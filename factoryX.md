@@ -1289,6 +1289,7 @@ FactoryX products live beside the vanilla systems they extend:
 | `x-gigafactory-building` | Gigafactory | Dedicated aligned 9x9 sprite and icon | Partial | Footprint-readable static art is wired; a future animation pass can add production motion without changing its silhouette. |
 | `x-gigafactory-v2` | Gigafactory V2 | Dedicated aligned Gigacast-focused 9x9 sprite | Partial | Distinct dual-press factory art is wired; the existing productivity-badged icon remains useful until a final icon pass. |
 | `x-terrestrial-datacenter` | Terrestrial Datacenter | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs a final server hall or datacenter block sprite pass. |
+| `x-robotaxi-service-center` | Robotaxi Service Center | Temporary layered Roboport/Robotaxi icon and scaled Datacenter playtest sprite | Yes | Implemented 8x8 fleet depot with 40 Robotaxi slots, one Dollar output slot, and a hidden 10 MW operating machine. Needs dedicated depot and charging-canopy artwork. |
 | `x-orbital-compute-array` | Orbital Compute Array | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs final space-platform-compatible compute array art. |
 | `x-planetary-grid-controller` | Planetary Energy Grid Controller | Assembler/substation-style placeholder | Yes | Needs a planet-scale power-grid control visual with energy, storage, and command infrastructure. |
 
@@ -1304,7 +1305,6 @@ beyond the MVP tech-and-recipe loop.
 | Ground Station | Converts the current Ground Station Network item into visible satellite infrastructure. | Yes | Could increase orbital compute output or satellite constellation capacity. |
 | Satellite Constellation Controller | Tracks constellation scale and links launch products to compute bonuses. | Yes | Might be a radar/combinator-like entity rather than a normal assembler. |
 | Market Exchange | Alternative or upgrade to Sales Office for late product sales. | Yes | Only worth adding if Sales Office recipes become too crowded. |
-| Robotaxi Service Center | Deploys Robotaxis as a recurring transportation service rather than selling them as consumer vehicles. | Yes | Large terrestrial facility with a 40-slot fleet inventory, operating recipe, service coverage, and built-in V4 fleet charging. |
 | Fictional Disruption Spawner | Optional event/enemy source if we add competition or disruption. | Yes | Not MVP. Avoid direct real-world political labels. |
 
 ### Items And Products
@@ -1482,7 +1482,8 @@ Future implementation; explicitly not part of the current runtime:
 
 ### Phase 2.7: Robotaxi Service Center
 
-Replace direct Robotaxi sales with recurring fleet-service income:
+Implemented V1 replaces direct Robotaxi sales with recurring fleet-service
+income:
 
 - Add a large `Robotaxi Service Center` with a broad service coverage area.
 - A Robotaxi Fleet item has a stack size of 5. The Service Center has 40
@@ -1513,8 +1514,14 @@ Replace direct Robotaxi sales with recurring fleet-service income:
   customers, current utilization, charging power satisfaction, Dollar rate, and
   estimated vehicle attrition rate.
 - Retire or disable the current `Sell robotaxi fleet` Sales Office recipe once
-  the Service Center is implemented. Existing direct-sale behavior is only a
-  temporary progression bridge.
+  the Service Center is implemented. Implemented: the legacy recipe remains an
+  internal compatibility prototype but is disabled in gameplay.
+- V1 balance is one Dollar per 100 allocated Robotaxi-minutes at full power and
+  one retired vehicle per 60 operating Robotaxi-hours. Premium Audio adds 5%
+  revenue per research level.
+- V1 uses a 41-slot logistics container: slots 1-40 are filtered to Robotaxis
+  and slot 41 to Dollars. A colocated invisible operating machine runs the
+  `Operate Robotaxis` recipe and provides the real 10 MW grid load.
 
 ### Phase 3: SpaceX-Style Launch Flywheel
 

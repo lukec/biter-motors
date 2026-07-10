@@ -73,6 +73,14 @@ local GIGAFACTORY_CONFIGS = {
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "x-high-density-solar-array"
 local MEGAPACK_NAME = "x-megapack"
 local TERRESTRIAL_DATACENTER_NAME = "x-terrestrial-datacenter"
+ROBOTAXI_SERVICE_CENTER_NAME = "x-robotaxi-service-center"
+ROBOTAXI_SERVICE_RECIPE = "x-operate-robotaxis"
+ROBOTAXI_SERVICE_POWER_NAME = "x-robotaxi-service-power"
+ROBOTAXI_ITEM_NAME = "x-robotaxi-fleet"
+ROBOTAXI_SERVICE_RADIUS = 256
+ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5
+ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100
+ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60
 local RESERVATION_NAME = "x-ev-reservation"
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
@@ -2210,12 +2218,10 @@ local function station_next_step(station, covered_settlements, hostile_settlemen
     return string.format("Next: place this charger within %d tiles of Sales Office-converted customer spawners.", station_config(station).customer_radius)
   end
   if station.name == "x-ev-charging-station-v3" then
-    local robotaxi_sold = storage.factoryx_first_robotaxi_sales
-      and storage.factoryx_first_robotaxi_sales[station.force.name]
-    if robotaxi_sold then
+    if researched(station.force, "x-autonomous-logistics") then
       return "Next: V4 Superchargers are unlocked; craft one from this V3, Solar Arrays, Megapacks, and Dollars."
     end
-    return "Next: research Autonomous Logistics, then build and sell a Robotaxi Fleet to unlock V4 Superchargers."
+    return "Next: research Autonomous Logistics to unlock Robotaxis, V4 fleet charging, and the Robotaxi Service Center."
   elseif station.name == "x-ev-charging-station-v4" then
     return "Next: use this 20-stall solar-canopy site to support Robotaxi-scale charging demand."
   elseif station.name == "x-ev-charging-station-v2" then
@@ -2463,6 +2469,139 @@ local function sales_office_products_finished()
   return storage.factoryx_sales_office_products_finished
 end
 
+function robotaxi_service_states()
+  storage.factoryx_robotaxi_service_states = storage.factoryx_robotaxi_service_states or {}
+  return storage.factoryx_robotaxi_service_states
+end
+
+function robotaxi_service_power_entities()
+  storage.factoryx_robotaxi_service_power = storage.factoryx_robotaxi_service_power or {}
+  return storage.factoryx_robotaxi_service_power
+end
+
+function ensure_robotaxi_service_power(center)
+  local powers = robotaxi_service_power_entities()
+  local power = powers[center.unit_number]
+  if power and power.valid then return power end
+  power = center.surface.create_entity{
+    name = ROBOTAXI_SERVICE_POWER_NAME,
+    position = center.position,
+    force = center.force,
+    quality = center.quality,
+    create_build_effect_smoke = false
+  }
+  if power then
+    pcall(function() power.set_recipe(ROBOTAXI_SERVICE_RECIPE) end)
+    powers[center.unit_number] = power
+  end
+  return power
+end
+
+function robotaxi_service_inventories(center)
+  if not center or not center.valid or center.name ~= ROBOTAXI_SERVICE_CENTER_NAME then
+    return nil, nil
+  end
+  local inventory = center.get_inventory(defines.inventory.chest)
+  if inventory and inventory.valid and #inventory >= 41 then
+    for slot = 1, 40 do pcall(function() inventory.set_filter(slot, ROBOTAXI_ITEM_NAME) end) end
+    pcall(function() inventory.set_filter(41, DOLLAR_NAME) end)
+  end
+  return inventory, inventory
+end
+
+function robotaxi_customers_in_range(center)
+  local customer_force = game.forces[CUSTOMER_FORCE_NAME]
+  if not customer_force then return 0 end
+  return #center.surface.find_entities_filtered{
+    type = "unit",
+    force = customer_force,
+    area = {
+      {center.position.x - ROBOTAXI_SERVICE_RADIUS, center.position.y - ROBOTAXI_SERVICE_RADIUS},
+      {center.position.x + ROBOTAXI_SERVICE_RADIUS, center.position.y + ROBOTAXI_SERVICE_RADIUS}
+    }
+  }
+end
+
+function robotaxi_service_power_factor(center)
+  local power = ensure_robotaxi_service_power(center)
+  if not power then return 0 end
+  if power.status == defines.entity_status.no_power then return 0 end
+  if power.status == defines.entity_status.low_power then return 0.5 end
+  return power.energy and power.energy > 0 and 1 or 0
+end
+
+function robotaxi_service_snapshot(center)
+  local input, output = robotaxi_service_inventories(center)
+  local stored = input and input.get_item_count(ROBOTAXI_ITEM_NAME) or 0
+  local fleet = math.min(200, stored)
+  local customers = robotaxi_customers_in_range(center)
+  local allocated = math.min(fleet, math.ceil(customers / ROBOTAXI_CUSTOMERS_PER_VEHICLE))
+  local served = math.min(customers, allocated * ROBOTAXI_CUSTOMERS_PER_VEHICLE)
+  local power_factor = robotaxi_service_power_factor(center)
+  local audio_level = continuous_improvement_level(center.force, PREMIUM_AUDIO_TECH_NAME)
+  local state = robotaxi_service_states()[center.unit_number] or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
+  return {
+    stored = fleet,
+    allocated = allocated,
+    customers = customers,
+    served = served,
+    power_factor = power_factor,
+    revenue_per_minute = allocated / ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR
+      * power_factor * (1 + audio_level * 0.05),
+    output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
+    revenue_progress = state.revenue or 0,
+    attrition_progress = state.attrition or 0,
+    lifetime_dollars = state.dollars or 0,
+    vehicles_retired = state.vehicles_retired or 0
+  }
+end
+
+function process_robotaxi_service_centers()
+  local seen = {}
+  for _, surface in pairs(game.surfaces) do
+    for _, center in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME}) do
+      if center.valid and center.unit_number then
+        seen[center.unit_number] = true
+        local input, output = robotaxi_service_inventories(center)
+        local snapshot = robotaxi_service_snapshot(center)
+        local state = robotaxi_service_states()[center.unit_number]
+          or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
+        robotaxi_service_states()[center.unit_number] = state
+        if snapshot.allocated > 0 then
+          state.revenue = state.revenue + snapshot.revenue_per_minute / 60
+          state.attrition = state.attrition
+            + snapshot.allocated * snapshot.power_factor / (ROBOTAXI_ATTRITION_VEHICLE_HOURS * 3600)
+          local dollars = math.floor(state.revenue)
+          if dollars > 0 and output then
+            local inserted = output.insert{name = DOLLAR_NAME, count = dollars}
+            state.revenue = state.revenue - inserted
+            state.dollars = state.dollars + inserted
+            if inserted > 0 then
+              local statistics = center.force.get_item_production_statistics(center.surface)
+              statistics.set_output_count(DOLLAR_NAME, statistics.get_output_count(DOLLAR_NAME) + inserted)
+              announce_first_robotaxi_service(center.force)
+            end
+          end
+          local retirements = math.floor(state.attrition)
+          if retirements > 0 and input then
+            local removed = input.remove{name = ROBOTAXI_ITEM_NAME, count = retirements}
+            state.attrition = state.attrition - removed
+            state.vehicles_retired = state.vehicles_retired + removed
+          end
+        end
+      end
+    end
+  end
+  for unit_number in pairs(robotaxi_service_states()) do
+    if not seen[unit_number] then
+      robotaxi_service_states()[unit_number] = nil
+      local power = robotaxi_service_power_entities()[unit_number]
+      if power and power.valid then power.destroy() end
+      robotaxi_service_power_entities()[unit_number] = nil
+    end
+  end
+end
+
 local function first_ev_production_line_hints()
   storage.factoryx_first_ev_production_line_hints = storage.factoryx_first_ev_production_line_hints or {}
   return storage.factoryx_first_ev_production_line_hints
@@ -2646,7 +2785,7 @@ local function announce_first_mass_market_ev_sale(force)
   force.print("[FactoryX] Mass-market EV sales are online. Build High-density Solar Arrays and Megapacks through Energy Products, then research Terrestrial AI.")
 end
 
-local function announce_first_robotaxi_sale(force)
+announce_first_robotaxi_service = function(force)
   if not force or not force.valid then
     return
   end
@@ -2659,11 +2798,13 @@ local function announce_first_robotaxi_sale(force)
   if v4_recipe then
     v4_recipe.enabled = true
   end
+  local legacy_robotaxi_sale = force.recipes and force.recipes[ROBOTAXI_SALE_RECIPE]
+  if legacy_robotaxi_sale then legacy_robotaxi_sale.enabled = false end
   local launch_technology = force.technologies and force.technologies[SMALL_ORBITAL_LAUNCH_TECH]
   if launch_technology then
     launch_technology.enabled = true
   end
-  force.print("[FactoryX] First Robotaxis sold. V4 Superchargers and Small Orbital Launch are now available.")
+  force.print("[FactoryX] Robotaxi service is producing recurring profit. Small Orbital Launch is now available.")
 end
 
 local RESEARCH_COMPLETION_MESSAGES = {
@@ -2673,7 +2814,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["x-reusable-launch"] = "[FactoryX] Reusable Launch researched. Build Reusable Boosters, combine them into Reusable Launch Services, and sell those services through a Sales Office.",
   ["x-satellite-constellation"] = "[FactoryX] Satellite Constellation researched. Manufacture Satellite Buses and Ground Station Networks; both become physical inputs to orbital compute and the planetary grid.",
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
-  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. In Gigafactory V2, commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars to each Robotaxi Fleet; sell fleets without EV Reservations.",
+  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Build Robotaxis in Gigafactory V2, then deploy them through a powered Robotaxi Service Center. Each vehicle serves five nearby customers.",
   ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
   ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 GW controller and supply AI Tokens, Megapacks, satellite infrastructure, capital, and grid segments.",
   ["x-kardashev-type-1"] = "[FactoryX] Kardashev Type I researched. Produce the final Planetary Grid Charge in a powered controller; completing its 1 GW charge cycle wins the game."
@@ -2694,7 +2835,8 @@ local ENTITY_PLACEMENT_MESSAGES = {
   ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Select Mass-market EV; each sale still needs one EV Reservation.",
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Array online: 300 kW peak output. Scale generation before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
-  [TERRESTRIAL_DATACENTER_NAME] = "[FactoryX] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens."
+  [TERRESTRIAL_DATACENTER_NAME] = "[FactoryX] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
+  [ROBOTAXI_SERVICE_CENTER_NAME] = "[FactoryX] Robotaxi Service Center online. Load up to 200 Robotaxis; its built-in V4 fleet charging draws 10 MW while Operate Robotaxis converts nearby customer service into recurring profit."
 }
 
 local function announce_first_entity_placement(entity)
@@ -2747,7 +2889,8 @@ local function repair_researched_factoryx_unlocks(force)
   for technology_name, technology in pairs(force.technologies or {}) do
     if is_factoryx_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
-        if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe) then
+        if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe)
+          and effect.recipe ~= ROBOTAXI_SALE_RECIPE then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
             recipe.enabled = true
@@ -2769,7 +2912,8 @@ local function progression_integrity_status(force)
   for technology_name, technology in pairs(force.technologies or {}) do
     if is_factoryx_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
-        if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe) then
+        if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe)
+          and effect.recipe ~= ROBOTAXI_SALE_RECIPE then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
             table.insert(disabled, effect.recipe)
@@ -2799,7 +2943,7 @@ local function sync_force_unlocks(force)
   end
   local v4_recipe = force.recipes and force.recipes["x-ev-charging-station-v4"]
   if v4_recipe then
-    v4_recipe.enabled = first_robotaxi_sales()[force.name] == true
+    v4_recipe.enabled = researched(force, "x-autonomous-logistics")
   end
   if researched(force, "x-sales-office") then
     for _, recipe_name in pairs(SALES_OFFICE_INITIAL_RECIPES) do
@@ -3140,7 +3284,7 @@ local function check_first_prototype_sales()
           announce_first_mass_market_ev_sale(office.force)
         elseif recipe_name == ROBOTAXI_SALE_RECIPE and completed_crafts > 0 then
           award_robotaxi_audio_revenue(office, completed_crafts)
-          announce_first_robotaxi_sale(office.force)
+          announce_first_robotaxi_service(office.force)
         end
         products_by_unit[office.unit_number] = products
       end
@@ -3253,6 +3397,7 @@ local function progress_snapshot(force)
     premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME),
     mass_market_evs_produced = count_item_produced(force, "x-mass-market-ev"),
     robotaxi_fleets_produced = count_item_produced(force, "x-robotaxi-fleet"),
+    robotaxi_service_centers = count_entities(force, ROBOTAXI_SERVICE_CENTER_NAME),
     supercharging_level = improvements.supercharging,
     battery_level = improvements.battery,
     audio_level = improvements.audio,
@@ -3309,10 +3454,12 @@ local function current_progress_objective(snapshot)
     return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Robotaxi Fleets."
   elseif snapshot.robotaxi_fleets_produced == 0 then
     return "Autonomy", "Build the first Robotaxi Fleet in Gigafactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
-  elseif not snapshot.robotaxi_sale_complete then
-    return "Autonomy", "Sell the first Robotaxis.", "Route three Robotaxi items to a Sales Office. The 3-second contract needs no EV Reservation and returns 1 Dollar of profit."
   elseif snapshot.chargers_v4 == 0 then
     return "Supercharging", "Craft and place a solar-canopy V4 Supercharger.", "Craft it from 1 V3 Supercharger, 4 High-density Solar Arrays, 4 Megapacks, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
+  elseif snapshot.robotaxi_service_centers == 0 then
+    return "Autonomy", "Build a Robotaxi Service Center.", "Combine a V4 Supercharger, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Robotaxis and draws 10 MW."
+  elseif not snapshot.robotaxi_sale_complete then
+    return "Autonomy", "Operate the Robotaxi service.", "Load Robotaxis into the 40-slot fleet inventory. Each vehicle serves five nearby mobile customers; recurring profit unlocks launch services."
   elseif not snapshot.small_launch_researched then
     return "Launch services", "Research Small Orbital Launch.", "Invest 1,000 cycles through utility science plus Dollars; the terrestrial business is now ready for launch services."
   elseif not snapshot.reusable_launch_researched then
@@ -3408,6 +3555,7 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "AI Tokens produced", tostring(snapshot.ai_tokens_produced))
   add_progress_metric(metrics, "Terrestrial AI tracked", tostring(snapshot.terrestrial_ai_tokens_generated))
   add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
+  add_progress_metric(metrics, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
 
   content.add{type = "line"}
   add_section_heading(content, "Infrastructure")
@@ -3497,7 +3645,9 @@ end
 
 local function is_factoryx_manufacturer(entity)
   return entity and entity.valid
-    and (entity.name == SALES_OFFICE_NAME or GIGAFACTORY_CONFIGS[entity.name] ~= nil)
+    and (entity.name == SALES_OFFICE_NAME
+      or entity.name == ROBOTAXI_SERVICE_CENTER_NAME
+      or GIGAFACTORY_CONFIGS[entity.name] ~= nil)
 end
 
 local function entity_status_text(entity)
@@ -3567,6 +3717,47 @@ local function show_manufacturer_info_panel(player, entity)
   }
   panel.style.width = 380
   add_station_info_label(panel, "State: " .. entity_status_text(entity))
+
+  if entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
+    local snapshot = robotaxi_service_snapshot(entity)
+    add_station_info_label(panel, string.format(
+      "Fleet: %d / 200 Robotaxis; %d allocated",
+      snapshot.stored,
+      snapshot.allocated
+    ))
+    add_station_info_label(panel, string.format(
+      "Customers: %d / %d served within %d tiles",
+      snapshot.served,
+      snapshot.customers,
+      ROBOTAXI_SERVICE_RADIUS
+    ))
+    add_station_info_label(panel, string.format(
+      "Built-in V4 charging: %.0f%% power; rated demand 10 MW",
+      snapshot.power_factor * 100
+    ))
+    add_station_info_label(panel, string.format(
+      "Profit: %.2f Dollars/min; %.2f pending; %d lifetime Dollars",
+      snapshot.revenue_per_minute,
+      snapshot.revenue_progress,
+      snapshot.lifetime_dollars
+    ))
+    add_station_info_label(panel, string.format(
+      "Fleet attrition: %.1f%% toward next replacement; %d vehicles retired",
+      snapshot.attrition_progress * 100,
+      snapshot.vehicles_retired
+    ))
+    add_station_info_label(panel, "One Robotaxi serves five customers. Premium Audio increases trip revenue.")
+    if snapshot.stored == 0 then
+      add_station_info_label(panel, "Next: deliver Robotaxis to the 40-slot fleet inventory.")
+    elseif snapshot.customers == 0 then
+      add_station_info_label(panel, "Blocked: no mobile biter customers are inside service coverage.")
+    elseif snapshot.power_factor == 0 then
+      add_station_info_label(panel, "Blocked: connect and supply the 10 MW fleet charger load.")
+    else
+      add_station_info_label(panel, "Operating: keep the fleet stocked, power stable, and Dollar output clear.")
+    end
+    return
+  end
 
   if entity.name == SALES_OFFICE_NAME then
     add_station_info_label(panel, string.format(
@@ -4031,6 +4222,10 @@ for _, event_name in pairs({
 	        unlock_gigafactory_logistics(entity.force, true)
 	      end
 	      announce_first_entity_placement(entity)
+	      if entity and entity.valid and entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
+	        robotaxi_service_inventories(entity)
+	        ensure_robotaxi_service_power(entity)
+	      end
 	      if entity and entity.valid and entity.name == SALES_OFFICE_NAME then
 	        sync_customer_settlements()
 	        mark_sales_office_coverage_dirty()
@@ -4063,6 +4258,11 @@ for _, event_name in pairs({
         clear_office_buyer_reservation(entity.unit_number)
         robotaxi_audio_revenue_progress()[entity.unit_number] = nil
         mark_sales_office_coverage_dirty()
+      elseif entity and entity.name == ROBOTAXI_SERVICE_CENTER_NAME and entity.unit_number then
+        robotaxi_service_states()[entity.unit_number] = nil
+        local power = robotaxi_service_power_entities()[entity.unit_number]
+        if power and power.valid then power.destroy() end
+        robotaxi_service_power_entities()[entity.unit_number] = nil
       end
     end)
   end
@@ -4081,6 +4281,7 @@ end)
 
 script.on_nth_tick(60, function()
   track_ai_efficiency_progress()
+  process_robotaxi_service_centers()
   process_customer_vehicle_variant_migration(50)
   if storage.factoryx_sales_office_coverage_dirty then
     refresh_all_sales_office_coverage()
@@ -4134,6 +4335,21 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  robotaxi_service_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local centers = {}
+    for _, surface in pairs(game.surfaces) do
+      for _, center in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME, force = force}) do
+        local snapshot = robotaxi_service_snapshot(center)
+        snapshot.unit_number = center.unit_number
+        snapshot.surface = surface.name
+        snapshot.position = center.position
+        centers[#centers + 1] = snapshot
+      end
+    end
+    return centers
+  end,
   continuous_improvements = function(force_name)
     local force = game.forces[force_name or "player"]
     return force and continuous_improvement_levels(force) or nil

@@ -482,6 +482,12 @@ local high_density_solar_array_icon = layered_icon64(
   {r = 0.65, g = 0.9, b = 1.0, a = 1.0}
 )
 local megapack_icon = generated_icon("megapack")
+local robotaxi_service_center_icon = layered_icon64(
+  "__base__/graphics/icons/roboport.png",
+  "__factoryx__/graphics/icons/robotaxi-fleet.png",
+  {r = 0.45, g = 0.85, b = 1.0, a = 1.0},
+  {r = 1.0, g = 0.72, b = 0.12, a = 1.0}
+)
 local cybertruck_icon = icon64(
   "__base__/graphics/icons/car.png",
   {r = 0.72, g = 0.76, b = 0.80, a = 1.0}
@@ -561,6 +567,10 @@ data:extend({
     name = "x-planetary-grid"
   },
   {
+    type = "recipe-category",
+    name = "x-robotaxi-service"
+  },
+  {
     type = "fuel-category",
     name = "x-electric-drive"
   }
@@ -582,7 +592,7 @@ data:extend({
   item("x-mass-market-ev", generated_icon("mass-market-ev"), "transport", "x-c[mass-market-ev]", 1, {place_result = "x-mass-market-ev"}),
   item("x-cybertruck", cybertruck_icon, "transport", "x-d[cybertruck]", 1, {place_result = "x-cybertruck"}),
   item("x-autonomy-computer", layered_icon64("__base__/graphics/icons/processing-unit.png", "__base__/graphics/icons/speed-module.png"), "x-factoryx-components", "e[autonomy-computer]", 50),
-  item("x-robotaxi-fleet", generated_icon("robotaxi-fleet"), "transport", "x-e[robotaxi-fleet]", 1, {place_result = "x-robotaxi-fleet"}),
+  item("x-robotaxi-fleet", generated_icon("robotaxi-fleet"), "transport", "x-e[robotaxi-fleet]", 5, {place_result = "x-robotaxi-fleet"}),
 
   item("x-electric-drive-charge", icon64("__base__/graphics/icons/battery.png"), "other", "z[x-electric-drive-charge]", 1, {
     hidden = true,
@@ -609,6 +619,7 @@ data:extend({
   item("x-high-density-solar-array", high_density_solar_array_icon, "energy", "x-a[high-density-solar-array]", 10, {place_result = "x-high-density-solar-array"}),
   item("x-megapack", megapack_icon, "energy", "x-b[megapack]", 10, {place_result = "x-megapack"}),
   item("x-terrestrial-datacenter", datacenter_icon, "x-factoryx-infrastructure", "f[terrestrial-datacenter]", 1, {place_result = "x-terrestrial-datacenter"}),
+  item("x-robotaxi-service-center", robotaxi_service_center_icon, "x-factoryx-infrastructure", "g[robotaxi-service-center]", 1, {place_result = "x-robotaxi-service-center"}),
   item("x-orbital-compute-array", orbital_compute_icon, "x-factoryx-infrastructure", "g[orbital-compute-array]", 1, {place_result = "x-orbital-compute-array"}),
   item("x-planetary-grid-controller", planetary_grid_controller_icon, "x-factoryx-infrastructure", "h[planetary-grid-controller]", 1, {place_result = "x-planetary-grid-controller"})
 })
@@ -773,6 +784,33 @@ terrestrial_datacenter.collision_box = {{-2.9, -2.9}, {2.9, 2.9}}
 terrestrial_datacenter.selection_box = {{-3, -3}, {3, 3}}
 terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-datacenter", 0.36)
 
+local robotaxi_service_center = table.deepcopy(data.raw["logistic-container"]["passive-provider-chest"])
+robotaxi_service_center.name = "x-robotaxi-service-center"
+robotaxi_service_center.icons = robotaxi_service_center_icon
+robotaxi_service_center.icon = nil
+robotaxi_service_center.minable = {mining_time = 1, result = "x-robotaxi-service-center"}
+robotaxi_service_center.inventory_size = 41
+robotaxi_service_center.collision_box = {{-3.9, -3.9}, {3.9, 3.9}}
+robotaxi_service_center.selection_box = {{-4, -4}, {4, 4}}
+robotaxi_service_center.picture = generated_entity_picture("terrestrial-datacenter", nil, 0.48)
+robotaxi_service_center.radius_visualisation_specification = customer_radius_visualisation(256)
+
+local robotaxi_service_power = copied_assembler(
+  "assembling-machine-2",
+  "x-robotaxi-service-power",
+  robotaxi_service_center_icon,
+  nil,
+  {"x-robotaxi-service"},
+  "10MW",
+  1
+)
+robotaxi_service_power.flags = {"not-on-map", "not-blueprintable", "not-deconstructable"}
+robotaxi_service_power.minable = nil
+robotaxi_service_power.selectable_in_game = false
+robotaxi_service_power.collision_mask = {layers = {}}
+robotaxi_service_power.collision_box = {{0, 0}, {0, 0}}
+robotaxi_service_power.selection_box = {{0, 0}, {0, 0}}
+
 local orbital_compute_array = copied_assembler(
   "assembling-machine-2",
   "x-orbital-compute-array",
@@ -849,6 +887,8 @@ data:extend({
   high_density_solar_array,
   megapack,
   terrestrial_datacenter,
+  robotaxi_service_center,
+  robotaxi_service_power,
   orbital_compute_array,
   planetary_grid_controller,
   electric_vehicles[1],
@@ -1015,6 +1055,19 @@ data:extend({
       {type = "item", name = "x-dollar", amount = 100}
     },
     {{type = "item", name = "x-robotaxi-fleet", amount = 1}}, 20
+  ),
+  recipe("x-robotaxi-service-center", {"advanced-crafting"}, "x-factoryx-infrastructure", "g[robotaxi-service-center]",
+    {
+      {type = "item", name = "x-ev-charging-station-v4", amount = 1},
+      {type = "item", name = "roboport", amount = 4},
+      {type = "item", name = "processing-unit", amount = 50},
+      {type = "item", name = "x-dollar", amount = 200}
+    },
+    {{type = "item", name = "x-robotaxi-service-center", amount = 1}}, 60
+  ),
+  recipe("x-operate-robotaxis", {"x-robotaxi-service"}, "x-factoryx-capital", "i[operate-robotaxis]",
+    {},
+    {{type = "item", name = "x-dollar", amount = 1}}, 100000000
   ),
 
   recipe("x-small-launch-service", {"advanced-crafting"}, "space-related", "x-a[small-launch-service]",
@@ -1399,6 +1452,9 @@ data:extend({
     {"x-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"},
     {
       unlock("x-robotaxi-fleet"),
+      unlock("x-ev-charging-station-v4"),
+      unlock("x-robotaxi-service-center"),
+      unlock("x-operate-robotaxis"),
       unlock("x-sell-robotaxi-fleet")
     },
     1000,

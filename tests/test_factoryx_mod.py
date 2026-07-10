@@ -379,7 +379,7 @@ class FactoryXModTest(unittest.TestCase):
         ]
         robotaxi_recipe = data[
             data.index('recipe("x-robotaxi-fleet"'):
-            data.index('recipe("x-small-launch-service"')
+            data.index('recipe("x-robotaxi-service-center"')
         ]
         datacenter_entity = data[
             data.index('local terrestrial_datacenter = copied_assembler('):
@@ -428,12 +428,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('data.raw.technology["x-small-orbital-launch"].enabled = false', data)
 
         self.assertIn('ROBOTAXI_SALE_RECIPE = "x-sell-robotaxi-fleet"', control)
-        self.assertIn("announce_first_robotaxi_sale", control)
+        self.assertIn("announce_first_robotaxi_service", control)
         self.assertIn("launch_technology.enabled = true", control)
         self.assertIn("v4_recipe.enabled = true", control)
-        self.assertIn("V4 Superchargers and Small Orbital Launch are now available", control)
+        self.assertIn("Robotaxi service is producing recurring profit", control)
         self.assertIn("robotaxi_sale_complete", control)
-        self.assertIn("Sell the first Robotaxis", control)
+        self.assertIn("Operate the Robotaxi service", control)
         self.assertIn("AI Tokens produced", control)
         self.assertIn("snapshot.ai_tokens_produced < 1000", control)
         self.assertIn("Generate 1,000 AI Tokens", control)
@@ -796,8 +796,8 @@ class FactoryXModTest(unittest.TestCase):
         capital_scaling_tech = data[data.index('tech("x-capital-scaling"'):data.index('tech("x-ev-charging-network"')]
         autonomous_tech = data[data.index('tech("x-autonomous-logistics"'):data.index('tech("x-planetary-energy-grid"')]
         self.assertIn('unlock("x-ev-charging-station-v3")', capital_scaling_tech)
-        self.assertNotIn('unlock("x-ev-charging-station-v4")', autonomous_tech)
-        self.assertIn('v4_recipe.enabled = first_robotaxi_sales()[force.name] == true', control)
+        self.assertIn('unlock("x-ev-charging-station-v4")', autonomous_tech)
+        self.assertIn('v4_recipe.enabled = researched(force, "x-autonomous-logistics")', control)
         mass_sale = data[data.index('recipe("x-sell-mass-market-ev"'):data.index('recipe("x-sell-megapack"')]
         robotaxi_sale = data[data.index('recipe("x-sell-robotaxi-fleet"'):data.index('recipe("x-terrestrial-ai-token"')]
         self.assertIn('"x-ev-reservation"', mass_sale)
@@ -992,7 +992,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('chargers_v4 = count_entities(force, "x-ev-charging-station-v4")', control)
         self.assertIn("Craft and place a V3 Supercharger", control)
         self.assertIn("Craft and place a solar-canopy V4 Supercharger", control)
-        self.assertIn("build and sell a Robotaxi Fleet to unlock V4 Superchargers", control)
+        self.assertIn("research Autonomous Logistics to unlock Robotaxis, V4 fleet charging", control)
         self.assertIn("ensure_station_power_sinks", control)
         self.assertIn("remove_station_power_sink", control)
         self.assertIn("active_station_stalls", control)
@@ -1118,6 +1118,30 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("terrestrial ceiling reached", control)
         self.assertIn("Terrestrial AI efficiency", control)
         self.assertIn("terrestrial_ai_tokens_generated", control)
+
+    def test_robotaxi_service_center_economy(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/factoryx.cfg").read_text()
+
+        robotaxi_item = next(line for line in data.splitlines() if 'item("x-robotaxi-fleet"' in line)
+        self.assertIn('"transport", "x-e[robotaxi-fleet]", 5,', robotaxi_item)
+        self.assertIn('name = "x-robotaxi-service-center"', data)
+        self.assertIn("robotaxi_service_center.inventory_size = 41", data)
+        self.assertIn('"x-robotaxi-service-power"', data)
+        self.assertIn('"10MW"', data[data.index("local robotaxi_service_power ="):data.index("local orbital_compute_array =")])
+        self.assertIn('recipe("x-operate-robotaxis", {"x-robotaxi-service"}', data)
+        self.assertIn('unlock("x-robotaxi-service-center")', data)
+        self.assertIn('unlock("x-operate-robotaxis")', data)
+        self.assertIn("ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5", control)
+        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100", control)
+        self.assertIn("ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60", control)
+        self.assertIn("function process_robotaxi_service_centers", control)
+        self.assertIn("function ensure_robotaxi_service_power", control)
+        self.assertIn("robotaxi_service_status = function", control)
+        self.assertIn("Premium Audio increases trip revenue", control)
+        self.assertIn("legacy_robotaxi_sale.enabled = false", control)
+        self.assertIn("x-robotaxi-service-center=Robotaxi Service Center", locale)
 
     def test_customer_reconciliation_is_not_per_second(self):
         control = (MOD / "control.lua").read_text()
@@ -1324,10 +1348,11 @@ class FactoryXModTest(unittest.TestCase):
             "x-premium-ev",
             "x-mass-market-ev",
             "x-cybertruck",
-            "x-robotaxi-fleet",
         ]:
             item_line = next(line for line in data.splitlines() if f'item("{name}"' in line)
             self.assertIn(", 1", item_line, name)
+        robotaxi_line = next(line for line in data.splitlines() if 'item("x-robotaxi-fleet"' in line)
+        self.assertIn(", 5,", robotaxi_line)
         for name in [
             "x-gigafactory-building",
             "x-gigafactory-v2",

@@ -1122,8 +1122,8 @@ if sum(owner_entities.values()) != 3 or not all(name.endswith("-robotaxi") for n
     raise SystemExit(f"Robotaxi sale did not replace owners with baked Robotaxi variants: {checked}")
 if not checked.get("outer_customer_biter_converted"):
     raise SystemExit(f"mobile unit beside a served outer spawner did not remain a customer: {checked}")
-if checked.get("v4_recipe_enabled_before_robotaxi_sale") is not False:
-    raise SystemExit(f"V4 Supercharger should remain locked until the first Robotaxi sale: {checked}")
+if checked.get("v4_recipe_enabled_before_robotaxi_sale") is not True:
+    raise SystemExit(f"Autonomous Logistics should unlock the V4 Supercharger needed by the Robotaxi Service Center: {checked}")
 if not checked.get("player_customer_friend") or not checked.get("customer_player_friend"):
     raise SystemExit(f"player and customer forces should be mutual friends: {checked}")
 if checked.get("covered_biter_settlements", 0) < 1:
