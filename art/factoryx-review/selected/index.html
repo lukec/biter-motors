@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Factory X Selected Art</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f2f3f5;
+        --panel: #ffffff;
+        --ink: #20242a;
+        --muted: #66707c;
+        --line: #d8dde3;
+        --accent: #235b8c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.4;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        border-bottom: 1px solid var(--line);
+        background: rgba(242, 243, 245, 0.94);
+        backdrop-filter: blur(10px);
+      }
+
+      .bar,
+      main {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .bar {
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
+
+      .subhead {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      nav a {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        padding: 7px 10px;
+        color: var(--accent);
+        font-size: 13px;
+        text-decoration: none;
+      }
+
+      main {
+        padding-top: 26px;
+        padding-bottom: 48px;
+      }
+
+      section {
+        margin: 0 0 34px;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        color: var(--accent);
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+      }
+
+      article {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      article img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        background: #e8eaee;
+      }
+
+      .meta {
+        min-height: 122px;
+        padding: 12px 14px 14px;
+        border-top: 1px solid var(--line);
+      }
+
+      h3 {
+        margin: 0 0 5px;
+        font-size: 16px;
+        line-height: 1.25;
+        letter-spacing: 0;
+      }
+
+      code {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 640px) {
+        .bar,
+        main {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .grid {
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <h1>Factory X Selected Art</h1>
+        <p class="subhead">Favorite quadrants cropped from the implemented-art concept sheets.</p>
+        <nav aria-label="Review pages">
+          <a href="../">All 4-option sheets</a>
+          <a href="../selected-picks.json">Selection JSON</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>Placeable Entities</h2>
+        <div class="grid">
+          <article>
+            <img src="assets/sales-office.png" alt="Selected Sales Office concept">
+            <div class="meta">
+              <h3>Sales Office</h3>
+              <code>x-sales-office</code>
+              <p>Option 4, bottom-right.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/ev-charging-station.png" alt="Selected EV Charging Station concept">
+            <div class="meta">
+              <h3>EV Charging Station</h3>
+              <code>x-ev-charging-station</code>
+              <p>Option 4, bottom-right.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/terrestrial-datacenter.png" alt="Selected Terrestrial Datacenter concept">
+            <div class="meta">
+              <h3>Terrestrial Datacenter</h3>
+              <code>x-terrestrial-datacenter</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/orbital-compute-array.png" alt="Selected Orbital Compute Array concept">
+            <div class="meta">
+              <h3>Orbital Compute Array</h3>
+              <code>x-orbital-compute-array</code>
+              <p>Option 3, bottom-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/knowledge-synthesizer.png" alt="Selected Knowledge Synthesizer concept">
+            <div class="meta">
+              <h3>Knowledge Synthesizer</h3>
+              <code>x-knowledge-synthesizer</code>
+              <p>Option 2, top-right.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Economy And Science Items</h2>
+        <div class="grid">
+          <article>
+            <img src="assets/ev-reservation.png" alt="Selected EV Reservation concept">
+            <div class="meta">
+              <h3>EV Reservation</h3>
+              <code>x-ev-reservation</code>
+              <p>Option 3, bottom-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/gigafactory-module.png" alt="Selected Gigafactory Module concept">
+            <div class="meta">
+              <h3>Gigafactory Module</h3>
+              <code>x-gigafactory-module</code>
+              <p>Option 3, bottom-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/ai-token.png" alt="Selected AI Token concept">
+            <div class="meta">
+              <h3>AI Token</h3>
+              <code>x-ai-token</code>
+              <p>Option 4, bottom-right.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/k1-knowledge.png" alt="Selected K1 Knowledge concept">
+            <div class="meta">
+              <h3>K1 Knowledge</h3>
+              <code>x-k1-knowledge</code>
+              <p>Option 4, bottom-right.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>EV Product Items</h2>
+        <div class="grid">
+          <article>
+            <img src="assets/prototype-roadster.png" alt="Selected Prototype Roadster concept">
+            <div class="meta">
+              <h3>Prototype Roadster</h3>
+              <code>x-prototype-roadster</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/premium-ev.png" alt="Selected Premium EV concept">
+            <div class="meta">
+              <h3>Premium EV</h3>
+              <code>x-premium-ev</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/mass-market-ev.png" alt="Selected Mass-Market EV concept">
+            <div class="meta">
+              <h3>Mass-Market EV</h3>
+              <code>x-mass-market-ev</code>
+              <p>Option 2, top-right.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/robotaxi-fleet.png" alt="Selected Robotaxi Fleet concept">
+            <div class="meta">
+              <h3>Robotaxi Fleet</h3>
+              <code>x-robotaxi-fleet</code>
+              <p>Option 3, bottom-left.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Space And Compute Product Items</h2>
+        <div class="grid">
+          <article>
+            <img src="assets/small-launch-service.png" alt="Selected Small Launch Service concept">
+            <div class="meta">
+              <h3>Small Launch Service</h3>
+              <code>x-small-launch-service</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/reusable-booster.png" alt="Selected Reusable Booster concept">
+            <div class="meta">
+              <h3>Reusable Booster</h3>
+              <code>x-reusable-booster</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/reusable-launch-service.png" alt="Selected Reusable Launch Service concept">
+            <div class="meta">
+              <h3>Reusable Launch Service</h3>
+              <code>x-reusable-launch-service</code>
+              <p>Option 2, top-right.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/satellite-bus.png" alt="Selected Satellite Bus concept">
+            <div class="meta">
+              <h3>Satellite Bus</h3>
+              <code>x-satellite-bus</code>
+              <p>Option 3, bottom-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/ground-station-network.png" alt="Selected Ground Station Network concept">
+            <div class="meta">
+              <h3>Ground Station Network</h3>
+              <code>x-ground-station-network</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+          <article>
+            <img src="assets/datacenter-rack.png" alt="Selected Datacenter Rack concept">
+            <div class="meta">
+              <h3>Datacenter Rack</h3>
+              <code>x-datacenter-rack</code>
+              <p>Option 1, top-left.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

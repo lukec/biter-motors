@@ -1,0 +1,12 @@
+{
+  "name": "factoryx",
+  "version": "0.1.0",
+  "title": "FactoryX",
+  "author": "Luke Closs and Codex",
+  "factorio_version": "2.1",
+  "dependencies": [
+    "base >= 2.1.0",
+    "space-age >= 2.1.0"
+  ],
+  "description": "A fictional industrial ambition MVP: sell EVs and launches for dollars, scale into orbital compute, build a planetary energy grid, and achieve Kardashev Type I."
+}

@@ -1,0 +1,1575 @@
+# FactoryX Design Notes
+
+This file tracks the current design for the Factorio mod concept we have been
+calling Factory X. The current working mod folder is
+`mod/factoryx_0.1.0`, and the in-game name is FactoryX. The internal
+mod id is `factoryx`, all custom prototype ids use the `x-` prefix, and this
+fresh-save version intentionally carries no compatibility aliases.
+
+## One-Line Pitch
+
+Factory X is a Space Age industrial ambition mod where the player bootstraps
+from premium electric vehicles and small launch services into mass-market EVs,
+reusable rockets, satellite infrastructure, orbital AI compute, and finally a
+Kardashev Type I civilization.
+
+## Design Principles
+
+- Keep the economy physical. Products move on belts. Money moves on belts.
+  Late-game AI and energy-grid outputs should also be tangible items where
+  possible.
+- Prefer concrete player-facing nouns over abstract business terms.
+- Use Dollars as the main capital token. Launch credit and money are the same
+  system for now.
+- Avoid bandwidth tokens. They add an extra abstraction without enough gameplay
+  payoff yet.
+- Avoid "EV Engineering Data" and "Factory Capex" as items. They were too
+  abstract. Replace them with visible infrastructure, concrete products, and
+  named hardware packages.
+- Make the bootstrapping arc mirror a simplified Tesla and SpaceX flywheel:
+  expensive early products fund scale, scale funds cheaper products, cheaper
+  products fund infrastructure, infrastructure funds space and AI.
+- Make space matter late. Terrestrial datacenters can create some AI tokens,
+  but the final game should require large orbital compute infrastructure.
+- The MVP victory is Kardashev Type I, represented by completing a planetary
+  energy grid. Orbital compute returns AI token data, then the planet consumes
+  those tokens plus physical grid infrastructure and a huge local power draw to
+  charge the grid.
+
+## Playtest Lessons To Carry Forward
+
+The first few playable steps taught us that the mod feels best when each step is
+plainly physical and when the UI answers "what next?" without needing external
+notes.
+
+Rules for the rest of the design:
+
+- Every new tech should unlock a concrete next action: place this building,
+  craft this product, belt it here, or power this machine.
+- Dollars should mostly represent proven market demand being reinvested into
+  tooling, factories, launch capacity, energy infrastructure, and compute.
+- Avoid single-use abstract tokens unless they are clearly physical or visible on
+  belts. `EV Reservation` works because it is a buyer demand item feeding sales.
+  We should be skeptical of adding more generated coupons.
+- The first instance of a new business loop should be slow and dramatic. `Sell
+  hopes and dreams` takes 120 seconds so prototype sales happen on the order of
+  minutes.
+- Sales Offices define customers. Hostile biters become peaceful customers only
+  when a Sales Office covers them, and chargers turn those customer settlements
+  into measured demand.
+- Infrastructure should explain itself through power draw, coverage, stalls,
+  recipes, and status panels. If the player clicks a machine, the next step
+  should be visible in-game.
+- Runtime milestone unlocks must be idempotent. Configuration changes can reset
+  a recipe to its data-stage disabled state while milestone storage and
+  production history survive. Recipe repair must always run; only the player
+  announcement should be one-time.
+- Researched FactoryX technologies are also repaired generically from their
+  declared unlock effects. The runtime exposes a progression-integrity report,
+  and validation fails if a recipe has no technology/milestone owner or no
+  compatible crafting machine.
+- Progress metrics use Factorio's lifetime per-surface output counters. The
+  Dollars value has a stable GUI identity and progressed-save validation checks
+  that the stored statistic, progression snapshot, and rendered caption match.
+- Each major arc should follow the same readable pattern:
+  1. Prove demand with an expensive niche product.
+  2. Convert sales into Dollars.
+  3. Spend Dollars plus real factory hardware on production capability.
+  4. Use the new capability to make a cheaper or larger-scale product.
+  5. Add infrastructure that creates more demand or unlocks the next domain.
+
+## Current Implemented MVP
+
+The MVP already has these major loops:
+
+1. Research Sales Office to unlock the Sales Office, EV Charging Station, and
+   the first Sales Office recipe: `Sell hopes and dreams`.
+2. Place a powered EV Charging Station near biter customer settlements.
+3. The first covered biter customer charging site unlocks Prototype Roadsters.
+4. Craft Prototype Roadsters.
+5. Active charger stalls print physical EV Reservation paperwork. Belt or bot
+   one reservation to the Sales Office with each Prototype Roadster.
+6. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
+7. Scale charging stations and the completed EV fleet to print more reservations
+   for Premium and Mass-market sales.
+8. Research EV Production Line and build ten Gigafactory Modules plus the EV
+   components.
+9. Research Energy Products to unlock Gigafactory construction.
+10. Combine the modules with two Substations, then build Premium and
+    Mass-Market EVs only in Gigafactories.
+11. Build silver Cybertrucks after Mass-market EV Production, then sell each
+    one with an EV Reservation for 2 Dollars of profit.
+12. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
+12. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
+13. Spend 1,000 AI Tokens and 1,000 Dollars on Autonomous Logistics.
+14. Build Robotaxi Fleets in Gigafactory V2 and sell them without reservations.
+15. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
+16. Move AI production to space platforms with Orbital Compute Arrays.
+17. Drop AI Tokens back to the planet.
+18. Build a Planetary Energy Grid Controller.
+19. Produce Planetary Grid Segments from AI Tokens, Megapacks, Satellite Buses,
+    and Ground Station Networks.
+20. Research Kardashev Type I to unlock the final grid-charge recipe.
+21. Run the Planetary Energy Grid Controller through a 1GW charge cycle to
+    trigger the victory state.
+
+Current runtime behavior is intentionally small:
+
+- Every 600 ticks, the mod counts active charging stalls from biter customer
+  settlements covered by grid-connected EV Charging Stations.
+- A v1 EV Charging Station has 4 stalls. Each covered biter spawner occupies
+  one stall, capped at 4 active stalls per station.
+- Each active stall draws 50 kW from the electric grid, so a fully used v1
+  charger draws 200 kW.
+- The first covered biter customer charging site unlocks Prototype Roadsters
+  for `Sell hopes and dreams`.
+- If the EV charging network technology is researched or the first customer
+  charging site has been covered, each active charging stall prints one EV
+  Reservation per minute into its charger's output inventory.
+- Chargers have a one-slot output inventory. Inserters can always move the
+  physical paperwork; logistic bots can also collect it when optional logistic
+  coverage is available. Logistic coverage never gates charger operation.
+- Prototype, Premium, and Mass-market EV sales consume one reservation per car.
+  Cybertruck sales also consume one reservation. Robotaxi fleets consume no
+  reservations; they require major capital instead.
+- All five FactoryX EV products are now drivable. They temporarily reuse the
+  vanilla car body with product colors: Roadster red, Premium black,
+  Mass-market white, Cybertruck silver, and Robotaxi gold.
+- Each placed EV receives embedded battery equipment. Powered charger tiers
+  reserve spare stalls for nearby player EVs, draw their normal per-stall grid
+  power, and refill those batteries. Customer stalls are allocated first and
+  only customer stalls generate EV Reservation paperwork.
+- The `/factoryx-coverage` command reports total station count,
+  grid-connected station count, covered biter settlements, active charging
+  stalls, active EV Sales Offices, and EV Reservation rate.
+
+## New Game Start
+
+FactoryX has an optional startup setting, `FactoryX accelerated start`, enabled
+by default. It is deliberately a light start rather than a prebuilt base:
+
+- No machines or structures are placed for the player.
+- Basic industrial research starts complete: Automation, Logistics,
+  Electronics, Steel Processing, Automation 2, Logistic Science, and Electric
+  Energy Distribution 1.
+- The crashed ship contains 100 Steel Plates, 100 Electronic Circuits, 100 Iron
+  Gears, four Assembling Machine 1s, and four Labs.
+- The surrounding wreckage contains starter plates, stone, coal, belts,
+  inserters, drills, furnaces, poles, and one small steam-power kit.
+- A spoiler-light opening message explains the customer economy and long-term
+  energy/computation objective.
+- Disabling the setting restores the ordinary Factorio freeplay start.
+
+## Quality Policy
+
+- Physical assets use native Factorio quality improvements. Machines gain the
+  normal speed and durability benefits; solar and storage use native quality
+  scaling; EVs gain vehicle durability.
+- Each quality level adds one embedded battery to a placed FactoryX EV.
+- Each quality level adds 10% EV capacity per stall to a charger. Stall count,
+  footprint, and coverage radius stay fixed so placement remains readable.
+- Abstract outputs do not roll quality. Dollar sales, AI Token production,
+  launch-service sales, and the final grid charge use `allow_quality = false`.
+
+## Vehicle Build And Profit Balance
+
+The implementation follows the useful architecture from the MIT-licensed
+`electric-vehicles` mod: battery equipment stores energy and a runtime
+transformer converts that energy into vehicle propulsion fuel. That mod and
+its wireless-charging companion target Factorio 0.14, so FactoryX does not take
+an obsolete dependency. It implements the pattern directly against Factorio
+2.1, with FactoryX chargers supplying the grid draw.
+
+| Vehicle | Build time | Sale time | Profit | Reservation |
+| --- | ---: | ---: | ---: | --- |
+| Prototype Roadster | 30s | 120s | 2 Dollars | 1 |
+| Premium EV | 20s | 30s | 1 Dollar | 1 |
+| Mass-market EV | 8s | 5s | 1 Dollar | 1 |
+| Cybertruck | 15s | 10s | 2 Dollars | 1 |
+| Robotaxi | 20s | 3s per three | 1 Dollar per three | None |
+
+One Dollar represents roughly US$10,000 of investable profit, not gross
+revenue. Robotaxi economics remain provisional until the planned Robotaxi
+Service Center replaces direct sales with fleet-service income.
+
+## Current Economy
+
+### Capital
+
+`Dollar` is the main capital item. One item represents roughly US$10,000 of
+investable capital in current-dollar terms. Dollars are produced by
+selling products through Sales Offices, then consumed by technologies and scale
+recipes.
+
+Capital currently goes into:
+
+- Research costs.
+- Higher-tier EV Charging Stations. The v1 station is built from ordinary
+  electrical infrastructure and does not consume Dollars.
+- Gigafactory Modules.
+- Space and satellite infrastructure.
+- Datacenter and planetary grid infrastructure.
+- Robotaxi and autonomy scaling.
+
+### Research Progression And Balance
+
+FactoryX research follows Factorio's cumulative-science convention. Major
+industrial milestones retain earlier science packs instead of replacing them
+with only the newest pack. Military science is intentionally excluded because
+the tree is commercial, industrial, energy, and compute focused.
+
+| Technology | Cycles | Inputs per cycle | Time |
+| --- | ---: | --- | ---: |
+| Sales Office | 75 | Red, green | 20s |
+| EV Production Line | 250 | Red, green, blue, Dollar | 30s |
+| EV Charging Network | 300 | Red, green, blue, Dollar | 30s |
+| Energy Products | 500 | Red, green, blue, purple, Dollar | 45s |
+| Mass-market EV Production | 1,000 | Red through yellow, Dollar | 60s |
+| Terrestrial AI | 1,000 | Red through yellow, Dollar | 60s |
+| Autonomous Logistics | 1,000 | Red through yellow, AI Token, Dollar | 60s |
+| Small Orbital Launch | 1,000 | Red through yellow, Dollar | 60s |
+| Reusable Launch | 1,500 | Red through space, Dollar | 60s |
+| Satellite Constellation | 2,000 | Red through space, Dollar | 60s |
+| Orbital Compute | 2,000 | Red through space, electromagnetic, AI Token, Dollar | 60s |
+| Planetary Energy Grid | 2,500 | Red through space, four planetary packs, AI Token, Dollar | 60s |
+| Kardashev Type I | 5,000 | Red through space, four planetary packs, AI Token | 60s |
+
+Mass-market EV Production explicitly requires Energy Products plus production
+and utility science. Autonomous Logistics uses Logistic Robotics rather than
+Space Age's space-gated Logistic System, preserving the terrestrial-first
+roadmap. Orbital Compute adds electromagnetic science for high-end compute
+hardware. Planetary Energy Grid and Kardashev Type I consume every official
+pre-Promethium science pack.
+
+Planetary Grid Segments are not laboratory science. They remain physical
+infrastructure assembled in the controller and consumed by the final charge.
+This prevents a large research count from silently multiplying segments and
+keeps the visible build-and-charge victory mechanic dominant.
+
+### Recipe Design Rule
+
+FactoryX recipes should normally use two to four inputs. Three is a natural
+default, not a quota. Every input must represent a distinct subsystem or
+gameplay logistics stream.
+
+Higher-level Factorio items carry their own material complexity forward. A
+recipe that consumes a Substation should not separately repeat its advanced
+circuits, copper cable, or steel. An Accumulator already represents cells and a
+metal enclosure. A Car already represents the chassis, engines, iron, and
+steel. Processing Units already contain advanced circuits. This keeps recipes
+readable without making them cheap: difficulty should come from quantities,
+craft time, power, prerequisites, and throughput rather than redundant input
+slots.
+
+Current simplified terrestrial recipes:
+
+- Sales Office: `Assembling Machine 2 + Radar + Concrete`.
+- V1 EV Charging Station: `Substation + Accumulators + Concrete`.
+- Battery Pack: `Accumulator + Electronic Circuits + Copper Cable`.
+- Electric Drivetrain: `Electric Engine Unit + Advanced Circuits + Copper Cable`.
+- Prototype Roadster: `Car + Batteries + Advanced Circuits`.
+- Premium EV: `Car + Battery Packs + Electric Drivetrains + Advanced Circuits`.
+- Mass-Market EV: `Car + Battery Packs + Electric Drivetrain`.
+- Cybertruck: `Mass-Market EV + Low Density Structures + Battery Packs +
+  Processing Units`.
+- High-density Solar Array: `Solar Panels + Processing Units + Low Density Structures + Dollars`.
+- Megapack: `Battery Packs + Accumulators + Substation`.
+- Autonomy Computer: `Processing Units + Speed Modules`.
+- Robotaxi Fleet: `Mass-Market EVs + Autonomy Computers + Dollars`.
+- Gigafactory Module: `10 Dollars + 5 Assembling Machine 2s + 5 Labs + 50 Refined Concrete`.
+- Gigafactory: `10 Gigafactory Modules + 2 Substations`.
+
+The Prototype Roadster deliberately uses primitive batteries and electronics.
+It cannot require FactoryX Battery Packs or Electric Drivetrains because its
+first sale funds the EV Production Line technology that unlocks those parts.
+
+### Sales Office
+
+The Sales Office is the central economic machine. It converts physical products
+into Dollars.
+
+Current sales recipes:
+
+- Prototype Roadster + EV Reservation -> 2 Dollars, displayed as `Sell hopes
+  and dreams`: 120 seconds.
+- Premium EV + EV Reservation -> 1 Dollar: 30 seconds. One Dollar represents
+  roughly US$10,000 of profit.
+- Mass-market EV + EV Reservation -> 1 Dollar: 5 seconds.
+- Cybertruck + EV Reservation -> 2 Dollars: 10 seconds.
+- Megapack -> Dollars.
+- Small launch service -> Dollars.
+- Reusable launch service -> Dollars.
+- Three Robotaxi Fleet items -> 1 Dollar: 3 seconds. This consumes Robotaxis at
+  one per second while representing roughly one Dollar of profit per three.
+
+Dollar outputs represent profit, not vehicle revenue. This keeps the physical
+currency useful as reinvestable capital without pretending that the business
+retains its gross sales price.
+
+Stack-size audit: individual EVs and Robotaxi Fleets stack to 1; Gigafactories,
+Terrestrial Datacenters, Orbital Compute Arrays, and the Planetary Grid
+Controller stack to 1; every charger tier stacks to 5; Sales Offices, large
+Solar Arrays, and Megapacks stack to 10. Bulk capital, paperwork, science, and
+intermediate components retain larger logistics-friendly stacks.
+
+The design intent is that sales are not magic research points. The player
+physically manufactures a product, belts it into a market-facing machine, and
+belts capital back out.
+
+A sale also requires a real mobile customer. Unsold mobile biters and spitters
+show `$`; a Sales Office reserves one eligible buyer per represented vehicle
+and pauses when none is available. A completed sale assigns the vehicle to that
+customer and replaces `$` with the vehicle's item icon. Buyer selection favors
+the least-loaded settlements, so scaling sales requires reaching additional
+colonies. If an owner dies, its vehicle leaves the active fleet immediately;
+lifetime sales remain in the economic statistics.
+
+Holding or selecting a Sales Office shows its 128-tile customer conversion
+radius. Hostile biter entities inside that radius are converted into customer
+entities. The `Sales Office Coverage` shortcut, unlocked with the Sales Office
+technology, toggles a per-player chart overlay for every Sales Office owned by
+that player's force. The chart-only circles use a dark teal translucent fill and
+restrained outline, so they remain readable without washing out Remote View.
+
+Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
+shows customer settlements in office coverage, machine state, selected sales
+contract, cycle progress, exact item counts for every input and output, and one
+specific blocker such as missing power, a missing item, or blocked output.
+
+A full Dollar output inventory stops the selected sale recipe. No EV or EV
+Reservation is consumed while blocked; inputs back up at the Sales Office,
+then reservation paperwork eventually backs up at chargers. Removing Dollars
+resumes the physical sales pipeline. This is normal Factorio backpressure, not
+an automatic customer penalty.
+
+### Progress And Diagnostics
+
+- The `FactoryX Progress` shortcut uses the steel-X FactoryX emblem and is
+  available throughout the game.
+- It opens a movable screen panel that derives the current stage and next
+  physical action from live force state rather than a static checklist.
+- Its inputs include research, Sales Offices, converted customer settlements,
+  grid-connected chargers, sold EVs, active stalls, reservation output,
+  first sales, both Gigafactory tiers, Energy Products, datacenters, autonomy,
+  orbital compute, planetary-grid research, and victory.
+- The panel reports lifetime Dollars produced, active charging throughput,
+  physical reservation stock at chargers, and important infrastructure counts.
+- `/factoryx-status` opens or refreshes the panel for players and returns the
+  same current objective through RCON.
+- Selecting either Gigafactory tier shows its state, rated power, selected
+  recipe, cycle progress, exact input/output counts, missing ingredient, and
+  output blockage. V2 also states its 2x speed and 150% built-in productivity.
+- Selecting a biter or spitter spawner opens the Customer Settlement Inspector.
+  It reports market coverage, assigned charger, active and free stalls, sold
+  fleet size, network capacity, and the concrete reason for hostile status.
+- Research completions and first placements provide concise physical next
+  actions. First Mass-market EV sales are now tracked alongside the existing
+  Prototype and Premium sales milestones.
+
+### EV Charging Network
+
+The EV Charging Station is the first demand-side infrastructure mechanic.
+
+Current implementation:
+
+- The station is an inventory-bearing site using custom charging-station art,
+  so clicking it exposes reservation paperwork without opening the Factorio
+  power-network UI.
+- A station can be placed away from power, but it is inactive until it is within
+  18 tiles of a friendly electric grid pole.
+- Powered stations create a hidden electric-pole grid tap at the same position,
+  so the site can retain a visible copper-wire connection to the grid while the
+  station itself remains the clickable object. Unpowered stations remove that
+  hidden tap and show Factorio's native flashing no-power alert to connected
+  players.
+- Logistic-network coverage is optional. The passive-provider capability makes
+  bot pickup convenient when coverage exists, but the prototype suppresses the
+  irrelevant no-logistic-network icon and runtime demand never checks logistics.
+- Holding a charger item shows electric coverage and hides logistics coverage;
+  changing the cursor restores the player's prior overlay choices.
+- A v1 station has 4 stalls. Each covered biter customer settlement occupies one
+  potential stall, capped at 4 per station.
+- Each active stall consumes 50 kW from the electric grid.
+- EV Charging Network unlocks V2: an 8-stall, 4x4 charging hub with a 96-tile
+  customer radius. Each active V2 stall draws 150 kW, for 1.2 MW maximum.
+- V2 costs `1 V1 Charger + 2 Substations + 20 Processing Units + 20 Dollars`.
+- V2 uses dedicated aligned 4x4 art with eight visible stalls and heavier
+  transformers.
+- Mass-market EV Production unlocks the 5x5 V3 Supercharger: 12 stalls, a
+  128-tile customer radius, and 250 kW per occupied stall for 3 MW maximum.
+- V3 costs `1 V2 Charger + 4 Substations + 40 Processing Units + 75 Dollars`.
+- Selling the first Robotaxi Fleet unlocks the 6x6 V4 Supercharger: 20 stalls,
+  a 160-tile customer radius, and 500 kW per occupied stall for 10 MW maximum.
+- V4 costs `1 V3 Supercharger + 4 High-density Solar Arrays + 4 Megapacks +
+  200 Dollars`. Its dedicated 6x6 art includes a broad solar canopy; 15 stalls
+  are visible and the final row is represented beneath the canopy.
+- Selecting a station opens a small FactoryX panel that shows grid
+  status, covered biter customer settlements, active stalls, power draw,
+  reservation rate, active EV Sales Offices, and the next progression step.
+- Holding or selecting a station shows a 64-tile customer coverage radius using
+  Factorio's native radius visualization.
+- The Sales Office technology enables the Sales Office, EV Charging Station,
+  and `Sell hopes and dreams`.
+- The first covered biter customer charging site enables the Prototype Roadster
+  craft recipe for that force.
+- Existing playtest saves also unlock on config sync if Factorio production
+  statistics show a Prototype Roadster was already consumed.
+- The three-input recipe is `Substation + Accumulators + Concrete`.
+  The Substation already embodies switchgear, power electronics, heavy
+  conductors, and a steel enclosure; the Accumulators add local buffering; the
+  Concrete represents site work.
+- More active charging stalls mean more EV Reservations: one per active stall
+  per minute.
+- Potential demand and actual utilization are separate. A stall is requested
+  only by a settlement containing at least one living mobile vehicle owner.
+  Manufactured inventory and historical production do not count.
+- Charger consumers measure the electric network's delivered fraction. Powered
+  stalls are the requested stalls multiplied by power satisfaction and rounded
+  down, so a 50% brownout serves roughly half the requested stalls and prints
+  half the paperwork.
+- A settlement that loses its stall because of overload, charger removal, or a
+  power shortage stays friendly for three minutes. Anger checks then ramp from
+  5% to 25% per minute. Restored powered service makes it friendly immediately
+  and clears its short memory of the outage.
+- Charging disruption and recovery do not print chat messages. Only affected
+  settlements receive a flashing entity alert while service is unavailable;
+  restoring service removes it. Routine customer settlement growth is also
+  silent, leaving the map and entity alerts as the operational interface.
+- A charger with a reachable unsold buyer can print one slow bootstrap
+  reservation before the first sale. Once owners exist, reservations scale at
+  one per powered occupied stall per minute.
+- Prototype, Premium, and Mass-market consumer EV sales consume EV Reservations,
+  starting with the first Prototype Roadster. Robotaxis are capital-gated.
+- This creates a reason to build charging infrastructure before high-volume
+  consumer EV sales really take off.
+
+Current limitation:
+
+- Overlapping chargers can still see the same settlement as potential demand,
+  but force-wide EV allocation prevents that overlap from creating more occupied
+  stalls than produced vehicles.
+- Future versions can make this more realistic by adding a custom coverage
+  visualization and measuring powered coverage, unique chunks, city zones, or
+  connected electric networks.
+- Charger art is now distinct by tier and sized to the exact 2x2, 4x4, 5x5,
+  and 6x6 footprints. A later animation pass can add status lighting without
+  changing those readable silhouettes.
+
+### Biter Customer Economy Research
+
+The conceptual leap in the current economy is that someone is buying the EVs.
+The funnier and more Factorio-native answer is: the biters are the customers.
+Instead of treating biters as direct political enemies or abstract mobs,
+FactoryX can turn them into non-aggressive biter customers whose settlements
+create demand for EVs and charging infrastructure.
+
+Current research notes from Factorio 2.1.9 docs and wiki:
+
+- `LuaForce::set_cease_fire` can put forces on a cease-fire list so they are
+  not targeted for attack. `LuaForce::set_friend` goes further and makes forces
+  friendly, including preventing turrets from firing at them. Source:
+  <https://lua-api.factorio.com/latest/classes/LuaForce.html>
+- `LuaSurface` can find enemy units and entities, create entities, create unit
+  groups, command units, pollute areas, find non-colliding positions, and call
+  `build_enemy_base(position, unit_count, force)` to send a group to build a
+  new enemy base. Source:
+  <https://lua-api.factorio.com/latest/classes/LuaSurface.html>
+- Commands can be given to enemies and unit groups, including go-to-location,
+  attack-area, wander, and compound commands. Source:
+  <https://lua-api.factorio.com/latest/concepts/Command.html>
+- `game.map_settings.enemy_expansion` can be changed at runtime. Enemy
+  expansion has an `enabled` flag, chunk scoring coefficients, settler group
+  sizes, and cooldowns. Source:
+  <https://lua-api.factorio.com/latest/concepts/EnemyExpansionMapSettings.html>
+- Vanilla enemy expansion is not enough by itself for this design. The base
+  game expands into "unclaimed" territory and penalizes chunks near player
+  structures and existing spawners, so chargers would not naturally attract
+  growth without scripted behavior. Source:
+  <https://wiki.factorio.com/Enemies>
+- Market entities exist, with offers and an `on_market_item_purchased` event,
+  but they are player-click purchase UIs. They do not solve belt-fed sales to
+  biters. Source:
+  <https://lua-api.factorio.com/latest/classes/LuaEntity.html> and
+  <https://lua-api.factorio.com/latest/concepts/Offer.html>
+
+Practical mechanics available to us:
+
+- Local customer conversion:
+  - FactoryX creates a `factoryx-customers` force.
+  - Normal `enemy` biters remain hostile to player forces.
+  - Enemy spawners inside 128 tiles of a Sales Office become eligible customers;
+    they convert only when a reachable powered charging stall can serve them.
+    Nearby mobile biters and spitters follow the served settlement's force.
+  - Worms remain on the enemy force and hostile to the player, even inside Sales
+    Office coverage. Their immobility makes them a fixed hazard around customer
+    settlements.
+  - Player forces have cease-fire with `factoryx-customers`, while player/enemy
+    cease-fire is explicitly disabled.
+  - Enemy and customer forces have cease-fire with each other so hostile biters
+    do not erase customer settlements.
+  - Customer spawners, biters, and spitters get a solid `$` marker so
+    playtesting can distinguish them from hostile entities.
+- Demand detection:
+  - Every bounded interval, convert Sales Office-covered enemy settlements into
+    customer settlements.
+  - Powered EV Charging Stations count customer spawners such as
+    `biter-spawner` and `spitter-spawner`.
+  - Convert customer settlement count, charger count, and Sales Office proximity
+    into EV Reservations.
+  - Keep the reservation item if possible. It becomes a physical "buyer
+    reservation" rather than an abstract generated coupon.
+- Sales:
+  - Keep Sales Offices as the belt-fed conversion point.
+  - Add or retheme recipes so mass-market EV and robotaxi sales are implicitly
+    selling to covered biter settlements.
+  - A Sales Office near biter settlements could receive a demand multiplier or
+    accept a special recipe such as `Sell EVs to biters`.
+- Charger-driven settlement growth:
+  - Scripted growth is the right tool. Vanilla expansion avoids player
+    structures, so it will not reliably grow around chargers.
+  - If a charger has power, a nearby Sales Office, and recent EV sales, it can
+    accumulate "customer adoption" points.
+  - At thresholds, the mod can add a new biter settlement near the charger by
+    finding a non-colliding position and either calling `build_enemy_base` or
+    directly creating a small spawner cluster.
+  - Growth must be capped per charger, per chunk, and per surface so it stays
+    readable and does not become a UPS problem.
+
+Implemented v1 behavior:
+
+- A settlement is friendly only when it is inside Sales Office coverage and is
+  assigned one reachable stall at a powered EV Charging Station. Sales coverage
+  by itself no longer creates a cease-fire zone.
+- Served spawners and their mobile biters become true friends with the player
+  force. Converted mobile units have old enemy attack commands replaced with a
+  persistent eight-tile wander command using `distraction = none`, so they move
+  around locally without attacking player structures, enemy worms, or anything
+  else under a customer `$` marker. Units that leave customer service get a
+  short interruptible enemy wander command so vanilla hostility can resume.
+- If a customer unit nevertheless damages player infrastructure, its command is
+  immediately reset to non-combat wandering. This prevents a friendly unit from
+  attacking a turret that correctly refuses to fire back.
+- Mobile service is centered on each assigned customer spawner, not on the
+  charger. This matters for V2-V4 sites whose served spawners can be well beyond
+  48 tiles from the station: units born beside a served `$` spawner remain
+  customers instead of immediately reverting to enemy force.
+- Completed sales assign cars to living mobile customers; production alone does
+  not form the fleet. Successive charger generations serve 12, 20, 32, and 50
+  owners per stall. Overload, charger removal, and brownouts use one local
+  three-minute grace-and-anger path; restored service recovers immediately.
+- Every active stall contributes one adoption point per second. Five active
+  stall-minutes grow one new customer spawner when that charger still has a
+  spare settlement stall and there are no stranded EVs.
+- Each new customer spawner rolls for at most one hostile worm: 25% below 0.3
+  evolution, 50% from 0.3 to 0.6, and 75% above 0.6. Worm tier still scales with
+  evolution. The spawner and mobile customers remain protected by the customer
+  cease-fire; any worm remains hostile and can be targeted normally.
+- Growth is locally bounded by the charger's stall count. V1 can serve at most
+  four nearby settlements and V2 can serve at most eight, so growth cannot run
+  away without deliberate charging expansion.
+- The charger panel and `factoryx` remote market status expose friendly and
+  angry settlements, stranded EVs, spare settlement capacity, grown colonies,
+  and progress toward the next colony.
+- Visual behavior:
+  - Customer spawning remains natural and FactoryX does not cap or cull mobile
+    populations. Friendly non-owners use an engine-native green tint and hostile
+    units retain their normal appearance.
+  - Vehicle owners use 32 explicit baked prototypes: eight vanilla mobile forms
+    multiplied by Roadster, Premium EV, Mass-market EV, Cybertruck, and
+    Robotaxi classes. Roadster is red, Premium is black, Mass-market is white,
+    Cybertruck is silver, and Robotaxi is gold.
+  - Completed sales replace the selected mobile buyer with its class prototype
+    while preserving position, health ratio, force, settlement, and ownership.
+    Existing owners migrate at 50 units per second. No per-owner Lua car-icon
+    render object remains; only settlement `$` markers use custom rendering.
+  - Friendly mobile customers wander independently near their conversion point.
+    Commands are assigned only when a unit is converted, stopped, or carrying a
+    non-wander command; the once-per-second service sync does not reset an
+    already wandering unit.
+  - Keep this strictly cosmetic and local. Broader routes between settlements,
+    chargers, and Sales Offices remain deferred because unit pathfinding is
+    expensive compared with counting static spawners.
+
+Recommended design direction:
+
+1. Recast EV Reservations as biter-customer demand.
+2. Keep the existing Sales Office and EV Charging Station as the main gameplay
+   objects.
+3. Add biter settlements as a demand amplifier, not a required dependency for
+   the first `Sell hopes and dreams` sale.
+4. Make Sales Office-covered biter customers the default FactoryX market
+   behavior while keeping normal biters hostile.
+5. Make settlement growth a scripted reward for serving demand, not a vanilla
+   enemy-expansion side effect.
+
+This creates a more coherent fiction:
+
+- Early prototype Roadster sales are "hopes and dreams."
+- Once the player wants mass-market sales, they need reachable customers.
+- Biters become the customers.
+- Charging stations are not just abstract coverage. They become the thing that
+  lets biter settlements adopt EVs, which then creates more demand and more
+  settlement growth.
+
+The first implementation should avoid adding new art. It can reuse the current
+Sales Office, EV Charging Station, EV Reservation, and Dollar items, with a new
+runtime demand rule and a command report. A later pass can add a distinct Biter
+Dealership, customer settlement marker, or decorative charger activity.
+
+### Gigafactory Module
+
+Gigafactory Module replaces the old abstract Factory Capex idea.
+
+Current recipe inputs:
+
+- Dollars.
+- Assembling machine 3s.
+- Express transport belts.
+- Concrete.
+
+Design meaning:
+
+- This is a tangible package of factory expansion hardware.
+- It represents converting capital plus real production equipment into scalable
+  industrial capacity.
+- Late infrastructure consumes Gigafactory Modules instead of abstract capex.
+
+### AI Tokens And Planetary Grid Segments
+
+AI token is a physical science-like output.
+
+Current design:
+
+- Terrestrial datacenters produce AI tokens slowly.
+- Orbital Compute Arrays produce AI tokens at scale in space.
+- Late technologies consume AI tokens directly.
+- Planetary Energy Grid Controllers are 1GW machines. They convert large AI
+  Token streams, Megapacks, Satellite Buses, and Ground Station Networks into
+  Planetary Grid Segments.
+- Planetary Grid Segments are physical inputs to the final Planetary Grid
+  Charge recipe, not laboratory science.
+- The final Planetary Grid Charge consumes four large streams: grid segments,
+  AI tokens, Megapacks, and Dollars, plus a sustained PEGC charge cycle.
+  Satellite and ground infrastructure are embodied in the grid segments.
+
+The important balance goal is that land-based compute should not be enough for
+the final game. The player should need many space platforms running orbital
+compute and returning AI tokens to the planet. Those tokens are not power beamed
+from space; they are the compute output the planet uses to coordinate and charge
+planet-scale energy infrastructure.
+
+## Concrete Tech Tree Arc
+
+This is the target shape for the full design. Some names already exist in code;
+some are recommended renames or future mechanics.
+
+### 1. Sales Office: Customer Discovery
+
+Player proof:
+
+- Place a Sales Office near a biter settlement.
+- The covered settlement converts to the `factoryx-customers` force and gets a
+  simple customer marker.
+- Place a powered EV Charging Station so one customer spawner occupies one
+  charger stall.
+- Craft one Prototype Roadster.
+- Run the deliberately slow `Sell hopes and dreams` contract and belt out the
+  first Dollars. Target sale time: 120 seconds.
+
+Why it works:
+
+- The player sees the customer.
+- The player sees the charger coverage and stall count.
+- The first sale is slow enough to feel like a milestone.
+
+Next concrete unlock:
+
+- EV Production Line.
+
+### 2. EV Production Line: From Prototype To Premium Product
+
+Tesla-like meaning:
+
+- The first capital goes into tooling: battery packs, drivetrains, jigs,
+  assemblers, power electronics, and better shop-floor logistics.
+
+Implemented design:
+
+- Player-facing technology name is `EV Production Line`; its prototype id is
+  `x-premium-ev-program`.
+- Research costs 250 cycles of Dollars plus red/green/blue science. This makes
+  the first production program a meaningful bootstrap investment while leaving
+  the truly large science jump for mass-market scale.
+- The first completed `Sell hopes and dreams` sale prints a next-step message
+  telling the player to research EV Production Line.
+- EV Production Line unlocks `Gigafactory Module`, `Battery Pack`, `Electric
+  Drivetrain`, `Premium EV`, and `Sell premium product`.
+- Energy Products is the next required technology and unlocks the Gigafactory
+  construction recipe. This makes the energy platform a prerequisite for the
+  factory that produces Premium EVs.
+- Every Sales Office recipe uses the sold product as its dominant icon with a
+  small gold coin badge. EV, Megapack, launch-service, and Robotaxi sales are
+  visually distinct in the recipe chooser.
+- The Gigafactory is the tangible production gate; do not add a separate EV
+  Production Line Kit item.
+
+Gigafactory design:
+
+- Internal prototype target: `x-gigafactory-building`.
+- A dedicated 9x9 production building, approximately the footprint of a rocket
+  silo.
+- Placing the first Gigafactory automatically researches Factorio's Logistic
+  System technology, granting requester, buffer, and active-provider chests.
+  This is the concrete factory-logistics milestone and bypasses Space Age's
+  space-science gate at the moment the large terrestrial factory needs it.
+- FactoryX `Autonomous Logistics` remains the later AI/Robotaxi technology; it
+  is not the requester-chest unlock.
+- A Gigafactory Module is one repeatable production cell: capital, machines,
+  line logistics, and factory floor. The Gigafactory is assembled from several
+  of these modules.
+- Gigafactory Module recipe:
+  `10 Dollars + 5 Assembling Machine 2s + 5 Labs + 50 Refined Concrete`.
+- Gigafactory construction recipe:
+  `10 Gigafactory Modules + 2 Substations`.
+- Total large-factory bill of materials:
+  `100 Dollars + 50 Assembling Machine 2s + 50 Labs + 500 Refined Concrete + 2 Substations`.
+- Labs replace direct belts because each Lab already embodies belts, gears, and
+  electronic circuits. Five hundred Refined Concrete embodies 1,000 ordinary
+  Concrete plus reinforcing materials, giving the building a foundation cost
+  comparable to a rocket silo.
+- Dollars, machinery, line logistics, and concrete are embodied in the modules,
+  so the Gigafactory recipe does not bill those inputs a second time.
+- Dedicated FactoryX vehicle-assembly recipe category. Ordinary assemblers
+  cannot build Premium EVs or Mass-Market EVs.
+- Prototype Roadsters remain craftable in ordinary advanced assemblers because
+  they precede the production-line investment.
+- Active power draw is 20 MW, with a native unpowered/low-power
+  state. This is the first meaningful factory power step before chargers and
+  datacenters create much larger demand.
+- Both Gigafactory tiers accept up to eight modules. Speed, efficiency,
+  pollution, and quality effects work on their recipes. Productivity modules
+  follow the base-game rule and work only on intermediate-product recipes;
+  V2's built-in 100% productivity remains part of the machine itself.
+- A curated `Gigafactory vertical integration` category makes the factory a
+  super-assembler without exposing every ordinary assembler recipe. It includes
+  Copper Cable, Electronic Circuits, Advanced Circuits, Low Density Structures,
+  Gigafactory Modules, Gigacasts, Battery Packs, Electric Drivetrains, Autonomy
+  Computers, Datacenter Racks, Reusable Boosters, Satellite Buses, and Ground
+  Station Networks.
+- Premium EVs, Mass-market EVs, Robotaxi Fleets, High-density Solar Arrays, and
+  Megapacks are final products and explicitly reject productivity modules.
+- The Gigafactory uses a centered, axis-aligned 9x9 static sprite whose visible
+  base fills the collision footprint. A later animation pass should preserve
+  that footprint-readable silhouette.
+- EV Production Line unlocks the Gigafactory Module recipe, but Energy Products
+  unlocks the Gigafactory itself. Gigafactory Modules remain useful as
+  repeatable capital inputs for later datacenters and more Gigafactories.
+- Both Gigafactory tiers manufacture energy hardware through the dedicated
+  `x-energy-products` recipe category. Research is possible before the factory;
+  manufacturing begins after the research unlocks Gigafactory construction.
+
+Gameplay loop:
+
+- Manufacture battery packs and drivetrains.
+- Build a Gigafactory and assemble Premium EVs in it.
+- Sell Premium EVs through Sales Offices for more Dollars.
+- Premium sales are faster than `Sell hopes and dreams`, because the business
+  has moved from hand-built prototype to limited production: 30 seconds per EV
+  for 1 Dollar of profit.
+- EV Production Line research completion prints a concrete production-chain
+  prompt.
+- The first `Sell premium product` completion prints the next scale prompt:
+  build EV Charging Network and prepare for mass-market EVs.
+
+Next concrete unlock:
+
+- EV Charging Network as an expansion system, not just a recipe.
+
+### 3. EV Charging Network: Demand Infrastructure
+
+Tesla-like meaning:
+
+- Premium products prove the market, but mass adoption needs visible charging
+  infrastructure.
+
+Current implemented rule:
+
+- V1 chargers have 4 stalls.
+- V2 chargers have 8 stalls, a 4x4 footprint, and a 96-tile customer radius.
+- V3 Superchargers have 12 stalls, a 5x5 footprint, and a 128-tile customer
+  radius.
+- V4 Superchargers have 20 stalls, a 6x6 footprint, a solar canopy, and a
+  160-tile customer radius.
+- Service capacity rises with charging generation: V1 serves 12 EVs per stall,
+  V2 serves 20, V3 serves 32, and V4 serves 50. Total site capacities are 48,
+  160, 384, and 1,000 EVs respectively.
+- Each active stall requires one Sales Office-converted customer spawner.
+- Total active stalls are capped by cumulative EV sales across the force.
+- Active stall draw rises by tier: V1 50 kW, V2 150 kW, V3 250 kW, and V4
+  500 kW. Peak site demand is therefore 200 kW, 1.2 MW, 3 MW, and 10 MW.
+- Every active stall creates one EV Reservation per minute in its charger.
+- Sales Office customer conversion range is larger than charger range: 2x the
+  V1 charger radius, currently 128 tiles.
+
+Current presentation work remaining:
+
+- Keep V1 chargers simple.
+- Replace V2/V3/V4 temporary scaled and tinted art with footprint-specific
+  sites. V4's final art should retain the solar canopy.
+- Sales Office panels and `/factoryx-coverage` should keep reporting:
+  customer settlements, powered chargers, active stalls, power draw, active Sales
+  Offices, and reservation rate.
+
+Next concrete unlock:
+
+- Mass-market EV Production: mass-market EVs become possible only after the
+  player has Dollars, charger-created demand, and a Gigacast-equipped factory.
+
+### 4. Mass-Market EV Production
+
+Tesla-like meaning:
+
+- Use premium-product profits and charging coverage to make cheaper cars at
+  higher volume.
+
+Current code:
+
+- `x-capital-scaling` is displayed as `Mass-market EV Production`.
+- Research requires 1,000 cycles of red-through-yellow science plus 1,000
+  Dollars, and explicitly requires Energy Products.
+- It unlocks `Gigacast`, `Gigafactory V2`, `Mass-market EV`, and
+  `Sell mass-market EV`.
+- Gigafactory V1 can build Premium EVs. Mass-market EVs use a dedicated recipe
+  category available only in Gigafactory V2.
+- Gigafactory V2 runs at 2x crafting speed with 150% built-in productivity and
+  draws 30 MW. It has much higher output and lower energy use per vehicle than
+  V1 while retaining a substantial absolute grid load.
+- Gigafactory V2 is crafted in an Assembling Machine or either Gigafactory tier
+  from one Gigafactory item, one Gigacast, and 100 Dollars. V1 and V2 share a
+  fast-replace group, so a V2 item can be placed directly over a V1 building.
+  The replaced V1 is returned just like an Assembling Machine tier upgrade.
+  The recipe does not repeat the concrete already embodied in Gigafactory V1.
+- Gigacast consumes 20 Electric Furnaces, 500 Steel Plates, 50 Electric Engine
+  Units, and 50 Dollars.
+- The sales recipe consumes EV Reservations, so charger demand matters.
+
+Target feel:
+
+- The player should not be able to spam mass-market sales from one early charger.
+- Mass-market EVs should be cheaper per vehicle than Premium EVs, but the sales
+  contract should stay literal and readable:
+  `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`.
+- Sale time is 5 seconds. This preserves the high-throughput
+  mass-market feel while allowing charger reservation output to bottleneck
+  sustained sales. Tune the time after playtesting rather than batching cars in
+  groups of five.
+- This is the first loop where charger stall count should obviously bottleneck
+  revenue.
+
+Roadmap after V2:
+
+- Gigafactory V3 should require a new physical `Humanoid Robot` item, turning
+  humanoid factory labor into the next concrete automation leap.
+- V3 should be a later terrestrial successor, likely tied to AI Tokens and
+  Autonomous Logistics. Its exact productivity, speed, recipe, power draw, and
+  vehicle access remain intentionally undecided until V2 is playtested.
+- Humanoid Robots and Gigafactory V3 will both require distinct artwork.
+
+Next concrete unlock:
+
+- Energy Products and broader Gigafactory scaling.
+
+### 5. Gigafactory Modules: Production Cells And Factory Expansion
+
+Tesla-like meaning:
+
+- Capital is now spent on factories, production cells, line automation, concrete,
+  logistics, and power distribution.
+
+Current code:
+
+- `Gigafactory Module` already replaces the abstract `Factory Capex` idea.
+- EV Production Line unlocks its production-cell recipe using Dollars,
+  Assembling Machine 2s, Labs, and Refined Concrete.
+
+Target feel:
+
+- This should become the main midgame capital sink.
+- Ten modules plus Substations construct one 9x9 Gigafactory.
+- It should be required by big infrastructure recipes so Dollars are not just a
+  research ingredient.
+- Building additional Gigafactories repeats module demand instead of introducing
+  another abstract factory token.
+
+Next concrete unlock:
+
+- Gigafactory / Energy Products.
+
+### 6. Energy Products
+
+Tesla-like meaning:
+
+- Once factories scale, the business expands from cars into solar generation and
+  energy infrastructure.
+
+Current code:
+
+- `x-energy-products` branches directly from EV Production Line, solar energy,
+  and electric energy accumulators; it does not require Mass-market EV Production.
+- It unlocks the placeable 300 kW High-density Solar Array, the placeable 100 MJ
+  Megapack, and `Sell Megapack`.
+- Megapack charges and discharges at up to 5 MW.
+- Both Gigafactory tiers can manufacture energy products.
+- High-density Solar Array costs 4 Solar Panels, 10 Processing Units, 10 Low
+  Density Structures, and 5 Dollars.
+- Megapack costs 12 Battery Packs, 4 Accumulators, and 1 Substation.
+
+Target additions:
+
+- Reserve the player-facing name `Megafactory` for a later dedicated Megapack or
+  grid-storage factory, matching Tesla's distinction between vehicle
+  Gigafactories and the Lathrop Megafactory.
+- Recipes should lean on meaningful composite infrastructure. Grid-storage
+  products use Battery Packs, Accumulators, and a Substation; they do
+  not separately repeat the Substation's circuits or steel.
+- This stage should teach the player that the final victory will be an energy
+  infrastructure problem, not just a research problem.
+
+Next concrete unlock:
+
+- Small Orbital Launch.
+
+### 7. Small Orbital Launch: Capital Enters Space
+
+SpaceX-like meaning:
+
+- Early launch services are expensive, small, and not yet reusable.
+- The shared Dollar economy lets EV profits fund launch capacity.
+
+Current code:
+
+- `Small Orbital Launch` unlocks `Small Launch Service` and its Sales Office
+  recipe.
+
+Target feel:
+
+- A Small Launch Service should be a physical product made from rocket fuel,
+  low-density structures, processing units, and maybe Dollars.
+- Selling it through the Sales Office represents commercial launch contracts.
+- It should produce a lot of Dollars, but the recipe should be slow and
+  material-heavy.
+
+Next concrete unlock:
+
+- Reusable Launch.
+
+### 8. Reusable Launch: Cheaper Access To Orbit
+
+SpaceX-like meaning:
+
+- Reusability should feel like a step-change in launch economics.
+
+Current code:
+
+- `Reusable Launch` unlocks Reusable Boosters, Reusable Launch Services, and a
+  higher-value sales recipe.
+
+Target additions:
+
+- Keep V1 simple: craft boosters, craft reusable launch service, sell it.
+- Later add recovery infrastructure or a probabilistic recovered-booster output.
+- Avoid an abstract `launch credit` item; Dollars are enough.
+
+Next concrete unlock:
+
+- Satellite Constellation.
+
+### 9. Satellite Constellation: Space Infrastructure Becomes A Network
+
+SpaceX-like meaning:
+
+- Launch capability turns into satellite deployment and ground network
+  operations.
+
+Current code:
+
+- Unlocks `Satellite Bus` and `Ground Station Network`.
+
+Target feel:
+
+- Satellite Bus should be a physical payload item.
+- Ground Station Network should be a physical infrastructure item or later a
+  placeable entity.
+- These should be used by orbital compute and planetary grid recipes so the
+  player understands that data and coordination depend on deployed space
+  infrastructure.
+
+Next concrete unlock:
+
+- Terrestrial AI.
+
+### 10. Terrestrial AI: Useful But Not Enough
+
+Tesla-like meaning:
+
+- Autonomy and AI start on the ground: computers, racks, datacenters, power, and
+  products like robotaxi fleets.
+
+Implemented design:
+
+- Unlocks Autonomy Computer, Datacenter Rack, Terrestrial Datacenter, and
+  terrestrial AI token production.
+- Requires Mass-market EV Production, Energy Products, and Processing Units,
+  with no launch, satellite, or space-science prerequisite.
+- Research costs 1,000 cycles of cumulative red-through-yellow science and
+  Dollars.
+- A Terrestrial Datacenter costs a Gigafactory Module, four Datacenter Racks,
+  four Substations, and 100 Refined Concrete.
+- The placed datacenter is a large 6x6 server hall. Each 30-second cycle consumes
+  20 Dollars, draws 8 MW continuously, and produces 20 AI Tokens.
+- One datacenter needs 25 minutes to produce the 1,000 AI Tokens required for
+  Autonomous Logistics, but more than two hours for the final 5,000-token
+  workload. This makes terrestrial compute useful without replacing orbit.
+- AI Tokens are acceptable as a science-like physical output because the player
+  can belt them, launch them, or ship them.
+- AI Tokens stack to 1,000,000, reflecting that trained models and inference
+  data are much denser cargo than physical products.
+- Terrestrial and orbital AI have independent efficiency tracks. Producing
+  1,000, 10,000, 100,000, 1 million, 10 million, and 100 million Tokens in a
+  track enables its next research level. Each level costs Dollars plus the
+  appropriate science packs and adds 10% recipe productivity without increasing
+  capital or power per cycle. Research cycles equal 10% of the threshold.
+
+Next concrete unlocks:
+
+- Autonomous Logistics.
+- Orbital Compute.
+
+### 11. Autonomous Logistics: Robotaxi Demand Loop
+
+Tesla-like meaning:
+
+- Robotaxis are not just better cars; they combine mass-market EVs, autonomy
+  computers, charging coverage, and customer demand.
+
+Implemented design:
+
+- Unlocks `Robotaxi Fleet` and `Sell robotaxi fleet`.
+- Autonomous Logistics research itself consumes 1,000 Dollars, and each Robotaxi
+  Fleet consumes another 100 Dollars alongside four Mass-market EVs and four
+  Autonomy Computers.
+- Research also consumes 1,000 AI Tokens and cumulative red-through-yellow
+  science. It requires Logistic Robotics, not Space Age's space-gated Logistic
+  System technology, so Robotaxis remain the final terrestrial loop.
+- Robotaxi Fleets can only be assembled in Gigafactory V2.
+- Selling three completed Robotaxi Fleet items takes 3 seconds, returns 1
+  Dollar, and does not consume an EV Reservation. Sustained input is one
+  Robotaxi item per second.
+- The first completed sale is an explicit progression milestone and points the
+  player to Small Orbital Launch.
+- Small Orbital Launch requires Autonomous Logistics and remains disabled until
+  the first Robotaxi Fleet sale, making this the final terrestrial business
+  loop before the space branch.
+
+Next concrete unlock:
+
+- Small Orbital Launch.
+
+### 12. Orbital Compute: AI Moves Off-Planet
+
+SpaceX/Tesla-like meaning:
+
+- Space infrastructure is not beaming power back. It is running compute in orbit
+  and returning AI Token data to the planet.
+
+Current code:
+
+- Orbital Compute Arrays can only run in low gravity.
+- Orbital AI Token production is much stronger than terrestrial production.
+- Research requires 2,000 cycles of red-through-space science,
+  electromagnetic science, AI Tokens, and Dollars.
+
+Target feel:
+
+- The player should need many space platforms with Orbital Compute Arrays.
+- Orbital compute should consume Satellite Buses, Ground Station Networks,
+  Datacenter Racks, or maintenance-like inputs so it has a logistics footprint.
+- The planet should receive large streams of AI Tokens and use them to coordinate
+  final energy-grid construction.
+
+Next concrete unlock:
+
+- Planetary Energy Grid.
+
+### 13. Planetary Energy Grid: Build The Machine Before Charging It
+
+Kardashev meaning:
+
+- Type I should mean planetary-scale energy coordination and storage, not magic
+  knowledge completion.
+
+Current code:
+
+- Planetary Energy Grid Controller is a 1 GW machine.
+- Research requires 2,500 cycles of every official pre-Promethium science pack,
+  AI Tokens, and Dollars.
+- Planetary Grid Segments consume AI Tokens, Megapacks, Satellite Buses, and
+  Ground Station Networks. Those four composite inputs carry the space and
+  energy infrastructure into the final stage.
+
+Target feel:
+
+- The player should first build the Planetary Energy Grid Controller.
+- Then they should feed it Planetary Grid Segments and supporting items over
+  time.
+- The controller should make progress only while receiving huge power.
+- This mirrors the rocket silo pattern: build the silo, then launch the rocket.
+  Here: build the PEGC, then charge the grid.
+
+Next concrete unlock:
+
+- Kardashev Type I.
+
+### 14. Kardashev Type I: Final Charge
+
+Victory meaning:
+
+- The player wins by completing a sustained, high-power planetary grid charge.
+
+Current code:
+
+- `Kardashev Type I` unlocks the final Planetary Grid Charge recipe.
+- Research requires 5,000 cycles of every official pre-Promethium science pack
+  plus AI Tokens. It does not consume Planetary Grid Segments.
+- Victory triggers when the controller consumes `Planetary Grid Charge`.
+
+Target feel:
+
+- The final recipe should be a four-stream megabase throughput challenge:
+  Planetary Grid Segments, AI Tokens, Megapacks, Dollars, and a
+  sustained 1 GW charge cycle. Satellite and ground infrastructure are already
+  embodied in every Planetary Grid Segment.
+- It should be clear in the UI that the remaining blocker is either input
+  logistics or power supply.
+
+## New Prototypes And Artwork Needs
+
+The current MVP uses layered or tinted vanilla icons and copied vanilla machine
+graphics. That is good enough for prototype validation, but not for a polished
+release. This table tracks what should eventually get custom artwork.
+
+Current concept review page:
+
+- `art/factoryx-review/index.html`
+- Scope: implemented prototypes marked as needing new artwork.
+- Format: one 2x2 concept sheet per prototype, with four prototype directions
+  per sheet.
+- Future candidate entities are intentionally excluded from this review page.
+
+Current selected-art review:
+
+- `art/factoryx-review/selected/index.html`
+- Cropped selected images: `art/factoryx-review/selected/assets/`
+- Structured picks: `art/factoryx-review/selected-picks.json`
+- Quadrant legend: option 1 = top-left, option 2 = top-right, option 3 =
+  bottom-left, option 4 = bottom-right.
+
+Selected directions:
+
+| Prototype | Player Name | Selected Option |
+| --- | --- | --- |
+| `x-sales-office` | Sales Office | 4, bottom-right |
+| `x-ev-charging-station` | EV Charging Station | 4, bottom-right |
+| `x-terrestrial-datacenter` | Terrestrial Datacenter | 1, top-left |
+| `x-orbital-compute-array` | Orbital Compute Array | 3, bottom-left |
+| `x-knowledge-synthesizer` | Knowledge Synthesizer | 2, top-right, retired from playable mod |
+| `x-ev-reservation` | EV Reservation | 3, bottom-left |
+| `x-gigafactory-module` | Gigafactory Module | 3, bottom-left |
+| `x-ai-token` | AI token | 4, bottom-right |
+| `x-k1-knowledge` | K1 knowledge | 4, bottom-right, retired from playable mod |
+| `x-prototype-roadster` | Prototype roadster | 1, top-left |
+| `x-premium-ev` | Premium EV | 1, top-left |
+| `x-mass-market-ev` | Mass-market EV | 2, top-right |
+| `x-robotaxi-fleet` | Robotaxi fleet | 3, bottom-left |
+| `x-small-launch-service` | Small launch service | 1, top-left |
+| `x-reusable-booster` | Reusable booster | 1, top-left |
+| `x-reusable-launch-service` | Reusable launch service | 2, top-right |
+| `x-satellite-bus` | Satellite bus | 3, bottom-left |
+| `x-ground-station-network` | Ground station network | 1, top-left |
+| `x-datacenter-rack` | Datacenter rack | 1, top-left |
+
+`x-planetary-grid-charge` was added after this review pass and still
+needs its own concept art options.
+
+Post-review playtest replacements:
+
+- `x-ev-reservation` now uses a deliberately minimal two-sheet paperwork icon:
+  one folded corner, one binder clip, and one large red approval check. The car,
+  circuitry, straps, and deep document stack were removed because they became
+  visual noise at belt and inventory scale.
+- The custom steel `X` inside a gear ring with one orange furnace center is the
+  FactoryX Progress shortcut icon and compact module identity. FactoryX no
+  longer creates a separate crafting-menu tab.
+
+### Entity Artwork Alignment Rule
+
+- Placeable entity art must make its collision footprint readable at normal
+  gameplay zoom.
+- Ground pads, slabs, roofs, and perimeter walls stay centered and aligned to
+  the Factorio tile axes. Do not rotate a square or rectangular building into a
+  diagonal concept-art composition.
+- The visible base should fill roughly 85-100% of the sprite canvas after
+  transparent padding. Keep only enough margin for antialiasing and legitimate
+  vertical equipment overhang.
+- All footprint corners should be visually inferable. Tall machinery may rise
+  above the rear edge, but it must not obscure or falsely extend the ground
+  boundary.
+- Multi-tile arrays must tile to their selection box. Internal module borders
+  must not create an apparent empty perimeter where adjacent entities actually
+  touch.
+- Icons may be derived from the aligned entity art so the inventory silhouette
+  matches what the player places.
+
+### Crafting Menu Integration
+
+FactoryX products live beside the vanilla systems they extend:
+
+- Prototype, Premium, and Mass-market EVs plus Robotaxi Fleets use the vanilla
+  Logistics `transport` row.
+- High-density Solar Arrays and Megapacks use the vanilla Production `energy`
+  row.
+- Launch services, boosters, satellites, and ground stations use the vanilla
+  Production `space-related` row.
+- AI Tokens and planetary-grid outputs use the vanilla `science-pack` row.
+- FactoryX infrastructure has a dedicated row in the vanilla Production tab.
+- FactoryX components and capital/contracts have dedicated rows in the vanilla
+  Intermediate Products tab.
+- EV Reservations use the vanilla `raw-material` subgroup inside Intermediate
+  Products so they are visible and searchable in item-filter selectors even
+  though chargers create them through runtime demand rather than a craft recipe.
+
+### Placeable Entities
+
+| Prototype | Player Name | Current Base | Needs New Artwork? | Notes |
+| --- | --- | --- | --- | --- |
+| `x-sales-office` | Sales Office | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod at `graphics/entity/sales-office/sales-office.png`; still needs a final Factorio-style sprite pass. |
+| `x-ev-charging-station` | EV Charging Station | Dedicated aligned 2x2, four-stall sprite | No | Square footprint-filling art and matching icon are wired. |
+| `x-ev-charging-station-v2` | EV Charging Station V2 | Dedicated aligned 4x4, eight-stall sprite | No | Larger transformers and cyan high-power treatment distinguish V2. |
+| `x-ev-charging-station-v3` | V3 Supercharger | Dedicated aligned 5x5, 12-stall sprite | No | Twelve visible charger pedestals and liquid-cooled edge equipment distinguish V3. |
+| `x-ev-charging-station-v4` | V4 Supercharger | Dedicated aligned 6x6 solar-canopy sprite | No | Fifteen stalls are visible and five are represented beneath the canopy, matching the 20-stall logical capacity. |
+| `x-gigafactory-building` | Gigafactory | Dedicated aligned 9x9 sprite and icon | Partial | Footprint-readable static art is wired; a future animation pass can add production motion without changing its silhouette. |
+| `x-gigafactory-v2` | Gigafactory V2 | Dedicated aligned Gigacast-focused 9x9 sprite | Partial | Distinct dual-press factory art is wired; the existing productivity-badged icon remains useful until a final icon pass. |
+| `x-terrestrial-datacenter` | Terrestrial Datacenter | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs a final server hall or datacenter block sprite pass. |
+| `x-orbital-compute-array` | Orbital Compute Array | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs final space-platform-compatible compute array art. |
+| `x-planetary-grid-controller` | Planetary Energy Grid Controller | Assembler/substation-style placeholder | Yes | Needs a planet-scale power-grid control visual with energy, storage, and command infrastructure. |
+
+### Future Candidate Placeable Entities
+
+These are not implemented yet, but they are likely candidates if the mod moves
+beyond the MVP tech-and-recipe loop.
+
+| Candidate | Purpose | Needs New Artwork? | Notes |
+| --- | --- | --- | --- |
+| Launch Site | Makes commercial launch services feel more physical than an item-only recipe. | Yes | Could be a rocket-silo-adjacent entity or a dedicated assembler category. |
+| Booster Landing Pad | Supports reusable booster recovery or reuse mechanics. | Yes | Would make the reusable-launch flywheel more visual. |
+| Ground Station | Converts the current Ground Station Network item into visible satellite infrastructure. | Yes | Could increase orbital compute output or satellite constellation capacity. |
+| Satellite Constellation Controller | Tracks constellation scale and links launch products to compute bonuses. | Yes | Might be a radar/combinator-like entity rather than a normal assembler. |
+| Market Exchange | Alternative or upgrade to Sales Office for late product sales. | Yes | Only worth adding if Sales Office recipes become too crowded. |
+| Fictional Disruption Spawner | Optional event/enemy source if we add competition or disruption. | Yes | Not MVP. Avoid direct real-world political labels. |
+
+### Items And Products
+
+| Prototype | Player Name | Needs New Artwork? | Notes |
+| --- | --- | --- | --- |
+| `x-dollar` | Dollar | Maybe | Current coin icon works for MVP. Could use a branded capital token later. |
+| `x-ev-reservation` | EV Reservation | No | Custom simplified approved-paperwork icon is wired and verified at 64 px. |
+| `x-gigafactory-module` | Gigafactory Module | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-gigacast` | Gigacast | Yes | Currently uses a layered Electric Furnace and Low Density Structure placeholder icon. Needs large casting-machine artwork. |
+| `x-ai-token` | AI token | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-planetary-grid-segment` | Planetary grid segment | Yes | Victory-critical item. Needs a distinctive grid/energy segment icon. |
+| `x-planetary-grid-charge` | Planetary grid charge | Yes | New final-victory output. Needs a high-energy grid activation icon. |
+| `x-battery-pack` | Battery pack | Maybe | Vanilla battery/accumulator layering is acceptable but could be custom. |
+| `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
+| `x-prototype-roadster` | Prototype roadster | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-premium-ev` | Premium EV | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-mass-market-ev` | Mass-market EV | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-high-density-solar-array` | High-density Solar Array | Partial | Native 4x4 solar-panel entity tiles four 2x2-scaled vanilla panels edge-to-edge across its full footprint. It retains vanilla solar placement/grid behavior and the native 300 kW day/night curve without rotation or hidden support entities. Final premium artwork remains optional. |
+| `x-megapack` | Megapack | No | Dedicated aligned 2x2 four-cabinet utility battery sprite and matching icon are wired. |
+| `x-autonomy-computer` | Autonomy computer | Maybe | Current processor/module concept is readable. |
+| `x-robotaxi-fleet` | Robotaxi fleet | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-small-launch-service` | Small launch service | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-reusable-booster` | Reusable booster | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-reusable-launch-service` | Reusable launch service | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-satellite-bus` | Satellite bus | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-ground-station-network` | Ground station network | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+| `x-datacenter-rack` | Datacenter rack | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
+
+### Recipes And Technologies
+
+Recipes and technologies do not require separate artwork if their icons reuse
+the output item, but major technologies may benefit from custom tech icons later:
+
+- EV Production Line.
+- EV Charging Network.
+- Mass-market EV Production.
+- Gigafactory Module.
+- Gigafactory.
+- Small Orbital Launch.
+- Reusable Launch.
+- Satellite Constellation.
+- Terrestrial AI.
+- Orbital Compute.
+- Autonomous Logistics.
+- Planetary Energy Grid.
+- Kardashev Type I.
+
+Highest-priority custom tech icons:
+
+1. Kardashev Type I.
+2. Planetary Energy Grid.
+3. Orbital Compute.
+4. EV Charging Network.
+5. Gigafactory.
+
+## Future Plans
+
+### Phase 0: Stabilize MVP
+
+- Keep the current prototype set loading cleanly under Factorio 2.1 + Space Age.
+- Keep the runtime loop bounded and easy to reason about.
+- Add tests for any new runtime mechanics.
+- Keep the install script and validation workflow documented.
+
+### Phase 0.5: Playtest-Driven Progression Pass
+
+- Rename or reframe `Premium EV Program` as `EV Production Line` so the next
+  step after first Dollars is obvious. Implemented for the player-facing locale;
+  its prototype id is `x-premium-ev-program`.
+- Add an explicit post-first-sale hint: spend Dollars on EV production tooling.
+  Implemented as a first-Dollar force message.
+- Make the first post-dollar tech consume Dollars, not only conventional science.
+  Implemented on EV Production Line research.
+- Add the 9x9 Gigafactory as the physical result of EV Production Line research.
+  It consumes ten Gigafactory Modules plus Substations and assembles Premium
+  EVs. Implemented.
+- Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
+  consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
+  and fast-replaces V1. Implemented.
+- Move Gigafactory Modules into EV Production Line with the production-cell
+  recipe `Dollars + Assembling Machine 2s + Labs + Refined Concrete`. Implemented.
+- Change mass-market sales from a five-car batch to the literal contract
+  `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`. Implemented.
+- Ensure every Sales Office recipe has a sensible sale time:
+  - `Sell hopes and dreams`: 120 seconds.
+  - `Sell premium product`: 30 seconds for 1 Dollar.
+  - `Sell mass-market EV`: 5 seconds and gated by EV Reservations.
+  - `Sell robotaxis`: three Robotaxi items in 3 seconds for 1 Dollar.
+  - Launch and grid sales: slow, high-value contracts.
+- Add status panels or command output for each new infrastructure loop before
+  adding more invisible mechanics. Implemented for global progression, Sales
+  Offices, EV Charging Stations, and both Gigafactory tiers; future placeable
+  infrastructure should extend the same model.
+
+### Phase 1: Art Pass
+
+- Replace copied machine graphics for the existing placeable entities and the
+  new Gigafactory.
+- Replace the most important product icons: EVs, launch services, AI token,
+  Planetary Grid Segment, Gigafactory Module, EV Reservation.
+- Keep silhouettes readable in Factorio's UI and on belts.
+- Avoid real company marks or real-world logos. The mod should be inspired by
+  the industrial arc, not use protected branding.
+
+### Phase 2: Better Charging Coverage
+
+- Move beyond simple active-stall count.
+- Possible mechanics:
+  - Count unique chunks covered by charging stations.
+  - Require stations to be powered.
+  - Scale reservations by connected electric network capacity.
+  - Reduce value from overlapping stations.
+  - Assign nearby peaceful biter settlements to charger stalls as real customer
+    demand.
+  - Require Sales Offices to be within a market radius of biter settlements for
+    mass-market sale bonuses.
+  - Add a dashboard or command report that shows coverage, demand, and sales
+    bottlenecks.
+
+### Phase 2.5: Biter Customers
+
+- Create a `factoryx-customers` force on init and configuration change.
+- Keep normal player/enemy hostility enabled.
+- Convert Sales Office-covered spawners, biters, and spitters with reachable
+  powered charging service into peaceful customer entities while leaving worms
+  hostile.
+- Count customer spawners near powered EV Charging Stations as covered biter
+  settlements.
+- Generate EV Reservations from active charger stalls rather than from raw
+  charger count alone.
+- Add `/factoryx-market` or extend `/factoryx-coverage` to report:
+  - Powered chargers.
+  - Covered biter settlements.
+  - Active charging stalls.
+  - Active Sales Offices.
+  - Reservations generated per interval.
+- V1 scripted growth is implemented: served stalls accumulate adoption and add
+  bounded customer spawners plus hostile worms when spare capacity exists.
+- Test against saves with biters disabled, peaceful mode, normal enemies, and
+  sandbox-created enemy spawners.
+
+### Phase 3: SpaceX-Style Launch Flywheel
+
+- Add a clearer small launch -> reusable booster -> reusable launch progression.
+- Consider launch-site or landing-pad entities if the vanilla rocket silo loop
+  is not expressive enough.
+- Add a "reuse" mechanic that makes reusable launch services much more
+  profitable but requires booster production and/or recovery infrastructure.
+- Consider launch cadence as a market mechanic: more launches unlock stronger
+  satellite and orbital compute throughput.
+
+### Phase 4: Satellite And Ground Network
+
+- Make satellite buses and ground station networks do more than act as recipe
+  ingredients.
+- Possible mechanics:
+  - Ground stations increase orbital compute efficiency.
+  - Satellite constellations unlock higher orbital AI token recipes.
+  - Space-platform compute needs satellite buses as ongoing maintenance or
+    scaling input.
+
+### Phase 5: Orbital AI Economy
+
+- Make land AI useful but insufficient.
+- Make space AI dramatically more scalable but logistically demanding.
+- Require large return flows of AI tokens from platforms to Nauvis or another
+  core planet.
+- Tune Planetary Grid Segments so they feel like a late-game megabase
+  throughput challenge.
+
+### Phase 6: Kardashev Type I Victory
+
+- Make Type I victory require:
+  - High sustained AI token throughput.
+  - High sustained Planetary Grid Segment throughput.
+  - Planetary energy infrastructure.
+  - Space infrastructure.
+  - A large Dollar sink.
+  - A huge local power draw through the Planetary Energy Grid Controller.
+- Keep the Planetary Energy Grid Controller as the explicit victory structure.
+- Kardashev Type I research should unlock the final charge recipe.
+- Completing the final Planetary Grid Charge in the controller should trigger
+  Factorio's victory state while allowing the player to continue.
+
+### Phase 7: Events, Competition, Or Enemies
+
+- Custom hostile enemies are not in the MVP.
+- The preferred direction is now biter customers, not real-world political
+  enemies.
+- FactoryX changes local enemy behavior around Sales Offices: covered biters are
+  converted into the peaceful `factoryx-customers` force, while normal biters
+  remain hostile elsewhere.
+- Possible future mechanics:
+  - Sales Office-covered peaceful biter customer settlements create EV demand.
+  - EV Charging Stations near settlements increase adoption.
+  - Recent EV sales plus charging coverage allow scripted settlement growth.
+  - Later, some fictional competitor or market event could create timed
+    pressure, but the core joke should stay "sell EVs to biters."
+
+## Open Design Questions
+- Should Dollars be allowed as lab science forever, or should late capital be
+  spent mostly through recipes and structures?
+- Should the Sales Office have recipe-specific sale rates that are dynamically
+  affected by charging coverage, instead of consuming EV Reservations?
+- Should orbital AI tokens be physically dropped by cargo pods, or is platform
+  logistics enough?
+- Should Planetary Grid Segments require real electric-network measurements,
+  or is the recipe-based controller enough for MVP?
+- Should the final controller charge remain a recipe-driven 1GW power sink, or
+  should a later version measure the actual electric network and require
+  sustained planetary generation?
+- Should biter settlement demand use existing EV Reservations, or should a
+  later version add a more explicit biter-market item?
+- Should charger-driven biter growth directly create spawners, or use
+  `build_enemy_base` so actual biter settlers walk to the new location?
+
+## Current Validation Expectations
+
+For meaningful mod changes, run:
+
+```sh
+python3 -m unittest tests.test_factoryx_mod
+scripts/validate-factoryx-mod.sh
+```
+
+Validate prototypes with the local Factorio binary in an isolated temp config
+and mod directory. The current validated binary is Factorio 2.1.9 with Space
+Age enabled:
+
+```sh
+"/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio" \
+  --config "$tmp/config.ini" \
+  --mod-directory "$tmp/mods" \
+  --dump-data
+```
+
+The isolated `mod-list.json` should enable only `base`, `space-age`, and
+`factoryx` unless a temporary smoke-test helper mod is being used.
+
+Current validation state, 2026-07-10:
+
+- `python3 -m unittest tests.test_factoryx_mod` passes: 45 tests.
+- `scripts/validate-factoryx-mod.sh` passes.
+- `scripts/validate-factoryx-gui.sh <save.zip>` passes against a disposable copy
+  of `FactoryX-Start5.zip`, creating the progress, Sales Office, and Gigafactory
+  panels and verifying that every researched recipe plus the runtime-unlocked
+  Prototype Roadster recipe is available without modifying the source save.
+- The same GUI check passes against the latest playtest autosave and verifies
+  that 40 lifetime Dollars in Factorio's production statistics render as `40`
+  in the FactoryX Progress panel.
+- The engine smoke test verifies a mixed V1/V2 network: 12 total stalls, one
+  sold EV demand, active 150 kW V2 sinks, no duplicated V1 allocation, and fleet-capped
+  reservation generation. After one minute, the active charger contains one
+  physical EV Reservation. Its pre-production snapshot verifies zero active
+  stalls and zero reservations.
+- Isolated `--dump-data` with Factorio 2.1.9 + Space Age loads
+  `factoryx 0.1.0` successfully.
+- The engine prototype check verifies that Prototype Roadster remains an
+  `advanced-crafting` recipe and that Assembling Machine 2 supports that
+  category.
+- The engine prototype check verifies vanilla crafting-tab placement, confirms
+  every authored FactoryX recipe has a technology or milestone owner, and
+  confirms every recipe category has at least one compatible machine.
+- The engine smoke test completes a real three-Robotaxi, 3-second sale with no
+  EV Reservation, verifies 1 Dollar in the Sales Office output, and verifies
+  that the sale enables Small Orbital Launch.
+- The engine smoke test places a drivable Prototype Roadster beside a powered
+  V2 charger, verifies two embedded battery equipment items, measures 8.3 MJ
+  stored during the test window, and verifies battery energy is transformed
+  into the hidden electric-drive fuel used by the car prototype.
+- Unpowered charger alerts use `LuaPlayer.add_custom_alert`; Factorio 2.1 has no
+  `defines.alert_type.no_power`. The copied-save GUI gate verifies the supported
+  custom-alert signature and the shared charger-build handler.
+- A disposable benchmark smoke save with a temporary helper mod ran 3780 updates
+  and verified:
+  - The Sales Office technology enabled EV Charging Stations and `Sell hopes
+    and dreams`.
+  - A nearby biter settlement was converted to the `factoryx-customers` force,
+    while a far biter settlement remained `enemy`.
+  - A covered biter customer charging site enabled Prototype Roadsters.
+  - One active charging stall generated one EV Reservation in the charger's
+    passive-provider output after one minute.
+  - A tracked Planetary Energy Grid Controller consumed
+    `x-planetary-grid-charge`.
+  - `game.finished` was true after the charge was consumed.
+
+For runtime script changes, benchmark a disposable save long enough for the
+one-minute EV Reservation printer cycle:
+
+```sh
+"/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio" \
+  --config "$tmp/config.ini" \
+  --mod-directory "$tmp/mods" \
+  --benchmark "$tmp/saves/x-smoke.zip" \
+  --benchmark-ticks 3780 \
+  --benchmark-runs 1
+```
