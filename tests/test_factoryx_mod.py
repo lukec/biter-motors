@@ -281,9 +281,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("icon_size = 256", progress_shortcut)
         with Image.open(group_icon) as image:
             self.assertEqual(image.size, (256, 256))
-            alpha = image.convert("RGBA").getchannel("A")
-            self.assertEqual(alpha.getpixel((0, 0)), 0)
-            self.assertGreater(alpha.histogram()[0], image.width * image.height * 0.1)
+            self.assertEqual(image.mode, "RGB")
+        with Image.open(MOD / "thumbnail.png") as image:
+            self.assertEqual(image.size, (144, 144))
+            self.assertEqual(image.mode, "RGB")
         for slug in ["robotaxi-service-center", "planetary-grid-controller"]:
             entity_path = MOD / f"graphics/entity/{slug}/{slug}.png"
             self.assertTrue(entity_path.exists())

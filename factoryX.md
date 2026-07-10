@@ -1367,6 +1367,11 @@ The playable terrestrial set no longer has missing or confusing placeholder
 art. A final-quality pass should focus on consistency and motion rather than
 adding more one-off concepts:
 
+- `BiterMotors.png` now supplies the square FactoryX brand artwork: a 256x256
+  in-game Progress shortcut icon and a 144x144 packaged-mod thumbnail. The
+  source artwork remains in Downloads and is not duplicated at full resolution
+  inside the mod.
+
 1. Replace the vanilla car-body reuse with five directional vehicle sheets for
    Roadster, Premium EV, Mass-market EV, Cybertruck, and Robotaxi. This is the
    largest remaining first-viewport quality gap.
