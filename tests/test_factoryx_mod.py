@@ -77,13 +77,19 @@ class FactoryXModTest(unittest.TestCase):
             "x-supercharging-power-electronics",
             "x-long-range-battery",
             "x-premium-audio-systems",
-            "x-customer-referral-program",
         ]:
             start = data.index(f'    "{technology}"')
             block = data[start:start + 750]
             self.assertIn('max_level = "infinite"', data[data.index("local function infinite_tech"):data.index("local function infinite_tech") + 500])
             self.assertIn('type = "nothing"', block)
             self.assertNotIn('"military-science-pack"', block)
+
+        referral_start = data.index('    "x-customer-referral-program"')
+        referral_block = data[referral_start:referral_start + 750]
+        self.assertIn('max_level = "infinite"', data[data.index("local function infinite_tech"):data.index("local function infinite_tech") + 500])
+        self.assertIn('type = "nothing"', referral_block)
+        self.assertIn('{"military-science-pack", 1}', referral_block)
+        self.assertIn('{"x-dollar", 1}', referral_block)
 
         self.assertIn("x-premium-audio-systems=Biters love Nickelback.", locale)
         self.assertIn("function station_stall_power_watts", control)

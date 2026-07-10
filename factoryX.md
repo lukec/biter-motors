@@ -215,20 +215,23 @@ Capital currently goes into:
 
 FactoryX research follows Factorio's cumulative-science convention. Major
 industrial milestones retain earlier science packs instead of replacing them
-with only the newest pack. Military science is intentionally excluded because
-the tree is commercial, industrial, energy, and compute focused.
+with only the newest pack. Military science is generally excluded because the
+tree is commercial, industrial, energy, and compute focused. Customer Referral
+Program is the deliberate satirical exception.
 
 #### Infinite Continuous Improvement
 
 Four repeatable technologies provide permanent late-game uses for Dollars and
-science. Their costs double each level and none use military science.
+science. Their costs double each level. Customer Referral Program uniquely
+requires military science; the joke is intentional and does not imply combat
+functionality.
 
 | Technology | Starts after | Effect per level |
 | --- | --- | --- |
 | Supercharging Power Electronics | EV Charging Network | Player EVs charge 10% faster; an occupied charging stall can draw 10% more power. |
 | Long-range Battery | Capital Scaling | Customer capacity rises 5% per stall and drivable EV energy use falls 8%, capped at a 75% reduction. |
 | Premium Audio Systems | EV Production Line | Consumer EV sales run 5% faster and Robotaxi trips return 5% more profit. Biters love Nickelback. |
-| Customer Referral Program | EV Charging Network | Powered charging-driven settlement growth runs 10% faster. |
+| Customer Referral Program | EV Charging Network | Powered charging-driven settlement growth runs 10% faster; uniquely consumes military science. |
 
 Research levels and their effects are visible in the FactoryX Progress panel.
 
