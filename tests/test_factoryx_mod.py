@@ -226,6 +226,11 @@ class FactoryXModTest(unittest.TestCase):
             "satellite-bus",
             "ground-station-network",
             "datacenter-rack",
+            "gigacast",
+            "planetary-grid-segment",
+            "planetary-grid-charge",
+            "planetary-grid-controller",
+            "robotaxi-service-center",
         ]:
             self.assertIn(f'generated_icon("{slug}")', data)
             icon_path = MOD / f"graphics/icons/{slug}.png"
@@ -249,6 +254,13 @@ class FactoryXModTest(unittest.TestCase):
             alpha = image.convert("RGBA").getchannel("A")
             self.assertEqual(alpha.getpixel((0, 0)), 0)
             self.assertGreater(alpha.histogram()[0], image.width * image.height * 0.1)
+        for slug in ["robotaxi-service-center", "planetary-grid-controller"]:
+            entity_path = MOD / f"graphics/entity/{slug}/{slug}.png"
+            self.assertTrue(entity_path.exists())
+            with Image.open(entity_path) as image:
+                self.assertEqual(image.size, (512, 512))
+                self.assertEqual(image.mode, "RGBA")
+                self.assertEqual(image.getpixel((0, 0))[3], 0)
         self.assertIn('generated_entity_picture("ev-charging-station", nil, 0.14)', data)
         self.assertIn('generated_entity_picture("ev-charging-station-v2", nil, 0.26)', data)
         self.assertIn('generated_entity_picture("ev-charging-station-v3", nil, 0.35)', data)

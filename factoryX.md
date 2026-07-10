@@ -1288,10 +1288,10 @@ FactoryX products live beside the vanilla systems they extend:
 | `x-ev-charging-station-v4` | V4 Supercharger | Dedicated aligned 6x6 solar-canopy sprite | No | Fifteen stalls are visible and five are represented beneath the canopy, matching the 20-stall logical capacity. |
 | `x-gigafactory-building` | Gigafactory | Dedicated aligned 9x9 sprite and icon | Partial | Footprint-readable static art is wired; a future animation pass can add production motion without changing its silhouette. |
 | `x-gigafactory-v2` | Gigafactory V2 | Dedicated aligned Gigacast-focused 9x9 sprite | Partial | Distinct dual-press factory art is wired; the existing productivity-badged icon remains useful until a final icon pass. |
-| `x-terrestrial-datacenter` | Terrestrial Datacenter | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs a final server hall or datacenter block sprite pass. |
-| `x-robotaxi-service-center` | Robotaxi Service Center | Temporary layered Roboport/Robotaxi icon and scaled Datacenter playtest sprite | Yes | Implemented 8x8 fleet depot with 40 Robotaxi slots, one Dollar output slot, and a hidden 10 MW operating machine. Needs dedicated depot and charging-canopy artwork. |
+| `x-terrestrial-datacenter` | Terrestrial Datacenter | Dedicated transparent server-block concept art | Partial | Readable 6x6 playtest art is wired; final polish should align it more tightly to the Factorio camera and add restrained operating animation. |
+| `x-robotaxi-service-center` | Robotaxi Service Center | Dedicated aligned 8x8 fleet-depot sprite and icon | No | Solar canopy, fleet rows, transformers, and gold vehicle accents fill the footprint. |
 | `x-orbital-compute-array` | Orbital Compute Array | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs final space-platform-compatible compute array art. |
-| `x-planetary-grid-controller` | Planetary Energy Grid Controller | Assembler/substation-style placeholder | Yes | Needs a planet-scale power-grid control visual with energy, storage, and command infrastructure. |
+| `x-planetary-grid-controller` | Planetary Energy Grid Controller | Dedicated aligned control-core sprite and icon | No | High-voltage buswork, transformers, and a contained energy core distinguish the victory structure. |
 
 ### Future Candidate Placeable Entities
 
@@ -1314,10 +1314,10 @@ beyond the MVP tech-and-recipe loop.
 | `x-dollar` | Dollar | Maybe | Current coin icon works for MVP. Could use a branded capital token later. |
 | `x-ev-reservation` | EV Reservation | No | Custom simplified approved-paperwork icon is wired and verified at 64 px. |
 | `x-gigafactory-module` | Gigafactory Module | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
-| `x-gigacast` | Gigacast | Yes | Currently uses a layered Electric Furnace and Low Density Structure placeholder icon. Needs large casting-machine artwork. |
+| `x-gigacast` | Gigacast | No | Dedicated one-piece vehicle casting and press-die icon is wired. |
 | `x-ai-token` | AI token | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
-| `x-planetary-grid-segment` | Planetary grid segment | Yes | Victory-critical item. Needs a distinctive grid/energy segment icon. |
-| `x-planetary-grid-charge` | Planetary grid charge | Yes | New final-victory output. Needs a high-energy grid activation icon. |
+| `x-planetary-grid-segment` | Planetary grid segment | No | Dedicated physical high-voltage grid-module icon is wired. |
+| `x-planetary-grid-charge` | Planetary grid charge | No | Dedicated charged activation-cartridge icon is wired. |
 | `x-battery-pack` | Battery pack | Maybe | Vanilla battery/accumulator layering is acceptable but could be custom. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
@@ -1360,6 +1360,34 @@ Highest-priority custom tech icons:
 3. Orbital Compute.
 4. EV Charging Network.
 5. Gigafactory.
+
+### Artwork Remaining For A Final-Quality Mod
+
+The playable terrestrial set no longer has missing or confusing placeholder
+art. A final-quality pass should focus on consistency and motion rather than
+adding more one-off concepts:
+
+1. Replace the vanilla car-body reuse with five directional vehicle sheets for
+   Roadster, Premium EV, Mass-market EV, Cybertruck, and Robotaxi. This is the
+   largest remaining first-viewport quality gap.
+2. Re-render Sales Office and Terrestrial Datacenter to the same strict
+   footprint-aligned Factorio camera used by chargers, Gigafactories, the
+   Service Center, and Grid Controller.
+3. Add restrained working animation: charger status lights, Gigafactory press
+   motion, Datacenter cooling fans, Robotaxi dispatch lights, and Grid
+   Controller charge stages. Preserve stable silhouettes and footprints.
+4. Normalize every icon at actual 64 px and belt scale: consistent key light,
+   edge contrast, padding, and saturation. The current generated EV, AI,
+   Gigafactory Module, and terrestrial component icons are usable but not yet a
+   unified set.
+5. Create dedicated technology illustrations for Kardashev Type I, Planetary
+   Energy Grid, Terrestrial AI, EV Charging Network, Autonomous Logistics, and
+   Gigafactory instead of reusing vanilla technology art.
+6. Add Factorio-style shadows, ambient occlusion, damage states, remnants, and
+   optional high-resolution variants to the major custom structures.
+7. Finish the later space-art pass separately: launch products, launch site,
+   orbital compute, satellites, and ground infrastructure should share one
+   visual language distinct from the terrestrial Tesla-like industry.
 
 ## Future Plans
 

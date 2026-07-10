@@ -425,24 +425,11 @@ end
 local dollar_icon = icon64("__base__/graphics/icons/coin.png", {r = 1.0, g = 0.86, b = 0.25, a = 1.0})
 local ev_reservation_icon = generated_icon("ev-reservation")
 local ai_token_icon = generated_icon("ai-token")
-local planetary_grid_segment_icon = layered_icon64(
-  "__base__/graphics/icons/solar-panel.png",
-  "__base__/graphics/icons/accumulator.png",
-  {r = 1.0, g = 0.92, b = 0.45, a = 1.0},
-  {r = 0.45, g = 0.85, b = 1.0, a = 1.0}
-)
-local planetary_grid_charge_icon = layered_icon64(
-  "__base__/graphics/icons/signal/signal-lightning.png",
-  "__base__/graphics/icons/solar-panel.png",
-  {r = 1.0, g = 0.9, b = 0.25, a = 1.0},
-  {r = 0.45, g = 0.85, b = 1.0, a = 1.0}
-)
+local planetary_grid_segment_icon = generated_icon("planetary-grid-segment")
+local planetary_grid_charge_icon = generated_icon("planetary-grid-charge")
 local gigafactory_module_icon = generated_icon("gigafactory-module")
 local gigafactory_icon = generated_icon("gigafactory")
-local gigacast_icon = layered_icon64(
-  "__base__/graphics/icons/electric-furnace.png",
-  "__base__/graphics/icons/low-density-structure.png"
-)
+local gigacast_icon = generated_icon("gigacast")
 local gigafactory_v2_icon = {
   {
     icon = "__factoryx__/graphics/icons/gigafactory.png",
@@ -470,24 +457,14 @@ local sales_office_icon = {
 }
 local datacenter_icon = generated_icon("terrestrial-datacenter")
 local orbital_compute_icon = generated_icon("orbital-compute-array")
-local planetary_grid_controller_icon = layered_icon64(
-  "__base__/graphics/icons/substation.png",
-  "__base__/graphics/icons/solar-panel.png",
-  {r = 0.9, g = 0.95, b = 1.0, a = 1.0},
-  {r = 1.0, g = 0.85, b = 0.25, a = 1.0}
-)
+local planetary_grid_controller_icon = generated_icon("planetary-grid-controller")
 local high_density_solar_array_icon = layered_icon64(
   "__base__/graphics/icons/solar-panel.png",
   "__base__/graphics/icons/processing-unit.png",
   {r = 0.65, g = 0.9, b = 1.0, a = 1.0}
 )
 local megapack_icon = generated_icon("megapack")
-local robotaxi_service_center_icon = layered_icon64(
-  "__base__/graphics/icons/roboport.png",
-  "__factoryx__/graphics/icons/robotaxi-fleet.png",
-  {r = 0.45, g = 0.85, b = 1.0, a = 1.0},
-  {r = 1.0, g = 0.72, b = 0.12, a = 1.0}
-)
+local robotaxi_service_center_icon = generated_icon("robotaxi-service-center")
 local cybertruck_icon = icon64(
   "__base__/graphics/icons/car.png",
   {r = 0.72, g = 0.76, b = 0.80, a = 1.0}
@@ -792,7 +769,7 @@ robotaxi_service_center.minable = {mining_time = 1, result = "x-robotaxi-service
 robotaxi_service_center.inventory_size = 41
 robotaxi_service_center.collision_box = {{-3.9, -3.9}, {3.9, 3.9}}
 robotaxi_service_center.selection_box = {{-4, -4}, {4, 4}}
-robotaxi_service_center.picture = generated_entity_picture("terrestrial-datacenter", nil, 0.48)
+robotaxi_service_center.picture = generated_entity_picture("robotaxi-service-center", nil, 0.48)
 robotaxi_service_center.radius_visualisation_specification = customer_radius_visualisation(256)
 
 local robotaxi_service_power = copied_assembler(
@@ -842,6 +819,7 @@ local planetary_grid_controller = copied_assembler(
   1
 )
 planetary_grid_controller.energy_source.emissions_per_minute = nil
+planetary_grid_controller.graphics_set = generated_entity_animation("planetary-grid-controller", 0.19)
 
 local electric_vehicles = {
   copied_electric_vehicle(
