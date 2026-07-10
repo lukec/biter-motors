@@ -1726,6 +1726,23 @@ AI-datacenter opposition dynamic:
 
 ## Current Validation Expectations
 
+## Infinite Solar Scaling
+
+- `Solar Cell Productivity` is available after Energy Products. Every level
+  adds 10% native recipe productivity to conventional Solar Panels.
+- `High-density Solar Productivity` follows it. Every level adds 10% native
+  recipe productivity to High-density Solar Arrays, compounding the upstream
+  panel savings without increasing the array's 300 kW peak output.
+- Both consume red, green, blue, purple, and yellow science plus Dollars. Costs
+  rise by 1.5x per level, starting at 500 and 750 cycles respectively.
+- Factorio caps recipe productivity at 300%. These upgrades make multi-gigawatt
+  terrestrial fields cheaper to mass-produce but do not make one small field
+  power a 100 GW Hyperscaler.
+- Future generation-density work should use finite higher-output solar hardware
+  tiers. Do not attach scripted hidden generators to every panel; that scales
+  runtime work with entity count and would make large solar fields expensive to
+  simulate.
+
 ## Drivable EV Roles
 
 The five EVs deliberately exaggerate different real-world product roles. Motor
