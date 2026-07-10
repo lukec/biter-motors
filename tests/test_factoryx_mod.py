@@ -112,8 +112,11 @@ class FactoryXModTest(unittest.TestCase):
             block = data[start:start + 700]
             self.assertIn(f'}}, {seconds}', block, recipe_name)
         cybertruck = data[data.index('recipe("x-cybertruck"'):data.index('recipe("x-high-density-solar-array"')]
-        for ingredient in ["x-mass-market-ev", "low-density-structure", "x-battery-pack", "processing-unit"]:
-            self.assertIn(ingredient, cybertruck)
+        self.assertIn('name = "x-mass-market-ev", amount = 2', cybertruck)
+        self.assertIn('name = "steel-plate", amount = 20', cybertruck)
+        self.assertIn('name = "x-battery-pack", amount = 4', cybertruck)
+        self.assertNotIn("low-density-structure", cybertruck)
+        self.assertNotIn("processing-unit", cybertruck)
         cybertruck_sale = data[data.index('recipe("x-sell-cybertruck"'):data.index('recipe("x-sell-megapack"')]
         self.assertIn('name = "x-dollar", amount = 2', cybertruck_sale)
         self.assertIn('name = "x-ev-reservation", amount = 1', cybertruck_sale)

@@ -958,10 +958,9 @@ data:extend({
   ),
   recipe("x-cybertruck", {"x-mass-vehicle-assembly"}, "transport", "x-d[cybertruck]",
     {
-      {type = "item", name = "x-mass-market-ev", amount = 1},
-      {type = "item", name = "low-density-structure", amount = 20},
-      {type = "item", name = "x-battery-pack", amount = 4},
-      {type = "item", name = "processing-unit", amount = 10}
+      {type = "item", name = "x-mass-market-ev", amount = 2},
+      {type = "item", name = "steel-plate", amount = 20},
+      {type = "item", name = "x-battery-pack", amount = 4}
     },
     {{type = "item", name = "x-cybertruck", amount = 1}}, 15
   ),

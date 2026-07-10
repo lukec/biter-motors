@@ -270,8 +270,7 @@ Current simplified terrestrial recipes:
 - Prototype Roadster: `Car + Batteries + Advanced Circuits`.
 - Premium EV: `Car + Battery Packs + Electric Drivetrains + Advanced Circuits`.
 - Mass-Market EV: `Car + Battery Packs + Electric Drivetrain`.
-- Cybertruck: `Mass-Market EV + Low Density Structures + Battery Packs +
-  Processing Units`.
+- Cybertruck: `2 Mass-Market EVs + 20 Steel Plates + 4 Battery Packs`.
 - High-density Solar Array: `Solar Panels + Processing Units + Low Density Structures + Dollars`.
 - Megapack: `Battery Packs + Accumulators + Substation`.
 - Autonomy Computer: `Processing Units + Speed Modules`.
