@@ -1551,6 +1551,23 @@ income:
   and slot 41 to Dollars. A colocated invisible operating machine runs the
   `Operate Robotaxis` recipe and provides the real 10 MW grid load.
 
+Robotaxi Service Center hardening:
+
+- Mobile customers inside overlapping service radii are assigned to exactly one
+  nearest stocked center. They cannot generate duplicate revenue at multiple
+  centers, while excess demand remains visible as `served / covered` in each
+  inspector.
+- A full Dollar output pauses trip revenue and vehicle attrition together.
+  Clearing the output resumes service; hidden fractional revenue cannot grow
+  into a large deferred payout while the center is blocked.
+- The hidden 10 MW operating machine is adopted by position after reload or
+  state repair. Duplicate colocated helpers are removed instead of stacking
+  invisible power demand.
+- A center with no fleet does not claim customers from another stocked center.
+  Allocation is deterministic by distance and then entity unit number.
+- Runtime processing remains once per second. Customer units are scanned once
+  per surface for the whole RSC network rather than once per center.
+
 ### Phase 2.8: Terrestrial AI Hyperscaler And AI Haters
 
 Future terrestrial escalation before the launch/orbital-compute buildout:

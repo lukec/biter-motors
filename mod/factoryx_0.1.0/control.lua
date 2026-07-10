@@ -2487,6 +2487,25 @@ function ensure_robotaxi_service_power(center)
   local powers = robotaxi_service_power_entities()
   local power = powers[center.unit_number]
   if power and power.valid then return power end
+  local existing = center.surface.find_entities_filtered{
+    name = ROBOTAXI_SERVICE_POWER_NAME,
+    position = center.position,
+    radius = 0.25,
+    force = center.force
+  }
+  for _, candidate in pairs(existing) do
+    if candidate.valid then
+      if not power then
+        power = candidate
+      else
+        candidate.destroy()
+      end
+    end
+  end
+  if power then
+    powers[center.unit_number] = power
+    return power
+  end
   power = center.surface.create_entity{
     name = ROBOTAXI_SERVICE_POWER_NAME,
     position = center.position,
@@ -2513,17 +2532,41 @@ function robotaxi_service_inventories(center)
   return inventory, inventory
 end
 
-function robotaxi_customers_in_range(center)
+function robotaxi_customer_allocations()
+  local result = {}
   local customer_force = game.forces[CUSTOMER_FORCE_NAME]
-  if not customer_force then return 0 end
-  return #center.surface.find_entities_filtered{
-    type = "unit",
-    force = customer_force,
-    area = {
-      {center.position.x - ROBOTAXI_SERVICE_RADIUS, center.position.y - ROBOTAXI_SERVICE_RADIUS},
-      {center.position.x + ROBOTAXI_SERVICE_RADIUS, center.position.y + ROBOTAXI_SERVICE_RADIUS}
-    }
-  }
+  if not customer_force then return result end
+  for _, surface in pairs(game.surfaces) do
+    local centers = surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME}
+    table.sort(centers, function(a, b) return a.unit_number < b.unit_number end)
+    local available = {}
+    for _, center in pairs(centers) do
+      local inventory = robotaxi_service_inventories(center)
+      local stored = inventory and math.min(200, inventory.get_item_count(ROBOTAXI_ITEM_NAME)) or 0
+      available[center.unit_number] = stored > 0
+      result[center.unit_number] = 0
+    end
+    for _, customer in pairs(surface.find_entities_filtered{type = "unit", force = customer_force}) do
+      local selected
+      local selected_distance
+      for _, center in pairs(centers) do
+        if available[center.unit_number] then
+          local dx = customer.position.x - center.position.x
+          local dy = customer.position.y - center.position.y
+          local distance = dx * dx + dy * dy
+          if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
+            and (not selected_distance or distance < selected_distance) then
+            selected = center
+            selected_distance = distance
+          end
+        end
+      end
+      if selected then
+        result[selected.unit_number] = result[selected.unit_number] + 1
+      end
+    end
+  end
+  return result
 end
 
 function robotaxi_service_power_factor(center)
@@ -2534,11 +2577,14 @@ function robotaxi_service_power_factor(center)
   return power.energy and power.energy > 0 and 1 or 0
 end
 
-function robotaxi_service_snapshot(center)
+function robotaxi_service_snapshot(center, allocated_customers)
   local input, output = robotaxi_service_inventories(center)
   local stored = input and input.get_item_count(ROBOTAXI_ITEM_NAME) or 0
   local fleet = math.min(200, stored)
-  local customers = robotaxi_customers_in_range(center)
+  local customers = allocated_customers
+  if customers == nil then
+    customers = robotaxi_customer_allocations()[center.unit_number] or 0
+  end
   local allocated = math.min(fleet, math.ceil(customers / ROBOTAXI_CUSTOMERS_PER_VEHICLE))
   local served = math.min(customers, allocated * ROBOTAXI_CUSTOMERS_PER_VEHICLE)
   local power_factor = robotaxi_service_power_factor(center)
@@ -2553,6 +2599,7 @@ function robotaxi_service_snapshot(center)
     revenue_per_minute = allocated / ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR
       * power_factor * (1 + audio_level * 0.05),
     output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
+    output_blocked = not (output and output.can_insert{name = DOLLAR_NAME, count = 1}),
     revenue_progress = state.revenue or 0,
     attrition_progress = state.attrition or 0,
     lifetime_dollars = state.dollars or 0,
@@ -2562,16 +2609,22 @@ end
 
 function process_robotaxi_service_centers()
   local seen = {}
+  local active_power_units = {}
+  local customer_allocations = robotaxi_customer_allocations()
   for _, surface in pairs(game.surfaces) do
     for _, center in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME}) do
       if center.valid and center.unit_number then
         seen[center.unit_number] = true
+        local power = ensure_robotaxi_service_power(center)
+        if power and power.valid and power.unit_number then
+          active_power_units[power.unit_number] = true
+        end
         local input, output = robotaxi_service_inventories(center)
-        local snapshot = robotaxi_service_snapshot(center)
+        local snapshot = robotaxi_service_snapshot(center, customer_allocations[center.unit_number] or 0)
         local state = robotaxi_service_states()[center.unit_number]
           or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
         robotaxi_service_states()[center.unit_number] = state
-        if snapshot.allocated > 0 then
+        if snapshot.allocated > 0 and snapshot.power_factor > 0 and not snapshot.output_blocked then
           state.revenue = state.revenue + snapshot.revenue_per_minute / 60
           state.attrition = state.attrition
             + snapshot.allocated * snapshot.power_factor / (ROBOTAXI_ATTRITION_VEHICLE_HOURS * 3600)
@@ -2602,6 +2655,13 @@ function process_robotaxi_service_centers()
       local power = robotaxi_service_power_entities()[unit_number]
       if power and power.valid then power.destroy() end
       robotaxi_service_power_entities()[unit_number] = nil
+    end
+  end
+  for _, surface in pairs(game.surfaces) do
+    for _, power in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_POWER_NAME}) do
+      if power.valid and not active_power_units[power.unit_number] then
+        power.destroy()
+      end
     end
   end
 end
@@ -3778,6 +3838,8 @@ local function show_manufacturer_info_panel(player, entity)
       add_station_info_label(panel, "Blocked: no mobile biter customers are inside service coverage.")
     elseif snapshot.power_factor == 0 then
       add_station_info_label(panel, "Blocked: connect and supply the 10 MW fleet charger load.")
+    elseif snapshot.output_blocked then
+      add_station_info_label(panel, "Blocked: Dollar output is full. Remove Dollars; trips and fleet attrition are paused.")
     else
       add_station_info_label(panel, "Operating: keep the fleet stocked, power stable, and Dollar output clear.")
     end
