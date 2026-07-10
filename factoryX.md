@@ -1551,6 +1551,67 @@ income:
   and slot 41 to Dollars. A colocated invisible operating machine runs the
   `Operate Robotaxis` recipe and provides the real 10 MW grid load.
 
+### Phase 2.8: Terrestrial AI Hyperscaler And AI Haters
+
+Future terrestrial escalation before the launch/orbital-compute buildout:
+
+- Add a very large `Terrestrial AI Hyperscaler`, approximately a 12x12
+  footprint, drawing **100 MW continuously**. The player request said "100 GB
+  of power"; the roadmap interprets that as 100 MW because real hyperscale data
+  centers commonly reach 100 MW or more, while 100 GW would exceed the current
+  1 GW planetary-grid victory load by two orders of magnitude.
+- Treat the requested **$10 million** construction investment as **1,000 Dollar
+  items**, following the existing rule that one in-game Dollar represents about
+  US$10,000 of investable capital.
+- Candidate four-input construction recipe:
+  `1 Terrestrial Datacenter + 20 Datacenter Racks + 20 Substations + 1,000 Dollars`.
+  The existing Datacenter carries the concrete, factory module, and lower-level
+  electrical infrastructure into the recipe.
+- Give it a dedicated hyperscale recipe rather than silently speeding up the
+  ordinary Datacenter. Initial balance target: `200 Dollars -> 200 AI Tokens`
+  every 30 seconds at 100 MW. This is ten ordinary Datacenters of throughput
+  and capital burn in one footprint, with worse energy efficiency, so orbital
+  compute can still become the superior scaling path.
+- Gate it behind all six Terrestrial AI Efficiency levels or a dedicated
+  `Hyperscale Terrestrial AI` technology after Autonomous Logistics. It should
+  be optional brute-force terrestrial scaling, not required for space.
+
+AI-datacenter opposition dynamic:
+
+- Individual mobile biter customers can become `AI Data Center Haters` when
+  they wander into an opposition radius around either a Terrestrial Datacenter
+  or Hyperscaler. The Hyperscaler has a much larger radius and higher conversion
+  chance.
+- Do not change an entire settlement or the global customer force. Convert only
+  the selected unit to a dedicated hostile `factoryx-ai-haters` force, replace
+  its customer/vehicle marker with a small red datacenter-protest marker, and
+  command it to attack the specific Datacenter that triggered it. Player
+  defenses can then target it normally.
+- Hatred is permanent for that unit. It is distinct from temporary charging
+  dissatisfaction, which still has a short memory and can recover when charging
+  service returns.
+- Give newly placed centers a five-minute commissioning grace period. After
+  that, perform a bounded check every 10 seconds, sample at most 32 eligible
+  nearby mobile customers per center, and make one probability roll per sampled
+  unit. Never scan or command every nearby biter every tick.
+- Starting tuning target per sampled visit: 0.25% around an ordinary 8 MW
+  Datacenter and 1% around a 100 MW Hyperscaler. Add a per-unit cooldown of five
+  minutes so a biter cannot roll repeatedly while lingering at the boundary.
+- Pollution and insufficient charging could later increase the chance, but V1
+  should use a simple fixed probability so players can understand and balance
+  the risk.
+- Haters should path to and attack only the triggering Datacenter. If the target
+  is destroyed, invalid, or unreachable after bounded retries, let them attack
+  nearby player infrastructure using ordinary enemy behavior rather than
+  running expensive repeated path requests.
+- The design creates a meaningful siting decision: Datacenters near dense
+  customer markets are easy to supply but generate opposition; remote power and
+  compute campuses require long transmission and logistics but encounter fewer
+  potential attackers.
+- Before implementation, benchmark 1, 4, and 10 centers against the 12,000-unit
+  customer save, measuring update time, path requests, active hater count, and
+  turret combat behavior. Cap simultaneous scripted attackers if needed.
+
 ### Phase 3: SpaceX-Style Launch Flywheel
 
 - Add a clearer small launch -> reusable booster -> reusable launch progression.
@@ -1651,7 +1712,7 @@ The isolated `mod-list.json` should enable only `base`, `space-age`, and
 
 Current validation state, 2026-07-10:
 
-- `python3 -m unittest tests.test_factoryx_mod` passes: 46 tests.
+- `python3 -m unittest tests.test_factoryx_mod` passes: 48 tests.
 - `scripts/validate-factoryx-mod.sh` passes.
 - `scripts/validate-factoryx-gui.sh <save.zip>` passes against a disposable copy
   of `FactoryX-Start5.zip`, creating the progress, Sales Office, and Gigafactory

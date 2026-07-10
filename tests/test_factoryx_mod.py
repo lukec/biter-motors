@@ -1155,6 +1155,15 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("legacy_robotaxi_sale.enabled = false", control)
         self.assertIn("x-robotaxi-service-center=Robotaxi Service Center", locale)
 
+    def test_hyperscaler_and_ai_hater_roadmap_is_concrete(self):
+        roadmap = (ROOT / "factoryX.md").read_text()
+        self.assertIn("Phase 2.8: Terrestrial AI Hyperscaler And AI Haters", roadmap)
+        self.assertIn("100 MW continuously", roadmap)
+        self.assertIn("1,000 Dollar", roadmap)
+        self.assertIn("factoryx-ai-haters", roadmap)
+        self.assertIn("sample at most 32 eligible", roadmap)
+        self.assertIn("12,000-unit", roadmap)
+
     def test_customer_reconciliation_is_not_per_second(self):
         control = (MOD / "control.lua").read_text()
         once_per_second = control[
