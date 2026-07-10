@@ -151,6 +151,10 @@ script.on_event(defines.events.on_tick, function()
   local progress_panel = player.gui.screen.factoryx_progress_panel
   local dollars_label = find_named(progress_panel, "factoryx_dollars_produced_value")
   local dollars_caption = dollars_label and dollars_label.caption
+  local solar_productivity_label = find_named(progress_panel, "factoryx_solar_productivity_level_value")
+  local megapack_productivity_label = find_named(progress_panel, "factoryx_megapack_productivity_level_value")
+  local solar_productivity_caption = solar_productivity_label and solar_productivity_label.caption
+  local megapack_productivity_caption = megapack_productivity_label and megapack_productivity_label.caption
   local gigafactory
   local datacenter
   local gigafactory_v2
@@ -263,6 +267,8 @@ script.on_event(defines.events.on_tick, function()
     progress_status = progress_status,
     progress_dollars = progress_status and progress_status.snapshot.dollars_produced,
     progress_dollars_caption = dollars_caption,
+    solar_productivity_caption = solar_productivity_caption,
+    megapack_productivity_caption = megapack_productivity_caption,
     market_status = market_status,
     progression_integrity_call_ok = integrity_ok,
     progression_integrity = integrity_result,
@@ -341,5 +347,9 @@ if checked.get("progress_dollars") != diagnostics_total:
     raise SystemExit(f"FactoryX progress snapshot Dollar count mismatch: {checked}")
 if checked.get("progress_dollars_caption") != str(diagnostics_total):
     raise SystemExit(f"FactoryX progress panel Dollar caption mismatch: {checked}")
+if checked.get("solar_productivity_caption") != "Level 0":
+    raise SystemExit(f"FactoryX progress panel solar productivity caption mismatch: {checked}")
+if checked.get("megapack_productivity_caption") != "Level 0":
+    raise SystemExit(f"FactoryX progress panel Megapack productivity caption mismatch: {checked}")
 print("FactoryX GUI smoke report OK:", json.dumps(checked, sort_keys=True))
 PY

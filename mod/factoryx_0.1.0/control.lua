@@ -196,6 +196,8 @@ SUPERCHARGING_TECH_NAME = "x-supercharging-power-electronics"
 LONG_RANGE_BATTERY_TECH_NAME = "x-long-range-battery"
 PREMIUM_AUDIO_TECH_NAME = "x-premium-audio-systems"
 CUSTOMER_REFERRAL_TECH_NAME = "x-customer-referral-program"
+SOLAR_PRODUCTIVITY_TECH_NAME = "x-high-density-solar-productivity"
+MEGAPACK_PRODUCTIVITY_TECH_NAME = "x-megapack-productivity"
 local BITER_SETTLEMENT_NAMES = {
   ["biter-spawner"] = true,
   ["spitter-spawner"] = true
@@ -306,7 +308,9 @@ function continuous_improvement_levels(force)
     supercharging = continuous_improvement_level(force, SUPERCHARGING_TECH_NAME),
     battery = continuous_improvement_level(force, LONG_RANGE_BATTERY_TECH_NAME),
     audio = continuous_improvement_level(force, PREMIUM_AUDIO_TECH_NAME),
-    referrals = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME)
+    referrals = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME),
+    solar_productivity = continuous_improvement_level(force, SOLAR_PRODUCTIVITY_TECH_NAME),
+    megapack_productivity = continuous_improvement_level(force, MEGAPACK_PRODUCTIVITY_TECH_NAME)
   }
 end
 
@@ -3402,6 +3406,8 @@ local function progress_snapshot(force)
     battery_level = improvements.battery,
     audio_level = improvements.audio,
     referral_level = improvements.referrals,
+    solar_productivity_level = improvements.solar_productivity,
+    megapack_productivity_level = improvements.megapack_productivity,
     victory = victory_forces()[force.name] == true
   }
 end
@@ -3552,19 +3558,26 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
-  add_progress_metric(metrics, "AI Tokens produced", tostring(snapshot.ai_tokens_produced))
-  add_progress_metric(metrics, "Terrestrial AI tracked", tostring(snapshot.terrestrial_ai_tokens_generated))
+  add_progress_metric(metrics, "AI Tokens in production statistics", tostring(snapshot.ai_tokens_produced))
+  add_progress_metric(
+    metrics,
+    "Terrestrial AI milestone progress",
+    snapshot.terrestrial_ai_next_threshold
+      and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
+      or string.format("%d; all milestones unlocked", snapshot.terrestrial_ai_tokens_generated)
+  )
   add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
   add_progress_metric(metrics, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
 
   content.add{type = "line"}
-  add_section_heading(content, "Infrastructure")
+  add_section_heading(content, "Terrestrial infrastructure")
   local infrastructure = content.add{type = "table", column_count = 2}
   infrastructure.style.horizontally_stretchable = true
   add_progress_metric(infrastructure, "Sales Offices", tostring(snapshot.sales_offices))
   add_progress_metric(infrastructure, "Gigafactories", string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2))
   add_progress_metric(infrastructure, "Energy Products", string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks))
   add_progress_metric(infrastructure, "Terrestrial Datacenters", tostring(snapshot.datacenters))
+  add_progress_metric(infrastructure, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
 
   content.add{type = "line"}
   add_section_heading(content, "Continuous improvement")
@@ -3574,6 +3587,18 @@ local function refresh_progress_panel(player)
   add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
   add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
   add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
+  add_progress_metric(
+    improvement_table,
+    "High-density solar productivity",
+    "Level " .. snapshot.solar_productivity_level,
+    "factoryx_solar_productivity_level_value"
+  )
+  add_progress_metric(
+    improvement_table,
+    "Megapack productivity",
+    "Level " .. snapshot.megapack_productivity_level,
+    "factoryx_megapack_productivity_level_value"
+  )
   add_progress_metric(
     improvement_table,
     "Terrestrial AI efficiency",

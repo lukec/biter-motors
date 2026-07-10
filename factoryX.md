@@ -1744,6 +1744,23 @@ AI-datacenter opposition dynamic:
   runtime work with entity count and would make large solar fields expensive to
   simulate.
 
+## Terrestrial Interface Cleanup
+
+- The FactoryX Progress panel uses explicit terrestrial labels rather than
+  mixing the terrestrial economy into generic infrastructure counters.
+- AI output distinguishes Factorio's item production statistic from the
+  FactoryX milestone tracker. The latter displays current progress toward the
+  next Terrestrial AI Efficiency unlock instead of a second unexplained total.
+- High-density Solar Productivity and Megapack Productivity levels are visible
+  beside the EV continuous-improvement tracks.
+- Robotaxi Service Centers are shown with the rest of terrestrial
+  infrastructure as well as in throughput, making an absent center easy to
+  distinguish from an idle or understocked one.
+- Existing contextual inspectors remain the primary troubleshooting surface:
+  Sales Offices, both Gigafactories, Terrestrial Datacenters, charging stations,
+  customer settlements, and Robotaxi Service Centers report their immediate
+  blocked or running state and the next concrete action.
+
 ## Drivable EV Roles
 
 The five EVs deliberately exaggerate different real-world product roles. Motor
