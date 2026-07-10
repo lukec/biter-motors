@@ -1555,26 +1555,60 @@ income:
 
 Future terrestrial escalation before the launch/orbital-compute buildout:
 
-- Add a very large `Terrestrial AI Hyperscaler`, approximately a 12x12
-  footprint, drawing **100 MW continuously**. The player request said "100 GB
-  of power"; the roadmap interprets that as 100 MW because real hyperscale data
-  centers commonly reach 100 MW or more, while 100 GW would exceed the current
-  1 GW planetary-grid victory load by two orders of magnitude.
-- Treat the requested **$10 million** construction investment as **1,000 Dollar
-  items**, following the existing rule that one in-game Dollar represents about
-  US$10,000 of investable capital.
-- Candidate four-input construction recipe:
-  `1 Terrestrial Datacenter + 20 Datacenter Racks + 20 Substations + 1,000 Dollars`.
-  The existing Datacenter carries the concrete, factory module, and lower-level
-  electrical infrastructure into the recipe.
-- Give it a dedicated hyperscale recipe rather than silently speeding up the
-  ordinary Datacenter. Initial balance target: `200 Dollars -> 200 AI Tokens`
-  every 30 seconds at 100 MW. This is ten ordinary Datacenters of throughput
-  and capital burn in one footprint, with worse energy efficiency, so orbital
-  compute can still become the superior scaling path.
+- Add a very large `Terrestrial AI Hyperscaler`, at least a 12x12 footprint,
+  drawing **100 GW continuously**. This is intentionally a speculative
+  cutting-edge-scale AI campus, not an average present-day hyperscale building.
+- Correct capital conversion: a roughly **US$100 billion** first campus costs
+  **10 million in-game Dollar items**, because one in-game Dollar represents
+  about US$10,000. The phrase "$10 million game dollars" means 10 million
+  physical Dollar items, not US$10 million represented by 1,000 items.
+- A direct assembler recipe cannot practically hold 10 million Dollars in one
+  ingredient slot at the current 100,000 stack size. Build it through a large
+  `Hyperscaler Construction Site` with a deep filtered capital inventory and a
+  visible construction contract. Dollars must arrive physically by train,
+  belt, or bots; do not collapse this cost into an abstract research counter.
+- The construction contract also consumes one Terrestrial Datacenter,
+  Datacenter Racks, and Substations. Exact hardware quantities can increase by
+  tier, but capital is the primary scaling pressure.
+- Give the Hyperscaler a dedicated operating recipe rather than silently
+  speeding up the ordinary Datacenter. Its token throughput should be enormous,
+  but its operating Dollar burn and 100 GW load should make repeated terrestrial
+  scaling progressively unattractive compared with orbital compute.
 - Gate it behind all six Terrestrial AI Efficiency levels or a dedicated
   `Hyperscale Terrestrial AI` technology after Autonomous Logistics. It should
   be optional brute-force terrestrial scaling, not required for space.
+
+Progressively worsening construction economics:
+
+- Track **lifetime completed Hyperscalers** per force. Do not use currently
+  placed count, because mining buildings must not lower future costs.
+- Author a sequence of construction-contract recipes that all produce the same
+  Hyperscaler entity. Runtime enables the next contract and disables the old
+  one as soon as lifetime production reaches `1, 2, 4, 8, 16, 32...`.
+- The active recipe must change on completed production, not placement, which
+  prevents players from stockpiling many cheap buildings before crossing a
+  threshold.
+- Initial capital curve for playtesting:
+
+  | Lifetime campuses before craft | Active contract | Dollars for next campus | Approximate real capital |
+  | ---: | --- | ---: | ---: |
+  | 0 | Hyperscaler I | 10,000,000 | US$100B |
+  | 1 | Hyperscaler II | 15,000,000 | US$150B |
+  | 2-3 | Hyperscaler III | 25,000,000 | US$250B |
+  | 4-7 | Hyperscaler IV | 40,000,000 | US$400B |
+  | 8-15 | Hyperscaler V | 65,000,000 | US$650B |
+  | 16-31 | Hyperscaler VI | 100,000,000 | US$1T |
+  | 32+ | Continue geometric tiers | roughly 1.6x per tier | intentionally prohibitive |
+
+- Show lifetime count, current contract, next doubling threshold, and next
+  capital cost in the construction-site inspector and FactoryX Progress panel.
+- This rising terrestrial marginal cost is the explicit economic pressure to
+  move AI-token growth into space. Orbital compute should have difficult launch
+  logistics but a flatter marginal-cost curve.
+- A 100 GW facility makes the current 1 GW final Controller charge internally
+  inconsistent. Before implementing the Hyperscaler, rebalance the late-game
+  power scale, likely moving the Controller into the terawatt range while still
+  requiring sustained local generation and storage.
 
 AI-datacenter opposition dynamic:
 
@@ -1595,7 +1629,7 @@ AI-datacenter opposition dynamic:
   nearby mobile customers per center, and make one probability roll per sampled
   unit. Never scan or command every nearby biter every tick.
 - Starting tuning target per sampled visit: 0.25% around an ordinary 8 MW
-  Datacenter and 1% around a 100 MW Hyperscaler. Add a per-unit cooldown of five
+  Datacenter and 1% around a 100 GW Hyperscaler. Add a per-unit cooldown of five
   minutes so a biter cannot roll repeatedly while lingering at the boundary.
 - Pollution and insufficient charging could later increase the chance, but V1
   should use a simple fixed probability so players can understand and balance

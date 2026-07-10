@@ -1158,8 +1158,9 @@ class FactoryXModTest(unittest.TestCase):
     def test_hyperscaler_and_ai_hater_roadmap_is_concrete(self):
         roadmap = (ROOT / "factoryX.md").read_text()
         self.assertIn("Phase 2.8: Terrestrial AI Hyperscaler And AI Haters", roadmap)
-        self.assertIn("100 MW continuously", roadmap)
-        self.assertIn("1,000 Dollar", roadmap)
+        self.assertIn("100 GW continuously", roadmap)
+        self.assertIn("10 million in-game Dollar items", roadmap)
+        self.assertIn("1, 2, 4, 8, 16, 32", roadmap)
         self.assertIn("factoryx-ai-haters", roadmap)
         self.assertIn("sample at most 32 eligible", roadmap)
         self.assertIn("12,000-unit", roadmap)
