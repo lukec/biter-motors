@@ -184,6 +184,10 @@ ELECTRIC_VEHICLE_BATTERIES = {
 }
 ELECTRIC_DRIVE_FUEL_NAME = "x-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000
+SUPERCHARGING_TECH_NAME = "x-supercharging-power-electronics"
+LONG_RANGE_BATTERY_TECH_NAME = "x-long-range-battery"
+PREMIUM_AUDIO_TECH_NAME = "x-premium-audio-systems"
+CUSTOMER_REFERRAL_TECH_NAME = "x-customer-referral-program"
 local BITER_SETTLEMENT_NAMES = {
   ["biter-spawner"] = true,
   ["spitter-spawner"] = true
@@ -235,11 +239,14 @@ local function station_config(station)
     return nil
   end
   local quality_level = station.quality and station.quality.level or 0
-  if quality_level <= 0 then
+  local battery_level = continuous_improvement_level(station.force, LONG_RANGE_BATTERY_TECH_NAME)
+  if quality_level <= 0 and battery_level <= 0 then
     return base
   end
   local config = table.deepcopy(base)
-  config.evs_per_stall = math.floor(base.evs_per_stall * (1 + quality_level * 0.1) + 0.5)
+  config.evs_per_stall = math.floor(
+    base.evs_per_stall * (1 + quality_level * 0.1) * (1 + battery_level * 0.05) + 0.5
+  )
   return config
 end
 
@@ -276,6 +283,23 @@ end
 local function researched(force, technology_name)
   local technology = force and force.technologies and force.technologies[technology_name]
   return technology and technology.researched
+end
+
+function continuous_improvement_level(force, technology_name)
+  local technology = force and force.technologies and force.technologies[technology_name]
+  if not technology then
+    return 0
+  end
+  return math.max(0, (technology.level or 1) - 1)
+end
+
+function continuous_improvement_levels(force)
+  return {
+    supercharging = continuous_improvement_level(force, SUPERCHARGING_TECH_NAME),
+    battery = continuous_improvement_level(force, LONG_RANGE_BATTERY_TECH_NAME),
+    audio = continuous_improvement_level(force, PREMIUM_AUDIO_TECH_NAME),
+    referrals = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME)
+  }
 end
 
 local function safe_products_finished(entity)
@@ -545,11 +569,13 @@ function feed_electric_drive_from_batteries(entity)
   if not fuel_inventory or not fuel_inventory.is_empty() then
     return
   end
+  local battery_level = continuous_improvement_level(entity.force, LONG_RANGE_BATTERY_TECH_NAME)
+  local required_energy = ELECTRIC_DRIVE_FUEL_JOULES * math.max(0.25, 1 - battery_level * 0.08)
   local energy = vehicle_battery_energy(entity)
-  if energy < ELECTRIC_DRIVE_FUEL_JOULES then
+  if energy < required_energy then
     return
   end
-  local remaining = ELECTRIC_DRIVE_FUEL_JOULES
+  local remaining = required_energy
   for _, equipment in pairs(entity.grid.equipment) do
     if equipment.type == "battery-equipment" and remaining > 0 then
       local removed = math.min(remaining, equipment.energy)
@@ -758,6 +784,25 @@ local function destroy_power_sink(sink)
   end
 end
 
+function station_stall_power_watts(station)
+  local config = station_config(station)
+  if not config then
+    return 0
+  end
+  local level = continuous_improvement_level(station.force, SUPERCHARGING_TECH_NAME)
+  return config.power_per_stall_kw * 1000 * (1 + level * 0.1)
+end
+
+function configure_station_power_sink(station, sink)
+  if not sink or not sink.valid then
+    return
+  end
+  local watts = station_stall_power_watts(station)
+  sink.power_usage = watts
+  sink.input_flow_limit = watts / 60
+  sink.electric_buffer_size = watts
+end
+
 local function normalize_station_power_sinks(station)
   if not station or not station.valid or not station.unit_number then
     return nil
@@ -802,6 +847,7 @@ local function ensure_station_power_sinks(station, active_stalls)
           force = station.force
         }
       end
+      configure_station_power_sink(station, station_sinks[stall])
     else
       destroy_power_sink(existing)
       station_sinks[stall] = nil
@@ -1096,6 +1142,7 @@ local function historical_customer_ev_sales(force)
     ["x-prototype-roadster"] = 0,
     ["x-premium-ev"] = 0,
     ["x-mass-market-ev"] = 0,
+    ["x-cybertruck"] = 0,
     ["x-robotaxi-fleet"] = 0
   }
   for _, surface in pairs(game.surfaces) do
@@ -1108,6 +1155,8 @@ local function historical_customer_ev_sales(force)
     local robotaxi_manufacturing_inputs = statistics.get_input_count("x-autonomy-computer") or 0
     totals["x-mass-market-ev"] = totals["x-mass-market-ev"]
       + math.max(0, mass_market_inputs - robotaxi_manufacturing_inputs)
+    totals["x-cybertruck"] = totals["x-cybertruck"]
+      + (statistics.get_input_count("x-cybertruck") or 0)
     totals["x-robotaxi-fleet"] = totals["x-robotaxi-fleet"]
       + (statistics.get_input_count("x-robotaxi-fleet") or 0)
   end
@@ -1443,7 +1492,7 @@ function charge_station_vehicles(station)
     (power_state.powered_stalls or 0) - (assignment.customer_requested_stalls or 0)
   )
   local charged = 0
-  local joules = station_config(station).power_per_stall_kw * 1000
+  local joules = station_stall_power_watts(station)
   for index = 1, math.min(vehicle_stalls, #assignment.vehicles) do
     if charge_vehicle(assignment.vehicles[index], joules) > 0 then
       charged = charged + 1
@@ -1972,6 +2021,8 @@ local function process_customer_growth(force)
   local service = customer_service_for_force(force)
   local allocations = calculate_station_utilization(force)
   local states = customer_growth_states()
+  local referral_level = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME)
+  local referral_multiplier = 1 + referral_level * 0.1
   for unit_number, assignment in pairs(service.assignments) do
     local station = assignment.station
     if station and station.valid then
@@ -1980,7 +2031,7 @@ local function process_customer_growth(force)
       local active_stalls = active_customer_station_stalls(station, service)
       local spare_stalls = station_config(station).stalls - #assignment.settlements
       if service.stranded_evs == 0 and active_stalls > 0 and spare_stalls > 0 then
-        state.progress = (state.progress or 0) + active_stalls
+        state.progress = (state.progress or 0) + active_stalls * referral_multiplier
         if state.progress >= CUSTOMER_GROWTH_PROGRESS_REQUIRED then
           if grow_customer_settlement(station, state) then
             state.progress = state.progress - CUSTOMER_GROWTH_PROGRESS_REQUIRED
@@ -2154,7 +2205,8 @@ local function show_station_info_panel(player, station)
     * RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE
   local reservation_inventory = station_reservation_inventory(station)
   local reservation_stock = reservation_inventory and reservation_inventory.get_item_count(RESERVATION_NAME) or 0
-  local power_draw_kw = active_stalls * config.power_per_stall_kw
+  local researched_power_per_stall_kw = station_stall_power_watts(station) / 1000
+  local power_draw_kw = active_stalls * researched_power_per_stall_kw
   local power_state = station_power_service()[station.unit_number] or {power_fraction = grid_connected and 1 or 0}
   local assignment = service.assignments[station.unit_number]
   local vehicle_assignments = storage.factoryx_station_vehicle_assignments
@@ -2210,7 +2262,11 @@ local function show_station_info_panel(player, station)
     math.floor((growth_state.progress or 0) / 60),
     CUSTOMER_GROWTH_STALL_MINUTES
   ))
-  add_station_info_label(panel, string.format("Power draw: %d kW / %d kW max", power_draw_kw, config.stalls * config.power_per_stall_kw))
+  add_station_info_label(panel, string.format(
+    "Power draw: %.0f kW / %.0f kW max",
+    power_draw_kw,
+    config.stalls * researched_power_per_stall_kw
+  ))
   add_station_info_label(panel, string.format("Paperwork output: %d EV Reservations per minute", reservation_rate))
   add_station_info_label(panel, string.format("Paperwork waiting for pickup: %d", reservation_stock))
   add_station_info_label(panel, string.format("Active EV Sales Offices: %d", offices))
@@ -2932,6 +2988,48 @@ function sync_sales_office_buyers()
   end
 end
 
+function accelerate_consumer_ev_sales()
+  for _, surface in pairs(game.surfaces) do
+    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME}) do
+      local recipe = office.valid and office.get_recipe()
+      local recipe_name = recipe and recipe.name
+      local level = continuous_improvement_level(office.force, PREMIUM_AUDIO_TECH_NAME)
+      if level > 0 and RESERVATION_RECIPES[recipe_name]
+        and office.active and (office.crafting_progress or 0) > 0 then
+        local bonus_progress = office.crafting_speed * 0.5 / recipe.energy * level * 0.05
+        office.crafting_progress = math.min(0.999999, office.crafting_progress + bonus_progress)
+      end
+    end
+  end
+end
+
+function robotaxi_audio_revenue_progress()
+  storage.factoryx_robotaxi_audio_revenue_progress = storage.factoryx_robotaxi_audio_revenue_progress or {}
+  return storage.factoryx_robotaxi_audio_revenue_progress
+end
+
+function award_robotaxi_audio_revenue(office, completed_crafts)
+  local level = continuous_improvement_level(office.force, PREMIUM_AUDIO_TECH_NAME)
+  if level <= 0 or completed_crafts <= 0 then
+    return 0
+  end
+  local progress = robotaxi_audio_revenue_progress()
+  local accumulated = (progress[office.unit_number] or 0) + completed_crafts * level * 0.05
+  local whole_dollars = math.floor(accumulated)
+  if whole_dollars <= 0 then
+    progress[office.unit_number] = accumulated
+    return 0
+  end
+  local inventory = office.get_inventory(crafter_output_inventory_id())
+  local inserted = inventory and inventory.insert{name = DOLLAR_NAME, count = whole_dollars} or 0
+  progress[office.unit_number] = accumulated - inserted
+  if inserted > 0 then
+    local statistics = office.force.get_item_production_statistics(office.surface)
+    statistics.set_output_count(DOLLAR_NAME, statistics.get_output_count(DOLLAR_NAME) + inserted)
+  end
+  return inserted
+end
+
 function complete_reserved_vehicle_sale(office, recipe_name)
   local reservation = office_buyer_reservations()[office.unit_number]
   local sale = CUSTOMER_EV_SALE_RECIPES[recipe_name]
@@ -2995,6 +3093,7 @@ local function check_first_prototype_sales()
         elseif recipe_name == MASS_MARKET_EV_SALE_RECIPE and completed_crafts > 0 then
           announce_first_mass_market_ev_sale(office.force)
         elseif recipe_name == ROBOTAXI_SALE_RECIPE and completed_crafts > 0 then
+          award_robotaxi_audio_revenue(office, completed_crafts)
           announce_first_robotaxi_sale(office.force)
         end
         products_by_unit[office.unit_number] = products
@@ -3054,6 +3153,7 @@ end
 
 local function progress_snapshot(force)
   local market = add_reservation_output_status(biter_customer_market_summary(force), force)
+  local improvements = continuous_improvement_levels(force)
   local first_sale_complete = first_ev_production_line_hints()[force.name] == true
     or researched(force, "x-premium-ev-program")
   local premium_sale_complete = first_premium_ev_sales()[force.name] == true
@@ -3103,6 +3203,10 @@ local function progress_snapshot(force)
     premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME),
     mass_market_evs_produced = count_item_produced(force, "x-mass-market-ev"),
     robotaxi_fleets_produced = count_item_produced(force, "x-robotaxi-fleet"),
+    supercharging_level = improvements.supercharging,
+    battery_level = improvements.battery,
+    audio_level = improvements.audio,
+    referral_level = improvements.referrals,
     victory = victory_forces()[force.name] == true
   }
 end
@@ -3262,6 +3366,15 @@ local function refresh_progress_panel(player)
   add_progress_metric(infrastructure, "Gigafactories", string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2))
   add_progress_metric(infrastructure, "Energy Products", string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks))
   add_progress_metric(infrastructure, "Terrestrial Datacenters", tostring(snapshot.datacenters))
+
+  content.add{type = "line"}
+  add_section_heading(content, "Continuous improvement")
+  local improvement_table = content.add{type = "table", column_count = 2}
+  improvement_table.style.horizontally_stretchable = true
+  add_progress_metric(improvement_table, "Supercharging electronics", "Level " .. snapshot.supercharging_level)
+  add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
+  add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
+  add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
 
   content.add{type = "line"}
   add_section_heading(content, "Progression")
@@ -3861,6 +3974,7 @@ for _, event_name in pairs({
         remove_station_support_entities(entity)
       elseif entity and entity.name == SALES_OFFICE_NAME then
         clear_office_buyer_reservation(entity.unit_number)
+        robotaxi_audio_revenue_progress()[entity.unit_number] = nil
         mark_sales_office_coverage_dirty()
       end
     end)
@@ -3870,8 +3984,9 @@ end
 
 script.on_nth_tick(30, function()
   feed_tracked_electric_vehicles()
-  check_first_prototype_sales()
   sync_sales_office_buyers()
+  accelerate_consumer_ev_sales()
+  check_first_prototype_sales()
   for _, force in pairs(game.forces) do
     finish_completed_grid_charges(force)
   end
@@ -3932,6 +4047,10 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  continuous_improvements = function(force_name)
+    local force = game.forces[force_name or "player"]
+    return force and continuous_improvement_levels(force) or nil
+  end,
   ai_efficiency_status = function(force_name)
     local force = game.forces[force_name or "player"]
     if not force then return nil end

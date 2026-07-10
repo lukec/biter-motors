@@ -205,6 +205,22 @@ local function tech(name, icon, prerequisites, effects, count, ingredients, time
   }
 end
 
+local function infinite_tech(name, icon, prerequisites, effects, count_formula, ingredients, time)
+  return {
+    type = "technology",
+    name = name,
+    icons = tech_icon(icon),
+    prerequisites = prerequisites,
+    effects = effects,
+    max_level = "infinite",
+    unit = {
+      count_formula = count_formula,
+      ingredients = ingredients,
+      time = time or 30
+    }
+  }
+end
+
 local function add_lab_input(lab_name, input_name)
   local lab = data.raw.lab and data.raw.lab[lab_name]
   if not lab or not lab.inputs then
@@ -1438,6 +1454,67 @@ data:extend({
       {"x-ai-token", 1}
     },
     60
+  )
+})
+
+data:extend({
+  infinite_tech(
+    "x-supercharging-power-electronics",
+    "__base__/graphics/technology/electric-energy-distribution-2.png",
+    {"x-ev-charging-network"},
+    {{type = "nothing", effect_description = {"technology-effect-description.x-supercharging-power-electronics"}}},
+    "200*2^(L-1)",
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    30
+  ),
+  infinite_tech(
+    "x-long-range-battery",
+    "__base__/graphics/technology/battery.png",
+    {"x-capital-scaling"},
+    {{type = "nothing", effect_description = {"technology-effect-description.x-long-range-battery"}}},
+    "300*2^(L-1)",
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"production-science-pack", 1},
+      {"utility-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    60
+  ),
+  infinite_tech(
+    "x-premium-audio-systems",
+    "__base__/graphics/technology/circuit-network.png",
+    {"x-premium-ev-program"},
+    {{type = "nothing", effect_description = {"technology-effect-description.x-premium-audio-systems"}}},
+    "150*2^(L-1)",
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    30
+  ),
+  infinite_tech(
+    "x-customer-referral-program",
+    "__base__/graphics/technology/worker-robots-speed.png",
+    {"x-ev-charging-network"},
+    {{type = "nothing", effect_description = {"technology-effect-description.x-customer-referral-program"}}},
+    "200*2^(L-1)",
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    30
   )
 })
 

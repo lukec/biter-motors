@@ -67,6 +67,39 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("default_value = true", settings)
         self.assertIn("[FactoryX]", control)
 
+    def test_infinite_continuous_improvement_research(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/factoryx.cfg").read_text()
+        roadmap = (ROOT / "factoryX.md").read_text()
+
+        for technology in [
+            "x-supercharging-power-electronics",
+            "x-long-range-battery",
+            "x-premium-audio-systems",
+            "x-customer-referral-program",
+        ]:
+            start = data.index(f'    "{technology}"')
+            block = data[start:start + 750]
+            self.assertIn('max_level = "infinite"', data[data.index("local function infinite_tech"):data.index("local function infinite_tech") + 500])
+            self.assertIn('type = "nothing"', block)
+            self.assertNotIn('"military-science-pack"', block)
+
+        self.assertIn("x-premium-audio-systems=Biters love Nickelback.", locale)
+        self.assertIn("function station_stall_power_watts", control)
+        self.assertIn("sink.power_usage = watts", control)
+        self.assertIn("1 + battery_level * 0.05", control)
+        self.assertIn("1 - battery_level * 0.08", control)
+        self.assertIn("function accelerate_consumer_ev_sales", control)
+        self.assertIn("function award_robotaxi_audio_revenue", control)
+        self.assertIn("1 + referral_level * 0.1", control)
+        self.assertIn("continuous_improvements = function", control)
+
+        self.assertIn("choose the nearest charger", roadmap)
+        self.assertIn("free roaming", roadmap)
+        self.assertIn("Charging duration scales inversely with available power", roadmap)
+        self.assertIn("12,000 customer units", roadmap)
+
     def test_factoryx_has_no_legacy_namespace(self):
         legacy_word = "front" + "ier"
         surfaces = [MOD, ROOT / "art" / "factoryx-review"]

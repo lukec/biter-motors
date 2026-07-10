@@ -218,6 +218,20 @@ industrial milestones retain earlier science packs instead of replacing them
 with only the newest pack. Military science is intentionally excluded because
 the tree is commercial, industrial, energy, and compute focused.
 
+#### Infinite Continuous Improvement
+
+Four repeatable technologies provide permanent late-game uses for Dollars and
+science. Their costs double each level and none use military science.
+
+| Technology | Starts after | Effect per level |
+| --- | --- | --- |
+| Supercharging Power Electronics | EV Charging Network | Player EVs charge 10% faster; an occupied charging stall can draw 10% more power. |
+| Long-range Battery | Capital Scaling | Customer capacity rises 5% per stall and drivable EV energy use falls 8%, capped at a 75% reduction. |
+| Premium Audio Systems | EV Production Line | Consumer EV sales run 5% faster and Robotaxi trips return 5% more profit. Biters love Nickelback. |
+| Customer Referral Program | EV Charging Network | Powered charging-driven settlement growth runs 10% faster. |
+
+Research levels and their effects are visible in the FactoryX Progress panel.
+
 | Technology | Cycles | Inputs per cycle | Time |
 | --- | ---: | --- | ---: |
 | Sales Office | 75 | Red, green | 20s |
@@ -1416,6 +1430,39 @@ Highest-priority custom tech icons:
 - Test against saves with biters disabled, peaceful mode, normal enemies, and
   sandbox-created enemy spawners.
 
+### Phase 2.6: Physical Customer Charging Commutes
+
+Future implementation; explicitly not part of the current runtime:
+
+- Only customers who own sold EVs need to charge. Unsold `$` buyers continue
+  wandering near their home settlement.
+- A customer is not permanently bound to its settlement's current charger.
+  When charging is due, choose the nearest charger on the same surface with an
+  available powered customer stall. This allows customers to float between
+  charger sites as the player expands or power conditions change.
+- Customers physically walk to a non-colliding staging position around the
+  selected charger, wait there for a charging interval, then return to normal
+  free roaming. Returning to the original spawner is optional; the important
+  state transition is back to an uncommanded local wander.
+- Charging duration scales inversely with available power. A fully powered
+  stall charges at its tier rate; a brownout lengthens the wait approximately
+  by `1 / power_fraction`. Zero useful power pauses charging without instantly
+  making the customer hostile.
+- Long-range Battery research increases time between charging visits.
+  Supercharging Power Electronics reduces the powered charging duration while
+  increasing the stall's grid draw.
+- Use event-driven `go_to_location`, timed `stop`, and
+  `on_ai_command_completed` transitions. Do not poll every customer every tick
+  or pre-request paths before issuing movement commands.
+- Move customers in bounded script-driven cohorts, approximately 4-8 units per
+  group. Start with global caps of 64 active cohorts and 512 moving customers,
+  plus exponential retry delays for blocked paths.
+- Settlement-level powered capacity remains authoritative in V1. Physical
+  commuters visualize service and can raise a local route-blocked alert, but a
+  pathfinding failure alone does not invalidate an otherwise healthy market.
+- Benchmark 128, 256, 512, and 1,024 simultaneous commuters against a save with
+  roughly 12,000 customer units before choosing production limits.
+
 ### Phase 3: SpaceX-Style Launch Flywheel
 
 - Add a clearer small launch -> reusable booster -> reusable launch progression.
@@ -1516,7 +1563,7 @@ The isolated `mod-list.json` should enable only `base`, `space-age`, and
 
 Current validation state, 2026-07-10:
 
-- `python3 -m unittest tests.test_factoryx_mod` passes: 45 tests.
+- `python3 -m unittest tests.test_factoryx_mod` passes: 46 tests.
 - `scripts/validate-factoryx-mod.sh` passes.
 - `scripts/validate-factoryx-gui.sh <save.zip>` passes against a disposable copy
   of `FactoryX-Start5.zip`, creating the progress, Sales Office, and Gigafactory
