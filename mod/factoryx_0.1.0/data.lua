@@ -1573,11 +1573,11 @@ data:extend({
     30
   ),
   infinite_tech(
-    "x-solar-cell-productivity",
+    "x-high-density-solar-productivity",
     "__base__/graphics/technology/solar-energy.png",
     {"x-energy-products"},
-    {{type = "change-recipe-productivity", recipe = "solar-panel", change = 0.1}},
-    "500*1.5^(L-1)",
+    {{type = "change-recipe-productivity", recipe = "x-high-density-solar-array", change = 0.1}},
+    "750*1.5^(L-1)",
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -1589,10 +1589,10 @@ data:extend({
     60
   ),
   infinite_tech(
-    "x-high-density-solar-productivity",
-    "__base__/graphics/technology/solar-energy.png",
-    {"x-solar-cell-productivity"},
-    {{type = "change-recipe-productivity", recipe = "x-high-density-solar-array", change = 0.1}},
+    "x-megapack-productivity",
+    "__base__/graphics/technology/electric-energy-acumulators.png",
+    {"x-energy-products"},
+    {{type = "change-recipe-productivity", recipe = "x-megapack", change = 0.1}},
     "750*1.5^(L-1)",
     {
       {"automation-science-pack", 1},

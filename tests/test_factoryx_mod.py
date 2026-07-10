@@ -93,16 +93,17 @@ class FactoryXModTest(unittest.TestCase):
 
         self.assertIn("x-premium-audio-systems=Biters love Nickelback.", locale)
         for technology, recipe, count_formula in [
-            ("x-solar-cell-productivity", "solar-panel", "500*1.5^(L-1)"),
             ("x-high-density-solar-productivity", "x-high-density-solar-array", "750*1.5^(L-1)"),
+            ("x-megapack-productivity", "x-megapack", "750*1.5^(L-1)"),
         ]:
             start = data.index(f'    "{technology}"')
             block = data[start:start + 900]
             self.assertIn(f'recipe = "{recipe}", change = 0.1', block)
             self.assertIn(f'"{count_formula}"', block)
             self.assertIn('{"x-dollar", 1}', block)
-        self.assertIn("Solar Panel recipe productivity: +10% per level", locale)
         self.assertIn("High-density Solar Array recipe productivity: +10% per level", locale)
+        self.assertIn("Megapack recipe productivity: +10% per level", locale)
+        self.assertNotIn("x-solar-cell-productivity", data)
         self.assertIn("function station_stall_power_watts", control)
         self.assertIn("sink.power_usage = watts", control)
         self.assertIn("1 + battery_level * 0.05", control)
