@@ -1288,6 +1288,7 @@ beyond the MVP tech-and-recipe loop.
 | Ground Station | Converts the current Ground Station Network item into visible satellite infrastructure. | Yes | Could increase orbital compute output or satellite constellation capacity. |
 | Satellite Constellation Controller | Tracks constellation scale and links launch products to compute bonuses. | Yes | Might be a radar/combinator-like entity rather than a normal assembler. |
 | Market Exchange | Alternative or upgrade to Sales Office for late product sales. | Yes | Only worth adding if Sales Office recipes become too crowded. |
+| Robotaxi Service Center | Deploys Robotaxis as a recurring transportation service rather than selling them as consumer vehicles. | Yes | Large terrestrial facility with a 40-slot fleet inventory, operating recipe, service coverage, and built-in V4 fleet charging. |
 | Fictional Disruption Spawner | Optional event/enemy source if we add competition or disruption. | Yes | Not MVP. Avoid direct real-world political labels. |
 
 ### Items And Products
@@ -1462,6 +1463,42 @@ Future implementation; explicitly not part of the current runtime:
   pathfinding failure alone does not invalidate an otherwise healthy market.
 - Benchmark 128, 256, 512, and 1,024 simultaneous commuters against a save with
   roughly 12,000 customer units before choosing production limits.
+
+### Phase 2.7: Robotaxi Service Center
+
+Replace direct Robotaxi sales with recurring fleet-service income:
+
+- Add a large `Robotaxi Service Center` with a broad service coverage area.
+- A Robotaxi Fleet item has a stack size of 5. The Service Center has 40
+  dedicated fleet-inventory slots, so one fully stocked center holds 200
+  Robotaxis.
+- Each allocated Robotaxi can serve five nearby biter customers. A fully stocked
+  and fully utilized center therefore serves at most 1,000 customers:
+  `40 slots * 5 Robotaxis * 5 customers`.
+- Inventory alone does not produce revenue. Runtime allocation assigns stored
+  Robotaxis to eligible biter customers inside the Service Center coverage area.
+  Revenue is based on the allocated fleet, capped by both available Robotaxis
+  and covered customers.
+- The center runs an explicit `Operate Robotaxis` recipe. It produces recurring
+  Dollars while very slowly consuming Robotaxi items as fleet attrition and
+  replacement demand. The recipe must not burn one Robotaxi every cycle; use a
+  long-lived runtime reserve or fractional attrition counter so service income
+  can tick frequently while vehicle replacement remains slow.
+- Premium Audio Systems increases Robotaxi revenue because customers take longer
+  rides. It does not increase the number of customers one Robotaxi can cover.
+- The center includes V4 Supercharger-class fleet charging. Its charging power
+  and available grid power constrain the proportion of the allocated fleet that
+  can operate. Brownouts reduce utilization and revenue proportionally instead
+  of immediately making customers hostile.
+- The built-in charger is fleet infrastructure, not an additional public
+  customer charger. It does not print EV Reservations or add public charging
+  stalls to nearby settlements.
+- The entity inspector must show stored Robotaxis, allocated Robotaxis, covered
+  customers, current utilization, charging power satisfaction, Dollar rate, and
+  estimated vehicle attrition rate.
+- Retire or disable the current `Sell robotaxi fleet` Sales Office recipe once
+  the Service Center is implemented. Existing direct-sale behavior is only a
+  temporary progression bridge.
 
 ### Phase 3: SpaceX-Style Launch Flywheel
 
