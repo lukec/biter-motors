@@ -21,9 +21,11 @@ the mod or coach yet.
   robotics cache before this run. That would bypass the early power and
   logistics constraints we need to measure. Reconsider it after reviewing the
   first playtest timeline.
-- Keep the currently implemented Planetary Energy Grid victory for this run.
-  AGI victory and the terrestrial Hyperscaler remain roadmap designs until
-  token rates from this run give us evidence for their scale.
+- Keep the currently implemented Planetary Energy Grid victory for this run so
+  telemetry work does not also become a victory migration. The roadmap now
+  adopts AGI as the target victory: one billion cumulative AI Tokens unlock a
+  physical final training run. This run will provide rate evidence for tuning
+  that already-chosen design.
 - The coach must run in a dedicated read-only playtest mode. Ordinary coach
   mutations would contaminate production timings and bottleneck evidence.
 
@@ -305,7 +307,8 @@ The pre-play slice is complete when:
 
 ## Explicitly Deferred
 
-- AGI victory implementation and its final token target.
+- AGI victory implementation. Its roadmap target is one billion cumulative AI
+  Tokens, followed by a 100-million-Token physical training run.
 - Terrestrial Hyperscaler implementation.
 - The rich 40 MW/robotics starting cache.
 - Final vehicle sprites and remaining art polish.

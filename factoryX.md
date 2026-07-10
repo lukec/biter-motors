@@ -17,7 +17,7 @@ analysis.
 Factory X is a Space Age industrial ambition mod where the player bootstraps
 from premium electric vehicles and small launch services into mass-market EVs,
 reusable rockets, satellite infrastructure, orbital AI compute, and finally a
-Kardashev Type I civilization.
+planetary-scale training run that achieves artificial general intelligence.
 
 ## Design Principles
 
@@ -37,10 +37,13 @@ Kardashev Type I civilization.
   products fund infrastructure, infrastructure funds space and AI.
 - Make space matter late. Terrestrial datacenters can create some AI tokens,
   but the final game should require large orbital compute infrastructure.
-- The MVP victory is Kardashev Type I, represented by completing a planetary
-  energy grid. Orbital compute returns AI token data, then the planet consumes
-  those tokens plus physical grid infrastructure and a huge local power draw to
-  charge the grid.
+- The target victory is Achieving AGI. Orbital compute returns AI Token data;
+  one billion cumulative Tokens unlock the final training run. The Planetary
+  Energy Grid is required infrastructure that combines physical Tokens,
+  capital, and a huge sustained local power draw into AGI.
+- Remove the old civilization-scale terminology and progression entirely.
+  Planetary energy is a concrete prerequisite for AGI, not a separate ranking
+  goal.
 
 ## Playtest Lessons To Carry Forward
 
@@ -112,12 +115,17 @@ The MVP already has these major loops:
 15. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
 16. Move AI production to space platforms with Orbital Compute Arrays.
 17. Drop AI Tokens back to the planet.
-18. Build a Planetary Energy Grid Controller.
+18. Build a Planetary Energy Grid Controller and the energy infrastructure
+    needed for the final training run.
 19. Produce Planetary Grid Segments from AI Tokens, Megapacks, Satellite Buses,
     and Ground Station Networks.
-20. Research Kardashev Type I to unlock the final grid-charge recipe.
-21. Run the Planetary Energy Grid Controller through a 1GW charge cycle to
-    trigger the victory state.
+20. Generate one billion cumulative AI Tokens across terrestrial and orbital
+    compute. This unlocks the AGI Training Run; Tokens need not remain stored.
+21. Deliver 100 million physical AI Tokens, 10 million Dollars, and the required
+    Planetary Grid Segments to the controller.
+22. Sustain roughly 1 TW for a 60-minute AGI Training Run to trigger victory.
+23. Continue after victory with larger compute, energy, and customer systems if
+    desired; AGI is the complete FactoryX victory.
 
 Current runtime behavior is intentionally small:
 
@@ -175,7 +183,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - Each quality level adds 10% EV capacity per stall to a charger. Stall count,
   footprint, and coverage radius stay fixed so placement remains readable.
 - Abstract outputs do not roll quality. Dollar sales, AI Token production,
-  launch-service sales, and the final grid charge use `allow_quality = false`.
+  launch-service sales, and the final AGI Model use `allow_quality = false`.
 
 ## Vehicle Build And Profit Balance
 
@@ -255,19 +263,21 @@ Research levels and their effects are visible in the FactoryX Progress panel.
 | Satellite Constellation | 2,000 | Red through space, Dollar | 60s |
 | Orbital Compute | 2,000 | Red through space, electromagnetic, AI Token, Dollar | 60s |
 | Planetary Energy Grid | 2,500 | Red through space, four planetary packs, AI Token, Dollar | 60s |
-| Kardashev Type I | 5,000 | Red through space, four planetary packs, AI Token | 60s |
+| AGI Training Run | Automatic unlock | One billion cumulative AI Tokens | N/A |
 
 Mass-market EV Production explicitly requires Energy Products plus production
 and utility science. Autonomous Logistics uses Logistic Robotics rather than
 Space Age's space-gated Logistic System, preserving the terrestrial-first
 roadmap. Orbital Compute adds electromagnetic science for high-end compute
-hardware. Planetary Energy Grid and Kardashev Type I consume every official
-pre-Promethium science pack.
+hardware. Planetary Energy Grid consumes every official pre-Promethium science
+pack. The AGI unlock is a production milestone rather than another laboratory
+research count.
 
 Planetary Grid Segments are not laboratory science. They remain physical
-infrastructure assembled in the controller and consumed by the final charge.
+infrastructure assembled in the controller and consumed by the final training
+run.
 This prevents a large research count from silently multiplying segments and
-keeps the visible build-and-charge victory mechanic dominant.
+keeps the visible build-and-train victory mechanic dominant.
 
 ### Recipe Design Rule
 
@@ -656,7 +666,7 @@ Design meaning:
   industrial capacity.
 - Late infrastructure consumes Gigafactory Modules instead of abstract capex.
 
-### AI Tokens And Planetary Grid Segments
+### AI Tokens, AGI, And Planetary Grid Segments
 
 AI token is a physical science-like output.
 
@@ -664,21 +674,24 @@ Current design:
 
 - Terrestrial datacenters produce AI tokens slowly.
 - Orbital Compute Arrays produce AI tokens at scale in space.
-- Late technologies consume AI tokens directly.
-- Planetary Energy Grid Controllers are 1GW machines. They convert large AI
-  Token streams, Megapacks, Satellite Buses, and Ground Station Networks into
-  Planetary Grid Segments.
-- Planetary Grid Segments are physical inputs to the final Planetary Grid
-  Charge recipe, not laboratory science.
-- The final Planetary Grid Charge consumes four large streams: grid segments,
-  AI tokens, Megapacks, and Dollars, plus a sustained PEGC charge cycle.
-  Satellite and ground infrastructure are embodied in the grid segments.
+- Late technologies consume AI tokens directly. Lifetime AI Token production
+  across all surfaces is also tracked toward the one-billion-Token AGI gate.
+- Planetary Energy Grid Controllers become 1 TW training machines. They convert
+  large AI Token streams, Megapacks, Satellite Buses, and Ground Station
+  Networks into Planetary Grid Segments.
+- Planetary Grid Segments are physical inputs to the final AGI Training Run,
+  not laboratory science.
+- The final AGI Training Run consumes four large streams: grid segments,
+  100 million physical AI Tokens, supporting energy hardware, and 10 million
+  Dollars, plus a sustained one-terawatt controller cycle. Satellite and ground
+  infrastructure are embodied in the grid segments.
 
 The important balance goal is that land-based compute should not be enough for
 the final game. The player should need many space platforms running orbital
 compute and returning AI tokens to the planet. Those tokens are not power beamed
-from space; they are the compute output the planet uses to coordinate and charge
-planet-scale energy infrastructure.
+from space; they are trained-model data and knowledge used by the planetary
+training system. Terrestrial production can contribute forever, but reaching
+one billion without orbital compute should be economically absurd.
 
 ## Concrete Tech Tree Arc
 
@@ -1136,12 +1149,13 @@ Next concrete unlock:
 
 - Planetary Energy Grid.
 
-### 13. Planetary Energy Grid: Build The Machine Before Charging It
+### 13. Planetary Energy Grid: Power The Final Training System
 
-Kardashev meaning:
+AGI meaning:
 
-- Type I should mean planetary-scale energy coordination and storage, not magic
-  knowledge completion.
+- The knowledge comes from terrestrial and orbital compute, but knowledge alone
+  does not win. The planet needs a physical grid capable of powering one final,
+  sustained training run.
 
 Current code:
 
@@ -1155,37 +1169,59 @@ Current code:
 Target feel:
 
 - The player should first build the Planetary Energy Grid Controller.
-- Then they should feed it Planetary Grid Segments and supporting items over
-  time.
-- The controller should make progress only while receiving huge power.
+- Then they should feed it Planetary Grid Segments and supporting items while
+  scaling toward one terawatt of local generation and storage.
+- The controller should make AGI training progress only while its full power
+  requirement is satisfied. Brownouts pause or proportionally slow training;
+  they do not erase completed progress.
 - This mirrors the rocket silo pattern: build the silo, then launch the rocket.
-  Here: build the PEGC, then charge the grid.
+  Here: build the controller and grid, then run the AGI training job.
 
 Next concrete unlock:
 
-- Kardashev Type I.
+- AGI Training Run, after one billion cumulative AI Tokens.
 
-### 14. Kardashev Type I: Final Charge
+### 14. Achieving AGI: Final Training Run
 
 Victory meaning:
 
-- The player wins by completing a sustained, high-power planetary grid charge.
+- The player wins by completing a sustained, high-power AGI training run after
+  proving that the whole economy can generate one billion cumulative AI Tokens.
 
 Current code:
 
-- `Kardashev Type I` unlocks the final Planetary Grid Charge recipe.
-- Research requires 5,000 cycles of every official pre-Promethium science pack
-  plus AI Tokens. It does not consume Planetary Grid Segments.
-- Victory triggers when the controller consumes `Planetary Grid Charge`.
+- The current MVP still has the legacy grid-charge victory scaffolding. Remove
+  it when implementing this phase after the fresh playtest establishes orbital
+  Token and power rates.
 
 Target feel:
 
-- The final recipe should be a four-stream megabase throughput challenge:
-  Planetary Grid Segments, AI Tokens, Megapacks, Dollars, and a
-  sustained 1 GW charge cycle. Satellite and ground infrastructure are already
-  embodied in every Planetary Grid Segment.
+- Track lifetime AI Token production by force across every surface. Consuming,
+  moving, or losing Tokens must not reduce the one-billion progress counter.
+- At one billion cumulative Tokens, unlock `AGI Training Run`. The threshold is
+  intentionally several orders of magnitude beyond practical terrestrial
+  production and therefore forces orbital-compute scale.
+- The first balance target for the final job is 100 million physical AI Tokens,
+  10 million Dollars, Planetary Grid Segments, and supporting Megapacks.
+  Physical Tokens and Dollars must arrive through normal logistics.
+- The controller draws roughly 1 TW continuously for 60 connected gameplay
+  minutes. Exact power and duration may be tuned from recorded playtest rates,
+  but the run must remain a sustained grid test rather than an instant craft.
+- Completion produces one concrete `AGI Model` result and triggers Factorio's
+  victory state while allowing the player to continue.
 - It should be clear in the UI that the remaining blocker is either input
-  logistics or power supply.
+  logistics, cumulative Token progress, or power supply.
+
+Legacy removal required by this redesign:
+
+- Delete the legacy final-victory technology and all locale, icon, progression,
+  and test references.
+- Delete `x-planetary-grid-charge` as an item and recipe. The AGI Training Run
+  replaces it as the controller's final operation.
+- Replace the current grid-charge victory trigger and saved victory wording
+  with the AGI Model completion event.
+- No compatibility aliases are required because FactoryX is still in
+  fresh-save playtesting.
 
 ## New Prototypes And Artwork Needs
 
@@ -1297,7 +1333,7 @@ FactoryX products live beside the vanilla systems they extend:
 | `x-terrestrial-datacenter` | Terrestrial Datacenter | Dedicated transparent server-block concept art | Partial | Readable 6x6 playtest art is wired; final polish should align it more tightly to the Factorio camera and add restrained operating animation. |
 | `x-robotaxi-service-center` | Robotaxi Service Center | Dedicated aligned 8x8 fleet-depot sprite and icon | No | Solar canopy, fleet rows, transformers, and gold vehicle accents fill the footprint. |
 | `x-orbital-compute-array` | Orbital Compute Array | Temporary transparent selected concept art | Partial | Distinct playtest art is wired into the mod; still needs final space-platform-compatible compute array art. |
-| `x-planetary-grid-controller` | Planetary Energy Grid Controller | Dedicated aligned control-core sprite and icon | No | High-voltage buswork, transformers, and a contained energy core distinguish the victory structure. |
+| `x-planetary-grid-controller` | Planetary Energy Grid Controller | Dedicated aligned control-core sprite and icon | No | High-voltage buswork, transformers, and a contained energy core distinguish the final training structure. |
 
 ### Future Candidate Placeable Entities
 
@@ -1323,7 +1359,7 @@ beyond the MVP tech-and-recipe loop.
 | `x-gigacast` | Gigacast | No | Dedicated one-piece vehicle casting and press-die icon is wired. |
 | `x-ai-token` | AI token | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
 | `x-planetary-grid-segment` | Planetary grid segment | No | Dedicated physical high-voltage grid-module icon is wired. |
-| `x-planetary-grid-charge` | Planetary grid charge | No | Dedicated charged activation-cartridge icon is wired. |
+| `x-agi-model` | AGI Model | Yes | Concrete output of the final training run and the victory trigger. |
 | `x-battery-pack` | Battery pack | Maybe | Vanilla battery/accumulator layering is acceptable but could be custom. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
@@ -1357,11 +1393,11 @@ the output item, but major technologies may benefit from custom tech icons later
 - Orbital Compute.
 - Autonomous Logistics.
 - Planetary Energy Grid.
-- Kardashev Type I.
+- Achieving AGI.
 
 Highest-priority custom tech icons:
 
-1. Kardashev Type I.
+1. Achieving AGI.
 2. Planetary Energy Grid.
 3. Orbital Compute.
 4. EV Charging Network.
@@ -1391,7 +1427,7 @@ adding more one-off concepts:
    edge contrast, padding, and saturation. The current generated EV, AI,
    Gigafactory Module, and terrestrial component icons are usable but not yet a
    unified set.
-5. Create dedicated technology illustrations for Kardashev Type I, Planetary
+5. Create dedicated technology illustrations for Achieving AGI, Planetary
    Energy Grid, Terrestrial AI, EV Charging Network, Autonomous Logistics, and
    Gigafactory instead of reusing vanilla technology art.
 6. Add Factorio-style shadows, ambient occlusion, damage states, remnants, and
@@ -1706,19 +1742,31 @@ AI-datacenter opposition dynamic:
 - Tune Planetary Grid Segments so they feel like a late-game megabase
   throughput challenge.
 
-### Phase 6: Kardashev Type I Victory
+### Phase 6: Achieving AGI Victory
 
-- Make Type I victory require:
-  - High sustained AI token throughput.
-  - High sustained Planetary Grid Segment throughput.
-  - Planetary energy infrastructure.
-  - Space infrastructure.
-  - A large Dollar sink.
-  - A huge local power draw through the Planetary Energy Grid Controller.
-- Keep the Planetary Energy Grid Controller as the explicit victory structure.
-- Kardashev Type I research should unlock the final charge recipe.
-- Completing the final Planetary Grid Charge in the controller should trigger
-  Factorio's victory state while allowing the player to continue.
+- Add a force-wide, all-surface cumulative AI Token production counter.
+- Show `current / 1,000,000,000` prominently in FactoryX Progress, with
+  terrestrial and orbital contributions broken out beneath it.
+- Unlock the AGI Training Run automatically at one billion cumulative Tokens.
+  The unlock must not require one billion Tokens to remain in storage.
+- Keep the Planetary Energy Grid Controller as the explicit final structure,
+  but repurpose its final operation from an abstract grid charge to AGI
+  training.
+- Initial final-run balance target:
+  - 100 million physical AI Tokens.
+  - 10 million Dollars.
+  - Planetary Grid Segments and Megapacks representing space communications,
+    storage, and grid hardware.
+  - Roughly 1 TW sustained for 60 connected gameplay minutes.
+- Brownouts pause or proportionally slow the run. Mining the controller must
+  preserve neither ingredients nor progress unless normal Factorio mechanics
+  explicitly return them.
+- Completion creates an `AGI Model`, triggers Factorio's victory state, records
+  completion time and lifetime Token totals, and permits continued play.
+- Rebalance orbital compute by orders of magnitude so a well-developed platform
+  fleet can reach one billion in a long but credible endgame. Terrestrial AI
+  remains useful for early unlocks but is intentionally impractical as the sole
+  AGI source.
 
 ### Phase 7: Events, Competition, Or Enemies
 
@@ -1744,9 +1792,9 @@ AI-datacenter opposition dynamic:
   logistics enough?
 - Should Planetary Grid Segments require real electric-network measurements,
   or is the recipe-based controller enough for MVP?
-- Should the final controller charge remain a recipe-driven 1GW power sink, or
-  should a later version measure the actual electric network and require
-  sustained planetary generation?
+- Should the AGI Training Run use a recipe-driven 1 TW sink, or should it
+  measure actual electric-network generation and require sustained planetary
+  supply more directly?
 - Should biter settlement demand use existing EV Reservations, or should a
   later version add a more explicit biter-market item?
 - Should charger-driven biter growth directly create spawners, or use

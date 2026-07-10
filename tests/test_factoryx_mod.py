@@ -1216,6 +1216,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("sample at most 32 eligible", roadmap)
         self.assertIn("12,000-unit", roadmap)
 
+    def test_agi_victory_roadmap_replaces_legacy_ending(self):
+        roadmap = (ROOT / "factoryX.md").read_text()
+        playtest_spec = (ROOT / "feature_specs/factoryx_fresh_playtest.md").read_text()
+        self.assertIn("Phase 6: Achieving AGI Victory", roadmap)
+        self.assertIn("one billion cumulative AI Tokens", roadmap)
+        self.assertIn("100 million physical AI Tokens", roadmap)
+        self.assertIn("10 million Dollars", roadmap)
+        self.assertIn("roughly 1 TW continuously for 60 connected gameplay", roadmap)
+        self.assertIn("Completion creates an `AGI Model`", roadmap)
+        self.assertNotIn("Kardashev", roadmap)
+        self.assertIn("one billion cumulative AI Tokens", playtest_spec)
+
     def test_customer_reconciliation_is_not_per_second(self):
         control = (MOD / "control.lua").read_text()
         once_per_second = control[
