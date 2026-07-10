@@ -6,6 +6,12 @@ calling Factory X. The current working mod folder is
 mod id is `factoryx`, all custom prototype ids use the `x-` prefix, and this
 fresh-save version intentionally carries no compatibility aliases.
 
+The immediate implementation plan for the next clean, non-sandbox balance run
+is in [`feature_specs/factoryx_fresh_playtest.md`](feature_specs/factoryx_fresh_playtest.md).
+It specifies fresh-map gates, a mutation-free coach profile, timestamped
+production snapshots, paired timelapse frames, playtest notes, and post-run
+analysis.
+
 ## One-Line Pitch
 
 Factory X is a Space Age industrial ambition mod where the player bootstraps
