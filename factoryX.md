@@ -1558,10 +1558,12 @@ Future terrestrial escalation before the launch/orbital-compute buildout:
 - Add a very large `Terrestrial AI Hyperscaler`, at least a 12x12 footprint,
   drawing **100 GW continuously**. This is intentionally a speculative
   cutting-edge-scale AI campus, not an average present-day hyperscale building.
-- Correct capital conversion: a roughly **US$100 billion** first campus costs
+- Correct capital conversion: a mature roughly **US$100 billion** campus costs
   **10 million in-game Dollar items**, because one in-game Dollar represents
-  about US$10,000. The phrase "$10 million game dollars" means 10 million
-  physical Dollar items, not US$10 million represented by 1,000 items.
+  about US$10,000. The first three campuses are deliberately cheaper prototypes;
+  the fourth campus reaches the full 10-million-Dollar cost. The phrase
+  "$10 million game dollars" means 10 million physical Dollar items, not US$10
+  million represented by 1,000 items.
 - A direct assembler recipe cannot practically hold 10 million Dollars in one
   ingredient slot at the current 100,000 stack size. Build it through a large
   `Hyperscaler Construction Site` with a deep filtered capital inventory and a
@@ -1584,7 +1586,7 @@ Progressively worsening construction economics:
   placed count, because mining buildings must not lower future costs.
 - Author a sequence of construction-contract recipes that all produce the same
   Hyperscaler entity. Runtime enables the next contract and disables the old
-  one as soon as lifetime production reaches `1, 2, 4, 8, 16, 32...`.
+  one as soon as lifetime production reaches `1, 2, 3, 4, 8, 16, 32...`.
 - The active recipe must change on completed production, not placement, which
   prevents players from stockpiling many cheap buildings before crossing a
   threshold.
@@ -1592,13 +1594,14 @@ Progressively worsening construction economics:
 
   | Lifetime campuses before craft | Active contract | Dollars for next campus | Approximate real capital |
   | ---: | --- | ---: | ---: |
-  | 0 | Hyperscaler I | 10,000,000 | US$100B |
-  | 1 | Hyperscaler II | 15,000,000 | US$150B |
-  | 2-3 | Hyperscaler III | 25,000,000 | US$250B |
-  | 4-7 | Hyperscaler IV | 40,000,000 | US$400B |
-  | 8-15 | Hyperscaler V | 65,000,000 | US$650B |
-  | 16-31 | Hyperscaler VI | 100,000,000 | US$1T |
-  | 32+ | Continue geometric tiers | roughly 1.6x per tier | intentionally prohibitive |
+  | 0 | Hyperscaler Prototype I | 1,000,000 | US$10B |
+  | 1 | Hyperscaler Prototype II | 2,500,000 | US$25B |
+  | 2 | Hyperscaler Prototype III | 5,000,000 | US$50B |
+  | 3 | Hyperscaler I | 10,000,000 | US$100B |
+  | 4-7 | Hyperscaler II | 20,000,000 | US$200B |
+  | 8-15 | Hyperscaler III | 40,000,000 | US$400B |
+  | 16-31 | Hyperscaler IV | 80,000,000 | US$800B |
+  | 32+ | Continue geometric tiers | 2x per tier | intentionally prohibitive |
 
 - Show lifetime count, current contract, next doubling threshold, and next
   capital cost in the construction-site inspector and FactoryX Progress panel.
