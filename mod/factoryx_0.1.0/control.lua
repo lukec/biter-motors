@@ -328,6 +328,24 @@ function researched_ai_efficiency_level(force, config)
   return level
 end
 
+function ai_efficiency_track_status(force, track_name)
+  local config = AI_EFFICIENCY_TRACKS[track_name]
+  if not force or not config then
+    return nil
+  end
+  local force_progress = ai_efficiency_progress()[force.index] or {}
+  local track = force_progress[track_name] or {generated = 0}
+  local level = researched_ai_efficiency_level(force, config)
+  return {
+    generated = math.floor(track.generated or 0),
+    researched_level = level,
+    productivity_bonus = level * 0.1,
+    tokens_per_cycle = config.tokens_per_cycle * (1 + level * 0.1),
+    next_threshold = AI_EFFICIENCY_THRESHOLDS[level + 1],
+    maximum_level = #AI_EFFICIENCY_THRESHOLDS
+  }
+end
+
 function update_ai_efficiency_unlocks(force, track_name, track)
   local config = AI_EFFICIENCY_TRACKS[track_name]
   for level, threshold in pairs(AI_EFFICIENCY_THRESHOLDS) do
@@ -344,19 +362,45 @@ function track_ai_efficiency_progress()
     if force.name ~= "enemy" and force.name ~= "neutral" and force.name ~= CUSTOMER_FORCE_NAME then
       all_progress[force.index] = all_progress[force.index] or {}
       for track_name, config in pairs(AI_EFFICIENCY_TRACKS) do
-        local track = all_progress[force.index][track_name] or {generated = 0, machines = {}}
+        local track = all_progress[force.index][track_name] or {
+          generated = 0,
+          machines = {},
+          bonus_progress = {},
+          pending_bonus = {}
+        }
         all_progress[force.index][track_name] = track
+        track.bonus_progress = track.bonus_progress or {}
+        track.pending_bonus = track.pending_bonus or {}
         local seen = {}
         local level = researched_ai_efficiency_level(force, config)
-        local tokens_per_cycle = config.tokens_per_cycle * (1 + level * 0.1)
         for _, surface in pairs(game.surfaces) do
           for _, machine in pairs(surface.find_entities_filtered{name = config.entity, force = force}) do
             if machine.valid and machine.unit_number then
               seen[machine.unit_number] = true
+              local output_inventory = machine.get_inventory(
+                defines.inventory.crafter_output or defines.inventory.assembling_machine_output
+              )
+              local pending_bonus = track.pending_bonus[machine.unit_number] or 0
+              if output_inventory and pending_bonus > 0 then
+                local inserted = output_inventory.insert{name = "x-ai-token", count = pending_bonus}
+                track.pending_bonus[machine.unit_number] = pending_bonus - inserted
+                track.pending_bonus_total = math.max(0, (track.pending_bonus_total or 0) - inserted)
+                track.generated = track.generated + inserted
+              end
               local finished = safe_products_finished(machine)
               local previous = track.machines[machine.unit_number]
               if previous ~= nil and finished > previous then
-                track.generated = track.generated + (finished - previous) * tokens_per_cycle
+                local completed_cycles = finished - previous
+                local bonus_progress = (track.bonus_progress[machine.unit_number] or 0)
+                  + completed_cycles * level * 0.1
+                local bonus_cycles = math.floor(bonus_progress + 0.000001)
+                track.bonus_progress[machine.unit_number] = bonus_progress - bonus_cycles
+                local bonus_tokens = bonus_cycles * config.tokens_per_cycle
+                track.pending_bonus[machine.unit_number] =
+                  (track.pending_bonus[machine.unit_number] or 0) + bonus_tokens
+                track.pending_bonus_total = (track.pending_bonus_total or 0) + bonus_tokens
+                track.generated = track.generated
+                  + completed_cycles * config.tokens_per_cycle
               end
               track.machines[machine.unit_number] = finished
             end
@@ -365,6 +409,8 @@ function track_ai_efficiency_progress()
         for unit_number in pairs(track.machines) do
           if not seen[unit_number] then
             track.machines[unit_number] = nil
+            track.bonus_progress[unit_number] = nil
+            track.pending_bonus[unit_number] = nil
           end
         end
         update_ai_efficiency_unlocks(force, track_name, track)
@@ -3158,6 +3204,7 @@ local function progress_snapshot(force)
     or researched(force, "x-premium-ev-program")
   local premium_sale_complete = first_premium_ev_sales()[force.name] == true
     or researched(force, "x-capital-scaling")
+  local terrestrial_ai = ai_efficiency_track_status(force, "terrestrial")
   return {
     sales_office_researched = researched(force, "x-sales-office"),
     ev_production_researched = researched(force, "x-premium-ev-program"),
@@ -3198,6 +3245,9 @@ local function progress_snapshot(force)
     megapacks = count_entities(force, MEGAPACK_NAME),
     datacenters = count_entities(force, TERRESTRIAL_DATACENTER_NAME),
     ai_tokens_produced = count_item_produced(force, "x-ai-token"),
+    terrestrial_ai_tokens_generated = terrestrial_ai.generated,
+    terrestrial_ai_efficiency_level = terrestrial_ai.researched_level,
+    terrestrial_ai_next_threshold = terrestrial_ai.next_threshold,
     dollars_produced = count_item_produced(force, DOLLAR_NAME),
     prototype_evs_produced = count_item_produced(force, PROTOTYPE_ROADSTER_NAME),
     premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME),
@@ -3356,6 +3406,7 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
   add_progress_metric(metrics, "AI Tokens produced", tostring(snapshot.ai_tokens_produced))
+  add_progress_metric(metrics, "Terrestrial AI tracked", tostring(snapshot.terrestrial_ai_tokens_generated))
   add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
 
   content.add{type = "line"}
@@ -3375,6 +3426,13 @@ local function refresh_progress_panel(player)
   add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
   add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
   add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
+  add_progress_metric(
+    improvement_table,
+    "Terrestrial AI efficiency",
+    snapshot.terrestrial_ai_next_threshold
+      and string.format("Level %d; next at %d", snapshot.terrestrial_ai_efficiency_level, snapshot.terrestrial_ai_next_threshold)
+      or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level)
+  )
 
   content.add{type = "line"}
   add_section_heading(content, "Progression")
@@ -3520,6 +3578,35 @@ local function show_manufacturer_info_panel(player, entity)
     add_station_info_label(panel, "Rated demand: " .. config.power)
     if config.productivity then
       add_station_info_label(panel, config.productivity)
+    end
+    if entity.name == TERRESTRIAL_DATACENTER_NAME then
+      local status = ai_efficiency_track_status(entity.force, "terrestrial")
+      add_station_info_label(panel, "Capital burn: 20 Dollars per 30-second cycle (40 Dollars/minute at full speed)")
+      add_station_info_label(panel, string.format(
+        "AI output: %g Tokens/cycle (%g/minute at full power)",
+        status.tokens_per_cycle,
+        status.tokens_per_cycle * 2
+      ))
+      add_station_info_label(panel, string.format(
+        "Terrestrial production tracked: %d AI Tokens",
+        status.generated
+      ))
+      if status.next_threshold then
+        add_station_info_label(panel, string.format(
+          "Efficiency: level %d/%d (+%d%%); next research unlocks at %d tracked Tokens",
+          status.researched_level,
+          status.maximum_level,
+          status.researched_level * 10,
+          status.next_threshold
+        ))
+      else
+        add_station_info_label(panel, string.format(
+          "Efficiency: level %d/%d (+%d%%); terrestrial ceiling reached",
+          status.researched_level,
+          status.maximum_level,
+          status.researched_level * 10
+        ))
+      end
     end
   end
 
@@ -4054,17 +4141,9 @@ remote.add_interface("factoryx", {
   ai_efficiency_status = function(force_name)
     local force = game.forces[force_name or "player"]
     if not force then return nil end
-    local force_progress = ai_efficiency_progress()[force.index] or {}
     local result = {}
-    for track_name, config in pairs(AI_EFFICIENCY_TRACKS) do
-      local track = force_progress[track_name] or {generated = 0}
-      local level = researched_ai_efficiency_level(force, config)
-      result[track_name] = {
-        generated = math.floor(track.generated or 0),
-        researched_level = level,
-        productivity_bonus = level * 0.1,
-        next_threshold = AI_EFFICIENCY_THRESHOLDS[level + 1]
-      }
+    for track_name in pairs(AI_EFFICIENCY_TRACKS) do
+      result[track_name] = ai_efficiency_track_status(force, track_name)
     end
     return result
   end,

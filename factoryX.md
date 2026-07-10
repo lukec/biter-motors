@@ -1032,6 +1032,19 @@ Implemented design:
 
 - Unlocks Autonomy Computer, Datacenter Rack, Terrestrial Datacenter, and
   terrestrial AI token production.
+- The 6x6 Terrestrial Datacenter runs the physical recipe
+  `20 Dollars -> 20 AI Tokens` over 30 seconds while drawing 8 MW. At full
+  speed that is 40 Dollars and 40 base AI Tokens per minute.
+- Its inspector reports capital burn, effective output, tracked terrestrial
+  production, current efficiency level, and the next output milestone.
+- Terrestrial AI Efficiency unlocks at 1,000, 10,000, 100,000, 1 million,
+  10 million, and 100 million tracked terrestrial AI Tokens. Each researched
+  level adds 10% output without increasing capital or power per cycle. The
+  runtime accumulates fractional improvement and emits whole 20-token bonus
+  batches, matching Factorio's familiar productivity-bar behavior.
+- The terrestrial track deliberately tops out at level 6: 32 AI Tokens per
+  cycle, or 64/minute at full power. Scaling materially beyond that ceiling
+  requires the separate Orbital AI track.
 - Requires Mass-market EV Production, Energy Products, and Processing Units,
   with no launch, satellite, or space-science prerequisite.
 - Research costs 1,000 cycles of cumulative red-through-yellow science and

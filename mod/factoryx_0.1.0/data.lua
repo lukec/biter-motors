@@ -767,6 +767,8 @@ local terrestrial_datacenter = copied_assembler(
   1
 )
 terrestrial_datacenter.energy_source.emissions_per_minute = {pollution = 2}
+terrestrial_datacenter.module_slots = 0
+terrestrial_datacenter.allowed_effects = {"consumption", "speed", "pollution", "quality"}
 terrestrial_datacenter.collision_box = {{-2.9, -2.9}, {2.9, 2.9}}
 terrestrial_datacenter.selection_box = {{-3, -3}, {3, 3}}
 terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-datacenter", 0.36)
@@ -781,6 +783,8 @@ local orbital_compute_array = copied_assembler(
   1.5
 )
 orbital_compute_array.energy_source.emissions_per_minute = nil
+orbital_compute_array.module_slots = 0
+orbital_compute_array.allowed_effects = {"consumption", "speed", "pollution", "quality"}
 orbital_compute_array.graphics_set = generated_entity_animation("orbital-compute-array")
 orbital_compute_array.surface_conditions = {
   {
@@ -1557,7 +1561,7 @@ for level, threshold in pairs(ai_efficiency_thresholds) do
       name,
       track.icon,
       {track.prerequisite},
-      {{type = "change-recipe-productivity", recipe = track.recipe, change = 0.1}},
+      {{type = "nothing", effect_description = {"", "+10% AI Tokens per cycle"}}},
       math.floor(threshold / 10),
       track.science,
       30

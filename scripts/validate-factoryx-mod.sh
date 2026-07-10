@@ -77,6 +77,8 @@ local SMALL_BITER = "small-biter"
 local GUN_TURRET = "gun-turret"
 local WORM = "small-worm-turret"
 local CUSTOMER_FORCE = "factoryx-customers"
+local TERRESTRIAL_DATACENTER = "x-terrestrial-datacenter"
+local TERRESTRIAL_AI_RECIPE = "x-terrestrial-ai-token"
 
 local function output_inventory_id()
   return defines.inventory.crafter_output or defines.inventory.assembling_machine_output
@@ -147,13 +149,22 @@ script.on_init(function()
   local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
   local power_source = create_named(surface, POWER_SOURCE, {-4, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)
+  local datacenter = create_named(surface, TERRESTRIAL_DATACENTER, {0, -40}, force)
+  local datacenter_pole = create_named(surface, POWER_POLE, {0, -35}, force)
+  local datacenter_power = create_named(surface, POWER_SOURCE, {2, -35}, force)
   if power_source then
     power_source.electric_interface_mode = defines.electric_interface_mode.primary_output
     power_source.power_production = 10000000
     power_source.power_usage = 0
     power_source.output_flow_limit = 10000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster then
+  if datacenter_power then
+    datacenter_power.electric_interface_mode = defines.electric_interface_mode.primary_output
+    datacenter_power.power_production = 10000000
+    datacenter_power.power_usage = 0
+    datacenter_power.output_flow_limit = 10000000
+  end
+  if not milestone_office or not reservation_office or not robotaxi_office or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
   end
@@ -190,6 +201,15 @@ script.on_init(function()
   pcall(function() controller.set_recipe(GRID_RECIPE) end)
   pcall(function() gigafactory.set_recipe(PREMIUM_EV_RECIPE) end)
   pcall(function() gigafactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
+  for level = 1, 5 do
+    local efficiency_technology = force.technologies["x-terrestrial-ai-efficiency-" .. level]
+    efficiency_technology.enabled = true
+    efficiency_technology.researched = true
+  end
+  force.reset_technology_effects()
+  pcall(function() datacenter.set_recipe(TERRESTRIAL_AI_RECIPE) end)
+  local datacenter_input = datacenter.get_inventory(input_inventory_id())
+  storage.datacenter_dollars_inserted = datacenter_input and datacenter_input.insert{name = DOLLAR, count = 100} or 0
   local gigafactory_modules = gigafactory.get_inventory(defines.inventory.crafter_modules)
   local gigafactory_v2_modules = gigafactory_v2.get_inventory(defines.inventory.crafter_modules)
   storage.gigafactory_modules_inserted = gigafactory_modules
@@ -248,6 +268,7 @@ script.on_init(function()
   storage.megapack_unit_number = megapack.unit_number
   storage.power_source_unit_number = power_source.unit_number
   storage.roadster_unit_number = roadster.unit_number
+  storage.datacenter_unit_number = datacenter.unit_number
   storage.biter_spawner_unit_number = biter_spawner.unit_number
   storage.far_biter_spawner_unit_number = far_biter_spawner.unit_number
   storage.hostile_worm_unit_number = hostile_worm.unit_number
@@ -431,6 +452,7 @@ script.on_nth_tick(3720, function()
   local gigafactory_v2 = find_unit(surface, GIGAFACTORY_V2, storage.gigafactory_v2_unit_number)
   local solar_array = find_unit(surface, SOLAR_ARRAY, storage.solar_array_unit_number)
   local roadster = find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
+  local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
   local station_output = station_v2 and station_v2.get_inventory(defines.inventory.chest)
   local controller_inventory = controller and controller.get_inventory(output_inventory_id())
   local station_recipe = game.forces.player.recipes["x-ev-charging-station"]
@@ -458,6 +480,9 @@ script.on_nth_tick(3720, function()
   local progress = remote.call("factoryx", "progress_status", "player")
   local progression_integrity = remote.call("factoryx", "progression_integrity", "player")
   local vehicle_ownership = remote.call("factoryx", "customer_vehicle_ownership", "player")
+  local ai_efficiency = remote.call("factoryx", "ai_efficiency_status", "player")
+  local datacenter_input = datacenter and datacenter.get_inventory(input_inventory_id())
+  local datacenter_output = datacenter and datacenter.get_inventory(output_inventory_id())
   local reservations = station_output and station_output.get_item_count(RESERVATION) or -1
   local inserted_victory_charge = 0
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
@@ -531,6 +556,12 @@ script.on_nth_tick(3720, function()
     roadster_batteries = roadster_batteries,
     roadster_battery_energy = roadster_battery_energy,
     roadster_electric_fuel = roadster_fuel,
+    terrestrial_datacenter_created = datacenter ~= nil,
+    terrestrial_datacenter_dollars_remaining = datacenter_input and datacenter_input.get_item_count(DOLLAR) or -1,
+    terrestrial_datacenter_tokens = datacenter_output and datacenter_output.get_item_count("x-ai-token") or -1,
+    terrestrial_datacenter_productivity_bonus = datacenter and datacenter.productivity_bonus or -1,
+    terrestrial_datacenter_bonus_progress = datacenter and datacenter.bonus_progress or -1,
+    terrestrial_ai_efficiency = ai_efficiency and ai_efficiency.terrestrial,
     event_unpowered_station_created = storage.event_unpowered_station_created,
     event_unpowered_station_survived = storage.event_unpowered_station_created and event_unpowered_station ~= nil,
     direct_unpowered_station_created = storage.direct_unpowered_station_created,
@@ -1033,6 +1064,19 @@ if not checked.get("megapack_created") or not checked.get("megapack_recipe_enabl
     raise SystemExit(f"Energy Products did not unlock a placeable Megapack: {checked}")
 if not checked.get("sell_megapack_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock Sell Megapack: {checked}")
+if not checked.get("terrestrial_datacenter_created"):
+    raise SystemExit(f"Terrestrial Datacenter was not created in smoke test: {checked}")
+if checked.get("terrestrial_datacenter_tokens", 0) < 60:
+    raise SystemExit(f"powered Terrestrial Datacenter did not produce efficiency-adjusted AI Tokens: {checked}")
+if checked.get("terrestrial_datacenter_productivity_bonus") != 0:
+    raise SystemExit(f"Terrestrial Datacenter unexpectedly accepted native productivity: {checked}")
+if checked.get("terrestrial_datacenter_dollars_remaining", 100) > 80:
+    raise SystemExit(f"Terrestrial Datacenter did not consume Dollars while operating: {checked}")
+terrestrial_ai = checked.get("terrestrial_ai_efficiency") or {}
+if terrestrial_ai.get("researched_level") != 5 or terrestrial_ai.get("tokens_per_cycle") != 30 or terrestrial_ai.get("next_threshold") != 100000000:
+    raise SystemExit(f"Terrestrial AI efficiency status mismatch: {checked}")
+if terrestrial_ai.get("generated", 0) < 60:
+    raise SystemExit(f"Terrestrial AI production tracker did not observe completed cycles: {checked}")
 if not checked.get("grid_connection_created"):
     raise SystemExit(f"EV Charging Station grid connection was not created: {checked}")
 if not checked.get("v1_power_sinks_capped"):
