@@ -1083,8 +1083,8 @@ if not checked.get("v1_power_sinks_capped"):
     raise SystemExit(f"V1 charger should receive no utilization after the single produced EV is allocated to the earlier V2 charger: {checked}")
 if not checked.get("v2_power_sinks_created"):
     raise SystemExit(f"EV Charging Station V2 should create two customer sinks plus one nearby player-EV charging sink: {checked}")
-if not checked.get("roadster_created") or checked.get("roadster_batteries") != 2:
-    raise SystemExit(f"placed Roadster did not receive its two embedded battery equipment items: {checked}")
+if not checked.get("roadster_created") or checked.get("roadster_batteries") != 1:
+    raise SystemExit(f"placed Roadster did not receive its single short-range battery equipment item: {checked}")
 if checked.get("roadster_battery_energy", 0) <= 0 or checked.get("roadster_electric_fuel", 0) != 1:
     raise SystemExit(f"powered V2 charger did not charge the Roadster and produce electric drive fuel: {checked}")
 if not checked.get("ev_charging_station_v3_enabled"):

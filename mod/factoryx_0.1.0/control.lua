@@ -184,11 +184,11 @@ CUSTOMER_VEHICLE_CLASS_BY_ITEM = {
   ["x-robotaxi-fleet"] = "robotaxi"
 }
 ELECTRIC_VEHICLE_BATTERIES = {
-  ["x-prototype-roadster"] = 2,
-  ["x-premium-ev"] = 3,
-  ["x-mass-market-ev"] = 2,
-  ["x-cybertruck"] = 4,
-  ["x-robotaxi-fleet"] = 3
+  ["x-prototype-roadster"] = 1,
+  ["x-premium-ev"] = 4,
+  ["x-mass-market-ev"] = 3,
+  ["x-cybertruck"] = 8,
+  ["x-robotaxi-fleet"] = 5
 }
 ELECTRIC_DRIVE_FUEL_NAME = "x-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000

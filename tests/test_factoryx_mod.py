@@ -166,7 +166,7 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         self.assertIn("local function copied_electric_vehicle", data)
-        self.assertIn('equipment_grid = "medium-equipment-grid"', data)
+        self.assertIn('profile.equipment_grid or "medium-equipment-grid"', data)
         self.assertIn('fuel_categories = {"x-electric-drive"}', data)
         self.assertIn('fuel_value = "1MJ"', data)
         for name in ["x-prototype-roadster", "x-premium-ev", "x-mass-market-ev", "x-cybertruck", "x-robotaxi-fleet"]:
@@ -179,6 +179,24 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("charge_station_vehicles(station)", control)
         self.assertIn("customer_requested_stalls", control)
         self.assertIn("Player EV charging", control)
+        for fragment in [
+            '{consumption = "450kW", weight = 500, max_health = 300',
+            '{consumption = "320kW", weight = 750, max_health = 550',
+            '{consumption = "240kW", weight = 800, max_health = 500',
+            '{consumption = "600kW", weight = 1800, max_health = 1400',
+            '{consumption = "270kW", weight = 850, max_health = 650',
+            'equipment_grid = "large-equipment-grid"',
+            '{type = "impact", decrease = 150, percent = 70}',
+        ]:
+            self.assertIn(fragment, data)
+        for name, batteries in {
+            "x-prototype-roadster": 1,
+            "x-premium-ev": 4,
+            "x-mass-market-ev": 3,
+            "x-cybertruck": 8,
+            "x-robotaxi-fleet": 5,
+        }.items():
+            self.assertIn(f'["{name}"] = {batteries}', control)
 
     def test_quality_scales_physical_assets_not_abstract_outputs(self):
         data = (MOD / "data.lua").read_text()

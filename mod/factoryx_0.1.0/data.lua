@@ -288,13 +288,13 @@ local function copied_energy_entity(prototype_type, source_name, new_name, icons
   return prototype
 end
 
-local function copied_electric_vehicle(name, icons, primary, secondary, consumption, weight)
+local function copied_electric_vehicle(name, icons, primary, secondary, profile)
   local prototype = table.deepcopy(data.raw.car.car)
   prototype.name = name
   prototype.icon = nil
   prototype.icons = icons
   prototype.minable = {mining_time = 0.4, result = name}
-  prototype.equipment_grid = "medium-equipment-grid"
+  prototype.equipment_grid = profile.equipment_grid or "medium-equipment-grid"
   prototype.energy_source = {
     type = "burner",
     fuel_categories = {"x-electric-drive"},
@@ -302,8 +302,15 @@ local function copied_electric_vehicle(name, icons, primary, secondary, consumpt
     fuel_inventory_size = 1,
     emissions_per_minute = {}
   }
-  prototype.consumption = consumption
-  prototype.weight = weight
+  prototype.consumption = profile.consumption
+  prototype.weight = profile.weight
+  prototype.max_health = profile.max_health
+  prototype.rotation_speed = prototype.rotation_speed * profile.rotation_multiplier
+  prototype.braking_force = prototype.braking_force * profile.braking_multiplier
+  prototype.friction_force = profile.friction_force
+  prototype.energy_per_hit_point = profile.energy_per_hit_point
+  prototype.inventory_size = profile.inventory_size
+  prototype.resistances = profile.resistances or prototype.resistances
   tint_animation_masks(prototype.animation, primary, secondary)
   tint_animation_masks(prototype.turret_animation, primary, secondary)
   return prototype
@@ -825,27 +832,37 @@ local electric_vehicles = {
   copied_electric_vehicle(
     "x-prototype-roadster", generated_icon("prototype-roadster"),
     {r = 0.90, g = 0.02, b = 0.01, a = 1}, {r = 1.00, g = 0.18, b = 0.08, a = 1},
-    "180kW", 650
+    {consumption = "450kW", weight = 500, max_health = 300, rotation_multiplier = 1.35,
+      braking_multiplier = 1.25, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20}
   ),
   copied_electric_vehicle(
     "x-premium-ev", generated_icon("premium-ev"),
     {r = 0.015, g = 0.015, b = 0.015, a = 1}, {r = 0.12, g = 0.12, b = 0.12, a = 1},
-    "160kW", 800
+    {consumption = "320kW", weight = 750, max_health = 550, rotation_multiplier = 1.1,
+      braking_multiplier = 1.4, friction_force = 1.8e-3, energy_per_hit_point = 0.9, inventory_size = 40}
   ),
   copied_electric_vehicle(
     "x-mass-market-ev", generated_icon("mass-market-ev"),
     {r = 0.82, g = 0.82, b = 0.82, a = 1}, {r = 1.00, g = 1.00, b = 1.00, a = 1},
-    "130kW", 750
+    {consumption = "240kW", weight = 800, max_health = 500, rotation_multiplier = 1.0,
+      braking_multiplier = 1.3, friction_force = 1.9e-3, energy_per_hit_point = 1.0, inventory_size = 50}
   ),
   copied_electric_vehicle(
     "x-cybertruck", cybertruck_icon,
     {r = 0.58, g = 0.62, b = 0.66, a = 1}, {r = 0.90, g = 0.93, b = 0.96, a = 1},
-    "210kW", 1200
+    {consumption = "600kW", weight = 1800, max_health = 1400, rotation_multiplier = 0.72,
+      braking_multiplier = 1.7, friction_force = 1.5e-3, energy_per_hit_point = 0.35, inventory_size = 100,
+      equipment_grid = "large-equipment-grid", resistances = {
+        {type = "impact", decrease = 150, percent = 70},
+        {type = "acid", percent = 40},
+        {type = "fire", percent = 70}
+      }}
   ),
   copied_electric_vehicle(
     "x-robotaxi-fleet", generated_icon("robotaxi-fleet"),
     {r = 0.85, g = 0.52, b = 0.03, a = 1}, {r = 1.00, g = 0.82, b = 0.18, a = 1},
-    "120kW", 700
+    {consumption = "270kW", weight = 850, max_health = 650, rotation_multiplier = 1.15,
+      braking_multiplier = 1.7, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30}
   )
 }
 

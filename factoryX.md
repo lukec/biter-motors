@@ -1723,6 +1723,26 @@ AI-datacenter opposition dynamic:
 
 ## Current Validation Expectations
 
+## Drivable EV Roles
+
+The five EVs deliberately exaggerate different real-world product roles. Motor
+power, mass, tire friction, steering, braking, durability, cargo, and physical
+battery equipment all differ; these are gameplay vehicles, not cosmetic car
+items.
+
+| Vehicle | Driving role | Batteries | Health | Cargo | Character |
+| --- | --- | ---: | ---: | ---: | --- |
+| Prototype Roadster | Sprint car | 1 | 300 | 20 | Fastest response and sharpest steering; minimal range and fragile in collisions |
+| Premium EV | Grand tourer | 4 | 550 | 40 | Fast, composed, strong braking, and good range |
+| Mass-market EV | All-rounder | 3 | 500 | 50 | Predictable handling and the most practical general-purpose balance |
+| Cybertruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
+| Robotaxi | Long-duty fleet car | 5 | 650 | 30 | Efficient, stable, excellent braking, and tuned for sustained duty |
+
+Quality adds one battery per quality level. The Cybertruck uses a large
+equipment grid so its eight-battery base capacity and quality bonuses are not
+silently truncated. Long-range Battery research still improves the energy used
+per drive-charge unit across every model.
+
 For meaningful mod changes, run:
 
 ```sh
