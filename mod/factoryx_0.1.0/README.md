@@ -4,6 +4,12 @@ FactoryX is a fictionalized industrial ambition content mod for Factorio 2.1 +
 Space Age. This is a clean-break namespace: the mod id is `factoryx`, custom
 prototype ids use the `x-` prefix, and no compatibility aliases are retained.
 
+With `FactoryX accelerated start` enabled, the first player also finds a red
+wreckage chest containing 54 legendary High-density Solar Arrays (40.5 MW
+peak), 12 legendary Megapacks, and 20 legendary Substations. Nothing is
+prebuilt: the cache intentionally enables a solar-first opening while leaving
+the power layout to the player.
+
 The MVP loop is intentionally physical:
 
 1. Research Sales Office to unlock the Sales Office, EV Charging Station, and

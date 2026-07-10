@@ -133,6 +133,24 @@ script.on_event(defines.events.on_tick, function()
     return
   end
 
+  remote.call("factoryx", "grant_energy_jumpstart", player.index)
+  local jumpstart_solar = 0
+  local jumpstart_megapacks = 0
+  local jumpstart_substations = 0
+  for _, chest in pairs(player.surface.find_entities_filtered{
+    name = "passive-provider-chest",
+    force = player.force,
+    position = player.position,
+    radius = 64
+  }) do
+    local inventory = chest.get_inventory(defines.inventory.chest)
+    if inventory then
+      jumpstart_solar = jumpstart_solar + inventory.get_item_count{name = "x-high-density-solar-array", quality = "legendary"}
+      jumpstart_megapacks = jumpstart_megapacks + inventory.get_item_count{name = "x-megapack", quality = "legendary"}
+      jumpstart_substations = jumpstart_substations + inventory.get_item_count{name = "substation", quality = "legendary"}
+    end
+  end
+
   local progress_ok, progress_result = pcall(function()
     return remote.call("factoryx", "open_progress", player.index)
   end)
@@ -262,6 +280,9 @@ script.on_event(defines.events.on_tick, function()
   write_report{
     status = "checked",
     progress_call_ok = progress_ok,
+    jumpstart_solar = jumpstart_solar,
+    jumpstart_megapacks = jumpstart_megapacks,
+    jumpstart_substations = jumpstart_substations,
     progress_result = progress_result,
     progress_panel_created = player.gui.screen.factoryx_progress_panel ~= nil,
     progress_status = progress_status,
@@ -351,5 +372,7 @@ if checked.get("solar_productivity_caption") != "Level 0":
     raise SystemExit(f"FactoryX progress panel solar productivity caption mismatch: {checked}")
 if checked.get("megapack_productivity_caption") != "Level 0":
     raise SystemExit(f"FactoryX progress panel Megapack productivity caption mismatch: {checked}")
+if checked.get("jumpstart_solar") != 54 or checked.get("jumpstart_megapacks") != 12 or checked.get("jumpstart_substations") != 20:
+    raise SystemExit(f"FactoryX legendary energy jumpstart mismatch: {checked}")
 print("FactoryX GUI smoke report OK:", json.dumps(checked, sort_keys=True))
 PY

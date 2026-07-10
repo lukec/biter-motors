@@ -17,10 +17,12 @@ the mod or coach yet.
   cheats.
 - Leave `FactoryX accelerated start` enabled. Its current light start grants
   basic industrial research and wreckage supplies, but places no factory.
-- Do not add the previously brainstormed 40 MW legendary solar/accumulator and
-  robotics cache before this run. That would bypass the early power and
-  logistics constraints we need to measure. Reconsider it after reviewing the
-  first playtest timeline.
+- Start with the approved 40 MW energy jumpstart: 54 legendary High-density
+  Solar Arrays, 12 legendary Megapacks, and 20 legendary Substations in a red
+  wreckage chest. No power infrastructure is prebuilt. This run deliberately
+  tests a solar-first opening rather than measuring the vanilla steam phase.
+- Do not include the previously brainstormed Roboports or robot cache. The
+  energy jumpstart should not also erase early logistics progression.
 - Keep the currently implemented Planetary Energy Grid victory for this run so
   telemetry work does not also become a victory migration. The roadmap now
   adopts AGI as the target victory: one billion cumulative AI Tokens unlock a

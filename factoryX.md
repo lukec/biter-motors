@@ -162,7 +162,8 @@ Current runtime behavior is intentionally small:
 FactoryX has an optional startup setting, `FactoryX accelerated start`, enabled
 by default. It is deliberately a light start rather than a prebuilt base:
 
-- No machines or structures are placed for the player.
+- No factory is prebuilt. A red wreckage cache is placed beside the first
+  player, but the player chooses where to deploy its power infrastructure.
 - Basic industrial research starts complete: Automation, Logistics,
   Electronics, Steel Processing, Automation 2, Logistic Science, and Electric
   Energy Distribution 1.
@@ -170,6 +171,10 @@ by default. It is deliberately a light start rather than a prebuilt base:
   Gears, four Assembling Machine 1s, and four Labs.
 - The surrounding wreckage contains starter plates, stone, coal, belts,
   inserters, drills, furnaces, poles, and one small steam-power kit.
+- The red cache contains 54 legendary High-density Solar Arrays (40.5 MW peak),
+  12 legendary Megapacks, and 20 legendary Substations. This intentionally
+  makes solar the attractive opening power source while leaving layout and
+  construction to the player.
 - A spoiler-light opening message explains the customer economy and long-term
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.

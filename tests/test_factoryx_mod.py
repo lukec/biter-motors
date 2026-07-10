@@ -146,7 +146,17 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('remote.call("freeplay", "set_debris_items"', control)
         self.assertIn('remote.call("freeplay", "set_custom_intro_message"', control)
         self.assertIn("Recover the supplies scattered through the wreckage", control)
-        self.assertNotIn("surface.create_entity", control[control.index("function configure_factoryx_new_game"):control.index("local function current_recipe_name")])
+        configure = control[control.index("function configure_factoryx_new_game"):control.index("function grant_factoryx_energy_jumpstart")]
+        self.assertNotIn("surface.create_entity", configure)
+        jumpstart = control[control.index("FACTORYX_ENERGY_JUMPSTART_ITEMS"):control.index("local STATION_GRID_CONNECTION_DISTANCE")]
+        self.assertIn('["x-high-density-solar-array"] = 54', jumpstart)
+        self.assertIn('["x-megapack"] = 12', jumpstart)
+        self.assertIn('["substation"] = 20', jumpstart)
+        self.assertIn('FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"', control)
+        self.assertIn('name = "passive-provider-chest"', control)
+        self.assertIn("grant_factoryx_energy_jumpstart(player)", control)
+        self.assertIn("grant_energy_jumpstart = function(player_index)", control)
+        self.assertIn("40.5 MW peak", control)
 
     def test_cybertruck_and_ev_sales_are_balanced_as_profit(self):
         data = (MOD / "data.lua").read_text()
@@ -901,6 +911,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("open_progress_panel", control)
         self.assertIn('sprite = "utility/close"', control)
         self.assertIn('commands.add_command("factoryx-status"', control)
+        self.assertIn('commands.add_command("factoryx-note"', control)
+        self.assertIn('helpers.write_file("factoryx-playtest-notes.jsonl"', control)
+        self.assertIn("Playtest note recorded", control)
         self.assertIn("progress_status = function", control)
         self.assertIn("Dollars produced", control)
         self.assertIn("statistics.output_counts[item_name]", control)
@@ -1189,6 +1202,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function process_robotaxi_service_centers", control)
         self.assertIn("function ensure_robotaxi_service_power", control)
         self.assertIn("function robotaxi_customer_allocations", control)
+        self.assertIn("local customers = #centers > 0", control)
         self.assertIn("distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS", control)
         self.assertIn("available[center.unit_number] = stored > 0", control)
         self.assertIn("result[selected.unit_number] = result[selected.unit_number] + 1", control)

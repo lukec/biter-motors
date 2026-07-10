@@ -170,6 +170,12 @@ FACTORYX_START_DEBRIS_ITEMS = {
   ["offshore-pump"] = 1,
   ["pipe"] = 50
 }
+FACTORYX_ENERGY_JUMPSTART_ITEMS = {
+  ["x-high-density-solar-array"] = 54,
+  ["x-megapack"] = 12,
+  ["substation"] = 20
+}
+FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
 local CUSTOMER_MOBILE_SERVICE_RADIUS = 48
@@ -465,6 +471,36 @@ function configure_factoryx_new_game()
       "Recover the supplies scattered through the wreckage. Rebuild electric industry, establish a Sales Office, and turn physical products into capital. Your long-term objective is to scale energy and computation far beyond one factory."
     })
   end
+end
+
+function grant_factoryx_energy_jumpstart(player)
+  if not factoryx_accelerated_start_enabled() or not player or not player.valid then
+    return nil
+  end
+  storage.factoryx_energy_jumpstart_forces = storage.factoryx_energy_jumpstart_forces or {}
+  if storage.factoryx_energy_jumpstart_forces[player.force.name] then
+    return nil
+  end
+  local surface = player.surface
+  local target = {x = player.position.x + 8, y = player.position.y}
+  local position = surface.find_non_colliding_position("passive-provider-chest", target, 32, 1) or target
+  local chest = surface.create_entity{
+    name = "passive-provider-chest",
+    position = position,
+    force = player.force,
+    create_build_effect_smoke = false
+  }
+  local inventory = chest and chest.get_inventory(defines.inventory.chest)
+  if not inventory then
+    if chest and chest.valid then chest.destroy() end
+    return nil
+  end
+  for item_name, count in pairs(FACTORYX_ENERGY_JUMPSTART_ITEMS) do
+    inventory.insert{name = item_name, count = count, quality = FACTORYX_ENERGY_JUMPSTART_QUALITY}
+  end
+  storage.factoryx_energy_jumpstart_forces[player.force.name] = true
+  player.print("[FactoryX] Recovered energy cache: 54 legendary solar arrays (40.5 MW peak), 12 legendary Megapacks, and 20 legendary Substations.")
+  return chest
 end
 
 local function current_recipe_name(entity)
@@ -2546,7 +2582,10 @@ function robotaxi_customer_allocations()
       available[center.unit_number] = stored > 0
       result[center.unit_number] = 0
     end
-    for _, customer in pairs(surface.find_entities_filtered{type = "unit", force = customer_force}) do
+    local customers = #centers > 0
+      and surface.find_entities_filtered{type = "unit", force = customer_force}
+      or {}
+    for _, customer in pairs(customers) do
       local selected
       local selected_distance
       for _, center in pairs(centers) do
@@ -4204,6 +4243,7 @@ end)
 script.on_event(defines.events.on_player_created, function(event)
   local player = game.get_player(event.player_index)
   if player then
+    grant_factoryx_energy_jumpstart(player)
     sales_office_coverage_enabled()[player.index] = false
     refresh_sales_office_coverage(player)
     sync_charger_placement_overlay(player)
@@ -4422,6 +4462,11 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  grant_energy_jumpstart = function(player_index)
+    local player = game.get_player(player_index)
+    local chest = grant_factoryx_energy_jumpstart(player)
+    return chest and chest.valid or false
+  end,
   robotaxi_service_status = function(force_name)
     local force = game.forces[force_name or "player"]
     if not force then return nil end
@@ -4553,6 +4598,26 @@ commands.add_command("factoryx-status", "Open or report FactoryX progression sta
   local snapshot = progress_snapshot(force)
   local stage, objective, detail = current_progress_objective(snapshot)
   rcon.print(string.format("[FactoryX] %s: %s %s", stage, objective, detail))
+end)
+
+commands.add_command("factoryx-note", "Record a timestamped FactoryX playtest note.", function(command)
+  local player = command.player_index and game.get_player(command.player_index)
+  local text = command.parameter and string.gsub(command.parameter, "^%s*(.-)%s*$", "%1") or ""
+  if not player or text == "" then
+    if player then player.print("Usage: /factoryx-note <observation>") end
+    return
+  end
+  local snapshot = progress_snapshot(player.force)
+  local stage = current_progress_objective(snapshot)
+  helpers.write_file("factoryx-playtest-notes.jsonl", helpers.table_to_json{
+    tick = game.tick,
+    player = player.name,
+    surface = player.surface.name,
+    position = {x = player.position.x, y = player.position.y},
+    stage = stage,
+    text = text
+  } .. "\n", true)
+  player.print("[FactoryX] Playtest note recorded.")
 end)
 
 commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid connections.", function(command)
