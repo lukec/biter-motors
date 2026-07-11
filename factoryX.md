@@ -95,8 +95,10 @@ Rules for the rest of the design:
 
 The MVP already has these major loops:
 
-1. Research Sales Office to unlock the Sales Office, EV Charging Station, and
-   the first Sales Office recipe: `Sell hopes and dreams`.
+1. Research Automobilism, then Sales Office. Sales Office requires
+   Automobilism and Electric Engine technology, and unlocks the Sales Office,
+   EV Charging Station, and the first Sales Office recipe: `Sell hopes and
+   dreams`.
 2. Place a powered EV Charging Station near biter customer settlements.
 3. The first covered biter customer charging site unlocks Prototype Roadsters.
 4. Craft Prototype Roadsters.
