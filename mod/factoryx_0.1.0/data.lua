@@ -30,6 +30,12 @@ local function tech_icon(path)
     {
       icon = path,
       icon_size = 256
+    },
+    {
+      icon = "__factoryx__/graphics/technology/factoryx-tech-badge.png",
+      icon_size = 64,
+      scale = 0.78,
+      shift = {88, 88}
     }
   }
 end
@@ -1339,7 +1345,7 @@ add_lab_input("biolab", "x-ai-token")
 
 data:extend({
   tech("x-sales-office",
-    "__factoryx__/graphics/technology/sales-office.png",
+    "__factoryx__/graphics/icons/sales-office.png",
     {"automobilism", "electric-engine", "chemical-science-pack"},
     {
       unlock("x-sales-office"),
@@ -1355,7 +1361,7 @@ data:extend({
     20
   ),
   tech("x-premium-ev-program",
-    "__base__/graphics/technology/electric-engine.png",
+    "__factoryx__/graphics/icons/premium-ev.png",
     {
       "x-sales-office",
       "battery",
@@ -1381,7 +1387,7 @@ data:extend({
     30
   ),
   tech("x-capital-scaling",
-    "__base__/graphics/technology/logistics-2.png",
+    "__factoryx__/graphics/icons/mass-market-ev.png",
     {
       "x-ev-charging-network",
       "x-energy-products",
@@ -1409,7 +1415,7 @@ data:extend({
     60
   ),
   tech("x-ev-charging-network",
-    "__factoryx__/graphics/technology/ev-charging-network.png",
+    "__factoryx__/graphics/icons/ev-charging-station-v2.png",
     {"x-premium-ev-program", "electric-energy-distribution-2", "concrete"},
     {
       unlock("x-ev-charging-station-v2")
@@ -1424,7 +1430,7 @@ data:extend({
     30
   ),
   tech("x-energy-products",
-    "__factoryx__/graphics/technology/gigafactory.png",
+    "__factoryx__/graphics/icons/megapack.png",
     {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy", "production-science-pack"},
     {
       unlock("x-gigafactory-building"),
@@ -1443,7 +1449,7 @@ data:extend({
     45
   ),
   tech("x-small-orbital-launch",
-    "__base__/graphics/technology/rocket-silo.png",
+    "__factoryx__/graphics/icons/small-launch-service.png",
     {"rocket-silo", "x-autonomous-logistics"},
     {
       unlock("x-small-launch-service"),
@@ -1461,7 +1467,7 @@ data:extend({
     60
   ),
   tech("x-reusable-launch",
-    "__space-age__/graphics/technology/rocket-part-productivity.png",
+    "__factoryx__/graphics/icons/reusable-launch-service.png",
     {"x-small-orbital-launch", "space-science-pack"},
     {
       unlock("x-reusable-booster"),
@@ -1481,7 +1487,7 @@ data:extend({
     60
   ),
   tech("x-satellite-constellation",
-    "__space-age__/graphics/technology/space-platform.png",
+    "__factoryx__/graphics/icons/satellite-bus.png",
     {"x-reusable-launch", "space-platform"},
     {
       unlock("x-satellite-bus"),
@@ -1500,7 +1506,7 @@ data:extend({
     60
   ),
   tech("x-terrestrial-ai",
-    "__factoryx__/graphics/technology/terrestrial-ai.png",
+    "__factoryx__/graphics/icons/terrestrial-datacenter.png",
     {"x-capital-scaling", "x-energy-products", "processing-unit"},
     {
       unlock("x-autonomy-computer"),
@@ -1520,7 +1526,7 @@ data:extend({
     60
   ),
   tech("x-orbital-compute",
-    "__base__/graphics/technology/space-science-pack.png",
+    "__factoryx__/graphics/icons/orbital-compute-array.png",
     {"x-satellite-constellation", "x-terrestrial-ai", "space-platform", "electromagnetic-science-pack"},
     {
       unlock("x-orbital-compute-array"),
@@ -1541,7 +1547,7 @@ data:extend({
     60
   ),
   tech("x-autonomous-logistics",
-    "__factoryx__/graphics/technology/autonomous-logistics.png",
+    "__factoryx__/graphics/icons/robotaxi-service-center.png",
     {"x-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"},
     {
       unlock("x-robotaxi-fleet"),
@@ -1563,7 +1569,7 @@ data:extend({
     60
   ),
   tech("x-planetary-energy-grid",
-    "__factoryx__/graphics/technology/planetary-energy-grid.png",
+    "__factoryx__/graphics/icons/planetary-grid-controller.png",
     {"x-orbital-compute", "x-autonomous-logistics", "fusion-reactor"},
     {
       unlock("x-planetary-grid-controller"),

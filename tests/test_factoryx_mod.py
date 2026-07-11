@@ -441,14 +441,15 @@ class FactoryXModTest(unittest.TestCase):
             with Image.open(path) as image:
                 self.assertEqual(image.size, (256, 256))
 
-        for technology in [
+        self.assertIn('"__factoryx__/graphics/technology/factoryx-tech-badge.png"', data)
+        for clean_subject in [
             "sales-office",
-            "ev-charging-network",
-            "terrestrial-ai",
-            "autonomous-logistics",
-            "planetary-energy-grid",
+            "ev-charging-station-v2",
+            "terrestrial-datacenter",
+            "robotaxi-service-center",
+            "planetary-grid-controller",
         ]:
-            self.assertIn(f'"__factoryx__/graphics/technology/{technology}.png"', data)
+            self.assertIn(f'"__factoryx__/graphics/icons/{clean_subject}.png"', data)
 
         self.assertIn('working_animation("gigafactory-press"', data)
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
@@ -977,6 +978,36 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('technology.researched = true', recycling_unlock)
         self.assertIn('output.insert{name = WRECKED_EV_NAME, count = removed}', control)
         self.assertIn('x-industrial-supply-chain=Industrial Supply Chain', locale)
+
+    def test_factoryx_technology_icons_share_one_badge(self):
+        data = (MOD / "data.lua").read_text()
+        updates = (MOD / "data-updates.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        badge = MOD / "graphics" / "technology" / "factoryx-tech-badge.png"
+        self.assertTrue(badge.exists())
+        with Image.open(badge) as badge_image:
+            self.assertEqual(badge_image.size, (64, 64))
+        self.assertIn('factoryx-tech-badge.png', data)
+        self.assertIn('factoryx-tech-badge.png', updates)
+        for old_ringed_icon in [
+            "sales-office.png",
+            "ev-charging-network.png",
+            "gigafactory.png",
+            "terrestrial-ai.png",
+            "autonomous-logistics.png",
+            "planetary-energy-grid.png",
+        ]:
+            self.assertNotIn(f'graphics/technology/{old_ringed_icon}', data)
+        for clean_subject in [
+            "graphics/icons/sales-office.png",
+            "graphics/icons/premium-ev.png",
+            "graphics/icons/mass-market-ev.png",
+            "graphics/icons/ev-charging-station-v2.png",
+            "graphics/icons/megapack.png",
+            "graphics/icons/robotaxi-service-center.png",
+            "graphics/icons/planetary-grid-controller.png",
+        ]:
+            self.assertIn(clean_subject, data)
         station_recipe = data[data.index('recipe("x-ev-charging-station"'):data.index('recipe("x-ev-charging-station-v2"')]
         station_v2_recipe = data[data.index('recipe("x-ev-charging-station-v2"'):data.index('recipe("x-ev-charging-station-v3"')]
         station_v3_recipe = data[data.index('recipe("x-ev-charging-station-v3"'):data.index('recipe("x-ev-charging-station-v4"')]

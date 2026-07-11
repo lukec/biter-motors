@@ -20,6 +20,20 @@ local function unlock(recipe)
   return {type = "unlock-recipe", recipe = recipe}
 end
 
+local function mark_factoryx_technology(technology, icon)
+  technology.icon = nil
+  technology.icon_size = nil
+  technology.icons = {
+    {icon = icon, icon_size = 256},
+    {
+      icon = "__factoryx__/graphics/technology/factoryx-tech-badge.png",
+      icon_size = 64,
+      scale = 0.78,
+      shift = {88, 88}
+    }
+  }
+end
+
 local function rewrite_recipe(name, values)
   local recipe = data.raw.recipe[name]
   if not recipe then return end
@@ -34,8 +48,10 @@ data:extend({
   {
     type = "technology",
     name = "x-industrial-supply-chain",
-    icon = "__base__/graphics/technology/automation-2.png",
-    icon_size = 256,
+    icons = {
+      {icon = "__base__/graphics/technology/automation-2.png", icon_size = 256},
+      {icon = "__factoryx__/graphics/technology/factoryx-tech-badge.png", icon_size = 64, scale = 0.78, shift = {88, 88}}
+    },
     prerequisites = {"automation-2", "electric-mining-drill", "steel-processing"},
     effects = {unlock("electric-furnace")},
     unit = science(75, {"automation-science-pack", "logistic-science-pack"}, 20),
@@ -71,6 +87,7 @@ rewrite_recipe("big-mining-drill", {
   )
 })
 local big_drill_tech = data.raw.technology["big-mining-drill"]
+mark_factoryx_technology(big_drill_tech, "__space-age__/graphics/technology/big-mining-drill.png")
 big_drill_tech.prerequisites = {"x-industrial-supply-chain", "engine"}
 big_drill_tech.research_trigger = nil
 big_drill_tech.unit = science(100, {"automation-science-pack", "logistic-science-pack"}, 30)
@@ -84,6 +101,7 @@ rewrite_recipe("foundry", {
   )
 })
 local foundry_tech = data.raw.technology.foundry
+mark_factoryx_technology(foundry_tech, "__space-age__/graphics/technology/foundry.png")
 foundry_tech.prerequisites = {"x-industrial-supply-chain", "concrete"}
 foundry_tech.research_trigger = nil
 foundry_tech.unit = science(150, {"automation-science-pack", "logistic-science-pack"}, 30)
@@ -120,6 +138,7 @@ rewrite_recipe("recycler", {
   )
 })
 local recycling_tech = data.raw.technology.recycling
+mark_factoryx_technology(recycling_tech, "__recycler__/graphics/technology/recycling.png")
 recycling_tech.prerequisites = {"x-industrial-supply-chain", "concrete"}
 recycling_tech.research_trigger = nil
 recycling_tech.unit = science(150, {"automation-science-pack", "logistic-science-pack"}, 30)
@@ -154,6 +173,7 @@ rewrite_recipe("tesla-ammo", {
   energy_required = 10
 })
 local tesla_tech = data.raw.technology["tesla-weapons"]
+mark_factoryx_technology(tesla_tech, "__space-age__/graphics/technology/tesla-weapons.png")
 tesla_tech.prerequisites = {"x-energy-products", "military-3", "processing-unit"}
 tesla_tech.unit = science(500, {
   "automation-science-pack", "logistic-science-pack", "chemical-science-pack",

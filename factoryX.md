@@ -1604,6 +1604,12 @@ art. The 2026-07-10 production pass added final Sales Office and Terrestrial
 Datacenter masters, normalized custom icons, seven locally composed technology
 icons, and bounded working animations. Remaining work is narrower:
 
+- Technology-tree identity now uses clean subject-specific art plus one small
+  lower-right steel `FX` maker's badge in gold and electric cyan. The older
+  concentric-circle compositions are retired from the live prototypes. Avoid a
+  red `X` or crossed-tool mark because it reads as unavailable or invalid in a
+  technology tree.
+
 - `BiterMotors.png` now supplies the square FactoryX brand artwork: a 256x256
   in-game Progress shortcut icon and a 144x144 packaged-mod thumbnail. The
   source artwork remains in Downloads and is not duplicated at full resolution

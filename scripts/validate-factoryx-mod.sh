@@ -762,6 +762,17 @@ from pathlib import Path
 
 data = json.loads(Path(sys.argv[1]).read_text())
 
+factoryx_badge = "__factoryx__/graphics/technology/factoryx-tech-badge.png"
+factoryx_technologies = {
+    name for name in data["technology"]
+    if name.startswith("x-")
+} | {"big-mining-drill", "foundry", "recycling", "tesla-weapons"}
+for technology_name in factoryx_technologies:
+    icon_paths = {layer.get("icon") for layer in data["technology"][technology_name].get("icons", [])}
+    if factoryx_badge not in icon_paths:
+        raise SystemExit(f"{technology_name} is missing the FactoryX technology badge: {sorted(str(p) for p in icon_paths)}")
+print("FactoryX technology icon branding OK.")
+
 rgb = {"automation-science-pack", "logistic-science-pack", "chemical-science-pack"}
 rgbpy = rgb | {"production-science-pack", "utility-science-pack"}
 rgbpys = rgbpy | {"space-science-pack"}
