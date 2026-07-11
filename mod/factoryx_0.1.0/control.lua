@@ -217,6 +217,8 @@ FACTORYX_START_TECHNOLOGIES = {
   "electric-mining-drill",
   "repair-pack",
   "military",
+  "gun-turret",
+  "radar",
   "heavy-armor",
   "stone-wall",
   "landfill",

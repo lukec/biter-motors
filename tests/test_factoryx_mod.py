@@ -157,6 +157,8 @@ class FactoryXModTest(unittest.TestCase):
             "electric-mining-drill",
             "repair-pack",
             "military",
+            "gun-turret",
+            "radar",
             "heavy-armor",
             "stone-wall",
             "landfill",
@@ -474,7 +476,8 @@ class FactoryXModTest(unittest.TestCase):
         prototype_recipe = data[data.index('recipe("x-prototype-roadster"'):data.index('recipe("x-premium-ev"')]
         first_sale_recipe = data[data.index('recipe("x-sell-prototype-roadster"'):data.index('recipe("x-sell-premium-ev"')]
         self.assertIn('unlock("x-sales-office")', sales_tech)
-        self.assertIn('{"automobilism", "electric-engine"}', sales_tech)
+        self.assertIn('{"automobilism", "electric-engine", "chemical-science-pack"}', sales_tech)
+        self.assertIn('{"chemical-science-pack", 1}', sales_tech)
         self.assertIn('unlock("x-ev-charging-station")', sales_tech)
         self.assertIn('unlock("x-sell-prototype-roadster")', sales_tech)
         self.assertNotIn('unlock("x-prototype-roadster")', sales_tech)

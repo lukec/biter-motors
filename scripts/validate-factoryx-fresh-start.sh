@@ -33,7 +33,7 @@ script.on_init(function()
   local technologies = {}
   for _, name in pairs({
     "steam-power", "automation-science-pack", "automation", "logistics", "electronics",
-    "steel-processing", "steel-axe", "electric-mining-drill", "repair-pack", "military",
+    "steel-processing", "steel-axe", "electric-mining-drill", "repair-pack", "military", "gun-turret", "radar",
     "heavy-armor", "stone-wall", "landfill", "circuit-network", "automation-2",
     "logistic-science-pack", "electric-energy-distribution-2", "advanced-material-processing",
     "advanced-material-processing-2", "oil-processing", "sulfur-processing", "plastics",

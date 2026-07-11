@@ -95,10 +95,10 @@ Rules for the rest of the design:
 
 The MVP already has these major loops:
 
-1. Research Automobilism, then Sales Office. Sales Office requires
-   Automobilism and Electric Engine technology, and unlocks the Sales Office,
-   EV Charging Station, and the first Sales Office recipe: `Sell hopes and
-   dreams`.
+1. Research Automobilism and Chemical Science, then Sales Office. Sales Office
+   requires Automobilism, Electric Engine, and Chemical Science technology, and
+   consumes red, green, and blue science. It unlocks the Sales Office, EV
+   Charging Station, and the first Sales Office recipe: `Sell hopes and dreams`.
 2. Place a powered EV Charging Station near biter customer settlements.
 3. The first covered biter customer charging site unlocks Prototype Roadsters.
 4. Craft Prototype Roadsters.
@@ -173,7 +173,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
   contents.
 - The opening skips basic research chores. Steam Power, Automation Science,
   Steel Axe, Electric Mining Drills, Labs, electric furnaces, lamps, basic
-  military and Heavy Armor, Repair Packs, Stone Walls, Landfill, circuit
+  military, Gun Turrets, Radar, and Heavy Armor, Repair Packs, Stone Walls, Landfill, circuit
   networks, fluid handling, and the oil-to-Advanced-Circuit chain all start
   researched. This makes every ordinary component supplied in the wreckage or
   personal kit craftable without replaying the burner-era technology path.

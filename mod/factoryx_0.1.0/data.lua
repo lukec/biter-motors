@@ -1325,7 +1325,7 @@ add_lab_input("biolab", "x-ai-token")
 data:extend({
   tech("x-sales-office",
     "__factoryx__/graphics/technology/sales-office.png",
-    {"automobilism", "electric-engine"},
+    {"automobilism", "electric-engine", "chemical-science-pack"},
     {
       unlock("x-sales-office"),
       unlock("x-ev-charging-station"),
@@ -1334,7 +1334,8 @@ data:extend({
     75,
     {
       {"automation-science-pack", 1},
-      {"logistic-science-pack", 1}
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1}
     },
     20
   ),

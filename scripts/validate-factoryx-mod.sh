@@ -768,7 +768,7 @@ planet_four = {
     "cryogenic-science-pack",
 }
 expected_research = {
-    "x-sales-office": (75, 20, {"automation-science-pack", "logistic-science-pack"}),
+    "x-sales-office": (75, 20, {"automation-science-pack", "logistic-science-pack", "chemical-science-pack"}),
     "x-premium-ev-program": (250, 30, rgb | {"x-dollar"}),
     "x-ev-charging-network": (300, 30, rgb | {"x-dollar"}),
     "x-energy-products": (500, 45, rgb | {"production-science-pack", "x-dollar"}),
