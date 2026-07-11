@@ -832,6 +832,22 @@ function seed_crash_site_salvage(player)
   end
 end
 
+local function award_small_crash_site_salvage(event)
+  local entity = event.entity
+  if not entity or not string.find(entity.name, "crash-site-spaceship-wreck-small-", 1, true) then
+    return
+  end
+  local inserted = event.buffer and event.buffer.insert{name = "copper-plate", count = 5} or 0
+  if inserted < 5 and entity.surface and entity.position then
+    entity.surface.spill_item_stack{
+      position = entity.position,
+      stack = {name = "copper-plate", count = 5 - inserted},
+      enable_looted = true,
+      force = entity.force
+    }
+  end
+end
+
 local function current_recipe_name(entity)
   local ok, recipe = pcall(function()
     return entity.get_recipe()
@@ -5535,6 +5551,10 @@ for _, event_name in pairs({
   if event_name then
     script.on_event(event_name, function(event)
       local entity = event.entity
+      if event_name == defines.events.on_player_mined_entity
+        or event_name == defines.events.on_robot_mined_entity then
+        award_small_crash_site_salvage(event)
+      end
       if entity and entity.valid and entity.unit_number and customer_unit_registry()[entity.unit_number] then
         destroy_customer_marker(entity)
         unregister_customer_unit(entity)

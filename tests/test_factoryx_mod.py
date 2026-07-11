@@ -209,6 +209,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('player.force.add_chart_tag', control)
         self.assertIn('function seed_crash_site_salvage', control)
         self.assertIn('crash-site-spaceship-wreck-', control)
+        self.assertIn('function award_small_crash_site_salvage', control)
+        self.assertIn('stack = {name = "copper-plate", count = 5', control)
         self.assertIn("grant_factoryx_energy_jumpstart(player)", control)
         self.assertIn("grant_energy_jumpstart = function(player_index)", control)
         self.assertIn('["x-high-density-solar-array"] = 54', control)

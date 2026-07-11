@@ -194,7 +194,8 @@ by default. It is deliberately a light start rather than a prebuilt base:
   products still require their normal FactoryX progression.
 - Every mineable crash-site wreck receives a small physical salvage payout when
   it would otherwise be empty: steel from large hull sections, iron from medium
-  sections, and copper from small fragments.
+  sections, and five copper plates directly into the mining output from each
+  small fragment.
 - A spoiler-light opening message explains the customer economy and long-term
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.
