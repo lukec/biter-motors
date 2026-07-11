@@ -222,6 +222,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_cybertruck_and_ev_sales_are_balanced_as_profit(self):
         data = (MOD / "data.lua").read_text()
         locale = (MOD / "locale/en/factoryx.cfg").read_text()
+        locale = (MOD / "locale/en/factoryx.cfg").read_text()
         expected = {
             "x-prototype-roadster": 30,
             "x-premium-ev": 20,
@@ -243,6 +244,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-dollar", amount = 2', cybertruck_sale)
         self.assertIn('name = "x-ev-reservation", amount = 1', cybertruck_sale)
         self.assertIn("}}, 10", cybertruck_sale)
+        self.assertIn("x-cybertruck=Megatruck", locale)
+        self.assertIn("x-sell-cybertruck=Sell Megatruck", locale)
+        self.assertNotIn("Cybertruck", locale)
         self.assertIn("Dollars of profit", locale)
 
     def test_factoryx_evs_are_drivable_and_charge_from_powered_stalls(self):

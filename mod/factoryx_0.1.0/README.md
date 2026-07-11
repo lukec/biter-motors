@@ -115,7 +115,7 @@ FactoryX does not cap or cull customer populations. Friendly non-owners use an
 engine-native green tint and hostile units retain their normal appearance.
 Owners become explicit baked unit prototypes across all eight biter/spitter
 forms: Roadster red, Premium black, Mass-market white, and Robotaxi gold. Future
-Cybertruck variants are reserved as silver. Existing owners migrate gradually;
+Megatruck variants are reserved as silver. Existing owners migrate gradually;
 per-owner Lua car-icon render objects are no longer used.
 Customer mobile units have old hostile commands cleared when they convert, so
 an attack order issued by the enemy force cannot survive customer conversion.

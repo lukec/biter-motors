@@ -1833,7 +1833,7 @@ local customer_vehicle_classes = {
     secondary = {r = 1.00, g = 0.82, b = 0.18, a = 1}
   },
   cybertruck = {
-    label = "Cybertruck",
+    label = "Megatruck",
     primary = {r = 0.58, g = 0.62, b = 0.66, a = 1},
     secondary = {r = 0.90, g = 0.93, b = 0.96, a = 1}
   }

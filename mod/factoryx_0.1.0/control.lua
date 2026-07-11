@@ -137,7 +137,7 @@ EV_SALES_GATES = {
     threshold = 2000,
     technology = "x-capital-scaling",
     recipes = {"x-cybertruck", "x-sell-cybertruck"},
-    label = "Cybertruck"
+    label = "Megatruck"
   },
   robotaxi = {
     total_consumer_sales = true,
@@ -3883,7 +3883,7 @@ local function announce_mass_market_production_researched(force)
     return
   end
 
-  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Cybertrucks require 2,000 Mass-market EV sales.")
+  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatrucks require 2,000 Mass-market EV sales.")
 end
 
 local function announce_ev_charging_network_researched(force)
@@ -4694,7 +4694,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.mass_market_sale_complete then
     return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Gigafactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
   elseif not snapshot.cybertruck_gate.market_ready then
-    return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Cybertruck production.", snapshot.mass_market_evs_sold)
+    return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Megatruck production.", snapshot.mass_market_evs_sold)
   elseif snapshot.chargers_v3 == 0 then
     return "Supercharging", "Craft and place a V3 Supercharger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.megapacks == 0 then
@@ -4708,7 +4708,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.autonomous_logistics_researched then
     return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Robotaxi Fleets."
   elseif not snapshot.robotaxi_gate.market_ready then
-    return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Cybertruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
+    return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Megatruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
   elseif snapshot.robotaxi_fleets_produced == 0 then
     return "Autonomy", "Build the first Robotaxi Fleet in Gigafactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
   elseif snapshot.chargers_v4 == 0 then
@@ -4818,7 +4818,7 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Premium EV gate", string.format("%d / 50 Roadsters", snapshot.roadsters_sold))
   add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
-  add_progress_metric(metrics, "Cybertruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
+  add_progress_metric(metrics, "Megatruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
   add_progress_metric(metrics, "Robotaxi gate", string.format("%d / 5,000 consumer EVs", snapshot.consumer_evs_sold))
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))

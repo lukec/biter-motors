@@ -112,7 +112,7 @@ The MVP already has these major loops:
 9. Research Energy Products to unlock Gigafactory construction.
 10. Combine the modules with two Substations, then build Premium and
     Mass-Market EVs only in Gigafactories.
-11. Build silver Cybertrucks after Mass-market EV Production, then sell each
+11. Build silver Megatrucks after Mass-market EV Production, then sell each
     one with an EV Reservation for 2 Dollars of profit.
 12. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
 12. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
@@ -150,11 +150,11 @@ Current runtime behavior is intentionally small:
   physical paperwork; logistic bots can also collect it when optional logistic
   coverage is available. Logistic coverage never gates charger operation.
 - Prototype, Premium, and Mass-market EV sales consume one reservation per car.
-  Cybertruck sales also consume one reservation. Robotaxi fleets consume no
+  Megatruck sales also consume one reservation. Robotaxi fleets consume no
   reservations; they require major capital instead.
 - All five FactoryX EV products are now drivable. They temporarily reuse the
   vanilla car body with product colors: Roadster red, Premium black,
-  Mass-market white, Cybertruck silver, and Robotaxi gold.
+  Mass-market white, Megatruck silver, and Robotaxi gold.
 - Each placed EV receives embedded battery equipment. Powered charger tiers
   reserve spare stalls for nearby player EVs, draw their normal per-stall grid
   power, and refill those batteries. Customer stalls are allocated first and
@@ -251,7 +251,7 @@ an obsolete dependency. It implements the pattern directly against Factorio
 | Prototype Roadster | 30s | 120s | 2 Dollars | 1 |
 | Premium EV | 20s | 30s | 1 Dollar | 1 |
 | Mass-market EV | 8s | 5s | 1 Dollar | 1 |
-| Cybertruck | 15s | 10s | 2 Dollars | 1 |
+| Megatruck | 15s | 10s | 2 Dollars | 1 |
 | Robotaxi | 20s | 3s per three | 1 Dollar per three | None |
 
 One Dollar represents roughly US$10,000 of investable profit, not gross
@@ -355,7 +355,7 @@ Current simplified terrestrial recipes:
 - Prototype Roadster: `Car + Batteries + Advanced Circuits`.
 - Premium EV: `Car + Battery Packs + Electric Drivetrains + Advanced Circuits`.
 - Mass-Market EV: `Car + Battery Packs + Electric Drivetrain`.
-- Cybertruck: `2 Mass-Market EVs + 20 Steel Plates + 4 Battery Packs`.
+- Megatruck: `2 Mass-Market EVs + 20 Steel Plates + 4 Battery Packs`.
 - High-density Solar Array: `Solar Panels + Processing Units + Low Density Structures + Dollars`.
 - Megapack: `Battery Packs + Accumulators + Substation`.
 - Autonomy Computer: `Processing Units + Speed Modules`.
@@ -379,7 +379,7 @@ Current sales recipes:
 - Premium EV + EV Reservation -> 1 Dollar: 30 seconds. One Dollar represents
   roughly US$10,000 of profit.
 - Mass-market EV + EV Reservation -> 1 Dollar: 5 seconds.
-- Cybertruck + EV Reservation -> 2 Dollars: 10 seconds.
+- Megatruck + EV Reservation -> 2 Dollars: 10 seconds.
 - Megapack -> Dollars.
 - Small launch service -> Dollars.
 - Reusable launch service -> Dollars.
@@ -388,9 +388,9 @@ Current sales recipes:
 
 Vehicle progression requires both the normal technology and completed,
 force-wide customer sales. Premium EVs require 50 Prototype Roadsters sold;
-Mass-market EVs require 250 Premium EVs sold; Cybertrucks require 2,000
+Mass-market EVs require 250 Premium EVs sold; Megatrucks require 2,000
 Mass-market EVs sold; and Robotaxis require 5,000 total Roadster, Premium,
-Mass-market, and Cybertruck sales. Production alone does not count. A completed
+Mass-market, and Megatruck sales. Production alone does not count. A completed
 Sales Office contract increments the relevant total permanently, so an owner's
 later death does not erase market progress. These intentionally large gates
 push the player to reach several customer settlements and scale reservations,
@@ -671,9 +671,9 @@ Implemented v1 behavior:
     populations. Friendly non-owners use an engine-native green tint and hostile
     units retain their normal appearance.
   - Vehicle owners use 32 explicit baked prototypes: eight vanilla mobile forms
-    multiplied by Roadster, Premium EV, Mass-market EV, Cybertruck, and
+    multiplied by Roadster, Premium EV, Mass-market EV, Megatruck, and
     Robotaxi classes. Roadster is red, Premium is black, Mass-market is white,
-    Cybertruck is silver, and Robotaxi is gold.
+    Megatruck is silver, and Robotaxi is gold.
   - Completed sales replace the selected mobile buyer with its class prototype
     while preserving position, health ratio, force, settlement, and ownership.
     Existing owners migrate at 50 units per second. No per-owner Lua car-icon
@@ -1558,7 +1558,7 @@ beyond the MVP tech-and-recipe loop.
 | `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-mass-market-ev` | Mass-market EV | No | White liftback model, derived icon, and packed 64-direction driving sheet are wired. |
-| `x-cybertruck` | Cybertruck | No | Silver faceted pickup model, derived icon, and packed 64-direction driving sheet are wired. |
+| `x-cybertruck` | Megatruck | No | Silver faceted pickup model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-high-density-solar-array` | High-density Solar Array | Partial | Native 4x4 solar-panel entity tiles four 2x2-scaled vanilla panels edge-to-edge across its full footprint. It retains vanilla solar placement/grid behavior and the native 300 kW day/night curve without rotation or hidden support entities. Final premium artwork remains optional. |
 | `x-megapack` | Megapack | No | Dedicated aligned 2x2 four-cabinet utility battery sprite and matching icon are wired. |
 | `x-autonomy-computer` | Autonomy computer | Maybe | Current processor/module concept is readable. |
@@ -1745,7 +1745,7 @@ Implemented V1:
   pauses it. Supercharging research accelerates the visit; Long-range Battery
   research adds 25% per level to the interval between visits.
 - Initial class intervals are deliberately exaggerated and readable: Roadster
-  3 minutes, Mass-market EV 5, Premium EV 6, Robotaxi 7, and Cybertruck 8.
+  3 minutes, Mass-market EV 5, Premium EV 6, Robotaxi 7, and Megatruck 8.
 - The charger inspector reports approaching and charging owners. FactoryX
   Progress reports network-wide commute activity and completed visits.
 - Still benchmark 128, 256, and 512 simultaneous commuters against the roughly
@@ -2122,10 +2122,10 @@ items.
 | Prototype Roadster | Sprint car | 1 | 300 | 20 | Fastest response and sharpest steering; minimal range and fragile in collisions |
 | Premium EV | Grand tourer | 4 | 550 | 40 | Fast, composed, strong braking, and good range |
 | Mass-market EV | All-rounder | 3 | 500 | 50 | Predictable handling and the most practical general-purpose balance |
-| Cybertruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
+| Megatruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
 | Robotaxi | Long-duty fleet car | 5 | 650 | 30 | Efficient, stable, excellent braking, and tuned for sustained duty |
 
-Quality adds one battery per quality level. The Cybertruck uses a large
+Quality adds one battery per quality level. The Megatruck uses a large
 equipment grid so its eight-battery base capacity and quality bonuses are not
 silently truncated. Long-range Battery research still improves the energy used
 per drive-charge unit across every model.
