@@ -137,6 +137,9 @@ script.on_event(defines.events.on_tick, function()
   local jumpstart_solar = 0
   local jumpstart_megapacks = 0
   local jumpstart_substations = 0
+  local jumpstart_roboports = 0
+  local jumpstart_construction_robots = 0
+  local jumpstart_logistic_robots = 0
   for _, chest in pairs(player.surface.find_entities_filtered{
     name = "passive-provider-chest",
     force = player.force,
@@ -148,6 +151,9 @@ script.on_event(defines.events.on_tick, function()
       jumpstart_solar = jumpstart_solar + inventory.get_item_count{name = "x-high-density-solar-array", quality = "legendary"}
       jumpstart_megapacks = jumpstart_megapacks + inventory.get_item_count{name = "x-megapack", quality = "legendary"}
       jumpstart_substations = jumpstart_substations + inventory.get_item_count{name = "substation", quality = "legendary"}
+      jumpstart_roboports = jumpstart_roboports + inventory.get_item_count{name = "roboport", quality = "legendary"}
+      jumpstart_construction_robots = jumpstart_construction_robots + inventory.get_item_count{name = "construction-robot", quality = "legendary"}
+      jumpstart_logistic_robots = jumpstart_logistic_robots + inventory.get_item_count{name = "logistic-robot", quality = "legendary"}
     end
   end
 
@@ -283,6 +289,9 @@ script.on_event(defines.events.on_tick, function()
     jumpstart_solar = jumpstart_solar,
     jumpstart_megapacks = jumpstart_megapacks,
     jumpstart_substations = jumpstart_substations,
+    jumpstart_roboports = jumpstart_roboports,
+    jumpstart_construction_robots = jumpstart_construction_robots,
+    jumpstart_logistic_robots = jumpstart_logistic_robots,
     progress_result = progress_result,
     progress_panel_created = player.gui.screen.factoryx_progress_panel ~= nil,
     progress_status = progress_status,
@@ -372,7 +381,14 @@ if checked.get("solar_productivity_caption") != "Level 0":
     raise SystemExit(f"FactoryX progress panel solar productivity caption mismatch: {checked}")
 if checked.get("megapack_productivity_caption") != "Level 0":
     raise SystemExit(f"FactoryX progress panel Megapack productivity caption mismatch: {checked}")
-if checked.get("jumpstart_solar") != 54 or checked.get("jumpstart_megapacks") != 12 or checked.get("jumpstart_substations") != 20:
+if (
+    checked.get("jumpstart_solar") != 54
+    or checked.get("jumpstart_megapacks") != 12
+    or checked.get("jumpstart_substations") != 20
+    or checked.get("jumpstart_roboports") != 10
+    or checked.get("jumpstart_construction_robots") != 200
+    or checked.get("jumpstart_logistic_robots") != 200
+):
     raise SystemExit(f"FactoryX legendary energy jumpstart mismatch: {checked}")
 print("FactoryX GUI smoke report OK:", json.dumps(checked, sort_keys=True))
 PY

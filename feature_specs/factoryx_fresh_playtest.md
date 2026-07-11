@@ -21,8 +21,10 @@ the mod or coach yet.
   Solar Arrays, 12 legendary Megapacks, and 20 legendary Substations in a red
   wreckage chest. No power infrastructure is prebuilt. This run deliberately
   tests a solar-first opening rather than measuring the vanilla steam phase.
-- Do not include the previously brainstormed Roboports or robot cache. The
-  energy jumpstart should not also erase early logistics progression.
+- The recovered ship cache also contains 10 legendary Roboports, 200 legendary
+  Construction Robots, and 200 legendary Logistic Robots. Robotics research is
+  not granted: this is a finite salvage network, and manufacturing replacements
+  or expanding beyond it still requires normal progression.
 - Keep the currently implemented Planetary Energy Grid victory for this run so
   telemetry work does not also become a victory migration. The roadmap now
   adopts AGI as the target victory: one billion cumulative AI Tokens unlock a
@@ -312,7 +314,6 @@ The pre-play slice is complete when:
 - AGI victory implementation. Its roadmap target is one billion cumulative AI
   Tokens, followed by a 100-million-Token physical training run.
 - Terrestrial Hyperscaler implementation.
-- The rich 40 MW/robotics starting cache.
 - Final vehicle sprites and remaining art polish.
 - Automatic balance changes during a playtest.
 - Model-generated advice or analysis while Luke is actively playing.

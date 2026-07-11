@@ -6,9 +6,11 @@ prototype ids use the `x-` prefix, and no compatibility aliases are retained.
 
 With `FactoryX accelerated start` enabled, the first player also finds a red
 wreckage chest containing 54 legendary High-density Solar Arrays (40.5 MW
-peak), 12 legendary Megapacks, and 20 legendary Substations. Nothing is
-prebuilt: the cache intentionally enables a solar-first opening while leaving
-the power layout to the player.
+peak), 12 legendary Megapacks, 20 legendary Substations, 10 legendary
+Roboports, 200 legendary Construction Robots, and 200 legendary Logistic
+Robots. Nothing is prebuilt, and Robotics research is not granted: the cache
+enables a solar-first opening and a finite recovered logistics network while
+leaving layout, replacement, and expansion to the player.
 
 The MVP loop is intentionally physical:
 

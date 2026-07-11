@@ -173,7 +173,10 @@ FACTORYX_START_DEBRIS_ITEMS = {
 FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["x-high-density-solar-array"] = 54,
   ["x-megapack"] = 12,
-  ["substation"] = 20
+  ["substation"] = 20,
+  ["roboport"] = 10,
+  ["construction-robot"] = 200,
+  ["logistic-robot"] = 200
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local STATION_GRID_CONNECTION_DISTANCE = 18
@@ -499,7 +502,7 @@ function grant_factoryx_energy_jumpstart(player)
     inventory.insert{name = item_name, count = count, quality = FACTORYX_ENERGY_JUMPSTART_QUALITY}
   end
   storage.factoryx_energy_jumpstart_forces[player.force.name] = true
-  player.print("[FactoryX] Recovered energy cache: 54 legendary solar arrays (40.5 MW peak), 12 legendary Megapacks, and 20 legendary Substations.")
+  player.print("[FactoryX] Recovered ship cache: 54 legendary solar arrays (40.5 MW peak), 12 legendary Megapacks, 20 legendary Substations, 10 legendary Roboports, and 200 legendary robots of each type.")
   return chest
 end
 

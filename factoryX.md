@@ -172,9 +172,12 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - The surrounding wreckage contains starter plates, stone, coal, belts,
   inserters, drills, furnaces, poles, and one small steam-power kit.
 - The red cache contains 54 legendary High-density Solar Arrays (40.5 MW peak),
-  12 legendary Megapacks, and 20 legendary Substations. This intentionally
-  makes solar the attractive opening power source while leaving layout and
-  construction to the player.
+  12 legendary Megapacks, 20 legendary Substations, 10 legendary Roboports,
+  200 legendary Construction Robots, and 200 legendary Logistic Robots. This
+  intentionally makes solar and a finite recovered logistics network attractive
+  opening tools while leaving layout and construction to the player. Robotics
+  research is not granted, so replacements and expansion still require normal
+  progression.
 - A spoiler-light opening message explains the customer economy and long-term
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.
