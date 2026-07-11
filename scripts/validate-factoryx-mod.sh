@@ -159,9 +159,9 @@ script.on_init(function()
   end
   if datacenter_power then
     datacenter_power.electric_interface_mode = defines.electric_interface_mode.primary_output
-    datacenter_power.power_production = 10000000
+    datacenter_power.power_production = 100000000
     datacenter_power.power_usage = 0
-    datacenter_power.output_flow_limit = 10000000
+    datacenter_power.output_flow_limit = 100000000
   end
   if not milestone_office or not reservation_office or not robotaxi_office or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
@@ -255,6 +255,7 @@ script.on_init(function()
   end
   script.raise_event(defines.events.script_raised_built, {entity = gigafactory})
   script.raise_event(defines.events.script_raised_built, {entity = controller})
+  script.raise_event(defines.events.script_raised_built, {entity = datacenter})
   script.raise_event(defines.events.script_raised_built, {entity = roadster})
 
   local office_output = milestone_office.get_inventory(output_inventory_id())
@@ -271,6 +272,7 @@ script.on_init(function()
   storage.power_source_unit_number = power_source.unit_number
   storage.roadster_unit_number = roadster.unit_number
   storage.datacenter_unit_number = datacenter.unit_number
+  storage.datacenter_power_unit_number = datacenter_power.unit_number
   storage.biter_spawner_unit_number = biter_spawner.unit_number
   storage.far_biter_spawner_unit_number = far_biter_spawner.unit_number
   storage.hostile_worm_unit_number = hostile_worm.unit_number
@@ -359,6 +361,50 @@ local function find_unit(surface, name, unit_number)
   end
   return nil
 end
+
+script.on_nth_tick(101, function()
+  if game.tick < 101 or storage.compute_brownout_started then return end
+  storage.compute_brownout_started = true
+  local surface = game.get_surface(storage.surface_index or 1)
+  local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
+  local power = find_unit(surface, POWER_SOURCE, storage.datacenter_power_unit_number)
+  storage.compute_progress_before_brownout = datacenter and datacenter.crafting_progress or -1
+  if power then
+    power.power_production = 1
+    power.output_flow_limit = 1
+    power.energy = 0
+  end
+end)
+
+script.on_nth_tick(111, function()
+  if game.tick < 111 or storage.compute_brownout_reported then return end
+  storage.compute_brownout_reported = true
+  local surface = game.get_surface(storage.surface_index or 1)
+  local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
+  write_report{
+    tick = game.tick,
+    status = "compute_brownout",
+    progress_before = storage.compute_progress_before_brownout,
+    progress_after = datacenter and datacenter.crafting_progress or -1,
+    entity_status = datacenter and tostring(datacenter.status) or "missing",
+    low_power_status = tostring(defines.entity_status.low_power),
+    no_power_status = tostring(defines.entity_status.no_power),
+    energy = datacenter and datacenter.energy or -1,
+    electric_buffer_size = datacenter and datacenter.electric_buffer_size or -1
+  }
+end)
+
+script.on_nth_tick(121, function()
+  if game.tick < 121 or storage.compute_brownout_recovered then return end
+  storage.compute_brownout_recovered = true
+  local surface = game.get_surface(storage.surface_index or 1)
+  local power = find_unit(surface, POWER_SOURCE, storage.datacenter_power_unit_number)
+  if power then
+    power.power_production = 100000000
+    power.output_flow_limit = 100000000
+    power.energy = power.electric_buffer_size
+  end
+end)
 
 script.on_nth_tick(180, function()
   if storage.commanded_biter_wander_distance then return end
@@ -1016,6 +1062,11 @@ growth = next((record for record in records if record.get("status") == "customer
 brownout = next((record for record in records if record.get("status") == "customer_brownout"), None)
 overload = next((record for record in records if record.get("status") == "customer_overload"), None)
 recovery = next((record for record in records if record.get("status") == "customer_recovery"), None)
+compute_brownout = next((record for record in records if record.get("status") == "compute_brownout"), None)
+if compute_brownout is None or compute_brownout.get("progress_before", 0) <= 0:
+    raise SystemExit(f"compute brownout test did not begin during an active run: {compute_brownout}")
+if compute_brownout.get("progress_after") != 0:
+    raise SystemExit(f"underpowered datacenter did not discard run progress: {compute_brownout}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):
@@ -1068,7 +1119,7 @@ if not checked.get("sell_megapack_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock Sell Megapack: {checked}")
 if not checked.get("terrestrial_datacenter_created"):
     raise SystemExit(f"Terrestrial Datacenter was not created in smoke test: {checked}")
-if checked.get("terrestrial_datacenter_tokens", 0) < 60:
+if checked.get("terrestrial_datacenter_tokens", 0) < 20:
     raise SystemExit(f"powered Terrestrial Datacenter did not produce efficiency-adjusted AI Tokens: {checked}")
 if checked.get("terrestrial_datacenter_productivity_bonus") != 0:
     raise SystemExit(f"Terrestrial Datacenter unexpectedly accepted native productivity: {checked}")
@@ -1077,7 +1128,7 @@ if checked.get("terrestrial_datacenter_dollars_remaining", 100) > 80:
 terrestrial_ai = checked.get("terrestrial_ai_efficiency") or {}
 if terrestrial_ai.get("researched_level") != 5 or terrestrial_ai.get("tokens_per_cycle") != 30 or terrestrial_ai.get("next_threshold") != 100000000:
     raise SystemExit(f"Terrestrial AI efficiency status mismatch: {checked}")
-if terrestrial_ai.get("generated", 0) < 60:
+if terrestrial_ai.get("generated", 0) < 20:
     raise SystemExit(f"Terrestrial AI production tracker did not observe completed cycles: {checked}")
 if not checked.get("grid_connection_created"):
     raise SystemExit(f"EV Charging Station grid connection was not created: {checked}")

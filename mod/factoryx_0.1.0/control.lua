@@ -88,6 +88,11 @@ AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
 AGI_MODEL_ITEM_NAME = "x-agi-model"
 AGI_TOKEN_GATE = 1000000000
 AGI_TRAINING_SECONDS = 3600
+FACTORYX_COMPUTE_RECIPES = {
+  ["x-terrestrial-datacenter"] = true,
+  ["x-orbital-compute-array"] = true,
+  ["x-planetary-grid-controller"] = AGI_TRAINING_RECIPE_NAME
+}
 local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
@@ -425,6 +430,68 @@ end
 function agi_training_unlocks()
   storage.factoryx_agi_training_unlocks = storage.factoryx_agi_training_unlocks or {}
   return storage.factoryx_agi_training_unlocks
+end
+
+function factoryx_compute_machines()
+  storage.factoryx_compute_machines = storage.factoryx_compute_machines or {}
+  return storage.factoryx_compute_machines
+end
+
+function factoryx_compute_power_failures()
+  storage.factoryx_compute_power_failures = storage.factoryx_compute_power_failures or {}
+  return storage.factoryx_compute_power_failures
+end
+
+function track_factoryx_compute_machine(entity)
+  if entity and entity.valid and entity.unit_number and FACTORYX_COMPUTE_RECIPES[entity.name] then
+    factoryx_compute_machines()[entity.unit_number] = entity
+  end
+end
+
+function rebuild_factoryx_compute_machines()
+  storage.factoryx_compute_machines = {}
+  storage.factoryx_compute_power_failures = {}
+  local names = {}
+  for name in pairs(FACTORYX_COMPUTE_RECIPES) do names[#names + 1] = name end
+  for _, surface in pairs(game.surfaces) do
+    for _, entity in pairs(surface.find_entities_filtered{name = names}) do
+      track_factoryx_compute_machine(entity)
+    end
+  end
+end
+
+function reset_underpowered_compute_progress()
+  for unit_number, entity in pairs(factoryx_compute_machines()) do
+    if not entity.valid then
+      factoryx_compute_machines()[unit_number] = nil
+      factoryx_compute_power_failures()[unit_number] = nil
+    else
+      local power_failure = factoryx_compute_power_failures()[unit_number]
+      if power_failure then
+        if entity.electric_buffer_size > 0
+          and entity.energy >= entity.electric_buffer_size * 0.9 then
+          entity.disabled_by_script = false
+          factoryx_compute_power_failures()[unit_number] = nil
+        end
+        goto continue
+      end
+      local required_recipe = FACTORYX_COMPUTE_RECIPES[entity.name]
+      local recipe = entity.get_recipe()
+      local recipe_matches = required_recipe == true or (recipe and recipe.name == required_recipe)
+      local status = entity.status
+      local power_failed = status == defines.entity_status.no_power
+        or (status == defines.entity_status.low_power
+          and entity.electric_buffer_size > 0
+          and entity.energy < entity.electric_buffer_size * 0.1)
+      if recipe_matches and (entity.crafting_progress or 0) > 0
+        and power_failed then
+        entity.crafting_progress = 0
+        entity.disabled_by_script = true
+        factoryx_compute_power_failures()[unit_number] = true
+      end
+    end
+    ::continue::
+  end
 end
 
 function sync_agi_training_unlock(force, announce)
@@ -4343,6 +4410,7 @@ script.on_init(function()
   configure_factoryx_new_game()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
+  rebuild_factoryx_compute_machines()
   rebuild_sales_offices()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
@@ -4359,6 +4427,7 @@ end)
 script.on_configuration_changed(function()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
+  rebuild_factoryx_compute_machines()
   rebuild_sales_offices()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
@@ -4503,6 +4572,7 @@ for _, event_name in pairs({
 	      local entity = event.entity or event.created_entity
 	      handle_station_built(entity, event)
 	      track_grid_controller(entity)
+	      track_factoryx_compute_machine(entity)
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity)
 	      attach_factoryx_runtime_visual(entity)
@@ -4540,6 +4610,8 @@ for _, event_name in pairs({
       end
       if entity and entity.unit_number then
         destroy_factoryx_runtime_visual(entity.unit_number)
+        factoryx_compute_machines()[entity.unit_number] = nil
+        factoryx_compute_power_failures()[entity.unit_number] = nil
       end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
@@ -4559,6 +4631,8 @@ for _, event_name in pairs({
   end
 end
 
+
+script.on_nth_tick(1, reset_underpowered_compute_progress)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()

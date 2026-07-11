@@ -1221,6 +1221,9 @@ Target feel:
 - The controller draws roughly 1 TW continuously for 60 connected gameplay
   minutes. Exact power and duration may be tuned from recorded playtest rates,
   but the run must remain a sustained grid test rather than an instant craft.
+- Terrestrial AI, orbital AI, and the final AGI Training Run require full power.
+  A low-power or no-power machine immediately loses all progress in its current
+  compute cycle; restoring power begins that cycle again from zero.
 - Completion produces one concrete `AGI Model` result and triggers Factorio's
   victory state while allowing the player to continue.
 - It should be clear in the UI that the remaining blocker is either input

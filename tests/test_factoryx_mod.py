@@ -1454,6 +1454,22 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
 
+    def test_factoryx_compute_runs_reset_when_underpowered(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn('["x-terrestrial-datacenter"] = true', control)
+        self.assertIn('["x-orbital-compute-array"] = true', control)
+        self.assertIn('["x-planetary-grid-controller"] = AGI_TRAINING_RECIPE_NAME', control)
+        self.assertIn('status == defines.entity_status.low_power', control)
+        self.assertIn('status == defines.entity_status.no_power', control)
+        self.assertIn('entity.energy < entity.electric_buffer_size * 0.1', control)
+        self.assertIn('entity.crafting_progress = 0', control)
+        self.assertIn('entity.disabled_by_script = true', control)
+        self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)
+        self.assertIn('entity.disabled_by_script = false', control)
+        self.assertIn('script.on_nth_tick(1, reset_underpowered_compute_progress)', control)
+        self.assertIn('track_factoryx_compute_machine(entity)', control)
+        self.assertIn('rebuild_factoryx_compute_machines()', control)
+
     def test_factoryx_avoids_capex_language(self):
         combined = "\n".join(
             [
