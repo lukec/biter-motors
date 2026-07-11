@@ -260,13 +260,13 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["x-megapack"] = 24,
   ["substation"] = 40,
   ["roboport"] = 20,
-  ["construction-robot"] = 400,
-  ["logistic-robot"] = 400,
-  ["modular-armor"] = 2,
-  ["personal-roboport-equipment"] = 2,
-  ["battery-equipment"] = 4,
-  ["solar-panel-equipment"] = 16,
-  ["night-vision-equipment"] = 2
+  ["construction-robot"] = 50,
+  ["logistic-robot"] = 50,
+  ["modular-armor"] = 1,
+  ["personal-roboport-equipment"] = 1,
+  ["battery-equipment"] = 2,
+  ["solar-panel-equipment"] = 8,
+  ["night-vision-equipment"] = 1
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
@@ -785,19 +785,36 @@ function grant_factoryx_energy_jumpstart(player)
     inventory.insert{name = item_name, count = count, quality = FACTORYX_ENERGY_JUMPSTART_QUALITY}
   end
   pcall(function() chest.backer_name = "Captain's Chest" end)
-  player.force.add_chart_tag(surface, {
-    position = position,
-    text = "Captain's Chest",
-    icon = {type = "item", name = "passive-provider-chest"}
-  })
   storage.factoryx_energy_jumpstart_forces[player.force.name] = true
-  player.print({
-    "",
-    "[FactoryX] Captain's Chest recovered at ",
-    string.format("[gps=%.1f,%.1f,%s]", position.x, position.y, surface.name),
-    ": two expedition kits containing 108 legendary solar arrays (81 MW peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary Roboports, 400 legendary robots of each type, and two complete legendary personal robotics loadouts."
-  })
   return chest
+end
+
+local function crash_site_salvage(entity)
+  if not entity or not entity.valid then return end
+  local inventory = entity.get_output_inventory and entity.get_output_inventory()
+  if not inventory or not inventory.valid or not inventory.is_empty() then return end
+  local item_name = "iron-plate"
+  local count = 10
+  if string.find(entity.name, "big", 1, true) then
+    item_name = "steel-plate"
+    count = 20
+  elseif string.find(entity.name, "medium", 1, true) then
+    count = 15
+  elseif string.find(entity.name, "small", 1, true) then
+    item_name = "copper-plate"
+  end
+  inventory.insert{name = item_name, count = count}
+end
+
+function seed_crash_site_salvage(player)
+  if not factoryx_accelerated_start_enabled() or not player or not player.valid then return end
+  for _, entity in pairs(player.surface.find_entities_filtered{
+    area = {{player.position.x - 96, player.position.y - 96}, {player.position.x + 96, player.position.y + 96}}
+  }) do
+    if string.find(entity.name, "crash-site-spaceship-wreck-", 1, true) == 1 then
+      crash_site_salvage(entity)
+    end
+  end
 end
 
 local function current_recipe_name(entity)
@@ -5348,6 +5365,7 @@ script.on_event(defines.events.on_player_created, function(event)
   local player = game.get_player(event.player_index)
   if player then
     grant_factoryx_energy_jumpstart(player)
+    seed_crash_site_salvage(player)
     sales_office_coverage_enabled()[player.index] = false
     refresh_sales_office_coverage(player)
     sync_charger_placement_overlay(player)

@@ -66,6 +66,10 @@ Rules for the rest of the design:
 - Sales Offices define customers. Hostile biters become peaceful customers only
   when a Sales Office covers them, and chargers turn those customer settlements
   into measured demand.
+- Opening salvage should invite exploration rather than explain itself. The
+  Captain's Chest is visible but unannounced, contains one personal robotics
+  kit and one stack of each robot type, and every mineable crash-site fragment
+  must yield at least a small physical salvage item.
 - Infrastructure should explain itself through power draw, coverage, stalls,
   recipes, and status panels. If the player clicks a machine, the next step
   should be visible in-game.
@@ -162,8 +166,9 @@ Current runtime behavior is intentionally small:
 FactoryX has an optional startup setting, `FactoryX accelerated start`, enabled
 by default. It is deliberately a light start rather than a prebuilt base:
 
-- No factory is prebuilt. A named and map-tagged `Captain's Chest` is placed
-  beside the first player, but the player chooses where to deploy its contents.
+- No factory is prebuilt. A red `Captain's Chest` is placed beside the first
+  player as a quiet discovery, but the player chooses where to deploy its
+  contents.
 - The recovered expedition supports two players. Basic electric industry,
   Electric Mining Drills, electric furnaces, lamps, solar and accumulator
   technology, substations, and construction/logistic robotics start researched.
@@ -177,14 +182,16 @@ by default. It is deliberately a light start rather than a prebuilt base:
   omitted so the recovered solar grid is the natural opening path.
 - The Captain's Chest contains 108 legendary High-density Solar Arrays (81 MW
   peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
-  Roboports, 400 legendary Construction Robots, and 400 legendary Logistic
-  Robots. It also contains two legendary personal kits: two Modular Armors,
-  two Personal Roboports, four Battery equipment items, 16 Portable Solar Panels, and two
-  Night-vision units. Their corresponding technologies start researched, so
-  normal-quality replacements are craftable. This is two finite expedition
-  kits; normal versions of the recovered
+  Roboports, one stack each of legendary Construction and Logistic Robots, and
+  one legendary personal kit: a Modular Armor, Personal Roboport, two Battery
+  equipment items, eight Portable Solar Panels, and Night-vision equipment.
+  Their corresponding technologies start researched, so normal-quality
+  replacements are craftable. Normal versions of the recovered
   base-game infrastructure are craftable immediately, while FactoryX energy
   products still require their normal FactoryX progression.
+- Every mineable crash-site wreck receives a small physical salvage payout when
+  it would otherwise be empty: steel from large hull sections, iron from medium
+  sections, and copper from small fragments.
 - A spoiler-light opening message explains the customer economy and long-term
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.
