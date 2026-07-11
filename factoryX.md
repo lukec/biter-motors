@@ -169,22 +169,23 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - No factory is prebuilt. A red `Captain's Chest` is placed beside the first
   player as a quiet discovery, but the player chooses where to deploy its
   contents.
-- The recovered expedition supports two players. Basic electric industry,
-  Electric Mining Drills, electric furnaces, lamps, solar and accumulator
-  technology, substations, and construction/logistic robotics start researched.
-  The opening skips burner power and basic mining/steel research while
-  preserving FactoryX progression.
+- The opening skips basic research chores. Steam Power, Automation Science,
+  Steel Axe, Electric Mining Drills, Labs, electric furnaces, lamps, basic
+  military and Heavy Armor, Repair Packs, Stone Walls, Landfill, circuit
+  networks, fluid handling, and the oil-to-Advanced-Circuit chain all start
+  researched. This makes every ordinary component supplied in the wreckage or
+  personal kit craftable without replaying the burner-era technology path.
 - The crashed ship contains 100 Steel Plates, 100 Electronic Circuits, 100 Iron
-  Gears, four Assembling Machine 1s, four Labs, 24 Electric Furnaces, and 50
-  Lamps.
+  Gears, four Assembling Machine 1s, four Labs, and 50 Lamps.
 - The surrounding wreckage contains starter plates, stone, coal, belts,
   inserters, electric drills, and electric poles. The former steam-power kit is
   omitted so the recovered solar grid is the natural opening path.
-- The Captain's Chest contains 108 legendary High-density Solar Arrays (81 MW
+- The Captain's Chest contains 54 legendary High-density Solar Arrays (40.5 MW
   peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
   Roboports, one stack each of legendary Construction and Logistic Robots, and
   one legendary personal kit: a Modular Armor, Personal Roboport, two Battery
-  equipment items, eight Portable Solar Panels, and Night-vision equipment.
+  equipment items, eight Portable Solar Panels, Night-vision equipment, and 10
+  Electric Furnaces.
   Their corresponding technologies start researched, so normal-quality
   replacements are craftable. Normal versions of the recovered
   base-game infrastructure are craftable immediately, while FactoryX energy

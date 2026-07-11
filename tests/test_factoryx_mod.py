@@ -150,11 +150,26 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('setting_type = "startup"', settings)
         self.assertIn("default_value = true", settings)
         for technology in [
+            "steam-power",
+            "automation-science-pack",
+            "steel-axe",
             "automation-2",
             "electric-mining-drill",
+            "repair-pack",
+            "military",
+            "heavy-armor",
+            "stone-wall",
+            "landfill",
+            "circuit-network",
             "logistic-science-pack",
+            "advanced-material-processing",
             "advanced-material-processing-2",
             "electric-energy-distribution-2",
+            "oil-processing",
+            "sulfur-processing",
+            "plastics",
+            "advanced-circuit",
+            "fluid-handling",
             "lamp",
             "construction-robotics",
             "logistic-robotics",
@@ -173,7 +188,7 @@ class FactoryXModTest(unittest.TestCase):
         configure = control[control.index("function configure_factoryx_new_game"):control.index("function grant_factoryx_energy_jumpstart")]
         self.assertNotIn("surface.create_entity", configure)
         jumpstart = control[control.index("FACTORYX_ENERGY_JUMPSTART_ITEMS"):control.index("local STATION_GRID_CONNECTION_DISTANCE")]
-        self.assertIn('["x-high-density-solar-array"] = 108', jumpstart)
+        self.assertIn('["x-high-density-solar-array"] = 54', jumpstart)
         self.assertIn('["x-megapack"] = 24', jumpstart)
         self.assertIn('["substation"] = 40', jumpstart)
         self.assertIn('["roboport"] = 20', jumpstart)
@@ -184,7 +199,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('["battery-equipment"] = 2', jumpstart)
         self.assertIn('["solar-panel-equipment"] = 8', jumpstart)
         self.assertIn('["night-vision-equipment"] = 1', jumpstart)
-        self.assertIn('["electric-furnace"] = 24', control)
+        self.assertIn('["electric-furnace"] = 10', jumpstart)
+        self.assertNotIn('["electric-furnace"] = 24', control)
         self.assertIn('["lamp"] = 50', control)
         self.assertIn('FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"', control)
         self.assertIn('name = "passive-provider-chest"', control)
@@ -194,7 +210,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('crash-site-spaceship-wreck-', control)
         self.assertIn("grant_factoryx_energy_jumpstart(player)", control)
         self.assertIn("grant_energy_jumpstart = function(player_index)", control)
-        self.assertIn('["x-high-density-solar-array"] = 108', control)
+        self.assertIn('["x-high-density-solar-array"] = 54', control)
 
     def test_cybertruck_and_ev_sales_are_balanced_as_profit(self):
         data = (MOD / "data.lua").read_text()

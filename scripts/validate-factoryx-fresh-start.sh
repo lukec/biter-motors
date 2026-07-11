@@ -32,9 +32,12 @@ script.on_init(function()
   local intro = remote.call("freeplay", "get_custom_intro_message")
   local technologies = {}
   for _, name in pairs({
-    "automation", "logistics", "electronics", "steel-processing", "electric-mining-drill", "automation-2",
-    "logistic-science-pack", "electric-energy-distribution-2",
-    "advanced-material-processing-2", "lamp", "construction-robotics", "logistic-robotics",
+    "steam-power", "automation-science-pack", "automation", "logistics", "electronics",
+    "steel-processing", "steel-axe", "electric-mining-drill", "repair-pack", "military",
+    "heavy-armor", "stone-wall", "landfill", "circuit-network", "automation-2",
+    "logistic-science-pack", "electric-energy-distribution-2", "advanced-material-processing",
+    "advanced-material-processing-2", "oil-processing", "sulfur-processing", "plastics",
+    "advanced-circuit", "fluid-handling", "lamp", "construction-robotics", "logistic-robotics",
     "modular-armor", "solar-panel-equipment", "battery-equipment",
     "night-vision-equipment", "personal-roboport-equipment"
   }) do
@@ -71,7 +74,7 @@ if not row["accelerated_start"] or not row["pollution"] or not row["enemy_expans
     raise SystemExit(f"fresh map settings mismatch: {row}")
 if not all(row["technologies"].values()):
     raise SystemExit(f"bootstrap technologies missing: {row}")
-for name, count in {"steel-plate": 100, "electronic-circuit": 100, "iron-gear-wheel": 100, "assembling-machine-1": 4, "lab": 4, "electric-furnace": 24, "lamp": 50}.items():
+for name, count in {"steel-plate": 100, "electronic-circuit": 100, "iron-gear-wheel": 100, "assembling-machine-1": 4, "lab": 4, "lamp": 50}.items():
     if row["ship"].get(name) != count:
         raise SystemExit(f"ship inventory mismatch for {name}: {row}")
 for name in ("iron-plate", "copper-plate", "transport-belt", "electric-mining-drill", "medium-electric-pole"):

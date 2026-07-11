@@ -207,15 +207,25 @@ AI_EFFICIENCY_TRACKS = {
   }
 }
 FACTORYX_START_TECHNOLOGIES = {
+  "steam-power",
+  "automation-science-pack",
   "automation",
   "logistics",
   "electronics",
   "steel-processing",
+  "steel-axe",
   "electric-mining-drill",
+  "repair-pack",
+  "military",
+  "heavy-armor",
+  "stone-wall",
+  "landfill",
+  "circuit-network",
   "automation-2",
   "logistic-science-pack",
   "electric-energy-distribution-1",
   "electric-energy-distribution-2",
+  "advanced-material-processing",
   "advanced-material-processing-1",
   "advanced-material-processing-2",
   "optics",
@@ -224,7 +234,12 @@ FACTORYX_START_TECHNOLOGIES = {
   "electric-energy-accumulators",
   "engine",
   "electric-engine",
+  "oil-processing",
+  "sulfur-processing",
+  "plastics",
+  "advanced-circuit",
   "battery",
+  "fluid-handling",
   "robotics",
   "construction-robotics",
   "logistic-robotics",
@@ -240,7 +255,6 @@ FACTORYX_START_SHIP_ITEMS = {
   ["iron-gear-wheel"] = 100,
   ["assembling-machine-1"] = 4,
   ["lab"] = 4,
-  ["electric-furnace"] = 24,
   ["lamp"] = 50
 }
 FACTORYX_START_DEBRIS_ITEMS = {
@@ -256,10 +270,11 @@ FACTORYX_START_DEBRIS_ITEMS = {
   ["pipe"] = 50
 }
 FACTORYX_ENERGY_JUMPSTART_ITEMS = {
-  ["x-high-density-solar-array"] = 108,
+  ["x-high-density-solar-array"] = 54,
   ["x-megapack"] = 24,
   ["substation"] = 40,
   ["roboport"] = 20,
+  ["electric-furnace"] = 10,
   ["construction-robot"] = 50,
   ["logistic-robot"] = 50,
   ["modular-armor"] = 1,
