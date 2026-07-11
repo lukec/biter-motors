@@ -35,13 +35,15 @@ class FactoryXModTest(unittest.TestCase):
             "x-ev-charging-station-v4",
             "x-ai-token",
             "x-planetary-grid-segment",
-            "x-planetary-grid-charge",
+            "x-agi-model",
+            "x-agi-training-run",
+            "x-agi-training-dataset",
+            "x-capital-allocation",
             "x-terrestrial-datacenter",
             "x-orbital-compute-array",
             "x-planetary-grid-controller",
             "x-sell-premium-ev",
             "x-orbital-ai-token",
-            "x-kardashev-type-1",
         ]:
             self.assertIn(expected, data)
 
@@ -234,7 +236,7 @@ class FactoryXModTest(unittest.TestCase):
             "x-sell-cybertruck",
             "x-terrestrial-ai-token",
             "x-orbital-ai-token",
-            "x-charge-planetary-grid",
+            "x-agi-training-run",
         ]:
             self.assertIn(f'"{recipe_name}"', data[data.index("for _, recipe_name in pairs({", data.index("allow_productivity = false")):])
         self.assertIn("data.raw.recipe[recipe_name].allow_quality = false", data)
@@ -271,7 +273,7 @@ class FactoryXModTest(unittest.TestCase):
             "datacenter-rack",
             "gigacast",
             "planetary-grid-segment",
-            "planetary-grid-charge",
+            "agi-model",
             "planetary-grid-controller",
             "robotaxi-service-center",
         ]:
@@ -551,7 +553,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Robotaxi service is producing recurring profit", control)
         self.assertIn("robotaxi_sale_complete", control)
         self.assertIn("Operate the Robotaxi service", control)
-        self.assertIn("AI Tokens in production statistics", control)
+        self.assertIn("Cumulative AI Tokens", control)
         self.assertIn("snapshot.ai_tokens_produced < 1000", control)
         self.assertIn("Generate 1,000 AI Tokens", control)
         self.assertIn('power = "8 MW"', control)
@@ -987,7 +989,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Energy Products", control)
         self.assertIn("Terrestrial Datacenters", control)
         self.assertIn("Terrestrial infrastructure", control)
-        self.assertIn("AI Tokens in production statistics", control)
+        self.assertIn("Cumulative AI Tokens", control)
         self.assertIn("Terrestrial AI milestone progress", control)
         self.assertIn("High-density solar productivity", control)
         self.assertIn("Megapack productivity", control)
@@ -1415,58 +1417,41 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("others may be in the grace period", control)
         self.assertIn("Next settlement:", control)
 
-    def test_factoryx_victory_is_planetary_energy_grid(self):
+    def test_factoryx_victory_is_agi_training_run(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         self.assertIn('"x-planetary-grid-controller"', data)
         self.assertIn('"x-planetary-grid-segment"', data)
-        self.assertIn('"x-planetary-grid-charge"', data)
+        self.assertIn('"x-agi-model"', data)
         self.assertIn('recipe("x-planetary-grid-segment"', data)
-        self.assertIn('recipe("x-charge-planetary-grid"', data)
+        self.assertIn('recipe("x-agi-training-run"', data)
         self.assertIn('tech("x-planetary-energy-grid"', data)
         self.assertIn('unlock("x-planetary-grid-controller")', data)
         self.assertIn('unlock("x-planetary-grid-segment")', data)
-        self.assertIn('unlock("x-charge-planetary-grid")', data)
+        self.assertNotIn('x-kardashev-type-1', data)
+        self.assertNotIn('x-planetary-grid-charge', data)
         controller = data[data.index('"x-planetary-grid-controller"'):data.index('planetary_grid_controller.energy_source')]
-        self.assertIn('"1GW"', controller)
-        charge_recipe = data[data.index('recipe("x-charge-planetary-grid"'):data.index('add_lab_input("lab", "x-dollar")')]
-        for expected in [
-            '"x-planetary-grid-segment"',
-            '"x-ai-token"',
-            '"x-megapack"',
-            '"x-dollar"',
-        ]:
+        self.assertIn('"1TW"', controller)
+        charge_recipe = data[data.index('recipe("x-agi-training-run"'):data.index('add_lab_input("lab", "x-dollar")')]
+        for expected in ['name = "x-agi-training-dataset", amount = 10000', 'name = "x-capital-allocation", amount = 1000', 'name = "x-planetary-grid-segment", amount = 10000', 'name = "x-megapack", amount = 1000', 'name = "x-agi-model", amount = 1', '3600']:
             self.assertIn(expected, charge_recipe)
+        self.assertIn('name = "x-ai-token", amount = 10000', data)
+        self.assertIn('name = "x-dollar", amount = 10000', data)
         for embodied_input in [
             '"x-satellite-bus"',
             '"x-ground-station-network"',
             '"space-science-pack"',
         ]:
             self.assertNotIn(embodied_input, charge_recipe)
-        segment_recipe = data[data.index('recipe("x-planetary-grid-segment"'):data.index('recipe("x-charge-planetary-grid"')]
+        segment_recipe = data[data.index('recipe("x-planetary-grid-segment"'):data.index('recipe("x-agi-training-run"')]
         self.assertIn('"x-satellite-bus"', segment_recipe)
         self.assertIn('"x-ground-station-network"', segment_recipe)
-        kardashev = data[data.index('tech("x-kardashev-type-1"'):data.index('data.raw.technology["x-small-orbital-launch"]')]
-        self.assertNotIn('"x-planetary-grid-segment"', kardashev)
-        self.assertIn("    5000,", kardashev)
-        for science in [
-            "automation-science-pack",
-            "logistic-science-pack",
-            "chemical-science-pack",
-            "production-science-pack",
-            "utility-science-pack",
-            "space-science-pack",
-            "metallurgic-science-pack",
-            "electromagnetic-science-pack",
-            "agricultural-science-pack",
-            "cryogenic-science-pack",
-            "x-ai-token",
-        ]:
-            self.assertIn(science, kardashev)
         self.assertNotIn("x-k1-knowledge", data)
-        self.assertIn('"x-planetary-grid-charge"', control)
-        self.assertIn('surface.find_entities_filtered{name = GRID_CONTROLLER_NAME', control)
-        self.assertIn("consume_grid_charge(controller)", control)
+        self.assertIn('AGI_TOKEN_GATE = 1000000000', control)
+        self.assertIn('controller_has_agi_model(controller)', control)
+        self.assertIn('sync_agi_training_unlock(force, true)', control)
+        self.assertIn('statistics.set_output_count(', control)
+        self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
 
     def test_factoryx_avoids_capex_language(self):

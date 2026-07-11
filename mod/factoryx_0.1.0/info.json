@@ -8,5 +8,5 @@
     "base >= 2.1.0",
     "space-age >= 2.1.0"
   ],
-  "description": "A fictional industrial ambition MVP: sell EVs and launches for dollars, scale into orbital compute, build a planetary energy grid, and achieve Kardashev Type I."
+  "description": "Sell EVs and industrial products, scale reusable launch and orbital compute, then train an AGI model in a planet-scale energy facility."
 }

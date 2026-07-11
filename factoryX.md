@@ -1196,11 +1196,17 @@ Victory meaning:
 - The player wins by completing a sustained, high-power AGI training run after
   proving that the whole economy can generate one billion cumulative AI Tokens.
 
-Current code:
+Current implementation:
 
-- The current MVP still has the legacy grid-charge victory scaffolding. Remove
-  it when implementing this phase after the fresh playtest establishes orbital
-  Token and power rates.
+- Lifetime production statistics track cumulative AI Tokens across surfaces.
+- One billion cumulative Tokens unlocks the controller-only AGI Training Run.
+- Packing recipes turn 10,000 AI Tokens into one AGI Training Dataset and
+  10,000 Dollars into one Capital Allocation, working around Factorio's 65,535
+  per-ingredient limit without changing the economics.
+- The run consumes 10,000 datasets, 1,000 allocations, 10,000 Planetary Grid
+  Segments, and 1,000 Megapacks over 60 minutes at a 1 TW machine load. These
+  embody 100 million AI Tokens and 10 million Dollars.
+- Producing the concrete AGI Model triggers victory and allows continued play.
 
 Target feel:
 
@@ -1220,14 +1226,14 @@ Target feel:
 - It should be clear in the UI that the remaining blocker is either input
   logistics, cumulative Token progress, or power supply.
 
-Legacy removal required by this redesign:
+Legacy ending removed by this redesign:
 
-- Delete the legacy final-victory technology and all locale, icon, progression,
-  and test references.
-- Delete `x-planetary-grid-charge` as an item and recipe. The AGI Training Run
-  replaces it as the controller's final operation.
-- Replace the current grid-charge victory trigger and saved victory wording
-  with the AGI Model completion event.
+- The legacy final-victory technology and all locale, icon, progression, and
+  runtime references were deleted.
+- The obsolete final charge item and recipe were deleted. The AGI Training Run
+  replaces them as the controller's final operation.
+- The old victory trigger and wording were replaced by the AGI Model completion
+  event.
 - No compatibility aliases are required because FactoryX is still in
   fresh-save playtesting.
 
@@ -1288,8 +1294,8 @@ Selected directions:
 | `x-ground-station-network` | Ground station network | 1, top-left |
 | `x-datacenter-rack` | Datacenter rack | 1, top-left |
 
-`x-planetary-grid-charge` was added after this review pass and still
-needs its own concept art options.
+The retired final-charge prototype no longer needs artwork; the AGI Model uses
+the generated endgame icon.
 
 Post-review playtest replacements:
 
@@ -1685,10 +1691,8 @@ Progressively worsening construction economics:
 - This rising terrestrial marginal cost is the explicit economic pressure to
   move AI-token growth into space. Orbital compute should have difficult launch
   logistics but a flatter marginal-cost curve.
-- A 100 GW facility makes the current 1 GW final Controller charge internally
-  inconsistent. Before implementing the Hyperscaler, rebalance the late-game
-  power scale, likely moving the Controller into the terawatt range while still
-  requiring sustained local generation and storage.
+- The 100 GW Hyperscaler concept now sits below the implemented 1 TW final
+  Controller load, preserving the intended late-game escalation.
 
 AI-datacenter opposition dynamic:
 
@@ -1763,8 +1767,7 @@ AI-datacenter opposition dynamic:
 - Unlock the AGI Training Run automatically at one billion cumulative Tokens.
   The unlock must not require one billion Tokens to remain in storage.
 - Keep the Planetary Energy Grid Controller as the explicit final structure,
-  but repurpose its final operation from an abstract grid charge to AGI
-  training.
+  with AGI training as its final operation.
 - Initial final-run balance target:
   - 100 million physical AI Tokens.
   - 10 million Dollars.
@@ -1934,9 +1937,9 @@ Current validation state, 2026-07-10:
   - A covered biter customer charging site enabled Prototype Roadsters.
   - One active charging stall generated one EV Reservation in the charger's
     passive-provider output after one minute.
-  - A tracked Planetary Energy Grid Controller consumed
-    `x-planetary-grid-charge`.
-  - `game.finished` was true after the charge was consumed.
+  - A tracked Planetary Energy Grid Controller exposed the AGI Training Run
+    after one billion cumulative AI Tokens.
+  - `game.finished` was true after an AGI Model appeared in its output.
 
 For runtime script changes, benchmark a disposable save long enough for the
 one-minute EV Reservation printer cycle:

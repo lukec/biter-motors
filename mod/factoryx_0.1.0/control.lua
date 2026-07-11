@@ -84,7 +84,10 @@ ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60
 local RESERVATION_NAME = "x-ev-reservation"
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
-local GRID_CHARGE_ITEM_NAME = "x-planetary-grid-charge"
+AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
+AGI_MODEL_ITEM_NAME = "x-agi-model"
+AGI_TOKEN_GATE = 1000000000
+AGI_TRAINING_SECONDS = 3600
 local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
@@ -410,6 +413,36 @@ local function safe_products_finished(entity)
   return 0
 end
 
+function count_item_produced(force, item_name)
+  local count = 0
+  for _, surface in pairs(game.surfaces) do
+    local statistics = force.get_item_production_statistics(surface)
+    count = count + (statistics.output_counts[item_name] or 0)
+  end
+  return count
+end
+
+function agi_training_unlocks()
+  storage.factoryx_agi_training_unlocks = storage.factoryx_agi_training_unlocks or {}
+  return storage.factoryx_agi_training_unlocks
+end
+
+function sync_agi_training_unlock(force, announce)
+  if not force or not force.valid then return false end
+  local cumulative = count_item_produced(force, "x-ai-token")
+  local unlocked = cumulative >= AGI_TOKEN_GATE
+  local recipe = force.recipes and force.recipes[AGI_TRAINING_RECIPE_NAME]
+  if recipe then recipe.enabled = unlocked end
+  local unlocks = agi_training_unlocks()
+  if unlocked and not unlocks[force.name] then
+    unlocks[force.name] = true
+    if announce ~= false then
+      force.print("[FactoryX] One billion cumulative AI Tokens generated. AGI Training Run is now available in the Planetary Energy Grid Controller.")
+    end
+  end
+  return unlocked
+end
+
 function ai_efficiency_progress()
   storage.factoryx_ai_efficiency_progress = storage.factoryx_ai_efficiency_progress or {}
   return storage.factoryx_ai_efficiency_progress
@@ -481,6 +514,13 @@ function track_ai_efficiency_progress()
               local pending_bonus = track.pending_bonus[machine.unit_number] or 0
               if output_inventory and pending_bonus > 0 then
                 local inserted = output_inventory.insert{name = "x-ai-token", count = pending_bonus}
+                if inserted > 0 then
+                  local statistics = force.get_item_production_statistics(machine.surface)
+                  statistics.set_output_count(
+                    "x-ai-token",
+                    statistics.get_output_count("x-ai-token") + inserted
+                  )
+                end
                 track.pending_bonus[machine.unit_number] = pending_bonus - inserted
                 track.pending_bonus_total = math.max(0, (track.pending_bonus_total or 0) - inserted)
                 track.generated = track.generated + inserted
@@ -513,6 +553,7 @@ function track_ai_efficiency_progress()
         end
         update_ai_efficiency_unlocks(force, track_name, track)
       end
+      sync_agi_training_unlock(force, true)
     end
   end
 end
@@ -3000,8 +3041,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
   ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Build Robotaxis in Gigafactory V2, then deploy them through a powered Robotaxi Service Center. Each vehicle serves five nearby customers.",
   ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
-  ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 GW controller and supply AI Tokens, Megapacks, satellite infrastructure, capital, and grid segments.",
-  ["x-kardashev-type-1"] = "[FactoryX] Kardashev Type I researched. Produce the final Planetary Grid Charge in a powered controller; completing its 1 GW charge cycle wins the game."
+  ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
 
 local function announce_research_completion(research)
@@ -3118,6 +3158,7 @@ end
 
 local function sync_force_unlocks(force)
   repair_researched_factoryx_unlocks(force)
+  sync_agi_training_unlock(force, false)
   if force_has_gigafactory(force) then
     unlock_gigafactory_logistics(force, false)
   end
@@ -3158,7 +3199,33 @@ local function sync_all_force_unlocks()
   end
 end
 
-local function trigger_victory(force)
+function agi_training_status(force)
+  local cumulative = count_item_produced(force, "x-ai-token")
+  local active = 0
+  local progress = 0
+  for unit_number, controller in pairs(grid_controllers()) do
+    if not controller.valid then
+      grid_controllers()[unit_number] = nil
+    elseif controller.force == force then
+      local recipe = current_recipe_name(controller)
+      if recipe == AGI_TRAINING_RECIPE_NAME then
+        active = active + 1
+        progress = math.max(progress, controller.crafting_progress or 0)
+      end
+    end
+  end
+  return {
+    cumulative_ai_tokens = cumulative,
+    required_ai_tokens = AGI_TOKEN_GATE,
+    unlocked = cumulative >= AGI_TOKEN_GATE,
+    active_controllers = active,
+    progress = progress,
+    training_seconds = AGI_TRAINING_SECONDS,
+    completed = victory_forces()[force.name] == true
+  }
+end
+
+function trigger_victory(force, controller)
   if not force or not force.valid then
     return
   end
@@ -3168,8 +3235,15 @@ local function trigger_victory(force)
     return
   end
   victories[force.name] = true
+  storage.factoryx_agi_victory = storage.factoryx_agi_victory or {}
+  storage.factoryx_agi_victory[force.name] = {
+    tick = game.tick,
+    cumulative_ai_tokens = count_item_produced(force, "x-ai-token"),
+    surface = controller and controller.valid and controller.surface.name or nil,
+    position = controller and controller.valid and controller.position or nil
+  }
 
-  force.print("[FactoryX] Kardashev Type I achieved: the charged planetary energy grid is online.")
+  force.print("[FactoryX] AGI achieved. The trained model is online, and humanity now has a new tool for deciding what comes next.")
   game.set_game_state{
     game_finished = true,
     player_won = true,
@@ -3177,7 +3251,7 @@ local function trigger_victory(force)
   }
 end
 
-local function consume_grid_charge(entity)
+function controller_has_agi_model(entity)
   local inventory_id = crafter_output_inventory_id()
   if not inventory_id then
     return false
@@ -3188,15 +3262,10 @@ local function consume_grid_charge(entity)
     return false
   end
 
-  if inventory.get_item_count(GRID_CHARGE_ITEM_NAME) == 0 then
-    return false
-  end
-
-  inventory.remove{name = GRID_CHARGE_ITEM_NAME, count = 1}
-  return true
+  return inventory.get_item_count(AGI_MODEL_ITEM_NAME) > 0
 end
 
-local function finish_completed_grid_charges(force)
+function finish_completed_agi_training(force)
   if not force or not force.valid then
     return
   end
@@ -3205,8 +3274,8 @@ local function finish_completed_grid_charges(force)
   for unit_number, controller in pairs(controllers) do
     if not controller.valid then
       controllers[unit_number] = nil
-    elseif controller.force == force and consume_grid_charge(controller) then
-      trigger_victory(force)
+    elseif controller.force == force and controller_has_agi_model(controller) then
+      trigger_victory(force, controller)
       return
     end
   end
@@ -3476,15 +3545,6 @@ local function check_first_prototype_sales()
   end
 end
 
-local function count_item_produced(force, item_name)
-  local count = 0
-  for _, surface in pairs(game.surfaces) do
-    local statistics = force.get_item_production_statistics(surface)
-    count = count + (statistics.output_counts[item_name] or 0)
-  end
-  return count
-end
-
 local function count_sales_office_customer_settlements(force)
   local customers = customer_force_if_exists()
   if not customers then
@@ -3533,6 +3593,7 @@ local function progress_snapshot(force)
   local premium_sale_complete = first_premium_ev_sales()[force.name] == true
     or researched(force, "x-capital-scaling")
   local terrestrial_ai = ai_efficiency_track_status(force, "terrestrial")
+  local agi = agi_training_status(force)
   return {
     sales_office_researched = researched(force, "x-sales-office"),
     ev_production_researched = researched(force, "x-premium-ev-program"),
@@ -3546,7 +3607,6 @@ local function progress_snapshot(force)
     satellite_constellation_researched = researched(force, "x-satellite-constellation"),
     orbital_compute_researched = researched(force, "x-orbital-compute"),
     planetary_grid_researched = researched(force, "x-planetary-energy-grid"),
-    kardashev_researched = researched(force, "x-kardashev-type-1"),
     first_sale_complete = first_sale_complete,
     premium_sale_complete = premium_sale_complete,
     mass_market_sale_complete = first_mass_market_ev_sales()[force.name] == true,
@@ -3573,6 +3633,12 @@ local function progress_snapshot(force)
     megapacks = count_entities(force, MEGAPACK_NAME),
     datacenters = count_entities(force, TERRESTRIAL_DATACENTER_NAME),
     ai_tokens_produced = count_item_produced(force, "x-ai-token"),
+    agi_token_gate = agi.required_ai_tokens,
+    agi_training_unlocked = agi.unlocked,
+    agi_training_active = agi.active_controllers,
+    agi_training_progress = agi.progress,
+    agi_models_produced = count_item_produced(force, AGI_MODEL_ITEM_NAME),
+    grid_controllers = count_entities(force, "x-planetary-grid-controller"),
     terrestrial_ai_tokens_generated = terrestrial_ai.generated,
     terrestrial_ai_efficiency_level = terrestrial_ai.researched_level,
     terrestrial_ai_next_threshold = terrestrial_ai.next_threshold,
@@ -3655,13 +3721,15 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.orbital_compute_researched then
     return "Orbital compute", "Research Orbital Compute.", "Invest 2,000 cycles through electromagnetic and space science plus AI Tokens and Dollars."
   elseif not snapshot.planetary_grid_researched then
-    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles of all pre-Promethium science plus AI Tokens and Dollars; prepare a 1 GW supply."
-  elseif not snapshot.kardashev_researched then
-    return "Planetary grid", "Research Kardashev Type I and stockpile Planetary Grid Segments.", "The research consumes 5,000 cycles of all pre-Promethium science plus AI Tokens; Grid Segments remain physical charge inputs."
+    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles of all pre-Promethium science plus AI Tokens and Dollars; prepare a 1 TW supply."
+  elseif snapshot.grid_controllers == 0 then
+    return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 1 TW training facility; brownouts slow or stop its work."
+  elseif not snapshot.agi_training_unlocked then
+    return "AGI scale", "Generate one billion cumulative AI Tokens.", "Terrestrial compute can begin the climb, but orbital compute is required to reach this scale. Tokens already spent still count."
   elseif not snapshot.victory then
-    return "Kardashev Type I", "Complete the Planetary Grid Charge.", "Keep the Planetary Energy Grid Controller powered through its final 1 GW charge cycle."
+    return "AGI training", "Complete the AGI Training Run.", "Package 100M AI Tokens into 10,000 datasets and 10M Dollars into 1,000 allocations; add 10,000 Grid Segments and 1,000 Megapacks, then sustain 1 TW for 60 minutes."
   end
-  return "Kardashev Type I", "Planetary energy grid online.", "FactoryX victory achieved."
+  return "AGI achieved", "The AGI Model is online.", "FactoryX victory achieved; you may continue building."
 end
 
 local function progress_stages(snapshot)
@@ -3675,7 +3743,8 @@ local function progress_stages(snapshot)
     {name = "Energy products", complete = snapshot.energy_products_researched and snapshot.solar_arrays > 0 and snapshot.megapacks > 0},
     {name = "AI and autonomy", complete = snapshot.autonomous_logistics_researched and snapshot.robotaxi_sale_complete},
     {name = "Orbital compute", complete = snapshot.orbital_compute_researched},
-    {name = "Planetary grid", complete = snapshot.victory}
+    {name = "Planetary grid", complete = snapshot.planetary_grid_researched and snapshot.grid_controllers > 0},
+    {name = "Achieving AGI", complete = snapshot.victory}
   }
 end
 
@@ -3738,7 +3807,15 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
-  add_progress_metric(metrics, "AI Tokens in production statistics", tostring(snapshot.ai_tokens_produced))
+  add_progress_metric(metrics, "Cumulative AI Tokens", string.format("%d / %d", snapshot.ai_tokens_produced, snapshot.agi_token_gate))
+  add_progress_metric(
+    metrics,
+    "AGI Training",
+    snapshot.victory and "complete"
+      or (snapshot.agi_training_unlocked
+        and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
+        or "locked")
+  )
   add_progress_metric(
     metrics,
     "Terrestrial AI milestone progress",
@@ -4490,7 +4567,7 @@ script.on_nth_tick(30, function()
   accelerate_consumer_ev_sales()
   check_first_prototype_sales()
   for _, force in pairs(game.forces) do
-    finish_completed_grid_charges(force)
+    finish_completed_agi_training(force)
   end
 end)
 
@@ -4583,6 +4660,12 @@ remote.add_interface("factoryx", {
       result[track_name] = ai_efficiency_track_status(force, track_name)
     end
     return result
+  end,
+  agi_training_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    sync_agi_training_unlock(force, false)
+    return agi_training_status(force)
   end,
   customer_vehicle_ownership = function(force_name)
     local force = game.forces[force_name or "player"]

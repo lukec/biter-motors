@@ -311,8 +311,8 @@ The pre-play slice is complete when:
 
 ## Explicitly Deferred
 
-- AGI victory implementation. Its roadmap target is one billion cumulative AI
-  Tokens, followed by a 100-million-Token physical training run.
+- Endgame balance tuning for the implemented AGI victory: one billion
+  cumulative AI Tokens followed by a 100-million-Token physical training run.
 - Terrestrial Hyperscaler implementation.
 - Final vehicle sprites and remaining art polish.
 - Automatic balance changes during a playtest.

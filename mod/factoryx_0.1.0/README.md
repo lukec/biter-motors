@@ -61,12 +61,12 @@ no animation rendering is attached to individual customer units.
 22. Build a Planetary Energy Grid Controller.
 23. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
     Buses, and Ground Station Networks.
-24. Research Kardashev Type I to unlock the final grid-charge recipe.
-25. Feed the controller four huge streams: grid segments, AI tokens, Megapacks,
-    and Dollars. The grid segments already embody the satellite and
-    ground infrastructure.
-26. Supply the controller's 1GW power draw through the final charge cycle to
-    trigger the victory state.
+24. Generate one billion cumulative AI Tokens to unlock AGI Training Run.
+25. Package 100 million AI Tokens into 10,000 Training Datasets and 10 million
+    Dollars into 1,000 Capital Allocations, then add 10,000 Grid Segments and
+    1,000 Megapacks.
+26. Sustain the controller's 1 TW draw through a 60-minute training run. Its
+    AGI Model output triggers victory and remains in the machine.
 
 ## Current Scope
 
@@ -168,8 +168,9 @@ EVs, spare settlement capacity, and progress toward the next settlement.
 Reservations are never teleported into Sales Offices. Before the first sale, a
 reachable unsold buyer provides a one-reservation-per-minute bootstrap signal.
 Afterward, only living assigned owners create occupied stalls, charging draw,
-and stall-rate reservations. Unsold inventory does not count. When a Planetary Energy Grid Controller completes the final grid
-charge, the mod consumes that charge and marks the game won.
+and stall-rate reservations. Unsold inventory does not count. One billion
+cumulative AI Tokens unlocks a 1 TW, 60-minute AGI Training Run in the
+Planetary Energy Grid Controller. Its AGI Model output marks the game won.
 
 The Sales Office technology also unlocks a `Sales Office Coverage` shortcut.
 It toggles dark teal, translucent 128-tile coverage circles in map and Remote View for
@@ -262,13 +263,13 @@ Current validation state, 2026-07-10:
 
 - Factorio 2.1.9 with Space Age enabled loads the mod with `--dump-data` from
   an isolated temp config and mod directory.
-- `python3 -m unittest tests.test_factoryx_mod` passes: 37 tests.
+- `python3 -m unittest tests.test_factoryx_mod` passes: 50 tests.
 - A disposable benchmark smoke save ran 3780 updates with a temporary helper mod
   and verified zero utilization before EV sales, force-wide sold-fleet-capped
   mixed V1/V2 utilization, native per-stall power sinks,
   Gigafactory Premium and Mass-market EV selection, one-minute physical EV
   Reservation generation in the charger output,
-  and Planetary Grid Charge victory.
+  the one-billion-token AGI unlock, and AGI Model victory.
 - The benchmark also sells three Robotaxi items without an EV Reservation,
   verifies the 1-Dollar profit output, and verifies that the sale enables Small
   Orbital Launch.

@@ -456,7 +456,7 @@ local dollar_icon = icon64("__base__/graphics/icons/coin.png", {r = 1.0, g = 0.8
 local ev_reservation_icon = generated_icon("ev-reservation")
 local ai_token_icon = generated_icon("ai-token")
 local planetary_grid_segment_icon = generated_icon("planetary-grid-segment")
-local planetary_grid_charge_icon = generated_icon("planetary-grid-charge")
+local agi_model_icon = generated_icon("agi-model")
 local gigafactory_module_icon = generated_icon("gigafactory-module")
 local gigafactory_icon = generated_icon("gigafactory")
 local gigacast_icon = generated_icon("gigacast")
@@ -608,8 +608,10 @@ data:extend({
   item("x-gigafactory-module", gigafactory_module_icon, "x-factoryx-components", "c[gigafactory-module]", 100),
   item("x-gigacast", gigacast_icon, "x-factoryx-components", "d[gigacast]", 10),
   item("x-ai-token", ai_token_icon, "science-pack", "h[x-ai-token]", 1000000, {weight = 1}),
+  item("x-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 10000),
+  item("x-capital-allocation", dollar_icon, "x-factoryx-capital", "b[capital-allocation]", 10000),
   item("x-planetary-grid-segment", planetary_grid_segment_icon, "x-factoryx-components", "g[planetary-grid-segment]", 2000),
-  item("x-planetary-grid-charge", planetary_grid_charge_icon, "x-factoryx-components", "h[planetary-grid-charge]", 1),
+  item("x-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1),
 
   item("x-battery-pack", layered_icon64("__base__/graphics/icons/battery.png", "__base__/graphics/icons/accumulator.png"), "x-factoryx-components", "a[battery-pack]", 100),
   item("x-electric-drivetrain", layered_icon64("__base__/graphics/icons/electric-engine-unit.png", "__base__/graphics/icons/advanced-circuit.png"), "x-factoryx-components", "b[electric-drivetrain]", 50),
@@ -869,7 +871,7 @@ local planetary_grid_controller = copied_assembler(
   planetary_grid_controller_icon,
   "x-planetary-grid-controller",
   {"x-planetary-grid"},
-  "1GW",
+  "1TW",
   1
 )
 planetary_grid_controller.energy_source.emissions_per_minute = nil
@@ -1273,14 +1275,25 @@ data:extend({
     },
     {{type = "item", name = "x-planetary-grid-segment", amount = 1}}, 60
   ),
-  recipe("x-charge-planetary-grid", {"x-planetary-grid"}, "x-factoryx-components", "h[charge-planetary-grid]",
+  recipe("x-package-agi-training-dataset", {"x-planetary-grid"}, "science-pack", "h[agi-training-dataset]",
+    {{type = "item", name = "x-ai-token", amount = 10000}},
+    {{type = "item", name = "x-agi-training-dataset", amount = 1}}, 1,
+    {allow_productivity = false, allow_quality = false}
+  ),
+  recipe("x-package-capital-allocation", {"x-planetary-grid"}, "x-factoryx-capital", "b[capital-allocation]",
+    {{type = "item", name = "x-dollar", amount = 10000}},
+    {{type = "item", name = "x-capital-allocation", amount = 1}}, 1,
+    {allow_productivity = false, allow_quality = false}
+  ),
+  recipe("x-agi-training-run", {"x-planetary-grid"}, "science-pack", "i[agi-training-run]",
     {
-      {type = "item", name = "x-planetary-grid-segment", amount = 100},
-      {type = "item", name = "x-ai-token", amount = 5000},
-      {type = "item", name = "x-megapack", amount = 100},
-      {type = "item", name = "x-dollar", amount = 1000}
+      {type = "item", name = "x-agi-training-dataset", amount = 10000},
+      {type = "item", name = "x-capital-allocation", amount = 1000},
+      {type = "item", name = "x-planetary-grid-segment", amount = 10000},
+      {type = "item", name = "x-megapack", amount = 1000}
     },
-    {{type = "item", name = "x-planetary-grid-charge", amount = 1}}, 600
+    {{type = "item", name = "x-agi-model", amount = 1}}, 3600,
+    {allow_productivity = false, allow_quality = false}
   )
 })
 
@@ -1518,7 +1531,9 @@ data:extend({
     {"x-orbital-compute", "x-autonomous-logistics", "fusion-reactor"},
     {
       unlock("x-planetary-grid-controller"),
-      unlock("x-planetary-grid-segment")
+      unlock("x-planetary-grid-segment"),
+      unlock("x-package-agi-training-dataset"),
+      unlock("x-package-capital-allocation")
     },
     2500,
     {
@@ -1534,28 +1549,6 @@ data:extend({
       {"cryogenic-science-pack", 1},
       {"x-ai-token", 1},
       {"x-dollar", 1}
-    },
-    60
-  ),
-  tech("x-kardashev-type-1",
-    "__space-age__/graphics/technology/solar-system-edge.png",
-    {"x-planetary-energy-grid"},
-    {
-      unlock("x-charge-planetary-grid")
-    },
-    5000,
-    {
-      {"automation-science-pack", 1},
-      {"logistic-science-pack", 1},
-      {"chemical-science-pack", 1},
-      {"production-science-pack", 1},
-      {"utility-science-pack", 1},
-      {"space-science-pack", 1},
-      {"metallurgic-science-pack", 1},
-      {"electromagnetic-science-pack", 1},
-      {"agricultural-science-pack", 1},
-      {"cryogenic-science-pack", 1},
-      {"x-ai-token", 1}
     },
     60
   )
@@ -1769,7 +1762,9 @@ for _, recipe_name in pairs({
   "x-sell-robotaxi-fleet",
   "x-terrestrial-ai-token",
   "x-orbital-ai-token",
-  "x-charge-planetary-grid"
+  "x-package-agi-training-dataset",
+  "x-package-capital-allocation",
+  "x-agi-training-run"
 }) do
   data.raw.recipe[recipe_name].allow_quality = false
 end

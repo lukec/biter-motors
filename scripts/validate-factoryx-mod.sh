@@ -44,8 +44,8 @@ EOF_INFO
 cat > "$smoke/control.lua" <<'EOF_LUA'
 local REPORT = "factoryx-smoke.jsonl"
 local CONTROLLER = "x-planetary-grid-controller"
-local CHARGE = "x-planetary-grid-charge"
-local GRID_RECIPE = "x-charge-planetary-grid"
+local AGI_MODEL = "x-agi-model"
+local AGI_RECIPE = "x-agi-training-run"
 local DOLLAR = "x-dollar"
 local GRID_CONNECTION = "x-ev-charging-grid-connection"
 local POWER_SINK = "x-ev-charging-power-sink"
@@ -117,8 +117,7 @@ script.on_init(function()
     "x-energy-products",
     "x-terrestrial-ai",
     "x-autonomous-logistics",
-    "x-planetary-energy-grid",
-    "x-kardashev-type-1"
+    "x-planetary-energy-grid"
   }) do
     if force.technologies[technology_name] then
       force.technologies[technology_name].researched = true
@@ -198,7 +197,10 @@ script.on_init(function()
   pcall(function() robotaxi_office.set_recipe(ROBOTAXI_SALE_RECIPE) end)
   local robotaxi_input = robotaxi_office.get_inventory(input_inventory_id())
   local inserted_robotaxi_fleet = robotaxi_input and robotaxi_input.insert{name = ROBOTAXI_FLEET, count = 3} or 0
-  pcall(function() controller.set_recipe(GRID_RECIPE) end)
+  local token_statistics = force.get_item_production_statistics(surface)
+  token_statistics.set_output_count("x-ai-token", 1000000000)
+  storage.agi_training_status = remote.call("factoryx", "agi_training_status", "player")
+  pcall(function() controller.set_recipe(AGI_RECIPE) end)
   pcall(function() gigafactory.set_recipe(PREMIUM_EV_RECIPE) end)
   pcall(function() gigafactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
   for level = 1, 5 do
@@ -280,7 +282,7 @@ script.on_init(function()
     tick = game.tick,
     status = "setup",
     inserted_sale_dollar = inserted_sale_dollar,
-    inserted_charge = 0,
+    agi_training_unlocked = storage.agi_training_status and storage.agi_training_status.unlocked,
     event_unpowered_station_created = storage.event_unpowered_station_created,
     event_unpowered_station_survived = storage.event_unpowered_station_survived,
     event_unpowered_station_unit_number = storage.event_unpowered_station_unit_number,
@@ -420,7 +422,7 @@ script.on_nth_tick(1, function()
   write_report{
     tick = game.tick,
     status = "victory",
-    remaining_charge = output and output.get_item_count(CHARGE) or -1,
+    agi_models = output and output.get_item_count(AGI_MODEL) or -1,
     game_finished = safe_value(function() return game.finished end)
   }
 end)
@@ -484,7 +486,7 @@ script.on_nth_tick(3720, function()
   local datacenter_input = datacenter and datacenter.get_inventory(input_inventory_id())
   local datacenter_output = datacenter and datacenter.get_inventory(output_inventory_id())
   local reservations = station_output and station_output.get_item_count(RESERVATION) or -1
-  local inserted_victory_charge = 0
+  local agi_training = remote.call("factoryx", "agi_training_status", "player")
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
   local logistic_roboports = #surface.find_entities_filtered{type = "roboport", force = game.forces.player}
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
@@ -597,7 +599,8 @@ script.on_nth_tick(3720, function()
     covered_biter_settlements = market and market.covered_biter_settlements,
     charger_reservations = reservations,
     charger_reservations_generated = reservations > 0,
-    victory_charge_inserted = inserted_victory_charge == 1
+    agi_training_unlocked = agi_training and agi_training.unlocked,
+    agi_training_selected = controller and controller.get_recipe() and controller.get_recipe().name == AGI_RECIPE
   }
 end)
 
@@ -653,7 +656,7 @@ script.on_nth_tick(18520, function()
   local surface = game.get_surface(storage.surface_index or 1)
   local controller = surface and find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local inventory = controller and controller.get_inventory(output_inventory_id())
-  local inserted = inventory and inventory.insert{name = CHARGE, count = 1} or 0
+  local inserted = inventory and inventory.insert{name = AGI_MODEL, count = 1} or 0
   storage.awaiting_victory = inserted == 1
 end)
 EOF_LUA
@@ -710,7 +713,6 @@ expected_research = {
     "x-satellite-constellation": (2000, 60, rgbpys | {"x-dollar"}),
     "x-orbital-compute": (2000, 60, rgbpys | {"electromagnetic-science-pack", "x-ai-token", "x-dollar"}),
     "x-planetary-energy-grid": (2500, 60, rgbpys | planet_four | {"x-ai-token", "x-dollar"}),
-    "x-kardashev-type-1": (5000, 60, rgbpys | planet_four | {"x-ai-token"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -872,7 +874,7 @@ for technology_name, technology in data["technology"].items():
     for effect in technology.get("effects", []):
         if effect.get("type") == "unlock-recipe":
             technology_unlocks.add(effect["recipe"])
-runtime_milestone_recipes = {"x-prototype-roadster", "x-ev-charging-station-v4"}
+runtime_milestone_recipes = {"x-prototype-roadster", "x-ev-charging-station-v4", "x-agi-training-run"}
 missing_unlocks = factoryx_recipes - technology_unlocks - runtime_milestone_recipes
 if missing_unlocks:
     raise SystemExit(f"FactoryX recipes without a progression owner: {sorted(missing_unlocks)}")
@@ -1173,8 +1175,10 @@ if not checked.get("charger_reservations_generated"):
     raise SystemExit(f"EV reservations were not generated in the charger output: {checked}")
 if checked.get("logistic_roboports") != 0:
     raise SystemExit(f"smoke test should prove charger output without a logistics network: {checked}")
-if victory is None or victory.get("remaining_charge") != 0:
-    raise SystemExit(f"planetary grid charge was not consumed: {victory}")
+if not checked.get("agi_training_unlocked") or not checked.get("agi_training_selected"):
+    raise SystemExit(f"one-billion-token gate did not unlock/select AGI training: {checked}")
+if victory is None or victory.get("agi_models") != 1:
+    raise SystemExit(f"AGI Model should remain in controller output after victory: {victory}")
 game_finished = victory.get("game_finished", {})
 if not (game_finished.get("ok") and game_finished.get("value") is True):
     raise SystemExit(f"game.finished was not true: {victory}")
