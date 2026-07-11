@@ -1661,6 +1661,52 @@ Implemented performance architecture:
   for market snapshots and Robotaxi allocation. It also fails explicitly when
   Factorio logs a non-recoverable mod error, even if the binary exits with zero.
 
+#### July 2026 customer scale benchmark
+
+`scripts/benchmark-factoryx-scale.sh` creates disposable saves with registered
+customer owners and compares 0, 128, 256, and 512 continuously commanded units.
+It never touches the active playtest save.
+
+Measured 20,000-unit results over 3,600 ticks:
+
+| Registered owners | Commanded movers | Average update | Maximum update |
+| --- | ---: | ---: | ---: |
+| No | 0 | 21.141 ms | 64.257 ms |
+| Yes | 0 | 22.507 ms | 98.743 ms |
+| Yes | 128 | 23.049 ms | 108.628 ms |
+| Yes | 256 | 22.333 ms | 60.943 ms |
+| Yes | 512 | 23.497 ms | 68.265 ms |
+
+The single-run movement values contain substantial simulation jitter, so they
+should not be interpreted as a monotonic curve. A separate 5,000-unit run
+verified that the commands were real: 512 requested movers produced 493 valid
+movers, 476 units that changed position, and 11,615 completed movement commands.
+Its average update times remained in the 3.34-4.20 ms range across all movement
+caps. The actionable conclusion is that up to 512 visible commutes are not the
+primary problem; 20,000 independently simulated unit entities already exceed
+the 16.67 ms budget for 60 UPS before scripted commuting.
+
+Recommended population virtualization:
+
+- Target at most roughly 5,000 physical mobile customers map-wide. Keep the
+  exact cap configurable until real playtest data confirms the comfortable
+  margin alongside the player's factory.
+- Store additional settlement population as integer counts by settlement and
+  vehicle class. Sales, charging demand, reservations, Robotaxi coverage, and
+  customer mood should operate on those aggregate counts.
+- Retain a bounded pool of visible representatives per settlement. A sale may
+  recolor/reclassify one representative, while the authoritative ownership
+  count remains aggregate.
+- Physical commutes become representative animation: schedule a sample of
+  visible owners, capped at 128 by default and 512 maximum, without requiring
+  every abstract owner to pathfind.
+- Once a settlement reaches its visible-unit allowance, stop its physical
+  spawner and advance virtual population through the existing growth clock.
+  This avoids paying to spawn and immediately destroy excess units.
+- Robotaxi Service Centers should consume aggregate nearby population from a
+  settlement index rather than querying mobile units. This is both faster and
+  a better model of fleet service coverage.
+
 ### Phase 2.7: Robotaxi Service Center
 
 Implemented V1 replaces direct Robotaxi sales with recurring fleet-service

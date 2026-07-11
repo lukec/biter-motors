@@ -1518,7 +1518,7 @@ class FactoryXModTest(unittest.TestCase):
             '"Customer charging commutes"',
             '"Completed charging visits"',
             "customer_charging_commutes = function",
-            "customer_commute_due_queue",
+            "customer_commute_timing_wheel",
             "customer_active_commutes",
         ]:
             self.assertIn(fragment, control)
@@ -1535,15 +1535,41 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function dequeue_available_buyer", control)
         self.assertIn("defines.events.on_entity_spawned", control)
         self.assertIn("event.spawner", control)
+        self.assertIn("if not market_force_name then return end", control)
         self.assertIn('registered_factoryx_entities("sales_offices")', control)
         self.assertIn('registered_factoryx_entities("stations", force, surface)', control)
         self.assertIn("performance_status = function", control)
+        self.assertIn('require("runtime.timing_wheel")', control)
+        self.assertIn('require("runtime.performance_state")', control)
+        self.assertIn("reconcile_factoryx_entity_registry_step", control)
+        self.assertIn('mark_factoryx_market_dirty(entity.force, "infrastructure-built")', control)
         buyer_start = control.index("function eligible_customer_buyers")
         buyer_end = control.index("function reserve_office_buyers", buyer_start)
         self.assertNotIn("pairs(customer_unit_registry())", control[buyer_start:buyer_end])
         commute_start = control.index("function process_customer_charging_commutes")
         commute_end = control.index("function handle_customer_commute_command_completed", commute_start)
         self.assertNotIn("pairs(customer_vehicle_owners())", control[commute_start:commute_end])
+
+    def test_factoryx_scale_benchmark_and_runtime_modules_exist(self):
+        timing_wheel = (MOD / "runtime/timing_wheel.lua").read_text()
+        performance_state = (MOD / "runtime/performance_state.lua").read_text()
+        customer_aggregates = (MOD / "runtime/customer_aggregates.lua").read_text()
+        buyer_queues = (MOD / "runtime/buyer_queues.lua").read_text()
+        benchmark = (ROOT / "scripts/benchmark-factoryx-scale.sh").read_text()
+        self.assertIn("function TimingWheel.schedule", timing_wheel)
+        self.assertIn("function TimingWheel.pop_due", timing_wheel)
+        self.assertIn("math.ceil(due_tick / 60)", timing_wheel)
+        self.assertIn("function PerformanceState.invalidate", performance_state)
+        self.assertIn("state.invalidations[reason]", performance_state)
+        self.assertIn("function CustomerAggregates.rebuild", customer_aggregates)
+        self.assertIn('require("runtime.customer_aggregates")', (MOD / "control.lua").read_text())
+        self.assertIn("function BuyerQueues.pop_valid", buyer_queues)
+        self.assertIn('require("runtime.buyer_queues")', (MOD / "control.lua").read_text())
+        self.assertIn("FACTORYX_BENCHMARK_UNITS:-20000", benchmark)
+        self.assertIn("FACTORYX_BENCHMARK_CAPS", benchmark)
+        self.assertIn("0 128 256 512", benchmark)
+        self.assertIn("completed_commands", benchmark)
+        self.assertIn("performance_test_seed_owner", benchmark)
 
     def test_factoryx_avoids_capex_language(self):
         combined = "\n".join(
