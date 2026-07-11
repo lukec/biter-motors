@@ -1,7 +1,10 @@
-local TimingWheel = require("runtime.timing_wheel")
-local PerformanceState = require("runtime.performance_state")
-local CustomerAggregates = require("runtime.customer_aggregates")
-local BuyerQueues = require("runtime.buyer_queues")
+TimingWheel = require("runtime.timing_wheel")
+PerformanceState = require("runtime.performance_state")
+CustomerAggregates = require("runtime.customer_aggregates")
+BuyerQueues = require("runtime.buyer_queues")
+RobotaxiService = require("runtime.robotaxi_service")
+PowerQueue = require("runtime.power_queue")
+UiRefresh = require("runtime.ui_refresh")
 
 local STATION_NAMES = {
   "x-ev-charging-station",
@@ -497,7 +500,7 @@ function factoryx_compute_power_failures()
 end
 
 function factoryx_compute_queue()
-  storage.factoryx_compute_queue = storage.factoryx_compute_queue or {units = {}, index = 1, members = {}}
+  storage.factoryx_compute_queue = PowerQueue.ensure(storage.factoryx_compute_queue)
   return storage.factoryx_compute_queue
 end
 
@@ -506,8 +509,7 @@ function track_factoryx_compute_machine(entity)
     factoryx_compute_machines()[entity.unit_number] = entity
     local queue = factoryx_compute_queue()
     if not queue.members[entity.unit_number] then
-      queue.units[#queue.units + 1] = entity.unit_number
-      queue.members[entity.unit_number] = true
+      PowerQueue.track(queue, entity.unit_number)
     end
   end
 end
@@ -529,21 +531,13 @@ function reset_underpowered_compute_progress()
   local queue = factoryx_compute_queue()
   local processed = 0
   while processed < 32 and #queue.units > 0 do
-    if queue.index > #queue.units then queue.index = 1 end
-    local unit_number = queue.units[queue.index]
-    queue.index = queue.index + 1
+    local unit_number = PowerQueue.next(queue)
     processed = processed + 1
     local entity = factoryx_compute_machines()[unit_number]
     if not entity or not entity.valid then
       factoryx_compute_machines()[unit_number] = nil
       factoryx_compute_power_failures()[unit_number] = nil
-      queue.members[unit_number] = nil
-      local remove_index = queue.index - 1
-      local last = table.remove(queue.units)
-      if remove_index <= #queue.units then
-        queue.units[remove_index] = last
-        queue.index = remove_index
-      end
+      PowerQueue.remove_current(queue, unit_number)
     else
       local power_failure = factoryx_compute_power_failures()[unit_number]
       if power_failure then
@@ -3393,7 +3387,12 @@ function robotaxi_customer_allocations(force)
             local previous = selected_by_unit[customer.unit_number]
             if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
               and (not previous or distance < previous.distance) then
-              selected_by_unit[customer.unit_number] = {center = center, distance = distance}
+              RobotaxiService.consider_nearest(
+                selected_by_unit,
+                customer.unit_number,
+                center,
+                distance
+              )
             end
           end
         end
@@ -3424,24 +3423,29 @@ end
 function robotaxi_service_snapshot(center, allocated_customers)
   local input, output = robotaxi_service_inventories(center)
   local stored = input and input.get_item_count(ROBOTAXI_ITEM_NAME) or 0
-  local fleet = math.min(200, stored)
   local customers = allocated_customers
   if customers == nil then
     customers = robotaxi_customer_allocations(center.force)[center.unit_number] or 0
   end
-  local allocated = math.min(fleet, math.ceil(customers / ROBOTAXI_CUSTOMERS_PER_VEHICLE))
-  local served = math.min(customers, allocated * ROBOTAXI_CUSTOMERS_PER_VEHICLE)
   local power_factor = robotaxi_service_power_factor(center)
   local audio_level = continuous_improvement_level(center.force, PREMIUM_AUDIO_TECH_NAME)
+  local metrics = RobotaxiService.metrics{
+    max_fleet = 200,
+    stored = stored,
+    customers = customers,
+    customers_per_vehicle = ROBOTAXI_CUSTOMERS_PER_VEHICLE,
+    vehicle_minutes_per_dollar = ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,
+    power_factor = power_factor,
+    revenue_multiplier = 1 + audio_level * 0.05
+  }
   local state = robotaxi_service_states()[center.unit_number] or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
   return {
-    stored = fleet,
-    allocated = allocated,
+    stored = metrics.fleet,
+    allocated = metrics.allocated,
     customers = customers,
-    served = served,
+    served = metrics.served,
     power_factor = power_factor,
-    revenue_per_minute = allocated / ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR
-      * power_factor * (1 + audio_level * 0.05),
+    revenue_per_minute = metrics.revenue_per_minute,
     output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
     output_blocked = not (output and output.can_insert{name = DOLLAR_NAME, count = 1}),
     revenue_progress = state.revenue or 0,
@@ -5382,7 +5386,7 @@ script.on_nth_tick(60, function()
   process_customer_charging_commutes()
 end)
 
-script.on_nth_tick(300, function()
+script.on_nth_tick(UiRefresh.interval_ticks, function()
   for _, player in pairs(game.connected_players) do
     local selected = player.selected
     if is_station(selected) then
