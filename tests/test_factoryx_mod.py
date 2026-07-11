@@ -206,6 +206,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("charge_station_vehicles(station)", control)
         self.assertIn("customer_requested_stalls", control)
         self.assertIn("Player EV charging", control)
+        self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png"', data)
+        self.assertIn("direction_count = 64", data)
+        self.assertIn("line_length = 8", data)
+        self.assertIn("prototype.turret_animation = nil", data)
+        self.assertIn("prototype.light_animation = nil", data)
+        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck", "robotaxi-fleet"]:
+            self.assertIn(f'artwork = "{artwork}"', data)
+            sheet = MOD / f"graphics/entity/vehicles/{artwork}.png"
+            self.assertTrue(sheet.exists())
+            with Image.open(sheet) as image:
+                self.assertEqual(image.size, (1536, 1536))
+                self.assertEqual(image.mode, "RGBA")
         for fragment in [
             '{consumption = "450kW", weight = 500, max_health = 300',
             '{consumption = "320kW", weight = 750, max_health = 550',

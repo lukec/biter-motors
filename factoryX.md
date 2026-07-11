@@ -1390,14 +1390,14 @@ beyond the MVP tech-and-recipe loop.
 | `x-agi-model` | AGI Model | Yes | Concrete output of the final training run and the victory trigger. |
 | `x-battery-pack` | Battery pack | Maybe | Vanilla battery/accumulator layering is acceptable but could be custom. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
-| `x-prototype-roadster` | Prototype roadster | Partial | Final-direction red Blender model and 64 rotations exist; game still uses temporary icon and vanilla driving sheet. |
-| `x-premium-ev` | Premium EV | Partial | Final-direction black grand-tourer Blender model and 64 rotations exist; not yet wired. |
-| `x-mass-market-ev` | Mass-market EV | Partial | Final-direction white liftback Blender model and 64 rotations exist; not yet wired. |
-| `x-cybertruck` | Cybertruck | Partial | Final-direction silver faceted pickup Blender model and 64 rotations exist; not yet wired. |
+| `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
+| `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |
+| `x-mass-market-ev` | Mass-market EV | No | White liftback model, derived icon, and packed 64-direction driving sheet are wired. |
+| `x-cybertruck` | Cybertruck | No | Silver faceted pickup model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-high-density-solar-array` | High-density Solar Array | Partial | Native 4x4 solar-panel entity tiles four 2x2-scaled vanilla panels edge-to-edge across its full footprint. It retains vanilla solar placement/grid behavior and the native 300 kW day/night curve without rotation or hidden support entities. Final premium artwork remains optional. |
 | `x-megapack` | Megapack | No | Dedicated aligned 2x2 four-cabinet utility battery sprite and matching icon are wired. |
 | `x-autonomy-computer` | Autonomy computer | Maybe | Current processor/module concept is readable. |
-| `x-robotaxi-fleet` | Robotaxi fleet | Partial | Final-direction gold Robotaxi Blender model and 64 rotations exist; not yet wired. |
+| `x-robotaxi-fleet` | Robotaxi fleet | No | Gold Robotaxi model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-small-launch-service` | Small launch service | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
 | `x-reusable-booster` | Reusable booster | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
 | `x-reusable-launch-service` | Reusable launch service | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
@@ -1444,10 +1444,8 @@ icons, and bounded working animations. Remaining work is narrower:
   source artwork remains in Downloads and is not duplicated at full resolution
   inside the mod.
 
-1. Pack the five completed Blender vehicle models into Factorio directional
-   sheets, derive their final icons, wire them into the car prototypes, and
-   validate rotation ordering, scale, shadows, collision alignment, and driving
-   animation in a disposable save.
+1. Playtest the five wired Blender vehicles for scale, collision alignment, and
+   steering feel; make model-specific sprite-scale adjustments from screenshots.
 2. Review normalized icons at actual 64 px and belt scale in the QA index; only
    regenerate individual icons that still fail after deterministic normalization.
 3. Add Factorio-style shadows, ambient occlusion, damage states, remnants, and

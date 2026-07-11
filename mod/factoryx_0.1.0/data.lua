@@ -334,8 +334,26 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
   prototype.energy_per_hit_point = profile.energy_per_hit_point
   prototype.inventory_size = profile.inventory_size
   prototype.resistances = profile.resistances or prototype.resistances
-  tint_animation_masks(prototype.animation, primary, secondary)
-  tint_animation_masks(prototype.turret_animation, primary, secondary)
+  if profile.artwork then
+    prototype.animation = {
+      layers = {
+        {
+          filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png",
+          priority = "high",
+          width = 192,
+          height = 192,
+          direction_count = 64,
+          line_length = 8,
+          scale = profile.sprite_scale or 0.72
+        }
+      }
+    }
+    prototype.turret_animation = nil
+    prototype.light_animation = nil
+  else
+    tint_animation_masks(prototype.animation, primary, secondary)
+    tint_animation_masks(prototype.turret_animation, primary, secondary)
+  end
   return prototype
 end
 
@@ -495,10 +513,7 @@ local high_density_solar_array_icon = layered_icon64(
 )
 local megapack_icon = generated_icon("megapack")
 local robotaxi_service_center_icon = generated_icon("robotaxi-service-center")
-local cybertruck_icon = icon64(
-  "__base__/graphics/icons/car.png",
-  {r = 0.72, g = 0.76, b = 0.80, a = 1.0}
-)
+local cybertruck_icon = generated_icon("cybertruck")
 
 local runtime_visual_sprites = {}
 for frame_index = 1, 8 do
@@ -884,25 +899,29 @@ local electric_vehicles = {
     "x-prototype-roadster", generated_icon("prototype-roadster"),
     {r = 0.90, g = 0.02, b = 0.01, a = 1}, {r = 1.00, g = 0.18, b = 0.08, a = 1},
     {consumption = "450kW", weight = 500, max_health = 300, rotation_multiplier = 1.35,
-      braking_multiplier = 1.25, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20}
+      braking_multiplier = 1.25, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20,
+      artwork = "prototype-roadster"}
   ),
   copied_electric_vehicle(
     "x-premium-ev", generated_icon("premium-ev"),
     {r = 0.015, g = 0.015, b = 0.015, a = 1}, {r = 0.12, g = 0.12, b = 0.12, a = 1},
     {consumption = "320kW", weight = 750, max_health = 550, rotation_multiplier = 1.1,
-      braking_multiplier = 1.4, friction_force = 1.8e-3, energy_per_hit_point = 0.9, inventory_size = 40}
+      braking_multiplier = 1.4, friction_force = 1.8e-3, energy_per_hit_point = 0.9, inventory_size = 40,
+      artwork = "premium-ev"}
   ),
   copied_electric_vehicle(
     "x-mass-market-ev", generated_icon("mass-market-ev"),
     {r = 0.82, g = 0.82, b = 0.82, a = 1}, {r = 1.00, g = 1.00, b = 1.00, a = 1},
     {consumption = "240kW", weight = 800, max_health = 500, rotation_multiplier = 1.0,
-      braking_multiplier = 1.3, friction_force = 1.9e-3, energy_per_hit_point = 1.0, inventory_size = 50}
+      braking_multiplier = 1.3, friction_force = 1.9e-3, energy_per_hit_point = 1.0, inventory_size = 50,
+      artwork = "mass-market-ev"}
   ),
   copied_electric_vehicle(
     "x-cybertruck", cybertruck_icon,
     {r = 0.58, g = 0.62, b = 0.66, a = 1}, {r = 0.90, g = 0.93, b = 0.96, a = 1},
     {consumption = "600kW", weight = 1800, max_health = 1400, rotation_multiplier = 0.72,
       braking_multiplier = 1.7, friction_force = 1.5e-3, energy_per_hit_point = 0.35, inventory_size = 100,
+      artwork = "cybertruck", sprite_scale = 0.76,
       equipment_grid = "large-equipment-grid", resistances = {
         {type = "impact", decrease = 150, percent = 70},
         {type = "acid", percent = 40},
@@ -913,7 +932,8 @@ local electric_vehicles = {
     "x-robotaxi-fleet", generated_icon("robotaxi-fleet"),
     {r = 0.85, g = 0.52, b = 0.03, a = 1}, {r = 1.00, g = 0.82, b = 0.18, a = 1},
     {consumption = "270kW", weight = 850, max_health = 650, rotation_multiplier = 1.15,
-      braking_multiplier = 1.7, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30}
+      braking_multiplier = 1.7, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30,
+      artwork = "robotaxi-fleet", sprite_scale = 0.68}
   )
 }
 

@@ -1042,6 +1042,20 @@ if prototype_roadster["categories"] != ["advanced-crafting"]:
 if "advanced-crafting" not in assembling_machine_2["crafting_categories"]:
     raise SystemExit(f"Assembling Machine 2 cannot craft Prototype Roadsters: {assembling_machine_2['crafting_categories']}")
 print("Prototype Roadster AM2 compatibility OK.")
+for vehicle_name in (
+    "x-prototype-roadster", "x-premium-ev", "x-mass-market-ev",
+    "x-cybertruck", "x-robotaxi-fleet",
+):
+    vehicle = data["car"][vehicle_name]
+    layer = vehicle["animation"]["layers"][0]
+    expected_file = f"__factoryx__/graphics/entity/vehicles/{vehicle_name[2:]}.png"
+    if layer.get("filename") != expected_file:
+        raise SystemExit(f"{vehicle_name} custom vehicle sheet mismatch: {layer}")
+    if layer.get("direction_count") != 64 or layer.get("line_length") != 8:
+        raise SystemExit(f"{vehicle_name} direction layout mismatch: {layer}")
+    if vehicle.get("turret_animation") is not None or vehicle.get("light_animation") is not None:
+        raise SystemExit(f"{vehicle_name} retained mismatched vanilla overlay art")
+print("FactoryX custom vehicle engine sprites OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/factoryx-create.log 2>&1
 rm -f "$report"
