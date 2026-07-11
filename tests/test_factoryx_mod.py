@@ -965,8 +965,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('item("x-wrecked-ev"', data)
         self.assertIn('recipe("x-wrecked-ev-recycling"', data)
         self.assertIn('if math.random() < 0.01', control)
-        self.assertIn('unlock_vehicle_recycling = function(force)', control)
-        self.assertIn('technology.researched = true', control)
+        recycling_unlock = control[
+            control.index('unlock_vehicle_recycling = function(force)'):
+            control.index('generate_station_wrecks = function')
+        ]
+        self.assertIn('technology.enabled = true', recycling_unlock)
+        self.assertNotIn('technology.researched = true', recycling_unlock)
         self.assertIn('output.insert{name = WRECKED_EV_NAME, count = removed}', control)
         self.assertIn('x-industrial-supply-chain=Industrial Supply Chain', locale)
         station_recipe = data[data.index('recipe("x-ev-charging-station"'):data.index('recipe("x-ev-charging-station-v2"')]

@@ -3411,10 +3411,9 @@ end
 
 unlock_vehicle_recycling = function(force)
   local technology = force.technologies and force.technologies.recycling
-  if not technology or technology.researched then return false end
+  if not technology or technology.enabled or technology.researched then return false end
   technology.enabled = true
-  technology.researched = true
-  force.print("[FactoryX] The first EV has wrecked. Vehicle Recycling unlocked: build a Recycler and recover useful parts from Wrecked EVs.")
+  force.print("[FactoryX] The first EV has wrecked. Recycling research is now available; complete it to build a Recycler and recover useful parts.")
   return true
 end
 
