@@ -190,8 +190,12 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - Each quality level adds one embedded battery to a placed FactoryX EV.
 - Each quality level adds 10% EV capacity per stall to a charger. Stall count,
   footprint, and coverage radius stay fixed so placement remains readable.
-- Abstract outputs do not roll quality. Dollar sales, AI Token production,
-  launch-service sales, and the final AGI Model use `allow_quality = false`.
+- Abstract outputs do not roll quality. Dollar sales, AI Token production, and
+  the final AGI Model use `allow_quality = false`.
+- Launch vehicles are the deliberate exception: their native item quality
+  represents manufacturing reliability. Their recipes allow quality modules
+  but not productivity modules, and the launch system preserves the produced
+  vehicle's quality through the attempt.
 
 ## Vehicle Build And Profit Balance
 
@@ -1002,6 +1006,45 @@ Target feel:
 - It should produce a lot of Dollars, but the recipe should be slow and
   material-heavy.
 
+Planned early-launch reliability mechanic:
+
+- Replace the abstract service-only step with a dedicated Rocket Factory that
+  manufactures a physical early launch vehicle. The intended progression path
+  requires installing quality modules in this factory and supplying enough
+  ingredients to tolerate failed quality rolls.
+- The early vehicle mirrors the Falcon 1 bootstrap period: normal and uncommon
+  vehicles may be launched, but always fail. A rare-or-better vehicle succeeds.
+- Every attempt consumes its vehicle and payload. Failure creates a visible
+  launch explosion and perhaps a small amount of ordinary wreckage or scrap;
+  it produces no Dollars, satellite deployment, or progression credit.
+- The first successful rare launch is the milestone that proves orbital access
+  and unlocks the next launch generation. Merely manufacturing or attempting a
+  launch is insufficient.
+- Do not add abstract Engineering Data or Launch Credit. Failed attempts are
+  their own lesson; the player's concrete response is better modules, more
+  production, and another vehicle.
+- The Launch Pad inspector must state the reliability rule before commitment:
+  `Early launch vehicle: rare quality required for success.` It should also
+  report attempts, failures, and successful launches by force.
+
+Proposed reliability progression:
+
+| Launch generation | Normal | Uncommon | Rare or better | Design purpose |
+| --- | ---: | ---: | ---: | --- |
+| Early expendable | 0% | 0% | 100% | Quality modules bootstrap the program. |
+| First reusable | 75% | 95% | 100% | Reliability is much better, but early production still carries risk. |
+| Mature reusable | 100% | 100% | 100% | Quality improves recovery and economics rather than basic mission success. |
+
+- For mature reusable vehicles, higher quality should increase booster recovery
+  chance or recovered-booster quality instead of gating access to orbit. This
+  keeps quality valuable without making the late launch economy arbitrarily
+  unreliable.
+- Before implementation, spike both supported approaches against Factorio 2.1:
+  preserving quality through a real rocket-silo launch event, or using a
+  dedicated scripted Launch Pad. Prefer the native rocket animation and launch
+  event if it can inspect the physical launch vehicle's quality without also
+  forcing the player through a duplicate vanilla rocket-production path.
+
 Next concrete unlock:
 
 - Reusable Launch.
@@ -1732,6 +1775,14 @@ AI-datacenter opposition dynamic:
 ### Phase 3: SpaceX-Style Launch Flywheel
 
 - Add a clearer small launch -> reusable booster -> reusable launch progression.
+- Make launch-vehicle quality represent reliability. The early expendable
+  vehicle requires rare quality to succeed; normal and uncommon attempts launch
+  and fail. Later generations progressively reduce failure risk, while mature
+  reusable quality primarily improves booster recovery and economics.
+- Add a Rocket Factory that accepts quality modules and launch recipes that
+  allow quality but explicitly disallow productivity.
+- Record force-wide attempts, failures, and successful launches. Only successful
+  launches unlock the next generation and orbital infrastructure.
 - Consider launch-site or landing-pad entities if the vanilla rocket silo loop
   is not expressive enough.
 - Add a "reuse" mechanic that makes reusable launch services much more
