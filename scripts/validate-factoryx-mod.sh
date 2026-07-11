@@ -808,7 +808,7 @@ for recipe_name, product_icon in sale_recipe_products.items():
 premium_sale = data["recipe"]["x-sell-premium-ev"]
 mass_market_sale = data["recipe"]["x-sell-mass-market-ev"]
 prototype_sale = data["recipe"]["x-sell-prototype-roadster"]
-if prototype_sale["energy_required"] != 120 or prototype_sale["results"] != [{"type": "item", "name": "x-dollar", "amount": 2}]:
+if prototype_sale["energy_required"] != 60 or prototype_sale["results"] != [{"type": "item", "name": "x-dollar", "amount": 2}]:
     raise SystemExit(f"Prototype Roadster sale balance mismatch: {prototype_sale}")
 if premium_sale["energy_required"] != 30 or premium_sale["results"] != [{"type": "item", "name": "x-dollar", "amount": 1}]:
     raise SystemExit(f"Premium EV sale balance mismatch: {premium_sale}")
@@ -1113,16 +1113,16 @@ if not checked.get("logistic_system_researched_by_gigafactory"):
     raise SystemExit(f"first Gigafactory placement did not research Logistic System: {checked}")
 if not checked.get("gigafactory_module_recipe_enabled"):
     raise SystemExit(f"EV Production Line did not unlock Gigafactory Modules: {checked}")
-if not checked.get("premium_ev_recipe_enabled"):
-    raise SystemExit(f"EV Production Line did not unlock Premium EVs: {checked}")
+if checked.get("premium_ev_recipe_enabled"):
+    raise SystemExit(f"Premium EV recipe bypassed its 50-Roadster sales gate: {checked}")
 if checked.get("gigafactory_selected_recipe") != "x-premium-ev":
     raise SystemExit(f"Gigafactory could not select the Premium EV recipe: {checked}")
 if not checked.get("gigacast_recipe_enabled"):
     raise SystemExit(f"Mass-market EV Production did not unlock Gigacast: {checked}")
 if not checked.get("gigafactory_v2_created") or not checked.get("gigafactory_v2_recipe_enabled"):
     raise SystemExit(f"Mass-market EV Production did not unlock a placeable Gigafactory V2: {checked}")
-if not checked.get("mass_market_ev_recipe_enabled"):
-    raise SystemExit(f"Mass-market EV Production did not unlock Mass-market EVs: {checked}")
+if checked.get("mass_market_ev_recipe_enabled"):
+    raise SystemExit(f"Mass-market EV recipe bypassed its 250-Premium sales gate: {checked}")
 if checked.get("gigafactory_v2_selected_recipe") != "x-mass-market-ev":
     raise SystemExit(f"Gigafactory V2 could not select the Mass-market EV recipe: {checked}")
 if checked.get("gigafactory_modules_inserted") != 8:
@@ -1215,7 +1215,7 @@ if checked.get("market", {}).get("customer_ev_fleet") != 3:
 if checked.get("market", {}).get("active_customer_stalls") != 2:
     raise SystemExit(f"charging utilization must be capped by sold EVs and the two served settlements: {checked}")
 progress = checked.get("progress", {})
-if progress.get("stage") != "Mass-market scale" or progress.get("objective") != "Produce and sell the first Mass-market EV.":
+if progress.get("stage") != "Prototype market validation" or progress.get("objective") != "Sell 50 Prototype Roadsters.":
     raise SystemExit(f"FactoryX progress status did not identify the next concrete objective: {checked}")
 if progress.get("snapshot", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"FactoryX progress snapshot did not expose live EV market state: {checked}")

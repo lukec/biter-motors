@@ -195,7 +195,7 @@ and free stalls, network capacity, and the exact reason it is hostile. Research 
 first Prototype, Premium, and Mass-market sales print concise next actions.
 
 `Sell hopes and dreams` is intentionally slow: one Prototype Roadster plus one
-EV Reservation takes 120 seconds to return 2 Dollars of profit. The first completed sale prints the next step:
+EV Reservation takes 60 seconds to return 2 Dollars of profit. The first completed sale prints the next step:
 research EV Production Line. That technology costs Dollars plus red, green, and
 blue science for 250 cycles, then unlocks Gigafactory Modules, battery packs,
 electric drivetrains, Premium EVs, and `Sell premium product`. Each production

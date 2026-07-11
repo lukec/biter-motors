@@ -10,6 +10,18 @@ MOD = ROOT / "mod" / "factoryx_0.1.0"
 
 
 class FactoryXModTest(unittest.TestCase):
+    def test_ev_progression_is_gated_by_completed_sales(self):
+        control = (MOD / "control.lua").read_text()
+        data = (MOD / "data.lua").read_text()
+        self.assertIn('item = "x-prototype-roadster",\n    threshold = 50', control)
+        self.assertIn('item = "x-premium-ev",\n    threshold = 250', control)
+        self.assertIn('item = "x-mass-market-ev",\n    threshold = 2000', control)
+        self.assertIn('total_consumer_sales = true,\n    threshold = 5000', control)
+        self.assertIn('sync_ev_sales_recipe_gates(force, true)', control)
+        self.assertIn('not EV_SALES_GATED_RECIPES[effect.recipe]', control)
+        prototype_sale = data[data.index('recipe("x-sell-prototype-roadster"'):data.index('recipe("x-sell-premium-ev"')]
+        self.assertIn('}}, 60,', prototype_sale)
+
     def test_factoryx_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
         self.assertEqual(info["name"], "factoryx")
@@ -428,7 +440,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('    250,', premium_tech)
         self.assertIn('unlock("x-gigafactory-module")', premium_tech)
         self.assertNotIn('unlock("x-gigafactory-building")', premium_tech)
-        self.assertIn('{{type = "item", name = "x-dollar", amount = 2}}, 120', first_sale_recipe)
+        self.assertIn('{{type = "item", name = "x-dollar", amount = 2}}, 60', first_sale_recipe)
         self.assertIn('name = "x-ev-reservation", amount = 1', first_sale_recipe)
         self.assertIn('"car"', prototype_recipe)
         self.assertIn('"battery"', prototype_recipe)
@@ -464,8 +476,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('{"x-vehicle-assembly"}', premium_ev_recipe)
         self.assertIn('{{type = "item", name = "x-dollar", amount = 1}}, 30', premium_sale_recipe)
         self.assertIn('"x-sell-premium-ev"', control)
-        self.assertIn("EV Production Line researched. Build 10 Gigafactory Modules", control)
-        self.assertIn("research Energy Products to unlock Gigafactory construction", control)
+        self.assertIn("EV Production Line researched. Premium EV tooling is ready, but production requires 50 completed Prototype Roadster sales", control)
+        self.assertIn("Energy Products researched. Gigafactory construction is now unlocked", control)
         self.assertIn("Premium EV sales are working. Next: build EV Charging Network, then research Mass-market EV Production", control)
         self.assertIn("factoryx_first_premium_ev_sales", control)
 
@@ -789,7 +801,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("data.raw.recipe[recipe_name].allow_productivity = false", data)
         self.assertIn("x-vertical-integration=Gigafactory vertical integration", locale)
         self.assertIn("vertically integrated component recipe", control)
-        self.assertIn("Craft Gigafactory V2 in an Assembling Machine or Gigafactory", (MOD / "control.lua").read_text())
+        self.assertIn("First Gigafactory V2 online", (MOD / "control.lua").read_text())
 
     def test_energy_products_are_parallel_placeable_and_gigafactory_built(self):
         data = (MOD / "data.lua").read_text()

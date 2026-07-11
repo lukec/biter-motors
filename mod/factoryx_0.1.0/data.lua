@@ -1218,7 +1218,7 @@ data:extend({
       {type = "item", name = "x-prototype-roadster", amount = 1},
       {type = "item", name = "x-ev-reservation", amount = 1}
     },
-    {{type = "item", name = "x-dollar", amount = 2}}, 120,
+    {{type = "item", name = "x-dollar", amount = 2}}, 60,
     {icons = sale_icon(generated_icon("prototype-roadster"))}
   ),
   recipe("x-sell-premium-ev", {"x-sales"}, "x-factoryx-capital", "b[sell-premium-ev]",

@@ -108,6 +108,40 @@ CUSTOMER_EV_SALE_RECIPES = {
   [CYBERTRUCK_SALE_RECIPE] = {item = "x-cybertruck", vehicles = 1},
   [ROBOTAXI_SALE_RECIPE] = {item = "x-robotaxi-fleet", vehicles = 3}
 }
+EV_SALES_GATES = {
+  premium = {
+    item = "x-prototype-roadster",
+    threshold = 50,
+    technology = "x-premium-ev-program",
+    recipes = {"x-premium-ev", "x-sell-premium-ev"},
+    label = "Premium EV"
+  },
+  mass_market = {
+    item = "x-premium-ev",
+    threshold = 250,
+    technology = "x-capital-scaling",
+    recipes = {"x-mass-market-ev", "x-sell-mass-market-ev"},
+    label = "Mass-market EV"
+  },
+  cybertruck = {
+    item = "x-mass-market-ev",
+    threshold = 2000,
+    technology = "x-capital-scaling",
+    recipes = {"x-cybertruck", "x-sell-cybertruck"},
+    label = "Cybertruck"
+  },
+  robotaxi = {
+    total_consumer_sales = true,
+    threshold = 5000,
+    technology = "x-autonomous-logistics",
+    recipes = {"x-robotaxi-fleet"},
+    label = "Robotaxi"
+  }
+}
+EV_SALES_GATED_RECIPES = {}
+for _, gate in pairs(EV_SALES_GATES) do
+  for _, recipe_name in pairs(gate.recipes) do EV_SALES_GATED_RECIPES[recipe_name] = true end
+end
 local SMALL_ORBITAL_LAUNCH_TECH = "x-small-orbital-launch"
 local RESERVATION_RECIPES = {
   ["x-sell-prototype-roadster"] = true,
@@ -1489,6 +1523,7 @@ local function record_customer_ev_sales(force, recipe_name, completed_crafts)
   local totals = sold_customer_evs(force)
   local vehicles = completed_crafts * sale.vehicles
   totals[sale.item] = (totals[sale.item] or 0) + vehicles
+  sync_ev_sales_recipe_gates(force, true)
   return vehicles
 end
 
@@ -1503,6 +1538,63 @@ function lifetime_customer_ev_sales_size(force)
     total = total + count
   end
   return math.max(0, math.floor(total))
+end
+
+function consumer_ev_sales_total(force)
+  local totals = sold_customer_evs(force)
+  return math.max(0, math.floor(
+    (totals["x-prototype-roadster"] or 0)
+    + (totals["x-premium-ev"] or 0)
+    + (totals["x-mass-market-ev"] or 0)
+    + (totals["x-cybertruck"] or 0)
+  ))
+end
+
+function ev_sales_gate_progress(force, gate)
+  if gate.total_consumer_sales then return consumer_ev_sales_total(force) end
+  return math.max(0, math.floor(sold_customer_evs(force)[gate.item] or 0))
+end
+
+function ev_sales_gate_announcements()
+  storage.factoryx_ev_sales_gate_announcements = storage.factoryx_ev_sales_gate_announcements or {}
+  return storage.factoryx_ev_sales_gate_announcements
+end
+
+function sync_ev_sales_recipe_gates(force, announce)
+  if not force or not force.valid then return {} end
+  local result = {}
+  local announced = ev_sales_gate_announcements()[force.name] or {}
+  ev_sales_gate_announcements()[force.name] = announced
+  for gate_name, gate in pairs(EV_SALES_GATES) do
+    local count = ev_sales_gate_progress(force, gate)
+    local market_ready = count >= gate.threshold
+    local technology_ready = researched(force, gate.technology) == true
+    local enabled = market_ready and technology_ready
+    for _, recipe_name in pairs(gate.recipes) do
+      local recipe = force.recipes and force.recipes[recipe_name]
+      if recipe then recipe.enabled = enabled end
+    end
+    if market_ready and not announced[gate_name] then
+      announced[gate_name] = true
+      if announce ~= false then
+        force.print(string.format(
+          "[FactoryX] Market milestone reached: %d/%d qualifying EV sales. %s production is now available%s.",
+          count,
+          gate.threshold,
+          gate.label,
+          technology_ready and "" or " after its technology is researched"
+        ))
+      end
+    end
+    result[gate_name] = {
+      count = count,
+      threshold = gate.threshold,
+      market_ready = market_ready,
+      technology_ready = technology_ready,
+      enabled = enabled
+    }
+  end
+  return result
 end
 
 function customer_ev_fleet_size(force)
@@ -3301,7 +3393,7 @@ local function announce_ev_production_line_researched(force)
     return
   end
 
-  force.print("[FactoryX] EV Production Line researched. Build 10 Gigafactory Modules and the EV components, then research Energy Products to unlock Gigafactory construction.")
+  force.print("[FactoryX] EV Production Line researched. Premium EV tooling is ready, but production requires 50 completed Prototype Roadster sales. Scale Sales Offices across multiple settlements.")
 end
 
 local function announce_mass_market_production_researched(force)
@@ -3309,7 +3401,7 @@ local function announce_mass_market_production_researched(force)
     return
   end
 
-  force.print("[FactoryX] Mass-market EV Production researched. Craft Gigafactory V2 in an Assembling Machine or Gigafactory, then place it directly over a V1. V2 runs twice as fast with 150% built-in productivity while drawing 30 MW.")
+  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Cybertrucks require 2,000 Mass-market EV sales.")
 end
 
 local function announce_ev_charging_network_researched(force)
@@ -3377,7 +3469,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["x-reusable-launch"] = "[FactoryX] Reusable Launch researched. Build Reusable Boosters, combine them into Reusable Launch Services, and sell those services through a Sales Office.",
   ["x-satellite-constellation"] = "[FactoryX] Satellite Constellation researched. Manufacture Satellite Buses and Ground Station Networks; both become physical inputs to orbital compute and the planetary grid.",
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
-  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Build Robotaxis in Gigafactory V2, then deploy them through a powered Robotaxi Service Center. Each vehicle serves five nearby customers.",
+  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Robotaxi production requires 5,000 total consumer EV sales. Then build them in Gigafactory V2 and deploy them through a powered Robotaxi Service Center.",
   ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
   ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
@@ -3393,8 +3485,8 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Select Premium EV, then supply Cars, Battery Packs, and Electric Drivetrains. Route the finished EV plus charger paperwork to a Sales Office.",
-  ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Select Mass-market EV; each sale still needs one EV Reservation.",
+  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Premium EV production appears after 50 Prototype Roadster sales. Then supply Cars, Battery Packs, and Electric Drivetrains.",
+  ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Array online: 300 kW peak output. Scale generation before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
   [TERRESTRIAL_DATACENTER_NAME] = "[FactoryX] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
@@ -3452,7 +3544,8 @@ local function repair_researched_factoryx_unlocks(force)
     if is_factoryx_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
         if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe)
-          and effect.recipe ~= ROBOTAXI_SALE_RECIPE then
+          and effect.recipe ~= ROBOTAXI_SALE_RECIPE
+          and not EV_SALES_GATED_RECIPES[effect.recipe] then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
             recipe.enabled = true
@@ -3475,7 +3568,8 @@ local function progression_integrity_status(force)
     if is_factoryx_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
         if effect.type == "unlock-recipe" and is_factoryx_name(effect.recipe)
-          and effect.recipe ~= ROBOTAXI_SALE_RECIPE then
+          and effect.recipe ~= ROBOTAXI_SALE_RECIPE
+          and not EV_SALES_GATED_RECIPES[effect.recipe] then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
             table.insert(disabled, effect.recipe)
@@ -3529,6 +3623,7 @@ local function sync_force_unlocks(force)
   if force_has_first_premium_sale_history(force) then
     first_premium_ev_sales()[force.name] = true
   end
+  sync_ev_sales_recipe_gates(force, false)
 end
 
 local function sync_all_force_unlocks()
@@ -3940,6 +4035,8 @@ local function progress_snapshot(force)
   local terrestrial_ai = ai_efficiency_track_status(force, "terrestrial")
   local agi = agi_training_status(force)
   local commutes = customer_commute_summary(force)
+  local sales_gates = sync_ev_sales_recipe_gates(force, false)
+  local sold = sold_customer_evs(force)
   return {
     sales_office_researched = researched(force, "x-sales-office"),
     ev_production_researched = researched(force, "x-premium-ev-program"),
@@ -3964,6 +4061,15 @@ local function progress_snapshot(force)
     active_stalls = market.active_customer_stalls,
     customer_ev_fleet = market.customer_ev_fleet,
     customer_ev_sales_lifetime = lifetime_customer_ev_sales_size(force),
+    roadsters_sold = sold["x-prototype-roadster"] or 0,
+    premium_evs_sold = sold["x-premium-ev"] or 0,
+    mass_market_evs_sold = sold["x-mass-market-ev"] or 0,
+    cybertrucks_sold = sold["x-cybertruck"] or 0,
+    consumer_evs_sold = consumer_ev_sales_total(force),
+    premium_ev_gate = sales_gates.premium,
+    mass_market_ev_gate = sales_gates.mass_market,
+    cybertruck_gate = sales_gates.cybertruck,
+    robotaxi_gate = sales_gates.robotaxi,
     customer_commutes_en_route = commutes.en_route,
     customer_commutes_charging = commutes.charging,
     customer_commutes_completed = commutes.completed,
@@ -4022,15 +4128,19 @@ local function current_progress_objective(snapshot)
     if snapshot.reservation_stock == 0 then
       return "Prototype revenue", "Wait for the first EV Reservation at the charger.", "A powered customer site with an available mobile buyer prints initial demand paperwork even before its first vehicle sale."
     end
-    return "Prototype revenue", "Run Sell hopes and dreams.", "Supply one Prototype Roadster and one EV Reservation, then remove the Dollars after the 120-second sale."
+    return "Prototype revenue", "Run Sell hopes and dreams.", "Supply one Prototype Roadster and one EV Reservation, then remove the Dollars after the 60-second sale."
   elseif not snapshot.ev_production_researched then
     return "Premium production", "Research EV Production Line.", "Invest 250 cycles of red, green, blue science, and Dollars; Energy Products unlocks the factory itself."
+  elseif not snapshot.premium_ev_gate.market_ready then
+    return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif not snapshot.energy_products_researched then
     return "Energy products", "Research Energy Products.", "Invest 500 cycles through production science plus Dollars to unlock Gigafactory construction, High-density Solar Arrays, and Megapacks."
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
     return "Premium production", "Produce and sell a Premium EV.", "Select Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
+  elseif not snapshot.mass_market_ev_gate.market_ready then
+    return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
   elseif not snapshot.charging_network_researched then
     return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
   elseif snapshot.chargers_v2 == 0 then
@@ -4041,6 +4151,8 @@ local function current_progress_objective(snapshot)
     return "Mass-market scale", "Upgrade a Gigafactory to V2.", "Craft V2 in an Assembling Machine or Gigafactory from 1 Gigafactory item, 1 Gigacast, and 100 Dollars, then place it directly over a V1."
   elseif not snapshot.mass_market_sale_complete then
     return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Gigafactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
+  elseif not snapshot.cybertruck_gate.market_ready then
+    return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Cybertruck production.", snapshot.mass_market_evs_sold)
   elseif snapshot.chargers_v3 == 0 then
     return "Supercharging", "Craft and place a V3 Supercharger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.megapacks == 0 then
@@ -4053,6 +4165,8 @@ local function current_progress_objective(snapshot)
     return "Terrestrial AI", "Generate 1,000 AI Tokens.", "Supply 20 Dollars per cycle; one 8 MW datacenter produces 20 tokens every 30 seconds."
   elseif not snapshot.autonomous_logistics_researched then
     return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Robotaxi Fleets."
+  elseif not snapshot.robotaxi_gate.market_ready then
+    return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Cybertruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
   elseif snapshot.robotaxi_fleets_produced == 0 then
     return "Autonomy", "Build the first Robotaxi Fleet in Gigafactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
   elseif snapshot.chargers_v4 == 0 then
@@ -4160,6 +4274,10 @@ local function refresh_progress_panel(player)
   )
   add_progress_metric(metrics, "Completed charging visits", tostring(snapshot.customer_commutes_completed))
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
+  add_progress_metric(metrics, "Premium EV gate", string.format("%d / 50 Roadsters", snapshot.roadsters_sold))
+  add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
+  add_progress_metric(metrics, "Cybertruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
+  add_progress_metric(metrics, "Robotaxi gate", string.format("%d / 5,000 consumer EVs", snapshot.consumer_evs_sold))
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
   add_progress_metric(metrics, "Cumulative AI Tokens", string.format("%d / %d", snapshot.ai_tokens_produced, snapshot.agi_token_gate))

@@ -61,7 +61,7 @@ Rules for the rest of the design:
   belts. `EV Reservation` works because it is a buyer demand item feeding sales.
   We should be skeptical of adding more generated coupons.
 - The first instance of a new business loop should be slow and dramatic. `Sell
-  hopes and dreams` takes 120 seconds so prototype sales happen on the order of
+  hopes and dreams` takes 60 seconds so prototype sales happen on the order of
   minutes.
 - Sales Offices define customers. Hostile biters become peaceful customers only
   when a Sales Office covers them, and chargers turn those customer settlements
@@ -335,7 +335,7 @@ into Dollars.
 Current sales recipes:
 
 - Prototype Roadster + EV Reservation -> 2 Dollars, displayed as `Sell hopes
-  and dreams`: 120 seconds.
+  and dreams`: 60 seconds.
 - Premium EV + EV Reservation -> 1 Dollar: 30 seconds. One Dollar represents
   roughly US$10,000 of profit.
 - Mass-market EV + EV Reservation -> 1 Dollar: 5 seconds.
@@ -343,6 +343,18 @@ Current sales recipes:
 - Megapack -> Dollars.
 - Small launch service -> Dollars.
 - Reusable launch service -> Dollars.
+
+### EV sales milestone gates
+
+Vehicle progression requires both the normal technology and completed,
+force-wide customer sales. Premium EVs require 50 Prototype Roadsters sold;
+Mass-market EVs require 250 Premium EVs sold; Cybertrucks require 2,000
+Mass-market EVs sold; and Robotaxis require 5,000 total Roadster, Premium,
+Mass-market, and Cybertruck sales. Production alone does not count. A completed
+Sales Office contract increments the relevant total permanently, so an owner's
+later death does not erase market progress. These intentionally large gates
+push the player to reach several customer settlements and scale reservations,
+charging, vehicle production, and Sales Office throughput together.
 - Three Robotaxi Fleet items -> 1 Dollar: 3 seconds. This consumes Robotaxis at
   one per second while representing roughly one Dollar of profit per three.
 
@@ -721,7 +733,7 @@ Player proof:
   charger stall.
 - Craft one Prototype Roadster.
 - Run the deliberately slow `Sell hopes and dreams` contract and belt out the
-  first Dollars. Target sale time: 120 seconds.
+  first Dollars. Target sale time: 60 seconds.
 
 Why it works:
 
@@ -1526,7 +1538,7 @@ icons, and bounded working animations. Remaining work is narrower:
 - Change mass-market sales from a five-car batch to the literal contract
   `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`. Implemented.
 - Ensure every Sales Office recipe has a sensible sale time:
-  - `Sell hopes and dreams`: 120 seconds.
+  - `Sell hopes and dreams`: 60 seconds.
   - `Sell premium product`: 30 seconds for 1 Dollar.
   - `Sell mass-market EV`: 5 seconds and gated by EV Reservations.
   - `Sell robotaxis`: three Robotaxi items in 3 seconds for 1 Dollar.
