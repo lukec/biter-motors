@@ -812,6 +812,22 @@ for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "foundr
     packs = {row[0] for row in data["technology"][technology_name]["unit"]["ingredients"]}
     if packs != {"automation-science-pack", "logistic-science-pack"}:
         raise SystemExit(f"{technology_name} is not red-green terrestrial research: {packs}")
+expected_branch_prerequisites = {
+    "x-industrial-supply-chain": {"automation-2", "electric-mining-drill", "steel-processing"},
+    "big-mining-drill": {"x-industrial-supply-chain", "engine"},
+    "foundry": {"x-industrial-supply-chain", "concrete"},
+    "recycling": {"x-industrial-supply-chain", "concrete"},
+}
+for technology_name, expected in expected_branch_prerequisites.items():
+    actual = set(data["technology"][technology_name].get("prerequisites", []))
+    if actual != expected:
+        raise SystemExit(f"{technology_name} prerequisite mismatch: {sorted(actual)}")
+foundry_unlocks = {
+    effect["recipe"] for effect in data["technology"]["foundry"].get("effects", [])
+    if effect.get("type") == "unlock-recipe"
+}
+if {"molten-iron-from-lava", "molten-copper-from-lava", "casting-low-density-structure"} & foundry_unlocks:
+    raise SystemExit(f"Terrestrial Foundry exposes unavailable planetary recipes: {sorted(foundry_unlocks)}")
 electric_furnace_owners = {
     technology_name for technology_name, technology in data["technology"].items()
     if any(

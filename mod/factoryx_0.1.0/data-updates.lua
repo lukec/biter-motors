@@ -36,7 +36,7 @@ data:extend({
     name = "x-industrial-supply-chain",
     icon = "__base__/graphics/technology/automation-2.png",
     icon_size = 256,
-    prerequisites = {"automation-2", "electric-mining-drill"},
+    prerequisites = {"automation-2", "electric-mining-drill", "steel-processing"},
     effects = {unlock("electric-furnace")},
     unit = science(75, {"automation-science-pack", "logistic-science-pack"}, 20),
     order = "x-a-a"
@@ -71,7 +71,7 @@ rewrite_recipe("big-mining-drill", {
   )
 })
 local big_drill_tech = data.raw.technology["big-mining-drill"]
-big_drill_tech.prerequisites = {"x-industrial-supply-chain"}
+big_drill_tech.prerequisites = {"x-industrial-supply-chain", "engine"}
 big_drill_tech.research_trigger = nil
 big_drill_tech.unit = science(100, {"automation-science-pack", "logistic-science-pack"}, 30)
 
@@ -92,17 +92,21 @@ foundry_tech.unit = science(150, {"automation-science-pack", "logistic-science-p
 -- recipes remain planetary. Preserve the vanilla foundry effects and add the
 -- two ore-melting recipes if the current Space Age version omitted them.
 local foundry_effects = {}
-for _, effect in ipairs(foundry_tech.effects or {}) do
-  if effect.type ~= "unlock-recipe" or effect.recipe ~= "tungsten-plate" then
-    foundry_effects[#foundry_effects + 1] = effect
-  end
-end
-for _, recipe_name in ipairs({"iron-ore-melting", "copper-ore-melting"}) do
-  local seen = false
-  for _, effect in ipairs(foundry_effects) do
-    if effect.type == "unlock-recipe" and effect.recipe == recipe_name then seen = true end
-  end
-  if not seen then foundry_effects[#foundry_effects + 1] = unlock(recipe_name) end
+for _, recipe_name in ipairs({
+  "foundry",
+  "iron-ore-melting",
+  "copper-ore-melting",
+  "concrete-from-molten-iron",
+  "casting-iron",
+  "casting-steel",
+  "casting-copper",
+  "casting-iron-gear-wheel",
+  "casting-iron-stick",
+  "casting-pipe",
+  "casting-pipe-to-ground",
+  "casting-copper-cable"
+}) do
+  foundry_effects[#foundry_effects + 1] = unlock(recipe_name)
 end
 foundry_tech.effects = foundry_effects
 
