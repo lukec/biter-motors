@@ -77,7 +77,7 @@ if not all(row["technologies"].values()):
 for name, count in {"steel-plate": 100, "electronic-circuit": 100, "iron-gear-wheel": 100, "assembling-machine-1": 4, "lab": 4, "lamp": 50}.items():
     if row["ship"].get(name) != count:
         raise SystemExit(f"ship inventory mismatch for {name}: {row}")
-for name in ("iron-plate", "copper-plate", "transport-belt", "electric-mining-drill", "medium-electric-pole"):
+for name in ("iron-plate", "copper-plate", "transport-belt", "medium-electric-pole"):
     if row["debris"].get(name, 0) <= 0:
         raise SystemExit(f"debris inventory missing {name}: {row}")
 for name in ("boiler", "steam-engine", "offshore-pump"):

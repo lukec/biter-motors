@@ -200,6 +200,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('["solar-panel-equipment"] = 8', jumpstart)
         self.assertIn('["night-vision-equipment"] = 1', jumpstart)
         self.assertIn('["electric-furnace"] = 10', jumpstart)
+        self.assertIn('["electric-mining-drill"] = 10', jumpstart)
         self.assertNotIn('["electric-furnace"] = 24', control)
         self.assertIn('["lamp"] = 50', control)
         self.assertIn('FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"', control)
