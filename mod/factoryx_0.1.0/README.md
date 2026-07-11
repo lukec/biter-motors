@@ -49,6 +49,13 @@ The MVP loop is intentionally physical:
 19. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
     Reservations.
 20. Begin Small Orbital Launch, reusable launch, and satellite infrastructure.
+
+Custom production art now includes footprint-aligned Sales Office and
+Terrestrial Datacenter masters, normalized 256 px icon sources, dedicated
+technology illustrations, and restrained working visuals for sales, charging,
+Gigafactory presses, datacenter cooling, Robotaxi dispatch, and grid charging.
+Runtime charger and Service Center lights use one render object per building;
+no animation rendering is attached to individual customer units.
 21. Move production to space platforms with Orbital Compute Arrays and return
     AI Tokens to the planet.
 22. Build a Planetary Energy Grid Controller.

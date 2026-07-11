@@ -179,6 +179,13 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["logistic-robot"] = 200
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
+local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
+  ["x-ev-charging-station"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.35}, scale = 0.55},
+  ["x-ev-charging-station-v2"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.2}, scale = 0.85},
+  ["x-ev-charging-station-v3"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.1}, scale = 1.0},
+  ["x-ev-charging-station-v4"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, 0}, scale = 1.2},
+  ["x-robotaxi-service-center"] = {sprite_prefix = "x-robotaxi-dispatch-lights-frame-", offset = {0, -0.55}, scale = 0.9}
+}
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
 local CUSTOMER_MOBILE_SERVICE_RADIUS = 48
@@ -271,6 +278,76 @@ end
 
 local function is_station(entity)
   return entity and entity.valid and station_config(entity) ~= nil
+end
+
+local function factoryx_runtime_visuals()
+  storage.factoryx_runtime_visuals = storage.factoryx_runtime_visuals or {}
+  return storage.factoryx_runtime_visuals
+end
+
+local function destroy_factoryx_runtime_visual(unit_number)
+  if not unit_number then return end
+  local visuals = factoryx_runtime_visuals()
+  local entry = visuals[unit_number]
+  if entry and entry.object and entry.object.valid then entry.object.destroy() end
+  visuals[unit_number] = nil
+end
+
+local function attach_factoryx_runtime_visual(entity)
+  local config = entity and entity.valid and FACTORYX_RUNTIME_VISUAL_CONFIGS[entity.name]
+  if not config or not entity.unit_number then return end
+  destroy_factoryx_runtime_visual(entity.unit_number)
+  local object = rendering.draw_sprite{
+    sprite = config.sprite_prefix .. "1",
+    surface = entity.surface,
+    target = entity,
+    target_offset = config.offset,
+    x_scale = config.scale,
+    y_scale = config.scale,
+    render_layer = "higher-object-above",
+    visible = false
+  }
+  factoryx_runtime_visuals()[entity.unit_number] = {
+    object = object,
+    entity = entity,
+    sprite_prefix = config.sprite_prefix,
+    enabled = false
+  }
+end
+
+local function set_factoryx_runtime_visual_enabled(entity, enabled)
+  if not entity or not entity.valid or not entity.unit_number then return end
+  local entry = factoryx_runtime_visuals()[entity.unit_number]
+  if not entry then
+    attach_factoryx_runtime_visual(entity)
+    entry = factoryx_runtime_visuals()[entity.unit_number]
+  end
+  if entry then entry.enabled = enabled == true end
+end
+
+local function rebuild_factoryx_runtime_visuals()
+  for unit_number in pairs(factoryx_runtime_visuals()) do
+    destroy_factoryx_runtime_visual(unit_number)
+  end
+  local names = {}
+  for name in pairs(FACTORYX_RUNTIME_VISUAL_CONFIGS) do names[#names + 1] = name end
+  for _, surface in pairs(game.surfaces) do
+    for _, entity in pairs(surface.find_entities_filtered{name = names}) do
+      attach_factoryx_runtime_visual(entity)
+    end
+  end
+end
+
+local function update_factoryx_runtime_visuals()
+  local frame_index = math.floor(game.tick / 30) % 8 + 1
+  for unit_number, entry in pairs(factoryx_runtime_visuals()) do
+    if not entry.entity or not entry.entity.valid or not entry.object or not entry.object.valid then
+      destroy_factoryx_runtime_visual(unit_number)
+    else
+      entry.object.visible = entry.enabled
+      if entry.enabled then entry.object.sprite = entry.sprite_prefix .. frame_index end
+    end
+  end
 end
 
 local function station_reservation_inventory(station)
@@ -2663,6 +2740,7 @@ function process_robotaxi_service_centers()
         end
         local input, output = robotaxi_service_inventories(center)
         local snapshot = robotaxi_service_snapshot(center, customer_allocations[center.unit_number] or 0)
+        set_factoryx_runtime_visual_enabled(center, snapshot.allocated > 0 and snapshot.power_factor > 0)
         local state = robotaxi_service_states()[center.unit_number]
           or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
         robotaxi_service_states()[center.unit_number] = state
@@ -4198,6 +4276,7 @@ script.on_init(function()
   end
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
+  rebuild_factoryx_runtime_visuals()
 end)
 
 script.on_configuration_changed(function()
@@ -4213,6 +4292,7 @@ script.on_configuration_changed(function()
   end
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
+  rebuild_factoryx_runtime_visuals()
 end)
 
 script.on_event(defines.events.on_lua_shortcut, function(event)
@@ -4348,6 +4428,7 @@ for _, event_name in pairs({
 	      track_grid_controller(entity)
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity)
+	      attach_factoryx_runtime_visual(entity)
 	      if entity and entity.valid and GIGAFACTORY_ENTITY_NAMES[entity.name] then
 	        unlock_gigafactory_logistics(entity.force, true)
 	      end
@@ -4380,6 +4461,9 @@ for _, event_name in pairs({
       if entity and entity.unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
         electric_vehicle_registry()[entity.unit_number] = nil
       end
+      if entity and entity.unit_number then
+        destroy_factoryx_runtime_visual(entity.unit_number)
+      end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
         customer_growth_states()[entity.unit_number] = nil
@@ -4400,6 +4484,7 @@ end
 
 
 script.on_nth_tick(30, function()
+  update_factoryx_runtime_visuals()
   feed_tracked_electric_vehicles()
   sync_sales_office_buyers()
   accelerate_consumer_ev_sales()
@@ -4426,7 +4511,8 @@ script.on_nth_tick(60, function()
       if not allocations_by_force[force_index] then
         allocations_by_force[force_index] = calculate_station_utilization(station.force)
       end
-      refresh_station_power_state(station, allocations_by_force[force_index])
+      local powered = refresh_station_power_state(station, allocations_by_force[force_index])
+      set_factoryx_runtime_visual_enabled(station, powered and active_station_stalls(station) > 0)
       sample_station_power_service(station)
       charge_station_vehicles(station)
       update_station_alerts(station)

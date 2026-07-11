@@ -55,7 +55,26 @@ local function sale_icon(product_icons)
   return icons
 end
 
-local function generated_entity_animation(slug, scale)
+local function working_animation(slug, width, height, scale, shift, animation_speed, additive)
+  local animation = {
+    filename = "__factoryx__/graphics/animation/" .. slug .. ".png",
+    priority = "high",
+    width = width,
+    height = height,
+    frame_count = 8,
+    line_length = 8,
+    animation_speed = animation_speed or 0.25,
+    scale = scale or 0.5,
+    shift = shift or {0, 0}
+  }
+  if additive then
+    animation.blend_mode = "additive"
+    animation.draw_as_glow = true
+  end
+  return {animation = animation}
+end
+
+local function generated_entity_animation(slug, scale, working_visualisations)
   return {
     animation = {
       layers = {
@@ -70,7 +89,8 @@ local function generated_entity_animation(slug, scale)
           scale = scale or 0.18
         }
       }
-    }
+    },
+    working_visualisations = working_visualisations
   }
 end
 
@@ -128,6 +148,9 @@ local function gigafactory_animation(filename)
           scale = 0.325
         }
       }
+    },
+    working_visualisations = {
+      working_animation("gigafactory-press", 128, 96, 0.7, {0, 0.4}, 0.18, false)
     }
   }
 end
@@ -477,6 +500,25 @@ local cybertruck_icon = icon64(
   {r = 0.72, g = 0.76, b = 0.80, a = 1.0}
 )
 
+local runtime_visual_sprites = {}
+for frame_index = 1, 8 do
+  for _, visual in pairs({
+    {name = "charger-status-lights", width = 64, height = 64},
+    {name = "robotaxi-dispatch-lights", width = 128, height = 64}
+  }) do
+    runtime_visual_sprites[#runtime_visual_sprites + 1] = {
+      type = "sprite",
+      name = "x-" .. visual.name .. "-frame-" .. frame_index,
+      filename = "__factoryx__/graphics/animation/" .. visual.name .. "-frame-" .. frame_index .. ".png",
+      width = visual.width,
+      height = visual.height,
+      blend_mode = "additive",
+      draw_as_glow = true
+    }
+  end
+end
+data:extend(runtime_visual_sprites)
+
 data:extend({
   {
     type = "shortcut",
@@ -632,6 +674,9 @@ sales_office.graphics_set = {
         scale = 0.18
       }
     }
+  },
+  working_visualisations = {
+    working_animation("sales-office-lights", 64, 64, 0.5, {0.55, -0.45}, 0.2, true)
   }
 }
 sales_office.radius_visualisation_specification = customer_radius_visualisation(128)
@@ -766,7 +811,9 @@ terrestrial_datacenter.module_slots = 0
 terrestrial_datacenter.allowed_effects = {"consumption", "speed", "pollution", "quality"}
 terrestrial_datacenter.collision_box = {{-2.9, -2.9}, {2.9, 2.9}}
 terrestrial_datacenter.selection_box = {{-3, -3}, {3, 3}}
-terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-datacenter", 0.36)
+terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-datacenter", 0.36, {
+  working_animation("datacenter-cooling-fans", 128, 64, 0.55, {0, -1.65}, 0.4, false)
+})
 
 local robotaxi_service_center = table.deepcopy(data.raw["logistic-container"]["passive-provider-chest"])
 robotaxi_service_center.name = "x-robotaxi-service-center"
@@ -826,7 +873,9 @@ local planetary_grid_controller = copied_assembler(
   1
 )
 planetary_grid_controller.energy_source.emissions_per_minute = nil
-planetary_grid_controller.graphics_set = generated_entity_animation("planetary-grid-controller", 0.19)
+planetary_grid_controller.graphics_set = generated_entity_animation("planetary-grid-controller", 0.19, {
+  working_animation("grid-charge-stages", 128, 128, 0.42, {0, -0.25}, 0.12, true)
+})
 
 local electric_vehicles = {
   copied_electric_vehicle(
@@ -1242,7 +1291,7 @@ add_lab_input("biolab", "x-ai-token")
 
 data:extend({
   tech("x-sales-office",
-    "__base__/graphics/technology/automation-2.png",
+    "__factoryx__/graphics/technology/sales-office.png",
     {"automation-2", "electronics"},
     {
       unlock("x-sales-office"),
@@ -1311,7 +1360,7 @@ data:extend({
     60
   ),
   tech("x-ev-charging-network",
-    "__base__/graphics/technology/electric-energy-distribution-2.png",
+    "__factoryx__/graphics/technology/ev-charging-network.png",
     {"x-premium-ev-program", "electric-energy-distribution-2", "concrete"},
     {
       unlock("x-ev-charging-station-v2")
@@ -1326,7 +1375,7 @@ data:extend({
     30
   ),
   tech("x-energy-products",
-    "__base__/graphics/technology/electric-energy-acumulators.png",
+    "__factoryx__/graphics/technology/gigafactory.png",
     {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy", "production-science-pack"},
     {
       unlock("x-gigafactory-building"),
@@ -1402,7 +1451,7 @@ data:extend({
     60
   ),
   tech("x-terrestrial-ai",
-    "__base__/graphics/technology/processing-unit.png",
+    "__factoryx__/graphics/technology/terrestrial-ai.png",
     {"x-capital-scaling", "x-energy-products", "processing-unit"},
     {
       unlock("x-autonomy-computer"),
@@ -1443,7 +1492,7 @@ data:extend({
     60
   ),
   tech("x-autonomous-logistics",
-    "__base__/graphics/technology/logistic-robotics.png",
+    "__factoryx__/graphics/technology/autonomous-logistics.png",
     {"x-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"},
     {
       unlock("x-robotaxi-fleet"),
@@ -1465,7 +1514,7 @@ data:extend({
     60
   ),
   tech("x-planetary-energy-grid",
-    "__base__/graphics/technology/solar-energy.png",
+    "__factoryx__/graphics/technology/planetary-energy-grid.png",
     {"x-orbital-compute", "x-autonomous-logistics", "fusion-reactor"},
     {
       unlock("x-planetary-grid-controller"),

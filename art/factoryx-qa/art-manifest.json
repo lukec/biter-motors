@@ -1,0 +1,71 @@
+{
+  "entities": [
+    "Sales Office",
+    "EV Charging Station",
+    "EV Charging Station V2",
+    "V3 Supercharger",
+    "V4 Supercharger",
+    "Gigafactory",
+    "Gigafactory V2",
+    "Megapack",
+    "Terrestrial Datacenter",
+    "Robotaxi Service Center",
+    "Orbital Compute Array",
+    "Planetary Grid Controller"
+  ],
+  "icons": [
+    "agi-model.png",
+    "ai-token.png",
+    "datacenter-rack.png",
+    "ev-charging-station-v2.png",
+    "ev-charging-station-v3.png",
+    "ev-charging-station-v4.png",
+    "ev-charging-station.png",
+    "ev-reservation.png",
+    "factoryx-group.png",
+    "gigacast.png",
+    "gigafactory-module.png",
+    "gigafactory.png",
+    "ground-station-network.png",
+    "mass-market-ev.png",
+    "megapack.png",
+    "orbital-compute-array.png",
+    "planetary-grid-charge.png",
+    "planetary-grid-controller.png",
+    "planetary-grid-segment.png",
+    "premium-ev.png",
+    "prototype-roadster.png",
+    "reusable-booster.png",
+    "reusable-launch-service.png",
+    "robotaxi-fleet.png",
+    "robotaxi-service-center.png",
+    "sales-office.png",
+    "satellite-bus.png",
+    "small-launch-service.png",
+    "terrestrial-datacenter.png"
+  ],
+  "animations": [
+    "Sales Office sale lights",
+    "Charger status lights",
+    "Gigafactory presses",
+    "Datacenter cooling fans",
+    "Robotaxi dispatch lights",
+    "Grid charge stages"
+  ],
+  "technology": [
+    "achieving-agi.png",
+    "autonomous-logistics.png",
+    "ev-charging-network.png",
+    "gigafactory.png",
+    "planetary-energy-grid.png",
+    "sales-office.png",
+    "terrestrial-ai.png"
+  ],
+  "paid_generation_count": 3,
+  "blender": {
+    "installed": false,
+    "break_even": "Worthwhile for directional drivable sprites; not worthwhile for icons alone.",
+    "image_generation_estimate": "10-15 attempts for five coherent directional sheets after retries.",
+    "local_pipeline_estimate": "One scripted camera/material rig plus five low-poly models; all rotations and recolors then render locally."
+  }
+}

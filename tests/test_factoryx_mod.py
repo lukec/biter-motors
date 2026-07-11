@@ -314,7 +314,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("radius_visualisation_specification", data)
         self.assertIn("draw_in_cursor = true", data)
         self.assertIn("draw_on_selection = true", data)
-        self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36)', data)
+        self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', data)
         self.assertIn('generated_entity_animation("orbital-compute-array")', data)
         for slug in [
             "ev-charging-station",
@@ -337,6 +337,67 @@ class FactoryXModTest(unittest.TestCase):
                     self.assertGreaterEqual(bottom - top, image.height * 0.84)
                     self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.05)
                     self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.05)
+
+    def test_factoryx_free_art_pipeline_is_wired_and_reviewable(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        animation_sizes = {
+            "sales-office-lights.png": (512, 64),
+            "charger-status-lights.png": (512, 64),
+            "gigafactory-press.png": (1024, 96),
+            "datacenter-cooling-fans.png": (1024, 64),
+            "robotaxi-dispatch-lights.png": (1024, 64),
+            "grid-charge-stages.png": (1024, 128),
+        }
+        for filename, expected_size in animation_sizes.items():
+            path = MOD / "graphics/animation" / filename
+            self.assertTrue(path.exists(), filename)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, expected_size)
+                self.assertEqual(image.mode, "RGBA")
+                self.assertGreater(image.getchannel("A").getbbox()[2], 0)
+
+        for technology in [
+            "sales-office",
+            "ev-charging-network",
+            "gigafactory",
+            "terrestrial-ai",
+            "autonomous-logistics",
+            "planetary-energy-grid",
+            "achieving-agi",
+        ]:
+            path = MOD / "graphics/technology" / f"{technology}.png"
+            self.assertTrue(path.exists(), technology)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (256, 256))
+
+        for technology in [
+            "sales-office",
+            "ev-charging-network",
+            "terrestrial-ai",
+            "autonomous-logistics",
+            "planetary-energy-grid",
+        ]:
+            self.assertIn(f'"__factoryx__/graphics/technology/{technology}.png"', data)
+
+        self.assertIn('working_animation("gigafactory-press"', data)
+        self.assertIn('working_animation("datacenter-cooling-fans"', data)
+        self.assertIn('working_animation("grid-charge-stages"', data)
+        self.assertIn('rendering.draw_sprite{', control)
+        self.assertIn('sprite_prefix = "x-charger-status-lights-frame-"', control)
+        self.assertIn('sprite_prefix = "x-robotaxi-dispatch-lights-frame-"', control)
+        self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)
+        self.assertIn("update_factoryx_runtime_visuals()", control)
+
+        qa = ROOT / "art/factoryx-qa/index.html"
+        manifest = json.loads((qa.parent / "art-manifest.json").read_text())
+        page = qa.read_text()
+        self.assertTrue(qa.exists())
+        self.assertEqual(manifest["paid_generation_count"], 3)
+        self.assertIn("FactoryX Artwork QA", page)
+        self.assertIn("Directional vehicle production math", page)
+        self.assertIn("data-filter=\"animations\"", page)
+        self.assertGreaterEqual(page.count('class="asset '), 50)
 
     def test_sales_office_starts_with_showroom_and_charger(self):
         data = (MOD / "data.lua").read_text()
@@ -463,7 +524,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('"8MW"', datacenter_entity)
         self.assertIn('collision_box = {{-2.9, -2.9}, {2.9, 2.9}}', datacenter_entity)
         self.assertIn('selection_box = {{-3, -3}, {3, 3}}', datacenter_entity)
-        self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36)', datacenter_entity)
+        self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', datacenter_entity)
 
         self.assertIn('{"x-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"}', autonomous_tech)
         for ingredient in [

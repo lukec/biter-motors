@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FactoryX Artwork QA</title>
+<style>
+:root{--ink:#e9edf0;--muted:#9ca7ad;--panel:#252729;--line:#454a4d;--orange:#f69a2b;--cyan:#45d5ec;--green:#7ed987;--red:#f07167}
+*{box-sizing:border-box;letter-spacing:0} body{margin:0;background:#171819;color:var(--ink);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header.page{padding:22px clamp(16px,4vw,48px) 14px;border-bottom:1px solid var(--line);display:flex;gap:18px;align-items:end;justify-content:space-between;flex-wrap:wrap}
+h1{margin:0;font-size:28px} .lede{margin:4px 0 0;color:var(--muted);max-width:760px} .summary{font-variant-numeric:tabular-nums;color:var(--cyan)}
+.toolbar{position:sticky;top:0;z-index:4;background:#1d1f20eF;padding:10px clamp(16px,4vw,48px);border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;backdrop-filter:blur(8px)}
+button{border:1px solid #555b5f;background:#292c2e;color:var(--ink);padding:7px 10px;border-radius:4px;cursor:pointer} button:hover,button.active{border-color:var(--cyan);background:#30383a} button[data-review="approve"].selected{border-color:var(--green);color:var(--green)} button[data-review="revise"].selected{border-color:var(--red);color:var(--red)}
+main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.asset{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden} .asset>header{min-height:58px;padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #3b3f41} .asset h2{font-size:14px;margin:0} .asset p{font-size:12px;color:var(--muted);margin:2px 0 0} .mini-icon{width:38px;height:38px;object-fit:contain}
+.entity-stage{height:390px;position:relative;overflow:hidden;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}
+.entity-stage.terrain-concrete{background-color:#77756c} .entity-stage.terrain-dark{background-color:#25292b} .footprint-grid{position:absolute;width:var(--footprint);height:var(--footprint);border:2px solid var(--cyan);background-image:linear-gradient(#45d5ec55 1px,transparent 1px),linear-gradient(90deg,#45d5ec55 1px,transparent 1px);background-size:32px 32px;opacity:.55}
+.entity-sprite{position:absolute;width:var(--sprite);height:var(--sprite);object-fit:contain;image-rendering:auto} body.show-bounds .entity-sprite{outline:1px dashed var(--orange);background:#f69a2b10}
+.belt{height:64px;background:#111416;display:flex;align-items:center;justify-content:space-evenly;border-top:1px solid #3b3f41;border-bottom:1px solid #3b3f41;overflow:hidden} .belt img{width:42px;height:42px;object-fit:contain}
+.review{padding:9px 10px;display:flex;gap:7px;justify-content:flex-end} .review button{font-size:12px;padding:5px 8px}
+.icon-scales{height:150px;display:flex;gap:26px;align-items:center;justify-content:center;background:#1b1d1e} .icon-scales img{object-fit:contain} .i64{width:64px;height:64px} .i32{width:32px;height:32px} .i20{width:20px;height:20px}
+.animation-stage{height:190px;display:grid;place-items:center;background:#111416} .sprite-animation{width:var(--fw);height:var(--fh);background-image:var(--sheet);background-size:calc(var(--fw) * 8) var(--fh);animation:play .9s steps(8) infinite;transform:scale(1.7);transform-origin:center} @keyframes play{to{background-position-x:calc(var(--fw) * -8)}}
+.technology-preview{height:230px;display:grid;place-items:center;background:#191b1c} .technology-preview img{width:190px;height:190px;object-fit:contain}
+.section-title{margin:28px 0 10px;font-size:18px} .math{margin-top:28px;border-top:1px solid var(--line);padding-top:20px;max-width:900px} .math table{width:100%;border-collapse:collapse} th,td{padding:8px;text-align:left;border-bottom:1px solid #3c4042} th{color:var(--cyan)} code{color:#ffd078}
+.hidden{display:none} @media(max-width:600px){.entity-stage{height:330px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="page"><div><h1>FactoryX Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
+<nav class="toolbar" aria-label="Artwork filters">
+  <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
+  <button id="terrain" title="Cycle entity preview terrain">Terrain</button><button id="bounds" title="Show transparent image bounds">Bounds</button><button id="copy" title="Copy review decisions">Copy review</button>
+</nav>
+<main>
+<section class="grid" id="assets">
+    <article class="asset entity-card" data-kind="entities" data-id="entity-0">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><div><h2>Sales Office</h2><p>3x3 tiles | generated-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:92px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/sales-office/sales-office.png" alt="Sales Office entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-0">
+        <button type="button" data-review="approve" data-id="entity-0">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-0">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-1">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><div><h2>EV Charging Station</h2><p>2x2 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/ev-charging-station/ev-charging-station.png" alt="EV Charging Station entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-1">
+        <button type="button" data-review="approve" data-id="entity-1">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-1">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-2">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><div><h2>EV Charging Station V2</h2><p>4x4 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:128px;--sprite:133px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/ev-charging-station-v2/ev-charging-station-v2.png" alt="EV Charging Station V2 entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-2">
+        <button type="button" data-review="approve" data-id="entity-2">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-2">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-3">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><div><h2>V3 Supercharger</h2><p>5x5 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:160px;--sprite:179px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/ev-charging-station-v3/ev-charging-station-v3.png" alt="V3 Supercharger entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-3">
+        <button type="button" data-review="approve" data-id="entity-3">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-3">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-4">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><div><h2>V4 Supercharger</h2><p>6x6 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:195px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/ev-charging-station-v4/ev-charging-station-v4.png" alt="V4 Supercharger entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-4">
+        <button type="button" data-review="approve" data-id="entity-4">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-4">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-5">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><div><h2>Gigafactory</h2><p>9x9 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:288px;--sprite:333px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/gigafactory/gigafactory.png" alt="Gigafactory entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-5">
+        <button type="button" data-review="approve" data-id="entity-5">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-5">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-6">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><div><h2>Gigafactory V2</h2><p>9x9 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:288px;--sprite:333px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/gigafactory/gigafactory-v2.png" alt="Gigafactory V2 entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-6">
+        <button type="button" data-review="approve" data-id="entity-6">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-6">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-7">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><div><h2>Megapack</h2><p>2x2 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/megapack/megapack.png" alt="Megapack entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-7">
+        <button type="button" data-review="approve" data-id="entity-7">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-7">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-8">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><div><h2>Terrestrial Datacenter</h2><p>6x6 tiles | generated-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:184px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/terrestrial-datacenter/terrestrial-datacenter.png" alt="Terrestrial Datacenter entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-8">
+        <button type="button" data-review="approve" data-id="entity-8">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-8">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-9">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><div><h2>Robotaxi Service Center</h2><p>8x8 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:256px;--sprite:246px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/robotaxi-service-center/robotaxi-service-center.png" alt="Robotaxi Service Center entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-9">
+        <button type="button" data-review="approve" data-id="entity-9">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-9">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-10">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><div><h2>Orbital Compute Array</h2><p>3x3 tiles | playtest</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:92px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/orbital-compute-array/orbital-compute-array.png" alt="Orbital Compute Array entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-10">
+        <button type="button" data-review="approve" data-id="entity-10">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-10">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity-11">
+      <header><img class="mini-icon" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><div><h2>Planetary Grid Controller</h2><p>3x3 tiles | aligned-final</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/factoryx_0.1.0/graphics/entity/planetary-grid-controller/planetary-grid-controller.png" alt="Planetary Grid Controller entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity-11">
+        <button type="button" data-review="approve" data-id="entity-11">Approve</button>
+        <button type="button" data-review="revise" data-id="entity-11">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-0">
+      <header><h2>Agi Model</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt="Agi Model at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/agi-model.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-0">
+        <button type="button" data-review="approve" data-id="icon-0">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-0">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-1">
+      <header><h2>Ai Token</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt="Ai Token at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ai-token.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-1">
+        <button type="button" data-review="approve" data-id="icon-1">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-1">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-2">
+      <header><h2>Datacenter Rack</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt="Datacenter Rack at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/datacenter-rack.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-2">
+        <button type="button" data-review="approve" data-id="icon-2">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-2">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-3">
+      <header><h2>Ev Charging Station V2</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt="Ev Charging Station V2 at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v2.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-3">
+        <button type="button" data-review="approve" data-id="icon-3">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-3">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-4">
+      <header><h2>Ev Charging Station V3</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt="Ev Charging Station V3 at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v3.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-4">
+        <button type="button" data-review="approve" data-id="icon-4">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-4">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-5">
+      <header><h2>Ev Charging Station V4</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt="Ev Charging Station V4 at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station-v4.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-5">
+        <button type="button" data-review="approve" data-id="icon-5">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-5">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-6">
+      <header><h2>Ev Charging Station</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt="Ev Charging Station at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-charging-station.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-6">
+        <button type="button" data-review="approve" data-id="icon-6">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-6">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-7">
+      <header><h2>Ev Reservation</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt="Ev Reservation at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ev-reservation.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-7">
+        <button type="button" data-review="approve" data-id="icon-7">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-7">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-8">
+      <header><h2>Factoryx Group</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt="Factoryx Group at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/factoryx-group.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-8">
+        <button type="button" data-review="approve" data-id="icon-8">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-8">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-9">
+      <header><h2>Gigacast</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt="Gigacast at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigacast.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-9">
+        <button type="button" data-review="approve" data-id="icon-9">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-9">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-10">
+      <header><h2>Gigafactory Module</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt="Gigafactory Module at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory-module.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-10">
+        <button type="button" data-review="approve" data-id="icon-10">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-10">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-11">
+      <header><h2>Gigafactory</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt="Gigafactory at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/gigafactory.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-11">
+        <button type="button" data-review="approve" data-id="icon-11">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-11">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-12">
+      <header><h2>Ground Station Network</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt="Ground Station Network at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/ground-station-network.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-12">
+        <button type="button" data-review="approve" data-id="icon-12">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-12">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-13">
+      <header><h2>Mass Market Ev</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt="Mass Market Ev at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/mass-market-ev.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-13">
+        <button type="button" data-review="approve" data-id="icon-13">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-13">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-14">
+      <header><h2>Megapack</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt="Megapack at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/megapack.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-14">
+        <button type="button" data-review="approve" data-id="icon-14">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-14">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-15">
+      <header><h2>Orbital Compute Array</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt="Orbital Compute Array at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/orbital-compute-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-15">
+        <button type="button" data-review="approve" data-id="icon-15">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-15">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-16">
+      <header><h2>Planetary Grid Charge</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt="Planetary Grid Charge at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-charge.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-16">
+        <button type="button" data-review="approve" data-id="icon-16">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-16">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-17">
+      <header><h2>Planetary Grid Controller</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt="Planetary Grid Controller at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-controller.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-17">
+        <button type="button" data-review="approve" data-id="icon-17">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-17">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-18">
+      <header><h2>Planetary Grid Segment</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt="Planetary Grid Segment at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/planetary-grid-segment.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-18">
+        <button type="button" data-review="approve" data-id="icon-18">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-18">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-19">
+      <header><h2>Premium Ev</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt="Premium Ev at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/premium-ev.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-19">
+        <button type="button" data-review="approve" data-id="icon-19">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-19">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-20">
+      <header><h2>Prototype Roadster</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt="Prototype Roadster at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/prototype-roadster.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-20">
+        <button type="button" data-review="approve" data-id="icon-20">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-20">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-21">
+      <header><h2>Reusable Booster</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt="Reusable Booster at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-booster.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-21">
+        <button type="button" data-review="approve" data-id="icon-21">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-21">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-22">
+      <header><h2>Reusable Launch Service</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt="Reusable Launch Service at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/reusable-launch-service.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-22">
+        <button type="button" data-review="approve" data-id="icon-22">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-22">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-23">
+      <header><h2>Robotaxi Fleet</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt="Robotaxi Fleet at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-fleet.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-23">
+        <button type="button" data-review="approve" data-id="icon-23">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-23">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-24">
+      <header><h2>Robotaxi Service Center</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt="Robotaxi Service Center at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/robotaxi-service-center.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-24">
+        <button type="button" data-review="approve" data-id="icon-24">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-24">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-25">
+      <header><h2>Sales Office</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt="Sales Office at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/sales-office.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-25">
+        <button type="button" data-review="approve" data-id="icon-25">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-25">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-26">
+      <header><h2>Satellite Bus</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt="Satellite Bus at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/satellite-bus.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-26">
+        <button type="button" data-review="approve" data-id="icon-26">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-26">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-27">
+      <header><h2>Small Launch Service</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt="Small Launch Service at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/small-launch-service.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-27">
+        <button type="button" data-review="approve" data-id="icon-27">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-27">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon-28">
+      <header><h2>Terrestrial Datacenter</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt="Terrestrial Datacenter at 64 pixels"><img class="i32" src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img class="i20" src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""></div>
+      <div class="belt"><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/factoryx_0.1.0/graphics/icons/terrestrial-datacenter.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon-28">
+        <button type="button" data-review="approve" data-id="icon-28">Approve</button>
+        <button type="button" data-review="revise" data-id="icon-28">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-0">
+      <header><h2>Sales Office sale lights</h2><p>Crafting only | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/sales-office-lights.png');--fw:64px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-0">
+        <button type="button" data-review="approve" data-id="animation-0">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-0">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-1">
+      <header><h2>Charger status lights</h2><p>Demand active | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-status-lights.png');--fw:64px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-1">
+        <button type="button" data-review="approve" data-id="animation-1">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-1">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-2">
+      <header><h2>Gigafactory presses</h2><p>Crafting only | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/gigafactory-press.png');--fw:128px;--fh:96px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-2">
+        <button type="button" data-review="approve" data-id="animation-2">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-2">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-3">
+      <header><h2>Datacenter cooling fans</h2><p>Compute active | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/datacenter-cooling-fans.png');--fw:128px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-3">
+        <button type="button" data-review="approve" data-id="animation-3">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-3">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-4">
+      <header><h2>Robotaxi dispatch lights</h2><p>Fleet allocated | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/robotaxi-dispatch-lights.png');--fw:128px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-4">
+        <button type="button" data-review="approve" data-id="animation-4">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-4">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-5">
+      <header><h2>Grid charge stages</h2><p>Charging only | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/grid-charge-stages.png');--fw:128px;--fh:128px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-5">
+        <button type="button" data-review="approve" data-id="animation-5">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-5">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-0">
+      <header><h2>Achieving Agi</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/achieving-agi.png" alt="Achieving Agi technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-0">
+        <button type="button" data-review="approve" data-id="technology-0">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-0">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-1">
+      <header><h2>Autonomous Logistics</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/autonomous-logistics.png" alt="Autonomous Logistics technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-1">
+        <button type="button" data-review="approve" data-id="technology-1">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-1">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-2">
+      <header><h2>Ev Charging Network</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/ev-charging-network.png" alt="Ev Charging Network technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-2">
+        <button type="button" data-review="approve" data-id="technology-2">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-2">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-3">
+      <header><h2>Gigafactory</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/gigafactory.png" alt="Gigafactory technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-3">
+        <button type="button" data-review="approve" data-id="technology-3">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-3">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-4">
+      <header><h2>Planetary Energy Grid</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/planetary-energy-grid.png" alt="Planetary Energy Grid technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-4">
+        <button type="button" data-review="approve" data-id="technology-4">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-4">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-5">
+      <header><h2>Sales Office</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/sales-office.png" alt="Sales Office technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-5">
+        <button type="button" data-review="approve" data-id="technology-5">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-5">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology-6">
+      <header><h2>Terrestrial Ai</h2><p>Locally composed technology art</p></header>
+      <div class="technology-preview"><img src="../../mod/factoryx_0.1.0/graphics/technology/terrestrial-ai.png" alt="Terrestrial Ai technology icon"></div>
+
+      <div class="review" role="group" aria-label="Review technology-6">
+        <button type="button" data-review="approve" data-id="technology-6">Approve</button>
+        <button type="button" data-review="revise" data-id="technology-6">Revise</button>
+      </div>
+    </article></section>
+<section class="math"><h2 class="section-title">Directional vehicle production math</h2><table><thead><tr><th>Path</th><th>Likely cost</th><th>Result</th></tr></thead><tbody><tr><td>Generate directional sheets</td><td>5 initial calls; realistically 10-15 with consistency retries</td><td>Fast, but wheelbase, lighting, and body shape drift between directions</td></tr><tr><td>Scripted Blender family</td><td>One camera/material rig plus five low-poly models; Blender is not installed</td><td>Deterministic rotations, shadows, recolors, icons, and later animation</td></tr></tbody></table><p>The Blender setup is worthwhile once custom drivable sprites are the target. It is not worthwhile merely to replace the current 64px product icons.</p><p>Generated masters: <a href="../factoryx-masters/final/sales-office.png">Sales Office</a>, <a href="../factoryx-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../factoryx-masters/final/agi-model.png">AGI Model</a>.</p></section>
+</main>
+<script>
+const key='factoryx-art-qa-v1';const state=JSON.parse(localStorage.getItem(key)||'{}');
+function renderState(){document.querySelectorAll('[data-review]').forEach(b=>b.classList.toggle('selected',state[b.dataset.id]===b.dataset.review));const values=Object.values(state);document.querySelector('#summary').textContent=`${values.filter(v=>v==='approve').length} approved / ${values.filter(v=>v==='revise').length} revise`;localStorage.setItem(key,JSON.stringify(state));}
+document.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{state[b.dataset.id]=b.dataset.review;renderState()});
+document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.asset').forEach(x=>x.classList.toggle('hidden',b.dataset.filter!=='all'&&x.dataset.kind!==b.dataset.filter));});
+const terrains=['terrain-grass','terrain-concrete','terrain-dark'];let terrainIndex=0;document.querySelector('#terrain').onclick=()=>{terrainIndex=(terrainIndex+1)%terrains.length;document.querySelectorAll('.entity-stage').forEach(x=>{terrains.forEach(t=>x.classList.remove(t));x.classList.add(terrains[terrainIndex])})};
+document.querySelector('#bounds').onclick=()=>document.body.classList.toggle('show-bounds');
+document.querySelector('#copy').onclick=async()=>{const rows=[...document.querySelectorAll('.asset')].map(x=>`- ${x.querySelector('h2').textContent}: ${state[x.dataset.id]||'unreviewed'}`);await navigator.clipboard.writeText('FactoryX art QA\n'+rows.join('\n'));};
+renderState();
+</script>
+</body></html>
