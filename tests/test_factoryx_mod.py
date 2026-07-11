@@ -1292,10 +1292,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function process_robotaxi_service_centers", control)
         self.assertIn("function ensure_robotaxi_service_power", control)
         self.assertIn("function robotaxi_customer_allocations", control)
-        self.assertIn("local customers = #centers > 0", control)
+        self.assertIn('registered_factoryx_entities("robotaxi_centers", force)', control)
+        self.assertIn('area = area_around(center.position, ROBOTAXI_SERVICE_RADIUS)', control)
         self.assertIn("distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS", control)
         self.assertIn("available[center.unit_number] = stored > 0", control)
-        self.assertIn("result[selected.unit_number] = result[selected.unit_number] + 1", control)
+        self.assertIn("result[selection.center.unit_number] = result[selection.center.unit_number] + 1", control)
+        self.assertIn("game.tick - cached.tick < 300", control)
         self.assertIn("output_blocked = not (output and output.can_insert", control)
         self.assertIn("not snapshot.output_blocked", control)
         self.assertIn("trips and fleet attrition are paused", control)
@@ -1491,6 +1493,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)
         self.assertIn('entity.disabled_by_script = false', control)
         self.assertIn('script.on_nth_tick(1, reset_underpowered_compute_progress)', control)
+        self.assertIn('while processed < 32', control)
         self.assertIn('track_factoryx_compute_machine(entity)', control)
         self.assertIn('rebuild_factoryx_compute_machines()', control)
 
@@ -1500,6 +1503,7 @@ class FactoryXModTest(unittest.TestCase):
         for fragment in [
             "CUSTOMER_COMMUTE_MAX_ACTIVE = 512",
             "CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8",
+            "CUSTOMER_COMMUTE_SCHEDULER_BATCH = 256",
             "CUSTOMER_COMMUTE_CHARGE_SECONDS = 30",
             "CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS = 2 * 60 * 60",
             "function select_customer_commute_station",
@@ -1514,9 +1518,32 @@ class FactoryXModTest(unittest.TestCase):
             '"Customer charging commutes"',
             '"Completed charging visits"',
             "customer_charging_commutes = function",
+            "customer_commute_due_queue",
+            "customer_active_commutes",
         ]:
             self.assertIn(fragment, control)
         self.assertIn("Implemented V1", roadmap[roadmap.index("### Phase 2.6"):])
+
+    def test_customer_scale_paths_are_cached_queued_and_event_driven(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("function factoryx_entity_registries", control)
+        self.assertIn("function rebuild_factoryx_entity_registries", control)
+        self.assertIn("function factoryx_market_cache", control)
+        self.assertIn("cached.tick == game.tick", control)
+        self.assertIn("market_snapshot_builds", control)
+        self.assertIn("function customer_buyer_queues", control)
+        self.assertIn("function dequeue_available_buyer", control)
+        self.assertIn("defines.events.on_entity_spawned", control)
+        self.assertIn("event.spawner", control)
+        self.assertIn('registered_factoryx_entities("sales_offices")', control)
+        self.assertIn('registered_factoryx_entities("stations", force, surface)', control)
+        self.assertIn("performance_status = function", control)
+        buyer_start = control.index("function eligible_customer_buyers")
+        buyer_end = control.index("function reserve_office_buyers", buyer_start)
+        self.assertNotIn("pairs(customer_unit_registry())", control[buyer_start:buyer_end])
+        commute_start = control.index("function process_customer_charging_commutes")
+        commute_end = control.index("function handle_customer_commute_command_completed", commute_start)
+        self.assertNotIn("pairs(customer_vehicle_owners())", control[commute_start:commute_end])
 
     def test_factoryx_avoids_capex_language(self):
         combined = "\n".join(

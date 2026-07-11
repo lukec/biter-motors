@@ -168,6 +168,7 @@ CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
 CUSTOMER_MOOD_MAX_ANGER_CHANCE = 0.25
 CUSTOMER_COMMUTE_MAX_ACTIVE = 512
 CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8
+CUSTOMER_COMMUTE_SCHEDULER_BATCH = 256
 CUSTOMER_COMMUTE_CHARGE_SECONDS = 30
 CUSTOMER_COMMUTE_FIRST_VISIT_TICKS = 60 * 60
 CUSTOMER_COMMUTE_RETRY_BASE_TICKS = 30 * 60
@@ -421,7 +422,7 @@ local function station_reservation_inventory(station)
 end
 
 local function find_stations(surface, force)
-  return surface.find_entities_filtered{name = STATION_NAMES, force = force}
+  return registered_factoryx_entities("stations", force, surface)
 end
 
 local function crafter_input_inventory_id()
@@ -490,15 +491,26 @@ function factoryx_compute_power_failures()
   return storage.factoryx_compute_power_failures
 end
 
+function factoryx_compute_queue()
+  storage.factoryx_compute_queue = storage.factoryx_compute_queue or {units = {}, index = 1, members = {}}
+  return storage.factoryx_compute_queue
+end
+
 function track_factoryx_compute_machine(entity)
   if entity and entity.valid and entity.unit_number and FACTORYX_COMPUTE_RECIPES[entity.name] then
     factoryx_compute_machines()[entity.unit_number] = entity
+    local queue = factoryx_compute_queue()
+    if not queue.members[entity.unit_number] then
+      queue.units[#queue.units + 1] = entity.unit_number
+      queue.members[entity.unit_number] = true
+    end
   end
 end
 
 function rebuild_factoryx_compute_machines()
   storage.factoryx_compute_machines = {}
   storage.factoryx_compute_power_failures = {}
+  storage.factoryx_compute_queue = {units = {}, index = 1, members = {}}
   local names = {}
   for name in pairs(FACTORYX_COMPUTE_RECIPES) do names[#names + 1] = name end
   for _, surface in pairs(game.surfaces) do
@@ -509,10 +521,24 @@ function rebuild_factoryx_compute_machines()
 end
 
 function reset_underpowered_compute_progress()
-  for unit_number, entity in pairs(factoryx_compute_machines()) do
-    if not entity.valid then
+  local queue = factoryx_compute_queue()
+  local processed = 0
+  while processed < 32 and #queue.units > 0 do
+    if queue.index > #queue.units then queue.index = 1 end
+    local unit_number = queue.units[queue.index]
+    queue.index = queue.index + 1
+    processed = processed + 1
+    local entity = factoryx_compute_machines()[unit_number]
+    if not entity or not entity.valid then
       factoryx_compute_machines()[unit_number] = nil
       factoryx_compute_power_failures()[unit_number] = nil
+      queue.members[unit_number] = nil
+      local remove_index = queue.index - 1
+      local last = table.remove(queue.units)
+      if remove_index <= #queue.units then
+        queue.units[remove_index] = last
+        queue.index = remove_index
+      end
     else
       local power_failure = factoryx_compute_power_failures()[unit_number]
       if power_failure then
@@ -953,6 +979,158 @@ function customer_charging_commutes()
   return storage.factoryx_customer_charging_commutes
 end
 
+function factoryx_entity_registries()
+  storage.factoryx_entity_registries = storage.factoryx_entity_registries or {
+    stations = {},
+    sales_offices = {},
+    robotaxi_centers = {}
+  }
+  return storage.factoryx_entity_registries
+end
+
+function track_factoryx_entity(entity)
+  if not entity or not entity.valid or not entity.unit_number then return end
+  local registries = factoryx_entity_registries()
+  if STATION_CONFIGS[entity.name] then
+    registries.stations[entity.unit_number] = entity
+  elseif entity.name == SALES_OFFICE_NAME then
+    registries.sales_offices[entity.unit_number] = entity
+  elseif entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
+    registries.robotaxi_centers[entity.unit_number] = entity
+  end
+end
+
+function untrack_factoryx_entity(entity)
+  if not entity or not entity.unit_number then return end
+  local registries = factoryx_entity_registries()
+  registries.stations[entity.unit_number] = nil
+  registries.sales_offices[entity.unit_number] = nil
+  registries.robotaxi_centers[entity.unit_number] = nil
+end
+
+function registered_factoryx_entities(kind, force, surface)
+  local result = {}
+  local registry = factoryx_entity_registries()[kind] or {}
+  for unit_number, entity in pairs(registry) do
+    if not entity or not entity.valid then
+      registry[unit_number] = nil
+    elseif (not force or entity.force == force) and (not surface or entity.surface == surface) then
+      result[#result + 1] = entity
+    end
+  end
+  return result
+end
+
+function rebuild_factoryx_entity_registries()
+  storage.factoryx_entity_registries = {stations = {}, sales_offices = {}, robotaxi_centers = {}}
+  local names = {SALES_OFFICE_NAME, ROBOTAXI_SERVICE_CENTER_NAME}
+  for _, name in pairs(STATION_NAMES) do names[#names + 1] = name end
+  for _, surface in pairs(game.surfaces) do
+    for _, entity in pairs(surface.find_entities_filtered{name = names}) do
+      track_factoryx_entity(entity)
+    end
+  end
+end
+
+function factoryx_market_cache()
+  storage.factoryx_market_cache = storage.factoryx_market_cache or {}
+  return storage.factoryx_market_cache
+end
+
+function factoryx_market_generation()
+  storage.factoryx_market_generation = storage.factoryx_market_generation or {}
+  return storage.factoryx_market_generation
+end
+
+function mark_factoryx_market_dirty(force)
+  if not force then return end
+  factoryx_market_generation()[force.index] = (factoryx_market_generation()[force.index] or 0) + 1
+  factoryx_market_cache()[force.index] = nil
+  storage.factoryx_vehicle_summary_cache = storage.factoryx_vehicle_summary_cache or {}
+  storage.factoryx_vehicle_summary_cache[force.index] = nil
+end
+
+function customer_buyer_queues()
+  storage.factoryx_customer_buyer_queues = storage.factoryx_customer_buyer_queues or {}
+  return storage.factoryx_customer_buyer_queues
+end
+
+function customer_settlement_market_forces()
+  storage.factoryx_customer_settlement_market_forces = storage.factoryx_customer_settlement_market_forces or {}
+  return storage.factoryx_customer_settlement_market_forces
+end
+
+function buyer_queue_for(force_name, settlement_key_value)
+  local by_force = customer_buyer_queues()
+  by_force[force_name] = by_force[force_name] or {}
+  by_force[force_name][settlement_key_value] = by_force[force_name][settlement_key_value]
+    or {units = {}, head = 1, members = {}}
+  return by_force[force_name][settlement_key_value]
+end
+
+function enqueue_customer_buyer(unit_number, home)
+  if not unit_number or not home then return end
+  local queue = buyer_queue_for(home.market_force_name, home.settlement_key)
+  if queue.members[unit_number] then return end
+  queue.units[#queue.units + 1] = unit_number
+  queue.members[unit_number] = true
+end
+
+function compact_customer_buyer_queue(queue)
+  if queue.head <= 256 or queue.head <= #queue.units / 2 then return end
+  local compacted = {}
+  for index = queue.head, #queue.units do compacted[#compacted + 1] = queue.units[index] end
+  queue.units = compacted
+  queue.head = 1
+end
+
+function rebuild_customer_buyer_queues()
+  storage.factoryx_customer_buyer_queues = {}
+  for unit_number, entity in pairs(customer_unit_registry()) do
+    local home = customer_home_settlements()[unit_number]
+    if entity and entity.valid and home and not customer_vehicle_owners()[unit_number]
+      and not buyer_reserved_by_unit()[unit_number] then
+      enqueue_customer_buyer(unit_number, home)
+    end
+  end
+end
+
+function customer_commute_due_queue()
+  storage.factoryx_customer_commute_due_queue = storage.factoryx_customer_commute_due_queue or {
+    units = {}, head = 1, members = {}
+  }
+  return storage.factoryx_customer_commute_due_queue
+end
+
+function customer_active_commutes()
+  storage.factoryx_customer_active_commutes = storage.factoryx_customer_active_commutes or {}
+  return storage.factoryx_customer_active_commutes
+end
+
+function enqueue_customer_commute(unit_number)
+  if not unit_number then return end
+  local queue = customer_commute_due_queue()
+  if queue.members[unit_number] then return end
+  queue.units[#queue.units + 1] = unit_number
+  queue.members[unit_number] = true
+end
+
+function rebuild_customer_commute_queue()
+  storage.factoryx_customer_commute_due_queue = {units = {}, head = 1, members = {}}
+  storage.factoryx_customer_active_commutes = {}
+  for unit_number, ownership in pairs(customer_vehicle_owners()) do
+    local entity = customer_unit_registry()[unit_number]
+    if ownership and entity and entity.valid then
+      local state = customer_charging_commutes()[unit_number]
+      if state and (state.phase == "to_charger" or state.phase == "charging") then
+        customer_active_commutes()[unit_number] = true
+      else
+        enqueue_customer_commute(unit_number)
+      end
+    end
+  end
+end
+
 function customer_commute_totals()
   storage.factoryx_customer_commute_totals = storage.factoryx_customer_commute_totals or {}
   return storage.factoryx_customer_commute_totals
@@ -1340,6 +1518,11 @@ function register_customer_unit(entity, settlement, market_force)
     settlement_key = settlement_key(settlement.surface, settlement),
     market_force_name = market_force.name
   }
+  if not customer_vehicle_owners()[entity.unit_number]
+    and not buyer_reserved_by_unit()[entity.unit_number] then
+    enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
+  end
+  mark_factoryx_market_dirty(market_force)
 end
 
 function unregister_customer_unit(entity)
@@ -1349,14 +1532,25 @@ function unregister_customer_unit(entity)
   local unit_number = entity.unit_number
   local ownership = customer_vehicle_owners()[unit_number]
   customer_charging_commutes()[unit_number] = nil
+  customer_active_commutes()[unit_number] = nil
+  customer_commute_due_queue().members[unit_number] = nil
   customer_vehicle_owners()[unit_number] = nil
   customer_unit_registry()[unit_number] = nil
   customer_home_settlements()[unit_number] = nil
   buyer_reserved_by_unit()[unit_number] = nil
+  if ownership and ownership.market_force_name then
+    mark_factoryx_market_dirty(game.forces[ownership.market_force_name])
+  end
   return ownership
 end
 
 function active_customer_vehicle_summary(force)
+  storage.factoryx_vehicle_summary_cache = storage.factoryx_vehicle_summary_cache or {}
+  local cached = storage.factoryx_vehicle_summary_cache[force.index]
+  local generation = factoryx_market_generation()[force.index] or 0
+  if cached and cached.tick == game.tick and cached.generation == generation then
+    return cached.summary
+  end
   local summary = {total = 0, by_vehicle = {}, by_settlement = {}}
   local owners = customer_vehicle_owners()
   local units = customer_unit_registry()
@@ -1373,6 +1567,11 @@ function active_customer_vehicle_summary(force)
       summary.by_settlement[ownership.settlement_key] = (summary.by_settlement[ownership.settlement_key] or 0) + 1
     end
   end
+  storage.factoryx_vehicle_summary_cache[force.index] = {
+    tick = game.tick,
+    generation = generation,
+    summary = summary
+  }
   return summary
 end
 
@@ -1616,15 +1815,7 @@ local function sorted_entities(entities)
 end
 
 local function force_sales_offices(force)
-  local offices = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME, force = force}) do
-      if office.valid then
-        offices[#offices + 1] = office
-      end
-    end
-  end
-  return sorted_entities(offices)
+  return sorted_entities(registered_factoryx_entities("sales_offices", force))
 end
 
 local function position_has_sales_coverage(surface, position, offices)
@@ -1712,6 +1903,12 @@ function settlement_friendly_after_service_check(force, key, operational, advanc
 end
 
 customer_service_for_force = function(force, advance_mood)
+  local generation = factoryx_market_generation()[force.index] or 0
+  local cached = factoryx_market_cache()[force.index]
+  if not advance_mood and cached and cached.tick == game.tick
+    and cached.generation == generation then
+    return cached.service
+  end
   local service = {
     assignments = {},
     assignment_by_settlement_key = {},
@@ -1802,6 +1999,7 @@ customer_service_for_force = function(force, advance_mood)
 
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
+    customer_settlement_market_forces()[key] = force.name
     local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
     if vehicle_count > 0 and not service.operational_keys[key] then
       service.stranded_evs = service.stranded_evs + vehicle_count
@@ -1825,6 +2023,14 @@ customer_service_for_force = function(force, advance_mood)
       service.supported_ev_capacity / service.powered_stall_capacity + 0.5
     )
   end
+  storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+  storage.factoryx_perf_counters.market_snapshot_builds =
+    (storage.factoryx_perf_counters.market_snapshot_builds or 0) + 1
+  factoryx_market_cache()[force.index] = {
+    tick = game.tick,
+    generation = generation,
+    service = service
+  }
   return service
 end
 
@@ -1991,7 +2197,9 @@ end
 
 function customer_commute_station_counts()
   local counts = {}
-  for _, state in pairs(customer_charging_commutes()) do
+  for unit_number in pairs(customer_active_commutes()) do
+    local state = customer_charging_commutes()[unit_number]
+    if state then
     if (state.phase == "to_charger" or state.phase == "charging") and state.station_unit_number then
       local count = counts[state.station_unit_number] or {en_route = 0, charging = 0, active = 0}
       counts[state.station_unit_number] = count
@@ -2001,6 +2209,7 @@ function customer_commute_station_counts()
       else
         count.en_route = count.en_route + 1
       end
+    end
     end
   end
   return counts
@@ -2080,6 +2289,7 @@ function begin_customer_charging_commute(entity, ownership, state, station, stat
   state.retry_tick = nil
   counts.en_route = counts.en_route + 1
   counts.active = counts.active + 1
+  customer_active_commutes()[entity.unit_number] = true
   return true
 end
 
@@ -2094,6 +2304,10 @@ function retry_customer_charging_commute(entity, state)
     CUSTOMER_COMMUTE_RETRY_MAX_TICKS,
     CUSTOMER_COMMUTE_RETRY_BASE_TICKS * (2 ^ (attempts - 1))
   )
+  if entity and entity.unit_number then
+    customer_active_commutes()[entity.unit_number] = nil
+    enqueue_customer_commute(entity.unit_number)
+  end
   if entity and entity.valid then give_customer_wander_command(entity, true) end
 end
 
@@ -2109,6 +2323,8 @@ function complete_customer_charging_commute(entity, ownership, state)
   customer_commute_totals()[ownership.market_force_name] =
     (customer_commute_totals()[ownership.market_force_name] or 0) + 1
   state.next_charge_tick = game.tick + customer_commute_interval_ticks(entity, ownership)
+  customer_active_commutes()[entity.unit_number] = nil
+  enqueue_customer_commute(entity.unit_number)
   give_customer_wander_command(entity, true)
 end
 
@@ -2116,11 +2332,13 @@ function process_customer_charging_commutes()
   local states = customer_charging_commutes()
   local station_counts = customer_commute_station_counts()
   local active = 0
-  for unit_number, state in pairs(states) do
+  for unit_number in pairs(customer_active_commutes()) do
+    local state = states[unit_number]
     local entity = customer_unit_registry()[unit_number]
     local ownership = customer_vehicle_owners()[unit_number]
-    if not entity or not entity.valid or not ownership then
+    if not state or not entity or not entity.valid or not ownership then
       states[unit_number] = nil
+      customer_active_commutes()[unit_number] = nil
     elseif state.phase == "to_charger" then
       active = active + 1
       if not state.station or not state.station.valid or not station_has_grid_access(state.station) then
@@ -2149,11 +2367,16 @@ function process_customer_charging_commutes()
   local starts = 0
   if active >= CUSTOMER_COMMUTE_MAX_ACTIVE then return end
   local service_by_force = {}
-  for unit_number, ownership in pairs(customer_vehicle_owners()) do
-    if starts >= CUSTOMER_COMMUTE_STARTS_PER_SECOND
-      or active + starts >= CUSTOMER_COMMUTE_MAX_ACTIVE then break end
+  local queue = customer_commute_due_queue()
+  local processed = 0
+  while processed < CUSTOMER_COMMUTE_SCHEDULER_BATCH and queue.head <= #queue.units do
+    local unit_number = queue.units[queue.head]
+    queue.head = queue.head + 1
+    queue.members[unit_number] = nil
+    processed = processed + 1
+    local ownership = customer_vehicle_owners()[unit_number]
     local entity = customer_unit_registry()[unit_number]
-    if entity and entity.valid then
+    if ownership and entity and entity.valid then
       local state = states[unit_number]
       if not state then
         state = {
@@ -2181,8 +2404,18 @@ function process_customer_charging_commutes()
             retry_customer_charging_commute(entity, state)
           end
         end
+      else
+        enqueue_customer_commute(unit_number)
       end
     end
+    if starts >= CUSTOMER_COMMUTE_STARTS_PER_SECOND
+      or active + starts >= CUSTOMER_COMMUTE_MAX_ACTIVE then break end
+  end
+  if queue.head > 256 and queue.head > #queue.units / 2 then
+    local compacted = {}
+    for index = queue.head, #queue.units do compacted[#compacted + 1] = queue.units[index] end
+    queue.units = compacted
+    queue.head = 1
   end
 end
 
@@ -2633,6 +2866,8 @@ local function grow_customer_settlement(station, state)
   if not settlement then
     return nil
   end
+  customer_settlement_market_forces()[settlement_key(settlement.surface, settlement)] = station.force.name
+  mark_factoryx_market_dirty(station.force)
   draw_customer_marker(settlement)
 
   local evolution = enemy_evolution(station.surface)
@@ -2657,7 +2892,6 @@ local function process_customer_growth(force)
     return
   end
   local service = customer_service_for_force(force)
-  local allocations = calculate_station_utilization(force)
   local states = customer_growth_states()
   local referral_level = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME)
   local referral_multiplier = 1 + referral_level * 0.1
@@ -2964,12 +3198,10 @@ end
 
 function find_sales_offices(force)
   local offices = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME, force = force}) do
+  for _, office in pairs(registered_factoryx_entities("sales_offices", force)) do
       if office.valid and RESERVATION_RECIPES[current_recipe_name(office)] then
         offices[#offices + 1] = office
       end
-    end
   end
   return offices
 end
@@ -3119,12 +3351,23 @@ function robotaxi_service_inventories(center)
   return inventory, inventory
 end
 
-function robotaxi_customer_allocations()
+function robotaxi_customer_allocations(force)
+  if not force then return {} end
+  storage.factoryx_robotaxi_allocation_cache = storage.factoryx_robotaxi_allocation_cache or {}
+  local cached = storage.factoryx_robotaxi_allocation_cache[force.index]
+  if cached and game.tick - cached.tick < 300 then
+    return cached.allocations
+  end
   local result = {}
   local customer_force = game.forces[CUSTOMER_FORCE_NAME]
   if not customer_force then return result end
-  for _, surface in pairs(game.surfaces) do
-    local centers = surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME}
+  local centers_by_surface = {}
+  for _, center in pairs(registered_factoryx_entities("robotaxi_centers", force)) do
+    centers_by_surface[center.surface.index] = centers_by_surface[center.surface.index] or {}
+    centers_by_surface[center.surface.index][#centers_by_surface[center.surface.index] + 1] = center
+  end
+  for surface_index, centers in pairs(centers_by_surface) do
+    local surface = game.surfaces[surface_index]
     table.sort(centers, function(a, b) return a.unit_number < b.unit_number end)
     local available = {}
     for _, center in pairs(centers) do
@@ -3133,29 +3376,36 @@ function robotaxi_customer_allocations()
       available[center.unit_number] = stored > 0
       result[center.unit_number] = 0
     end
-    local customers = #centers > 0
-      and surface.find_entities_filtered{type = "unit", force = customer_force}
-      or {}
-    for _, customer in pairs(customers) do
-      local selected
-      local selected_distance
-      for _, center in pairs(centers) do
-        if available[center.unit_number] then
+    local selected_by_unit = {}
+    for _, center in pairs(centers) do
+      if available[center.unit_number] then
+        local area = area_around(center.position, ROBOTAXI_SERVICE_RADIUS)
+        for _, customer in pairs(surface.find_entities_filtered{type = "unit", force = customer_force, area = area}) do
+          local home = customer.unit_number and customer_home_settlements()[customer.unit_number]
+          if home and home.market_force_name == force.name then
           local dx = customer.position.x - center.position.x
           local dy = customer.position.y - center.position.y
           local distance = dx * dx + dy * dy
-          if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
-            and (not selected_distance or distance < selected_distance) then
-            selected = center
-            selected_distance = distance
+            local previous = selected_by_unit[customer.unit_number]
+            if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
+              and (not previous or distance < previous.distance) then
+              selected_by_unit[customer.unit_number] = {center = center, distance = distance}
+            end
           end
         end
       end
-      if selected then
-        result[selected.unit_number] = result[selected.unit_number] + 1
-      end
+    end
+    for _, selection in pairs(selected_by_unit) do
+      result[selection.center.unit_number] = result[selection.center.unit_number] + 1
     end
   end
+  storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+  storage.factoryx_perf_counters.robotaxi_allocation_builds =
+    (storage.factoryx_perf_counters.robotaxi_allocation_builds or 0) + 1
+  storage.factoryx_robotaxi_allocation_cache[force.index] = {
+    tick = game.tick,
+    allocations = result
+  }
   return result
 end
 
@@ -3173,7 +3423,7 @@ function robotaxi_service_snapshot(center, allocated_customers)
   local fleet = math.min(200, stored)
   local customers = allocated_customers
   if customers == nil then
-    customers = robotaxi_customer_allocations()[center.unit_number] or 0
+    customers = robotaxi_customer_allocations(center.force)[center.unit_number] or 0
   end
   local allocated = math.min(fleet, math.ceil(customers / ROBOTAXI_CUSTOMERS_PER_VEHICLE))
   local served = math.min(customers, allocated * ROBOTAXI_CUSTOMERS_PER_VEHICLE)
@@ -3200,10 +3450,12 @@ end
 function process_robotaxi_service_centers()
   local seen = {}
   local active_power_units = {}
-  local customer_allocations = robotaxi_customer_allocations()
-  for _, surface in pairs(game.surfaces) do
-    for _, center in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME}) do
+  local allocations_by_force = {}
+  for _, center in pairs(registered_factoryx_entities("robotaxi_centers")) do
       if center.valid and center.unit_number then
+        allocations_by_force[center.force.index] = allocations_by_force[center.force.index]
+          or robotaxi_customer_allocations(center.force)
+        local customer_allocations = allocations_by_force[center.force.index]
         seen[center.unit_number] = true
         local power = ensure_robotaxi_service_power(center)
         if power and power.valid and power.unit_number then
@@ -3238,7 +3490,6 @@ function process_robotaxi_service_centers()
           end
         end
       end
-    end
   end
   for unit_number in pairs(robotaxi_service_states()) do
     if not seen[unit_number] then
@@ -3721,6 +3972,9 @@ function clear_office_buyer_reservation(office_unit_number)
     for _, unit_number in pairs(reservation.buyers or {}) do
       if buyer_reserved_by_unit()[unit_number] == office_unit_number then
         buyer_reserved_by_unit()[unit_number] = nil
+        if not customer_vehicle_owners()[unit_number] then
+          enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+        end
       end
     end
   end
@@ -3740,8 +3994,34 @@ function office_has_all_sale_inputs(office, recipe)
   return true
 end
 
+function dequeue_available_buyer(queue, office, expected_settlement_key)
+  local checks = math.max(0, #queue.units - queue.head + 1)
+  while checks > 0 and queue.head <= #queue.units do
+    local unit_number = queue.units[queue.head]
+    queue.head = queue.head + 1
+    queue.members[unit_number] = nil
+    checks = checks - 1
+    local entity = customer_unit_registry()[unit_number]
+    local home = customer_home_settlements()[unit_number]
+    local available = entity and entity.valid and home
+      and home.settlement_key == expected_settlement_key
+      and entity.force.name == CUSTOMER_FORCE_NAME
+      and not customer_vehicle_owners()[unit_number]
+      and not buyer_reserved_by_unit()[unit_number]
+    if available and entity.surface == office.surface
+      and within_radius(office, entity, SALES_OFFICE_CUSTOMER_RADIUS) then
+      compact_customer_buyer_queue(queue)
+      return unit_number
+    elseif available then
+      queue.units[#queue.units + 1] = unit_number
+      queue.members[unit_number] = true
+    end
+  end
+  compact_customer_buyer_queue(queue)
+  return nil
+end
+
 function eligible_customer_buyers(office, needed)
-  local buyers_by_settlement = {}
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
   local reserved_by_settlement = {}
@@ -3751,35 +4031,19 @@ function eligible_customer_buyers(office, needed)
       reserved_by_settlement[home.settlement_key] = (reserved_by_settlement[home.settlement_key] or 0) + 1
     end
   end
-  for unit_number, entity in pairs(customer_unit_registry()) do
-    local home = customer_home_settlements()[unit_number]
-    local assigned_station = home and service.assignment_by_settlement_key[home.settlement_key]
-    local config = assigned_station and station_config(assigned_station)
-    if entity and entity.valid and entity.type == "unit"
-      and entity.force.name == CUSTOMER_FORCE_NAME
-      and home and home.market_force_name == office.force.name
-      and service.operational_keys[home.settlement_key]
-      and config
-      and (vehicle_summary.by_settlement[home.settlement_key] or 0)
-        + (reserved_by_settlement[home.settlement_key] or 0) < config.evs_per_stall
-      and not customer_vehicle_owners()[unit_number]
-      and not buyer_reserved_by_unit()[unit_number]
-      and entity.surface == office.surface
-      and within_radius(office, entity, SALES_OFFICE_CUSTOMER_RADIUS) then
-      local key = home.settlement_key
-      buyers_by_settlement[key] = buyers_by_settlement[key] or {}
-      buyers_by_settlement[key][#buyers_by_settlement[key] + 1] = unit_number
-    end
-  end
-
   local pools = {}
-  for key, units in pairs(buyers_by_settlement) do
-    table.sort(units)
-    pools[#pools + 1] = {
-      key = key,
-      units = units,
-      load = (vehicle_summary.by_settlement[key] or 0) + (reserved_by_settlement[key] or 0)
-    }
+  for key in pairs(service.operational_keys) do
+    local assigned_station = service.assignment_by_settlement_key[key]
+    local config = assigned_station and station_config(assigned_station)
+    local load = (vehicle_summary.by_settlement[key] or 0) + (reserved_by_settlement[key] or 0)
+    if config and load < config.evs_per_stall then
+      pools[#pools + 1] = {
+        key = key,
+        queue = buyer_queue_for(office.force.name, key),
+        load = load,
+        capacity = config.evs_per_stall
+      }
+    end
   end
 
   local buyers = {}
@@ -3792,7 +4056,7 @@ function eligible_customer_buyers(office, needed)
     end)
     local pool
     for _, candidate in pairs(pools) do
-      if #candidate.units > 0 then
+      if candidate.load < candidate.capacity then
         pool = candidate
         break
       end
@@ -3800,8 +4064,13 @@ function eligible_customer_buyers(office, needed)
     if not pool then
       break
     end
-    buyers[#buyers + 1] = table.remove(pool.units, 1)
-    pool.load = pool.load + 1
+    local unit_number = dequeue_available_buyer(pool.queue, office, pool.key)
+    if unit_number then
+      buyers[#buyers + 1] = unit_number
+      pool.load = pool.load + 1
+    else
+      pool.load = pool.capacity
+    end
   end
   return buyers
 end
@@ -3810,6 +4079,9 @@ function reserve_office_buyers(office, recipe_name, sale)
   clear_office_buyer_reservation(office.unit_number)
   local buyers = eligible_customer_buyers(office, sale.vehicles)
   if #buyers < sale.vehicles then
+    for _, unit_number in pairs(buyers) do
+      enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+    end
     return false
   end
   office_buyer_reservations()[office.unit_number] = {
@@ -3823,8 +4095,7 @@ function reserve_office_buyers(office, recipe_name, sale)
 end
 
 function sync_sales_office_buyers()
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME}) do
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
       if office.valid and office.unit_number then
         local recipe = office.get_recipe()
         local recipe_name = recipe and recipe.name
@@ -3860,13 +4131,11 @@ function sync_sales_office_buyers()
           end
         end
       end
-    end
   end
 end
 
 function accelerate_consumer_ev_sales()
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME}) do
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
       local recipe = office.valid and office.get_recipe()
       local recipe_name = recipe and recipe.name
       local level = continuous_improvement_level(office.force, PREMIUM_AUDIO_TECH_NAME)
@@ -3875,7 +4144,6 @@ function accelerate_consumer_ev_sales()
         local bonus_progress = office.crafting_speed * 0.5 / recipe.energy * level * 0.05
         office.crafting_progress = math.min(0.999999, office.crafting_progress + bonus_progress)
       end
-    end
   end
 end
 
@@ -3931,6 +4199,7 @@ function complete_reserved_vehicle_sale(office, recipe_name)
         next_charge_tick = game.tick + CUSTOMER_COMMUTE_FIRST_VISIT_TICKS,
         completed_visits = 0
       }
+      enqueue_customer_commute(owner_unit_number)
       assigned = assigned + 1
     end
   end
@@ -3940,6 +4209,7 @@ function complete_reserved_vehicle_sale(office, recipe_name)
     assigned = assigned,
     tick = game.tick
   }
+  mark_factoryx_market_dirty(office.force)
   return assigned
 end
 
@@ -3955,8 +4225,7 @@ end
 
 local function check_first_prototype_sales()
   local products_by_unit = sales_office_products_finished()
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME}) do
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
       if office.valid and office.unit_number then
         local products = safe_products_finished(office)
         local previous_products = products_by_unit[office.unit_number] or products
@@ -3981,7 +4250,6 @@ local function check_first_prototype_sales()
         end
         products_by_unit[office.unit_number] = products
       end
-    end
   end
 end
 
@@ -3991,8 +4259,8 @@ local function count_sales_office_customer_settlements(force)
     return 0
   end
   local covered = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME, force = force}) do
+  for _, office in pairs(registered_factoryx_entities("sales_offices", force)) do
+      local surface = office.surface
       local area = area_around(office.position, SALES_OFFICE_CUSTOMER_RADIUS)
       scan_biter_customer_entities(surface, customers, area, function(entity)
         if BITER_SETTLEMENT_NAMES[entity.name]
@@ -4000,7 +4268,6 @@ local function count_sales_office_customer_settlements(force)
           covered[settlement_key(surface, entity)] = true
         end
       end)
-    end
   end
   local count = 0
   for _ in pairs(covered) do
@@ -4814,6 +5081,7 @@ end
 
 script.on_init(function()
   configure_factoryx_new_game()
+  rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
   rebuild_factoryx_compute_machines()
@@ -4821,6 +5089,8 @@ script.on_init(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  rebuild_customer_buyer_queues()
+  rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
@@ -4831,6 +5101,7 @@ script.on_init(function()
 end)
 
 script.on_configuration_changed(function()
+  rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
   rebuild_factoryx_compute_machines()
@@ -4838,6 +5109,8 @@ script.on_configuration_changed(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  rebuild_customer_buyer_queues()
+  rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
@@ -4897,6 +5170,21 @@ script.on_event(defines.events.on_entity_damaged, function(event)
     and player_market_force(victim.force) then
     give_customer_wander_command(attacker, true)
   end
+end)
+
+script.on_event(defines.events.on_entity_spawned, function(event)
+  local entity = event.entity
+  local spawner = event.spawner
+  if not entity or not entity.valid or entity.type ~= "unit"
+    or entity.force.name ~= CUSTOMER_FORCE_NAME
+    or not spawner or not spawner.valid then
+    return
+  end
+  local key = settlement_key(spawner.surface, spawner)
+  local market_force = game.forces[customer_settlement_market_forces()[key]]
+  if not market_force then return end
+  register_customer_unit(entity, spawner, market_force)
+  give_customer_wander_command(entity, true)
 end)
 
 script.on_event(defines.events.on_ai_command_completed, handle_customer_commute_command_completed)
@@ -4983,6 +5271,7 @@ for _, event_name in pairs({
 	      track_factoryx_compute_machine(entity)
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity)
+	      track_factoryx_entity(entity)
 	      attach_factoryx_runtime_visual(entity)
 	      if entity and entity.valid and GIGAFACTORY_ENTITY_NAMES[entity.name] then
 	        unlock_gigafactory_logistics(entity.force, true)
@@ -4995,6 +5284,11 @@ for _, event_name in pairs({
 	      if entity and entity.valid and entity.name == SALES_OFFICE_NAME then
 	        sync_customer_settlements()
 	        mark_sales_office_coverage_dirty()
+	      end
+	      if entity and entity.valid and (is_station(entity)
+	        or entity.name == SALES_OFFICE_NAME
+	        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME) then
+	        mark_factoryx_market_dirty(entity.force)
 	      end
 	    end)
 	  end
@@ -5017,10 +5311,13 @@ for _, event_name in pairs({
         electric_vehicle_registry()[entity.unit_number] = nil
       end
       if entity and entity.unit_number then
+        untrack_factoryx_entity(entity)
         destroy_factoryx_runtime_visual(entity.unit_number)
         factoryx_compute_machines()[entity.unit_number] = nil
         factoryx_compute_power_failures()[entity.unit_number] = nil
+        factoryx_compute_queue().members[entity.unit_number] = nil
       end
+      if entity and entity.valid then mark_factoryx_market_dirty(entity.force) end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
         customer_growth_states()[entity.unit_number] = nil
@@ -5080,6 +5377,13 @@ script.on_nth_tick(60, function()
       end
     end
   end
+  for _, force in pairs(game.forces) do
+    generate_station_reservations(force)
+  end
+  process_customer_charging_commutes()
+end)
+
+script.on_nth_tick(300, function()
   for _, player in pairs(game.connected_players) do
     local selected = player.selected
     if is_station(selected) then
@@ -5095,12 +5399,6 @@ script.on_nth_tick(60, function()
       close_station_info_panel(player)
       close_entity_info_panel(player)
     end
-  end
-  for _, force in pairs(game.forces) do
-    generate_station_reservations(force)
-  end
-  process_customer_charging_commutes()
-  for _, player in pairs(game.connected_players) do
     refresh_progress_panel(player)
   end
 end)
@@ -5120,14 +5418,13 @@ remote.add_interface("factoryx", {
     local force = game.forces[force_name or "player"]
     if not force then return nil end
     local centers = {}
-    for _, surface in pairs(game.surfaces) do
-      for _, center in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_CENTER_NAME, force = force}) do
-        local snapshot = robotaxi_service_snapshot(center)
+    local allocations = robotaxi_customer_allocations(force)
+    for _, center in pairs(registered_factoryx_entities("robotaxi_centers", force)) do
+        local snapshot = robotaxi_service_snapshot(center, allocations[center.unit_number] or 0)
         snapshot.unit_number = center.unit_number
-        snapshot.surface = surface.name
+        snapshot.surface = center.surface.name
         snapshot.position = center.position
         centers[#centers + 1] = snapshot
-      end
     end
     return centers
   end,
@@ -5147,6 +5444,30 @@ remote.add_interface("factoryx", {
   customer_charging_commutes = function(force_name)
     local force = game.forces[force_name or "player"]
     return force and customer_commute_summary(force) or nil
+  end,
+  performance_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local buyer_units = 0
+    for _, queue in pairs(customer_buyer_queues()[force.name] or {}) do
+      buyer_units = buyer_units + math.max(0, #queue.units - queue.head + 1)
+    end
+    local due = customer_commute_due_queue()
+    local active = 0
+    for _ in pairs(customer_active_commutes()) do active = active + 1 end
+    return {
+      counters = storage.factoryx_perf_counters or {},
+      registered_stations = #registered_factoryx_entities("stations", force),
+      registered_sales_offices = #registered_factoryx_entities("sales_offices", force),
+      registered_robotaxi_centers = #registered_factoryx_entities("robotaxi_centers", force),
+      queued_buyers = buyer_units,
+      queued_commutes = math.max(0, #due.units - due.head + 1),
+      active_commutes = active,
+      compute_queue_size = #factoryx_compute_queue().units,
+      robotaxi_cache_tick = storage.factoryx_robotaxi_allocation_cache
+        and storage.factoryx_robotaxi_allocation_cache[force.index]
+        and storage.factoryx_robotaxi_allocation_cache[force.index].tick or nil
+    }
   end,
   agi_training_status = function(force_name)
     local force = game.forces[force_name or "player"]

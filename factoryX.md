@@ -1635,6 +1635,32 @@ Implemented V1:
 - Still benchmark 128, 256, and 512 simultaneous commuters against the roughly
   12,000 customer units in the large save before increasing the production cap.
 
+Implemented performance architecture:
+
+- Stations, Sales Offices, and Robotaxi Service Centers are maintained in
+  lifecycle registries. Recurring handlers no longer search every surface for
+  these entities; configuration changes rebuild the registries once.
+- Each force shares one immutable customer-service snapshot per simulation
+  tick. Growth, stall utilization, reservation generation, commute dispatch,
+  alerts, and inspectors reuse it instead of reconstructing the market several
+  times during the same update.
+- New mobile customers enter a settlement-specific available-buyer queue from
+  `on_entity_spawned`. Sales Offices pop and lazily validate buyers instead of
+  scanning every mobile customer for every contract.
+- Commute dispatch uses a bounded 256-owner round-robin due queue and a separate
+  active set capped at 512. Active station counts inspect only active commutes;
+  the scheduler no longer walks every vehicle owner each second.
+- Robotaxi customer allocation uses per-center spatial queries, chooses the
+  nearest eligible center for overlaps, and caches the network result for five
+  seconds. Inspectors and the remote status API consume the same allocation.
+- Entity inspectors and FactoryX Progress refresh expensive telemetry every
+  five seconds while selection/open events still render immediately.
+- Datacenter brownout checks use a rotating queue of at most 32 compute machines
+  per tick, preserving sub-second response while bounding late-game work.
+- The engine smoke exposes performance counters and enforces call-count budgets
+  for market snapshots and Robotaxi allocation. It also fails explicitly when
+  Factorio logs a non-recoverable mod error, even if the binary exits with zero.
+
 ### Phase 2.7: Robotaxi Service Center
 
 Implemented V1 replaces direct Robotaxi sales with recurring fleet-service

@@ -63,6 +63,7 @@ local PROTOTYPE_ROADSTER = "x-prototype-roadster"
 local RESERVATION_SALES_RECIPE = "x-sell-mass-market-ev"
 local ROBOTAXI_SALE_RECIPE = "x-sell-robotaxi-fleet"
 local ROBOTAXI_FLEET = "x-robotaxi-fleet"
+local ROBOTAXI_SERVICE_CENTER = "x-robotaxi-service-center"
 local SMALL_LAUNCH_TECH = "x-small-orbital-launch"
 local GIGAFACTORY = "x-gigafactory-building"
 local GIGAFACTORY_V2 = "x-gigafactory-v2"
@@ -127,6 +128,7 @@ script.on_init(function()
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
   local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
+  local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {90, 0}, force)
   local pole = create_named(surface, POWER_POLE, {-4, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
   local station = create_named(surface, STATION, {-2, 0}, force)
@@ -163,9 +165,16 @@ script.on_init(function()
     datacenter_power.power_usage = 0
     datacenter_power.output_flow_limit = 100000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
+  end
+
+  for _, entity in pairs({
+    milestone_office, reservation_office, robotaxi_office,
+    station, station_v2, robotaxi_center
+  }) do
+    script.raise_script_built{entity = entity}
   end
 
   commanded_biter.commandable.set_command{
@@ -197,6 +206,8 @@ script.on_init(function()
   pcall(function() robotaxi_office.set_recipe(ROBOTAXI_SALE_RECIPE) end)
   local robotaxi_input = robotaxi_office.get_inventory(input_inventory_id())
   local inserted_robotaxi_fleet = robotaxi_input and robotaxi_input.insert{name = ROBOTAXI_FLEET, count = 3} or 0
+  local robotaxi_center_inventory = robotaxi_center.get_inventory(defines.inventory.chest)
+  if robotaxi_center_inventory then robotaxi_center_inventory.insert{name = ROBOTAXI_FLEET, count = 20} end
   local token_statistics = force.get_item_production_statistics(surface)
   token_statistics.set_output_count("x-ai-token", 1000000000)
   storage.agi_training_status = remote.call("factoryx", "agi_training_status", "player")
@@ -702,7 +713,8 @@ script.on_nth_tick(8000, function()
   write_report{
     tick = game.tick,
     status = "customer_commutes",
-    commutes = remote.call("factoryx", "customer_charging_commutes", "player")
+    commutes = remote.call("factoryx", "customer_charging_commutes", "player"),
+    performance = remote.call("factoryx", "performance_status", "player")
   }
 end)
 
@@ -1067,8 +1079,16 @@ for vehicle_name in (
 print("FactoryX custom vehicle engine sprites OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/factoryx-create.log 2>&1
+if grep -qE "non-recoverable error|Error while running event" /tmp/factoryx-create.log; then
+  tail -80 /tmp/factoryx-create.log >&2
+  exit 1
+fi
 rm -f "$report"
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --benchmark "$save" --benchmark-ticks 18580 --benchmark-runs 1 >/tmp/factoryx-benchmark.log 2>&1
+if grep -qE "non-recoverable error|Error while running event" /tmp/factoryx-benchmark.log; then
+  tail -120 /tmp/factoryx-benchmark.log >&2
+  exit 1
+fi
 
 python3 - "$report" <<'PY'
 import json
@@ -1093,6 +1113,20 @@ if compute_brownout.get("progress_after") != 0:
     raise SystemExit(f"underpowered datacenter did not discard run progress: {compute_brownout}")
 if commutes is None or commutes.get("commutes", {}).get("completed", 0) < 1:
     raise SystemExit(f"customer EV owners did not complete a physical charging commute: {commutes}")
+performance = commutes.get("performance", {})
+counters = performance.get("counters", {})
+if performance.get("registered_sales_offices") != 3 or performance.get("registered_stations", 0) < 3:
+    raise SystemExit(f"FactoryX entity registries missed smoke entities: {performance}")
+if performance.get("registered_robotaxi_centers") != 1:
+    raise SystemExit(f"Robotaxi Service Center registry missed smoke entity: {performance}")
+if counters.get("market_snapshot_builds", 999999) > 200:
+    raise SystemExit(f"market snapshots were rebuilt too often: {performance}")
+if counters.get("robotaxi_allocation_builds", 999999) > 30:
+    raise SystemExit(f"Robotaxi allocations were rebuilt too often: {performance}")
+if performance.get("active_commutes", 999999) > 512:
+    raise SystemExit(f"active commute cap was exceeded: {performance}")
+if checked.get("vehicle_ownership", {}).get("registered_buyers", 0) <= 5:
+    raise SystemExit(f"naturally spawned customer units were not registered: {checked}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):
