@@ -43,6 +43,17 @@ data:extend({
   }
 })
 
+local advanced_materials = data.raw.technology["advanced-material-processing-2"]
+if advanced_materials then
+  local retained_effects = {}
+  for _, effect in ipairs(advanced_materials.effects or {}) do
+    if effect.type ~= "unlock-recipe" or effect.recipe ~= "electric-furnace" then
+      retained_effects[#retained_effects + 1] = effect
+    end
+  end
+  advanced_materials.effects = retained_effects
+end
+
 rewrite_recipe("electric-furnace", {
   ingredients = ingredients(
     {"steel-plate", 10},

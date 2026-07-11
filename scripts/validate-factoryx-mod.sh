@@ -812,6 +812,15 @@ for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "foundr
     packs = {row[0] for row in data["technology"][technology_name]["unit"]["ingredients"]}
     if packs != {"automation-science-pack", "logistic-science-pack"}:
         raise SystemExit(f"{technology_name} is not red-green terrestrial research: {packs}")
+electric_furnace_owners = {
+    technology_name for technology_name, technology in data["technology"].items()
+    if any(
+        effect.get("type") == "unlock-recipe" and effect.get("recipe") == "electric-furnace"
+        for effect in technology.get("effects", [])
+    )
+}
+if electric_furnace_owners != {"x-industrial-supply-chain"}:
+    raise SystemExit(f"Electric Furnace technology ownership mismatch: {sorted(electric_furnace_owners)}")
 calcite_control = data["planet"]["nauvis"]["map_gen_settings"]["autoplace_controls"].get("calcite")
 if calcite_control != {"frequency": 0.5, "size": 0.7, "richness": 0.8}:
     raise SystemExit(f"Nauvis calcite autoplace mismatch: {calcite_control}")

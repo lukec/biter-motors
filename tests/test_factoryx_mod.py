@@ -947,6 +947,8 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         locale = (MOD / "locale" / "en" / "factoryx.cfg").read_text()
         self.assertIn('name = "x-industrial-supply-chain"', updates)
+        self.assertIn('data.raw.technology["advanced-material-processing-2"]', updates)
+        self.assertIn('effect.recipe ~= "electric-furnace"', updates)
         self.assertIn('{"electric-mining-drill", 4}', updates)
         self.assertIn('{"engine-unit", 20}', updates)
         self.assertIn('{"electronic-circuit", 20}', updates)
