@@ -796,9 +796,11 @@ The branch should be implemented and balanced in this order:
    experiment. Foundry's built-in productivity may radically reduce early ore
    pressure, so telemetry should compare ore mined, plates produced, power, and
    time-to-Sales-Office against the previous run before this becomes permanent.
-5. **Vehicle Recycling** relocates the Recycler without importing Fulgoran
-   scrap or holmium. It unlocks explicit FactoryX recycling recipes for Wrecked
-   EVs, with probabilistic recovery of recognizable EV ingredients. Explicit
+5. **Vehicle Recycling** is discovered automatically when the first Wrecked EV
+   is produced; it is not conventional science research. The milestone relocates
+   the Recycler without importing Fulgoran scrap or holmium and unlocks explicit
+   FactoryX recycling recipes for Wrecked EVs, with probabilistic recovery of
+   recognizable EV ingredients. Explicit
    recipes are preferred over automatic recipe reversal so returns can be
    balanced and cannot create ingredient loops.
 6. **Tesla Weapons** relocates the Tesla Gun/Turret branch without holmium,

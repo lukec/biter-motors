@@ -108,6 +108,7 @@ local recycling_tech = data.raw.technology.recycling
 recycling_tech.prerequisites = {"x-industrial-supply-chain", "concrete"}
 recycling_tech.research_trigger = nil
 recycling_tech.unit = science(150, {"automation-science-pack", "logistic-science-pack"}, 30)
+recycling_tech.enabled = false
 recycling_tech.effects = recycling_tech.effects or {}
 recycling_tech.effects[#recycling_tech.effects + 1] = unlock("x-wrecked-ev-recycling")
 

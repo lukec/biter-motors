@@ -3409,6 +3409,15 @@ local function top_up_station_reservations(station, amount)
   }
 end
 
+unlock_vehicle_recycling = function(force)
+  local technology = force.technologies and force.technologies.recycling
+  if not technology or technology.researched then return false end
+  technology.enabled = true
+  technology.researched = true
+  force.print("[FactoryX] The first EV has wrecked. Vehicle Recycling unlocked: build a Recycler and recover useful parts from Wrecked EVs.")
+  return true
+end
+
 generate_station_wrecks = function(station, completed_charges)
   local inventory = station_reservation_inventory(station)
   if not inventory or completed_charges <= 0 then return 0 end
@@ -3421,6 +3430,7 @@ generate_station_wrecks = function(station, completed_charges)
   if inserted > 0 then
     local statistics = station.force.get_item_production_statistics(station.surface)
     statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + inserted)
+    unlock_vehicle_recycling(station.force)
   end
   return inserted
 end
@@ -3706,6 +3716,7 @@ function process_robotaxi_service_centers()
               if wrecks > 0 then
                 local statistics = center.force.get_item_production_statistics(center.surface)
                 statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + wrecks)
+                unlock_vehicle_recycling(center.force)
               end
             end
           end
