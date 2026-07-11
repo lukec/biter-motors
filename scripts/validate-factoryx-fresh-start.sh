@@ -31,7 +31,11 @@ script.on_init(function()
   local debris = remote.call("freeplay", "get_debris_items")
   local intro = remote.call("freeplay", "get_custom_intro_message")
   local technologies = {}
-  for _, name in pairs({"automation", "logistics", "electronics", "steel-processing", "automation-2", "logistic-science-pack", "electric-energy-distribution-1"}) do
+  for _, name in pairs({
+    "automation", "logistics", "electronics", "steel-processing", "automation-2",
+    "logistic-science-pack", "electric-energy-distribution-2",
+    "advanced-material-processing-2", "lamp", "construction-robotics", "logistic-robotics"
+  }) do
     technologies[name] = force.technologies[name] and force.technologies[name].researched or false
   end
   helpers.write_file("factoryx-fresh-start.jsonl", helpers.table_to_json{
@@ -65,12 +69,15 @@ if not row["accelerated_start"] or not row["pollution"] or not row["enemy_expans
     raise SystemExit(f"fresh map settings mismatch: {row}")
 if not all(row["technologies"].values()):
     raise SystemExit(f"bootstrap technologies missing: {row}")
-for name, count in {"steel-plate": 100, "electronic-circuit": 100, "iron-gear-wheel": 100, "assembling-machine-1": 4, "lab": 4}.items():
+for name, count in {"steel-plate": 100, "electronic-circuit": 100, "iron-gear-wheel": 100, "assembling-machine-1": 4, "lab": 4, "electric-furnace": 24, "lamp": 50}.items():
     if row["ship"].get(name) != count:
         raise SystemExit(f"ship inventory mismatch for {name}: {row}")
-for name in ("iron-plate", "copper-plate", "transport-belt", "electric-mining-drill", "boiler", "steam-engine"):
+for name in ("iron-plate", "copper-plate", "transport-belt", "electric-mining-drill", "medium-electric-pole"):
     if row["debris"].get(name, 0) <= 0:
         raise SystemExit(f"debris inventory missing {name}: {row}")
+for name in ("boiler", "steam-engine", "offshore-pump"):
+    if row["debris"].get(name, 0) != 0:
+        raise SystemExit(f"burner-era power item should not be in debris: {name}: {row}")
 if "FACTORYX" not in str(row["intro"]) or "Recover the supplies" not in str(row["intro"]):
     raise SystemExit(f"intro mismatch: {row}")
 if row["sales_office_researched"] or row["prototype_roadster_enabled"]:

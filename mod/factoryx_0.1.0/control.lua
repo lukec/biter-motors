@@ -211,14 +211,29 @@ FACTORYX_START_TECHNOLOGIES = {
   "steel-processing",
   "automation-2",
   "logistic-science-pack",
-  "electric-energy-distribution-1"
+  "electric-energy-distribution-1",
+  "electric-energy-distribution-2",
+  "advanced-material-processing-1",
+  "advanced-material-processing-2",
+  "optics",
+  "lamp",
+  "solar-energy",
+  "electric-energy-accumulators",
+  "engine",
+  "electric-engine",
+  "battery",
+  "robotics",
+  "construction-robotics",
+  "logistic-robotics"
 }
 FACTORYX_START_SHIP_ITEMS = {
   ["steel-plate"] = 100,
   ["electronic-circuit"] = 100,
   ["iron-gear-wheel"] = 100,
   ["assembling-machine-1"] = 4,
-  ["lab"] = 4
+  ["lab"] = 4,
+  ["electric-furnace"] = 24,
+  ["lamp"] = 50
 }
 FACTORYX_START_DEBRIS_ITEMS = {
   ["iron-plate"] = 400,
@@ -228,20 +243,17 @@ FACTORYX_START_DEBRIS_ITEMS = {
   ["transport-belt"] = 200,
   ["inserter"] = 30,
   ["electric-mining-drill"] = 10,
-  ["stone-furnace"] = 12,
   ["small-electric-pole"] = 60,
-  ["boiler"] = 2,
-  ["steam-engine"] = 4,
-  ["offshore-pump"] = 1,
+  ["medium-electric-pole"] = 40,
   ["pipe"] = 50
 }
 FACTORYX_ENERGY_JUMPSTART_ITEMS = {
-  ["x-high-density-solar-array"] = 54,
-  ["x-megapack"] = 12,
-  ["substation"] = 20,
-  ["roboport"] = 10,
-  ["construction-robot"] = 200,
-  ["logistic-robot"] = 200
+  ["x-high-density-solar-array"] = 108,
+  ["x-megapack"] = 24,
+  ["substation"] = 40,
+  ["roboport"] = 20,
+  ["construction-robot"] = 400,
+  ["logistic-robot"] = 400
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
@@ -759,8 +771,19 @@ function grant_factoryx_energy_jumpstart(player)
   for item_name, count in pairs(FACTORYX_ENERGY_JUMPSTART_ITEMS) do
     inventory.insert{name = item_name, count = count, quality = FACTORYX_ENERGY_JUMPSTART_QUALITY}
   end
+  pcall(function() chest.backer_name = "Captain's Chest" end)
+  player.force.add_chart_tag(surface, {
+    position = position,
+    text = "Captain's Chest",
+    icon = {type = "item", name = "passive-provider-chest"}
+  })
   storage.factoryx_energy_jumpstart_forces[player.force.name] = true
-  player.print("[FactoryX] Recovered ship cache: 54 legendary solar arrays (40.5 MW peak), 12 legendary Megapacks, 20 legendary Substations, 10 legendary Roboports, and 200 legendary robots of each type.")
+  player.print({
+    "",
+    "[FactoryX] Captain's Chest recovered at ",
+    string.format("[gps=%.1f,%.1f,%s]", position.x, position.y, surface.name),
+    ": two expedition kits containing 108 legendary solar arrays (81 MW peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary Roboports, and 400 legendary robots of each type."
+  })
   return chest
 end
 

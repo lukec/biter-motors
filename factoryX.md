@@ -162,22 +162,24 @@ Current runtime behavior is intentionally small:
 FactoryX has an optional startup setting, `FactoryX accelerated start`, enabled
 by default. It is deliberately a light start rather than a prebuilt base:
 
-- No factory is prebuilt. A red wreckage cache is placed beside the first
-  player, but the player chooses where to deploy its power infrastructure.
-- Basic industrial research starts complete: Automation, Logistics,
-  Electronics, Steel Processing, Automation 2, Logistic Science, and Electric
-  Energy Distribution 1.
+- No factory is prebuilt. A named and map-tagged `Captain's Chest` is placed
+  beside the first player, but the player chooses where to deploy its contents.
+- The recovered expedition supports two players. Basic electric industry,
+  electric furnaces, lamps, solar and accumulator technology, substations, and
+  construction/logistic robotics start researched. The opening skips burner
+  power and basic mining/steel research while preserving FactoryX progression.
 - The crashed ship contains 100 Steel Plates, 100 Electronic Circuits, 100 Iron
-  Gears, four Assembling Machine 1s, and four Labs.
+  Gears, four Assembling Machine 1s, four Labs, 24 Electric Furnaces, and 50
+  Lamps.
 - The surrounding wreckage contains starter plates, stone, coal, belts,
-  inserters, drills, furnaces, poles, and one small steam-power kit.
-- The red cache contains 54 legendary High-density Solar Arrays (40.5 MW peak),
-  12 legendary Megapacks, 20 legendary Substations, 10 legendary Roboports,
-  200 legendary Construction Robots, and 200 legendary Logistic Robots. This
-  intentionally makes solar and a finite recovered logistics network attractive
-  opening tools while leaving layout and construction to the player. Robotics
-  research is not granted, so replacements and expansion still require normal
-  progression.
+  inserters, electric drills, and electric poles. The former steam-power kit is
+  omitted so the recovered solar grid is the natural opening path.
+- The Captain's Chest contains 108 legendary High-density Solar Arrays (81 MW
+  peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
+  Roboports, 400 legendary Construction Robots, and 400 legendary Logistic
+  Robots. This is two finite expedition kits; normal versions of the recovered
+  base-game infrastructure are craftable immediately, while FactoryX energy
+  products still require their normal FactoryX progression.
 - A spoiler-light opening message explains the customer economy and long-term
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.

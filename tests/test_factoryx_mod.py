@@ -152,7 +152,11 @@ class FactoryXModTest(unittest.TestCase):
         for technology in [
             "automation-2",
             "logistic-science-pack",
-            "electric-energy-distribution-1",
+            "advanced-material-processing-2",
+            "electric-energy-distribution-2",
+            "lamp",
+            "construction-robotics",
+            "logistic-robotics",
         ]:
             self.assertIn(f'"{technology}"', control)
         self.assertIn('remote.call("freeplay", "set_ship_items"', control)
@@ -163,17 +167,21 @@ class FactoryXModTest(unittest.TestCase):
         configure = control[control.index("function configure_factoryx_new_game"):control.index("function grant_factoryx_energy_jumpstart")]
         self.assertNotIn("surface.create_entity", configure)
         jumpstart = control[control.index("FACTORYX_ENERGY_JUMPSTART_ITEMS"):control.index("local STATION_GRID_CONNECTION_DISTANCE")]
-        self.assertIn('["x-high-density-solar-array"] = 54', jumpstart)
-        self.assertIn('["x-megapack"] = 12', jumpstart)
-        self.assertIn('["substation"] = 20', jumpstart)
-        self.assertIn('["roboport"] = 10', jumpstart)
-        self.assertIn('["construction-robot"] = 200', jumpstart)
-        self.assertIn('["logistic-robot"] = 200', jumpstart)
+        self.assertIn('["x-high-density-solar-array"] = 108', jumpstart)
+        self.assertIn('["x-megapack"] = 24', jumpstart)
+        self.assertIn('["substation"] = 40', jumpstart)
+        self.assertIn('["roboport"] = 20', jumpstart)
+        self.assertIn('["construction-robot"] = 400', jumpstart)
+        self.assertIn('["logistic-robot"] = 400', jumpstart)
+        self.assertIn('["electric-furnace"] = 24', control)
+        self.assertIn('["lamp"] = 50', control)
         self.assertIn('FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"', control)
         self.assertIn('name = "passive-provider-chest"', control)
+        self.assertIn('chest.backer_name = "Captain\'s Chest"', control)
+        self.assertIn('player.force.add_chart_tag', control)
         self.assertIn("grant_factoryx_energy_jumpstart(player)", control)
         self.assertIn("grant_energy_jumpstart = function(player_index)", control)
-        self.assertIn("40.5 MW peak", control)
+        self.assertIn("81 MW peak", control)
 
     def test_cybertruck_and_ev_sales_are_balanced_as_profit(self):
         data = (MOD / "data.lua").read_text()
