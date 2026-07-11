@@ -762,6 +762,74 @@ one billion without orbital compute should be economically absurd.
 This is the target shape for the full design. Some names already exist in code;
 some are recommended renames or future mechanics.
 
+### Terrestrial Industrial Supply Chain
+
+Before the Sales Office, FactoryX should offer a red-and-green-science
+`Industrial Supply Chain` branch. It does not produce or consume Dollars. Its
+purpose is to make the terrestrial opening materially different from ordinary
+Nauvis by moving a carefully selected set of Space Age industrial machines
+into an earlier, self-contained progression. The Sales Office remains the first
+business and the first source of capital; do not add an early normal-Car sales
+loop.
+
+The branch should be implemented and balanced in this order:
+
+1. **Industrial Supply Chain** (`automation-science-pack` and
+   `logistic-science-pack`) establishes the branch and unlocks the adapted Big
+   Mining Drill research. It should require Electric Mining Drills but no oil,
+   plastics, blue science, or Dollars.
+2. **Heavy Mining Equipment** unlocks the Big Mining Drill with the terrestrial
+   recipe `4 Electric Mining Drills + 20 Engines + 20 Electronic Circuits`.
+   Remove its vanilla molten-iron, tungsten-carbide, Foundry-only, and Vulcanus
+   dependencies. This is intentionally an early and powerful accelerator; its
+   electricity draw, footprint, and reduced resource drain remain the costs.
+3. **Electric Metallurgy** makes Electric Furnaces available before plastics.
+   Because the vanilla furnace recipe uses Advanced Circuits, FactoryX must
+   deliberately replace those with Electronic Circuits; otherwise the intended
+   pre-plastics Foundry gate is impossible. Keep the rest of the furnace recipe
+   recognizable and cover this global recipe change with a prototype test.
+4. **Terrestrial Foundry** unlocks sparse Nauvis calcite deposits, ore melting,
+   metal casting, and the Foundry recipe `25 Electric Furnaces + 50 Electronic
+   Circuits + 200 Refined Concrete`. Remove the magnetic/pressure, Vulcanus,
+   tungsten, and molten-metal construction restrictions that prevent terrestrial
+   crafting. This is deliberately available before plastics as a playtest
+   experiment. Foundry's built-in productivity may radically reduce early ore
+   pressure, so telemetry should compare ore mined, plates produced, power, and
+   time-to-Sales-Office against the previous run before this becomes permanent.
+5. **Vehicle Recycling** relocates the Recycler without importing Fulgoran
+   scrap or holmium. It unlocks explicit FactoryX recycling recipes for Wrecked
+   EVs, with probabilistic recovery of recognizable EV ingredients. Explicit
+   recipes are preferred over automatic recipe reversal so returns can be
+   balanced and cannot create ingredient loops.
+6. **Tesla Weapons** relocates the Tesla Gun/Turret branch without holmium,
+   electrolyte, superconductors, or electromagnetic science. Recipes should use
+   existing terrestrial and FactoryX intermediates such as Battery Packs,
+   Processing Units, steel, accumulators, and Dollars. This is a later
+   terrestrial branch, not part of the red-and-green bootstrap; exact recipes
+   and placement relative to Robotaxis remain a balance decision.
+7. **Mech Armor** remains future content. It must be built from an Optimus
+   Humanoid Robot when that product exists, making the armor the wearable result
+   of FactoryX robotics rather than a transplanted Fulgora recipe. Its other
+   ingredients should use terrestrial FactoryX power electronics and advanced
+   materials, not holmium.
+
+Charging infrastructure participates in the circular economy. Each active
+stall's completed reservation-generation cycle has a 1% chance to produce one
+`Wrecked EV` in addition to its normal demand paperwork. This ties wreck volume
+to sold-EV charging demand, not merely to placed chargers. Robotaxi Service
+Centers should remain the larger, predictable source of wrecks because fleet
+vehicles are operated continuously and slowly wear out.
+
+Explicit exclusions:
+
+- Do not relocate the Electromagnetic Plant or create a Nauvis holmium chain.
+- Do not import Gleba materials, biological recipes, or technologies.
+- Do not require Dollars anywhere in the Industrial Supply Chain bootstrap.
+  Capital first enters progression through the existing Sales Office economy.
+- Do not automatically relocate every planetary technology. Recycler, Big
+  Mining Drill, Foundry, Tesla weapons, and future Optimus-derived Mech Armor
+  are the intentional exceptions.
+
 ### 1. Sales Office: Customer Discovery
 
 Player proof:
