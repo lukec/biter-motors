@@ -165,9 +165,10 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - No factory is prebuilt. A named and map-tagged `Captain's Chest` is placed
   beside the first player, but the player chooses where to deploy its contents.
 - The recovered expedition supports two players. Basic electric industry,
-  electric furnaces, lamps, solar and accumulator technology, substations, and
-  construction/logistic robotics start researched. The opening skips burner
-  power and basic mining/steel research while preserving FactoryX progression.
+  Electric Mining Drills, electric furnaces, lamps, solar and accumulator
+  technology, substations, and construction/logistic robotics start researched.
+  The opening skips burner power and basic mining/steel research while
+  preserving FactoryX progression.
 - The crashed ship contains 100 Steel Plates, 100 Electronic Circuits, 100 Iron
   Gears, four Assembling Machine 1s, four Labs, 24 Electric Furnaces, and 50
   Lamps.

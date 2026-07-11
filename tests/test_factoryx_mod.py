@@ -151,6 +151,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("default_value = true", settings)
         for technology in [
             "automation-2",
+            "electric-mining-drill",
             "logistic-science-pack",
             "advanced-material-processing-2",
             "electric-energy-distribution-2",

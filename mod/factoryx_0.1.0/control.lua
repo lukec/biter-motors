@@ -211,6 +211,7 @@ FACTORYX_START_TECHNOLOGIES = {
   "logistics",
   "electronics",
   "steel-processing",
+  "electric-mining-drill",
   "automation-2",
   "logistic-science-pack",
   "electric-energy-distribution-1",

@@ -32,7 +32,7 @@ script.on_init(function()
   local intro = remote.call("freeplay", "get_custom_intro_message")
   local technologies = {}
   for _, name in pairs({
-    "automation", "logistics", "electronics", "steel-processing", "automation-2",
+    "automation", "logistics", "electronics", "steel-processing", "electric-mining-drill", "automation-2",
     "logistic-science-pack", "electric-energy-distribution-2",
     "advanced-material-processing-2", "lamp", "construction-robotics", "logistic-robotics",
     "modular-armor", "solar-panel-equipment", "battery-equipment",
