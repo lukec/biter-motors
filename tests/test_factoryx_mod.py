@@ -1301,10 +1301,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function ensure_robotaxi_service_power", control)
         self.assertIn("function robotaxi_customer_allocations", control)
         self.assertIn('registered_factoryx_entities("robotaxi_centers", force)', control)
-        self.assertIn('area = area_around(center.position, ROBOTAXI_SERVICE_RADIUS)', control)
+        self.assertIn("customer_settlement_populations()", control)
         self.assertIn("distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS", control)
         self.assertIn("available[center.unit_number] = stored > 0", control)
-        self.assertIn("result[selection.center.unit_number] = result[selection.center.unit_number] + 1", control)
+        self.assertIn("result[selected.unit_number] = result[selected.unit_number] + customers", control)
         self.assertIn("game.tick - cached.tick < 300", control)
         self.assertIn("output_blocked = not (output and output.can_insert", control)
         self.assertIn("not snapshot.output_blocked", control)
@@ -1316,6 +1316,17 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Premium Audio increases trip revenue", control)
         self.assertIn("legacy_robotaxi_sale.enabled = false", control)
         self.assertIn("x-robotaxi-service-center=Robotaxi Service Center", locale)
+
+    def test_customer_population_virtualizes_beyond_visible_limits(self):
+        control = (MOD / "control.lua").read_text()
+        aggregates = (MOD / "runtime" / "customer_aggregates.lua").read_text()
+        self.assertIn("CUSTOMER_VISIBLE_GLOBAL_LIMIT = 2000", control)
+        self.assertIn("CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT = 128", control)
+        self.assertIn("population.virtual_unowned", control)
+        self.assertIn("population.virtual_reserved", control)
+        self.assertIn("population.virtual_by_vehicle", control)
+        self.assertIn("CustomerAggregates.add_virtual", aggregates)
+        self.assertIn("visible_customer_limit = CUSTOMER_VISIBLE_GLOBAL_LIMIT", control)
 
     def test_hyperscaler_and_ai_hater_roadmap_is_concrete(self):
         roadmap = (ROOT / "factoryX.md").read_text()

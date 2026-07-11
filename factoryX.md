@@ -184,6 +184,27 @@ by default. It is deliberately a light start rather than a prebuilt base:
   energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.
 
+## Customer Population Scaling
+
+- Customer settlements are the authoritative population unit. Mobile biters
+  are visible representatives, not the source of truth for market size.
+- FactoryX retains at most 128 visible mobile customers per settlement and
+  2,000 across the map. Additional spawned customers are folded into their
+  settlement's virtual population instead of remaining as pathfinding units.
+- Virtual customers remain real economically: they can reserve and buy EVs,
+  their sold vehicles consume charger capacity, and they contribute to
+  settlement mood, reservations, sales progression, and Robotaxi demand.
+- Robotaxi Service Centers allocate against aggregate settlement population and
+  settlement position. They no longer scan every nearby mobile customer.
+- Physical charging commutes remain a bounded visual sample. Virtual vehicle
+  owners are represented in charging utilization and mood without individual
+  pathfinding or rendering work.
+- The 2,000-unit ceiling is conservative. The July 2026 synthetic benchmark
+  measured about 21 ms/update for 20,000 ordinary moving biters before adding
+  meaningful FactoryX work; registered ownership added about 1.4 ms/update.
+  The dominant 20,000-unit cost is Factorio's native unit simulation, although
+  per-unit mod rendering and scans can compound it and remain prohibited.
+
 ## Quality Policy
 
 - Physical assets use native Factorio quality improvements. Machines gain the

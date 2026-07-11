@@ -37,7 +37,18 @@ function CustomerAggregates.remove(storage, owners, unit_number)
   return ownership
 end
 
-function CustomerAggregates.rebuild(storage, owners, units)
+function CustomerAggregates.add_virtual(storage, ownership, count)
+  count = math.max(0, count or 0)
+  if count == 0 or not ownership then return false end
+  local aggregate = CustomerAggregates.summary(storage, ownership.market_force_name)
+  aggregate.total = aggregate.total + count
+  aggregate.by_vehicle[ownership.vehicle] = (aggregate.by_vehicle[ownership.vehicle] or 0) + count
+  aggregate.by_settlement[ownership.settlement_key] =
+    (aggregate.by_settlement[ownership.settlement_key] or 0) + count
+  return true
+end
+
+function CustomerAggregates.rebuild(storage, owners, units, populations)
   storage.factoryx_customer_vehicle_aggregates = {}
   for unit_number, ownership in pairs(owners) do
     local entity = units[unit_number]
@@ -49,6 +60,15 @@ function CustomerAggregates.rebuild(storage, owners, units)
         (aggregate.by_settlement[ownership.settlement_key] or 0) + 1
     else
       owners[unit_number] = nil
+    end
+  end
+  for settlement_key, population in pairs(populations or {}) do
+    for vehicle, count in pairs(population.virtual_by_vehicle or {}) do
+      CustomerAggregates.add_virtual(storage, {
+        vehicle = vehicle,
+        settlement_key = settlement_key,
+        market_force_name = population.market_force_name
+      }, count)
     end
   end
 end

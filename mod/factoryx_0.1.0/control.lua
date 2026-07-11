@@ -170,6 +170,8 @@ local RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE = 1
 local RESERVATION_SAMPLES_PER_PRINT = 60
 local CUSTOMER_GROWTH_STALL_MINUTES = 5
 local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
+local CUSTOMER_VISIBLE_GLOBAL_LIMIT = 2000
+local CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT = 128
 CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
@@ -986,6 +988,61 @@ function customer_unit_registry()
   return storage.factoryx_customer_units
 end
 
+function customer_settlement_populations()
+  storage.factoryx_customer_settlement_populations = storage.factoryx_customer_settlement_populations or {}
+  return storage.factoryx_customer_settlement_populations
+end
+
+function customer_visible_count()
+  if storage.factoryx_customer_visible_count == nil then
+    local count = 0
+    for _, entity in pairs(customer_unit_registry()) do
+      if entity and entity.valid then count = count + 1 end
+    end
+    storage.factoryx_customer_visible_count = count
+  end
+  return storage.factoryx_customer_visible_count
+end
+
+function customer_population_members()
+  storage.factoryx_customer_population_members = storage.factoryx_customer_population_members or {}
+  return storage.factoryx_customer_population_members
+end
+
+function customer_settlement_population(settlement, market_force)
+  local key
+  if settlement.unit_number then
+    key = settlement.surface.index .. ":" .. settlement.unit_number
+  else
+    key = string.format(
+      "%d:%s:%.1f:%.1f",
+      settlement.surface.index,
+      settlement.name,
+      settlement.position.x,
+      settlement.position.y
+    )
+  end
+  local populations = customer_settlement_populations()
+  local population = populations[key]
+  if not population then
+    population = {
+      market_force_name = market_force.name,
+      surface_index = settlement.surface.index,
+      position = {x = settlement.position.x, y = settlement.position.y},
+      physical = 0,
+      virtual_unowned = 0,
+      virtual_reserved = 0,
+      virtual_by_vehicle = {}
+    }
+    populations[key] = population
+  else
+    population.market_force_name = market_force.name
+    population.surface_index = settlement.surface.index
+    population.position = {x = settlement.position.x, y = settlement.position.y}
+  end
+  return key, population
+end
+
 function customer_home_settlements()
   storage.factoryx_customer_home_settlements = storage.factoryx_customer_home_settlements or {}
   return storage.factoryx_customer_home_settlements
@@ -1542,18 +1599,38 @@ end
 
 function register_customer_unit(entity, settlement, market_force)
   if not entity or not entity.valid or entity.type ~= "unit" or not entity.unit_number then
-    return
+    return false
+  end
+  local home_key, population = customer_settlement_population(settlement, market_force)
+  if customer_unit_registry()[entity.unit_number] then
+    if not customer_population_members()[entity.unit_number] then
+      population.physical = (population.physical or 0) + 1
+      customer_population_members()[entity.unit_number] = home_key
+    end
+    return true
+  end
+  local benchmark = script.active_mods["factoryx_perf_benchmark"] ~= nil
+  if not benchmark and (customer_visible_count() >= CUSTOMER_VISIBLE_GLOBAL_LIMIT
+    or population.physical >= CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT) then
+    population.virtual_unowned = (population.virtual_unowned or 0) + 1
+    mark_factoryx_market_dirty(market_force, "customer-virtualized")
+    entity.destroy()
+    return false
   end
   customer_unit_registry()[entity.unit_number] = entity
   customer_home_settlements()[entity.unit_number] = {
-    settlement_key = settlement_key(settlement.surface, settlement),
+    settlement_key = home_key,
     market_force_name = market_force.name
   }
+  population.physical = (population.physical or 0) + 1
+  customer_population_members()[entity.unit_number] = home_key
+  storage.factoryx_customer_visible_count = customer_visible_count() + 1
   if not customer_vehicle_owners()[entity.unit_number]
     and not buyer_reserved_by_unit()[entity.unit_number] then
     enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
   end
   mark_factoryx_market_dirty(market_force, "customer-registered")
+  return true
 end
 
 function customer_vehicle_aggregates()
@@ -1573,7 +1650,12 @@ function remove_customer_vehicle_ownership(unit_number)
 end
 
 function rebuild_customer_vehicle_aggregates()
-  CustomerAggregates.rebuild(storage, customer_vehicle_owners(), customer_unit_registry())
+  CustomerAggregates.rebuild(
+    storage,
+    customer_vehicle_owners(),
+    customer_unit_registry(),
+    customer_settlement_populations()
+  )
 end
 
 function unregister_customer_unit(entity)
@@ -1581,12 +1663,19 @@ function unregister_customer_unit(entity)
     return nil
   end
   local unit_number = entity.unit_number
+  local home = customer_home_settlements()[unit_number]
   local ownership = remove_customer_vehicle_ownership(unit_number)
   customer_charging_commutes()[unit_number] = nil
   customer_active_commutes()[unit_number] = nil
   TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
   customer_unit_registry()[unit_number] = nil
   customer_home_settlements()[unit_number] = nil
+  customer_population_members()[unit_number] = nil
+  if home then
+    local population = customer_settlement_populations()[home.settlement_key]
+    if population then population.physical = math.max(0, (population.physical or 0) - 1) end
+    storage.factoryx_customer_visible_count = math.max(0, customer_visible_count() - 1)
+  end
   buyer_reserved_by_unit()[unit_number] = nil
   if ownership and ownership.market_force_name then
     mark_factoryx_market_dirty(game.forces[ownership.market_force_name], "customer-removed")
@@ -2501,6 +2590,7 @@ function replace_customer_vehicle_entity(entity, ownership)
   replacement.health = math.max(1, replacement.max_health * health_ratio)
   customer_unit_registry()[replacement.unit_number] = replacement
   customer_home_settlements()[replacement.unit_number] = home
+  customer_population_members()[replacement.unit_number] = customer_population_members()[old_unit_number]
   customer_vehicle_owners()[replacement.unit_number] = ownership
   if customer_charging_commutes()[old_unit_number] then
     customer_charging_commutes()[replacement.unit_number] = customer_charging_commutes()[old_unit_number]
@@ -2521,6 +2611,7 @@ function replace_customer_vehicle_entity(entity, ownership)
   destroy_customer_marker(entity)
   customer_unit_registry()[old_unit_number] = nil
   customer_home_settlements()[old_unit_number] = nil
+  customer_population_members()[old_unit_number] = nil
   customer_vehicle_owners()[old_unit_number] = nil
   buyer_reserved_by_unit()[old_unit_number] = nil
   entity.destroy()
@@ -2706,11 +2797,12 @@ function sync_customer_settlements()
                 and within_radius(settlement, entity, CUSTOMER_MOBILE_SERVICE_RADIUS) then
                 local key = settlement_key(settlement.surface, entity)
                 covered[key] = true
-                register_customer_unit(entity, settlement, force)
-                if convert_biter_entity(entity, customers) then
-                  converted = converted + 1
+                if register_customer_unit(entity, settlement, force) then
+                  if convert_biter_entity(entity, customers) then
+                    converted = converted + 1
+                  end
+                  draw_customer_marker(entity)
                 end
-                draw_customer_marker(entity)
               end
             end)
           end
@@ -2985,6 +3077,16 @@ end
 function waiting_market_buyers_at_station(station, service)
   service = service or customer_service_for_force(station.force)
   local count = 0
+  for key, population in pairs(customer_settlement_populations()) do
+    if population.market_force_name == station.force.name
+      and service.operational_keys[key]
+      and service.assignment_by_settlement_key[key] == station then
+      count = count + math.max(
+        0,
+        (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
+      )
+    end
+  end
   for unit_number, entity in pairs(customer_unit_registry()) do
     local home = customer_home_settlements()[unit_number]
     if entity and entity.valid and entity.force.name == CUSTOMER_FORCE_NAME
@@ -3397,32 +3499,28 @@ function robotaxi_customer_allocations(force)
       available[center.unit_number] = stored > 0
       result[center.unit_number] = 0
     end
-    local selected_by_unit = {}
-    for _, center in pairs(centers) do
-      if available[center.unit_number] then
-        local area = area_around(center.position, ROBOTAXI_SERVICE_RADIUS)
-        for _, customer in pairs(surface.find_entities_filtered{type = "unit", force = customer_force, area = area}) do
-          local home = customer.unit_number and customer_home_settlements()[customer.unit_number]
-          if home and home.market_force_name == force.name then
-          local dx = customer.position.x - center.position.x
-          local dy = customer.position.y - center.position.y
-          local distance = dx * dx + dy * dy
-            local previous = selected_by_unit[customer.unit_number]
+    for _, population in pairs(customer_settlement_populations()) do
+      if population.market_force_name == force.name and population.surface_index == surface_index then
+        local selected
+        local best_distance
+        for _, center in pairs(centers) do
+          if available[center.unit_number] then
+            local dx = population.position.x - center.position.x
+            local dy = population.position.y - center.position.y
+            local distance = dx * dx + dy * dy
             if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
-              and (not previous or distance < previous.distance) then
-              RobotaxiService.consider_nearest(
-                selected_by_unit,
-                customer.unit_number,
-                center,
-                distance
-              )
+              and (not best_distance or distance < best_distance) then
+              selected = center
+              best_distance = distance
             end
           end
         end
+        if selected then
+          local customers = (population.physical or 0) + (population.virtual_unowned or 0)
+          for _, count in pairs(population.virtual_by_vehicle or {}) do customers = customers + count end
+          result[selected.unit_number] = result[selected.unit_number] + customers
+        end
       end
-    end
-    for _, selection in pairs(selected_by_unit) do
-      result[selection.center.unit_number] = result[selection.center.unit_number] + 1
     end
   end
   storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
@@ -4000,11 +4098,16 @@ function clear_office_buyer_reservation(office_unit_number)
   local reservations = office_buyer_reservations()
   local reservation = reservations[office_unit_number]
   if reservation then
-    for _, unit_number in pairs(reservation.buyers or {}) do
-      if buyer_reserved_by_unit()[unit_number] == office_unit_number then
-        buyer_reserved_by_unit()[unit_number] = nil
-        if not customer_vehicle_owners()[unit_number] then
-          enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+    for _, buyer in pairs(reservation.buyers or {}) do
+      if type(buyer) == "table" and buyer.virtual then
+        local population = customer_settlement_populations()[buyer.settlement_key]
+        if population then
+          population.virtual_reserved = math.max(0, (population.virtual_reserved or 0) - 1)
+        end
+      elseif buyer_reserved_by_unit()[buyer] == office_unit_number then
+        buyer_reserved_by_unit()[buyer] = nil
+        if not customer_vehicle_owners()[buyer] then
+          enqueue_customer_buyer(buyer, customer_home_settlements()[buyer])
         end
       end
     end
@@ -4056,13 +4159,20 @@ function eligible_customer_buyers(office, needed)
   for key in pairs(service.operational_keys) do
     local assigned_station = service.assignment_by_settlement_key[key]
     local config = assigned_station and station_config(assigned_station)
-    local load = (vehicle_summary.by_settlement[key] or 0) + (reserved_by_settlement[key] or 0)
+    local population = customer_settlement_populations()[key]
+    local load = (vehicle_summary.by_settlement[key] or 0)
+      + (reserved_by_settlement[key] or 0)
+      + (population and population.virtual_reserved or 0)
     if config and load < config.evs_per_stall then
       pools[#pools + 1] = {
         key = key,
         queue = buyer_queue_for(office.force.name, key),
         load = load,
-        capacity = config.evs_per_stall
+        capacity = config.evs_per_stall,
+        virtual_available = population and math.max(
+          0,
+          (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
+        ) or 0
       }
     end
   end
@@ -4089,6 +4199,14 @@ function eligible_customer_buyers(office, needed)
     if unit_number then
       buyers[#buyers + 1] = unit_number
       pool.load = pool.load + 1
+    elseif pool.virtual_available > 0 then
+      buyers[#buyers + 1] = {
+        virtual = true,
+        settlement_key = pool.key,
+        market_force_name = office.force.name
+      }
+      pool.virtual_available = pool.virtual_available - 1
+      pool.load = pool.load + 1
     else
       pool.load = pool.capacity
     end
@@ -4100,8 +4218,10 @@ function reserve_office_buyers(office, recipe_name, sale)
   clear_office_buyer_reservation(office.unit_number)
   local buyers = eligible_customer_buyers(office, sale.vehicles)
   if #buyers < sale.vehicles then
-    for _, unit_number in pairs(buyers) do
-      enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+    for _, buyer in pairs(buyers) do
+      if type(buyer) ~= "table" then
+        enqueue_customer_buyer(buyer, customer_home_settlements()[buyer])
+      end
     end
     return false
   end
@@ -4109,8 +4229,15 @@ function reserve_office_buyers(office, recipe_name, sale)
     recipe_name = recipe_name,
     buyers = buyers
   }
-  for _, unit_number in pairs(buyers) do
-    buyer_reserved_by_unit()[unit_number] = office.unit_number
+  for _, buyer in pairs(buyers) do
+    if type(buyer) == "table" and buyer.virtual then
+      local population = customer_settlement_populations()[buyer.settlement_key]
+      if population then
+        population.virtual_reserved = (population.virtual_reserved or 0) + 1
+      end
+    else
+      buyer_reserved_by_unit()[buyer] = office.unit_number
+    end
   end
   return true
 end
@@ -4129,12 +4256,20 @@ function sync_sales_office_buyers()
           local valid_reservation = reservation and reservation.recipe_name == recipe_name
             and #reservation.buyers == sale.vehicles
           if valid_reservation then
-            for _, unit_number in pairs(reservation.buyers) do
-              local entity = customer_unit_registry()[unit_number]
-              if not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
-                or customer_vehicle_owners()[unit_number] then
-                valid_reservation = false
-                break
+            for _, buyer in pairs(reservation.buyers) do
+              if type(buyer) == "table" and buyer.virtual then
+                local population = customer_settlement_populations()[buyer.settlement_key]
+                if not population or (population.virtual_reserved or 0) <= 0 then
+                  valid_reservation = false
+                  break
+                end
+              else
+                local entity = customer_unit_registry()[buyer]
+                if not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
+                  or customer_vehicle_owners()[buyer] then
+                  valid_reservation = false
+                  break
+                end
               end
             end
           end
@@ -4202,10 +4337,25 @@ function complete_reserved_vehicle_sale(office, recipe_name)
     return 0
   end
   local assigned = 0
-  for _, unit_number in pairs(reservation.buyers) do
-    local entity = customer_unit_registry()[unit_number]
-    local home = customer_home_settlements()[unit_number]
-    if entity and entity.valid and home and not customer_vehicle_owners()[unit_number] then
+  for _, buyer in pairs(reservation.buyers) do
+    if type(buyer) == "table" and buyer.virtual then
+      local population = customer_settlement_populations()[buyer.settlement_key]
+      if population and (population.virtual_unowned or 0) > 0 then
+        population.virtual_unowned = population.virtual_unowned - 1
+        population.virtual_by_vehicle[sale.item] =
+          (population.virtual_by_vehicle[sale.item] or 0) + 1
+        CustomerAggregates.add_virtual(storage, {
+          vehicle = sale.item,
+          settlement_key = buyer.settlement_key,
+          market_force_name = office.force.name
+        }, 1)
+        assigned = assigned + 1
+      end
+    else
+      local unit_number = buyer
+      local entity = customer_unit_registry()[unit_number]
+      local home = customer_home_settlements()[unit_number]
+      if entity and entity.valid and home and not customer_vehicle_owners()[unit_number] then
       local ownership = {
         vehicle = sale.item,
         settlement_key = home.settlement_key,
@@ -4223,6 +4373,7 @@ function complete_reserved_vehicle_sale(office, recipe_name)
       }
       enqueue_customer_commute(owner_unit_number)
       assigned = assigned + 1
+      end
     end
   end
   clear_office_buyer_reservation(office.unit_number)
@@ -4936,6 +5087,11 @@ local function show_customer_settlement_info_panel(player, settlement)
   local operational = service.operational_keys[key] == true
   local vehicle_summary = active_customer_vehicle_summary(force)
   local settlement_vehicles = vehicle_summary.by_settlement[key] or 0
+  local population = customer_settlement_populations()[key] or {}
+  local settlement_population = (population.physical or 0) + (population.virtual_unowned or 0)
+  for _, count in pairs(population.virtual_by_vehicle or {}) do
+    settlement_population = settlement_population + count
+  end
   local panel = player.gui.left.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
@@ -4946,6 +5102,11 @@ local function show_customer_settlement_info_panel(player, settlement)
 
   add_station_info_label(panel, "Status: " .. (friendly and "customer" or "hostile"))
   add_station_info_label(panel, "Sales Office coverage: " .. (sales_covered and "yes" or "no"))
+  add_station_info_label(panel, string.format(
+    "Settlement population: %d (%d visible representatives)",
+    settlement_population,
+    population.physical or 0
+  ))
   add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
   add_station_info_label(panel, string.format("Active customer vehicles network-wide: %d", vehicle_summary.total))
   add_station_info_label(panel, string.format("Network vehicle capacity: %d", service.supported_ev_capacity))
@@ -5209,8 +5370,9 @@ script.on_event(defines.events.on_entity_spawned, function(event)
   if not market_force_name then return end
   local market_force = game.forces[market_force_name]
   if not market_force then return end
-  register_customer_unit(entity, spawner, market_force)
-  give_customer_wander_command(entity, true)
+  if register_customer_unit(entity, spawner, market_force) then
+    give_customer_wander_command(entity, true)
+  end
 end)
 
 script.on_event(defines.events.on_ai_command_completed, handle_customer_commute_command_completed)
@@ -5489,6 +5651,8 @@ remote.add_interface("factoryx", {
       registered_sales_offices = #registered_factoryx_entities("sales_offices", force),
       registered_robotaxi_centers = #registered_factoryx_entities("robotaxi_centers", force),
       queued_buyers = buyer_units,
+      visible_customers = customer_visible_count(),
+      visible_customer_limit = CUSTOMER_VISIBLE_GLOBAL_LIMIT,
       queued_commutes = due.size,
       active_commutes = active,
       market_invalidations = performance_state.invalidations,
