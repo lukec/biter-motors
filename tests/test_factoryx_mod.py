@@ -192,6 +192,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('["x-megapack"] = 24', jumpstart)
         self.assertIn('["substation"] = 40', jumpstart)
         self.assertIn('["roboport"] = 20', jumpstart)
+        self.assertIn('["passive-provider-chest"] = 50', jumpstart)
+        self.assertIn('["storage-chest"] = 50', jumpstart)
         self.assertIn('["construction-robot"] = 50', jumpstart)
         self.assertIn('["logistic-robot"] = 50', jumpstart)
         self.assertIn('["modular-armor"] = 1', jumpstart)
