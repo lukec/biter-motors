@@ -132,6 +132,20 @@ CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
 CUSTOMER_MOOD_MAX_ANGER_CHANCE = 0.25
+CUSTOMER_COMMUTE_MAX_ACTIVE = 512
+CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8
+CUSTOMER_COMMUTE_CHARGE_SECONDS = 30
+CUSTOMER_COMMUTE_FIRST_VISIT_TICKS = 60 * 60
+CUSTOMER_COMMUTE_RETRY_BASE_TICKS = 30 * 60
+CUSTOMER_COMMUTE_RETRY_MAX_TICKS = 5 * 60 * 60
+CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS = 2 * 60 * 60
+CUSTOMER_COMMUTE_INTERVALS = {
+  ["x-prototype-roadster"] = 3 * 60 * 60,
+  ["x-premium-ev"] = 6 * 60 * 60,
+  ["x-mass-market-ev"] = 5 * 60 * 60,
+  ["x-cybertruck"] = 8 * 60 * 60,
+  ["x-robotaxi-fleet"] = 7 * 60 * 60
+}
 AI_EFFICIENCY_THRESHOLDS = {1000, 10000, 100000, 1000000, 10000000, 100000000}
 AI_EFFICIENCY_TRACKS = {
   terrestrial = {
@@ -900,6 +914,16 @@ function customer_vehicle_owners()
   return storage.factoryx_customer_vehicle_owners
 end
 
+function customer_charging_commutes()
+  storage.factoryx_customer_charging_commutes = storage.factoryx_customer_charging_commutes or {}
+  return storage.factoryx_customer_charging_commutes
+end
+
+function customer_commute_totals()
+  storage.factoryx_customer_commute_totals = storage.factoryx_customer_commute_totals or {}
+  return storage.factoryx_customer_commute_totals
+end
+
 function office_buyer_reservations()
   storage.factoryx_office_buyer_reservations = storage.factoryx_office_buyer_reservations or {}
   return storage.factoryx_office_buyer_reservations
@@ -1290,6 +1314,7 @@ function unregister_customer_unit(entity)
   end
   local unit_number = entity.unit_number
   local ownership = customer_vehicle_owners()[unit_number]
+  customer_charging_commutes()[unit_number] = nil
   customer_vehicle_owners()[unit_number] = nil
   customer_unit_registry()[unit_number] = nil
   customer_home_settlements()[unit_number] = nil
@@ -1863,6 +1888,238 @@ local function give_customer_wander_command(entity, force_reset)
   return true
 end
 
+function customer_commute_interval_ticks(entity, ownership)
+  local base = CUSTOMER_COMMUTE_INTERVALS[ownership.vehicle] or (5 * 60 * 60)
+  local market_force = game.forces[ownership.market_force_name]
+  local battery_level = market_force
+    and continuous_improvement_level(market_force, LONG_RANGE_BATTERY_TECH_NAME)
+    or 0
+  return math.floor(base * (1 + battery_level * 0.25))
+end
+
+function customer_commute_station_counts()
+  local counts = {}
+  for _, state in pairs(customer_charging_commutes()) do
+    if (state.phase == "to_charger" or state.phase == "charging") and state.station_unit_number then
+      local count = counts[state.station_unit_number] or {en_route = 0, charging = 0, active = 0}
+      counts[state.station_unit_number] = count
+      count.active = count.active + 1
+      if state.phase == "charging" then
+        count.charging = count.charging + 1
+      else
+        count.en_route = count.en_route + 1
+      end
+    end
+  end
+  return counts
+end
+
+function customer_commute_summary(force)
+  local summary = {
+    scheduled = 0,
+    en_route = 0,
+    charging = 0,
+    retrying = 0,
+    completed = customer_commute_totals()[force.name] or 0
+  }
+  for unit_number, state in pairs(customer_charging_commutes()) do
+    local ownership = customer_vehicle_owners()[unit_number]
+    if ownership and ownership.market_force_name == force.name then
+      if state.phase == "to_charger" then summary.en_route = summary.en_route + 1
+      elseif state.phase == "charging" then summary.charging = summary.charging + 1
+      elseif state.retry_tick and state.retry_tick > game.tick then summary.retrying = summary.retrying + 1
+      else summary.scheduled = summary.scheduled + 1 end
+    end
+  end
+  summary.active = summary.en_route + summary.charging
+  return summary
+end
+
+function select_customer_commute_station(entity, force, service, station_counts)
+  local selected
+  local selected_distance
+  for unit_number, assignment in pairs(service.assignments or {}) do
+    local station = assignment.station
+    if station and station.valid and station.surface == entity.surface
+      and station_has_grid_access(station) and (assignment.powered_stalls or 0) > 0 then
+      local occupancy = station_counts[unit_number] and station_counts[unit_number].active or 0
+      local commuter_capacity = assignment.powered_stalls * 8
+      if occupancy < commuter_capacity then
+        local dx = station.position.x - entity.position.x
+        local dy = station.position.y - entity.position.y
+        local distance = dx * dx + dy * dy
+        if not selected_distance or distance < selected_distance then
+          selected = station
+          selected_distance = distance
+        end
+      end
+    end
+  end
+  return selected
+end
+
+function customer_commute_staging_position(entity, station, occupancy)
+  local config = station_config(station)
+  local radius = 3.5 + math.min(3, (config and config.stalls or 4) / 8)
+  local angle = ((station.unit_number or 0) * 0.37 + occupancy * 2.399963) % (2 * math.pi)
+  local target = {
+    x = station.position.x + math.cos(angle) * radius,
+    y = station.position.y + math.sin(angle) * radius
+  }
+  return station.surface.find_non_colliding_position(entity.name, target, 8, 0.5) or target
+end
+
+function begin_customer_charging_commute(entity, ownership, state, station, station_counts)
+  if not entity.commandable then return false end
+  local counts = station_counts[station.unit_number] or {en_route = 0, charging = 0, active = 0}
+  station_counts[station.unit_number] = counts
+  local destination = customer_commute_staging_position(entity, station, counts.active)
+  entity.commandable.set_command{
+    type = defines.command.go_to_location,
+    destination = destination,
+    distraction = defines.distraction.none,
+    radius = 1.5
+  }
+  state.phase = "to_charger"
+  state.station = station
+  state.station_unit_number = station.unit_number
+  state.destination = destination
+  state.command_started_tick = game.tick
+  state.retry_tick = nil
+  counts.en_route = counts.en_route + 1
+  counts.active = counts.active + 1
+  return true
+end
+
+function retry_customer_charging_commute(entity, state)
+  local attempts = math.min(5, (state.retry_attempts or 0) + 1)
+  state.phase = "roaming"
+  state.station = nil
+  state.station_unit_number = nil
+  state.destination = nil
+  state.retry_attempts = attempts
+  state.retry_tick = game.tick + math.min(
+    CUSTOMER_COMMUTE_RETRY_MAX_TICKS,
+    CUSTOMER_COMMUTE_RETRY_BASE_TICKS * (2 ^ (attempts - 1))
+  )
+  if entity and entity.valid then give_customer_wander_command(entity, true) end
+end
+
+function complete_customer_charging_commute(entity, ownership, state)
+  state.phase = "roaming"
+  state.station = nil
+  state.station_unit_number = nil
+  state.destination = nil
+  state.charge_progress = 0
+  state.retry_attempts = 0
+  state.retry_tick = nil
+  state.completed_visits = (state.completed_visits or 0) + 1
+  customer_commute_totals()[ownership.market_force_name] =
+    (customer_commute_totals()[ownership.market_force_name] or 0) + 1
+  state.next_charge_tick = game.tick + customer_commute_interval_ticks(entity, ownership)
+  give_customer_wander_command(entity, true)
+end
+
+function process_customer_charging_commutes()
+  local states = customer_charging_commutes()
+  local station_counts = customer_commute_station_counts()
+  local active = 0
+  for unit_number, state in pairs(states) do
+    local entity = customer_unit_registry()[unit_number]
+    local ownership = customer_vehicle_owners()[unit_number]
+    if not entity or not entity.valid or not ownership then
+      states[unit_number] = nil
+    elseif state.phase == "to_charger" then
+      active = active + 1
+      if not state.station or not state.station.valid or not station_has_grid_access(state.station) then
+        retry_customer_charging_commute(entity, state)
+      elseif game.tick - (state.command_started_tick or game.tick) >= CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS then
+        retry_customer_charging_commute(entity, state)
+      end
+    elseif state.phase == "charging" then
+      active = active + 1
+      local station = state.station
+      if not station or not station.valid or not station_has_grid_access(station) then
+        retry_customer_charging_commute(entity, state)
+      else
+        local power = station_power_service()[station.unit_number] or {}
+        local fraction = math.max(0, math.min(1, power.power_fraction or 0))
+        local supercharging = continuous_improvement_level(station.force, SUPERCHARGING_TECH_NAME)
+        state.charge_progress = (state.charge_progress or 0)
+          + fraction * (1 + supercharging * 0.1) / CUSTOMER_COMMUTE_CHARGE_SECONDS
+        if state.charge_progress >= 1 then
+          complete_customer_charging_commute(entity, ownership, state)
+        end
+      end
+    end
+  end
+
+  local starts = 0
+  if active >= CUSTOMER_COMMUTE_MAX_ACTIVE then return end
+  local service_by_force = {}
+  for unit_number, ownership in pairs(customer_vehicle_owners()) do
+    if starts >= CUSTOMER_COMMUTE_STARTS_PER_SECOND
+      or active + starts >= CUSTOMER_COMMUTE_MAX_ACTIVE then break end
+    local entity = customer_unit_registry()[unit_number]
+    if entity and entity.valid then
+      local state = states[unit_number]
+      if not state then
+        state = {
+          phase = "roaming",
+          next_charge_tick = game.tick + CUSTOMER_COMMUTE_FIRST_VISIT_TICKS,
+          completed_visits = 0
+        }
+        states[unit_number] = state
+      end
+      local due = state.phase == "roaming"
+        and game.tick >= (state.retry_tick or state.next_charge_tick or game.tick)
+      if due then
+        local force = game.forces[ownership.market_force_name]
+        if force then
+          service_by_force[force.index] = service_by_force[force.index]
+            or customer_service_for_force(force)
+          local station = select_customer_commute_station(
+            entity, force, service_by_force[force.index], station_counts
+          )
+          if station and begin_customer_charging_commute(
+            entity, ownership, state, station, station_counts
+          ) then
+            starts = starts + 1
+          else
+            retry_customer_charging_commute(entity, state)
+          end
+        end
+      end
+    end
+  end
+end
+
+function handle_customer_commute_command_completed(event)
+  local state = event.unit_number and customer_charging_commutes()[event.unit_number]
+  if not state or state.phase ~= "to_charger" then return end
+  local entity = customer_unit_registry()[event.unit_number]
+  if not entity or not entity.valid then
+    customer_charging_commutes()[event.unit_number] = nil
+    return
+  end
+  local destination = state.destination
+  local dx = destination and entity.position.x - destination.x or math.huge
+  local dy = destination and entity.position.y - destination.y or math.huge
+  if destination and dx * dx + dy * dy <= 36 then
+    state.phase = "charging"
+    state.charge_progress = 0
+    state.arrived_tick = game.tick
+    entity.commandable.set_command{
+      type = defines.command.wander,
+      distraction = defines.distraction.none,
+      radius = 0.25,
+      ticks_to_wait = 60
+    }
+  else
+    retry_customer_charging_commute(entity, state)
+  end
+end
+
 function customer_vehicle_variant_name(entity_name, vehicle_name)
   local base_name = CUSTOMER_UNIT_BASE_BY_NAME[entity_name]
   local class_name = CUSTOMER_VEHICLE_CLASS_BY_ITEM[vehicle_name]
@@ -1899,6 +2156,10 @@ function replace_customer_vehicle_entity(entity, ownership)
   customer_unit_registry()[replacement.unit_number] = replacement
   customer_home_settlements()[replacement.unit_number] = home
   customer_vehicle_owners()[replacement.unit_number] = ownership
+  if customer_charging_commutes()[old_unit_number] then
+    customer_charging_commutes()[replacement.unit_number] = customer_charging_commutes()[old_unit_number]
+    customer_charging_commutes()[old_unit_number] = nil
+  end
   if reserved_office then
     buyer_reserved_by_unit()[replacement.unit_number] = reserved_office
     local reservation = office_buyer_reservations()[reserved_office]
@@ -2004,7 +2265,10 @@ local function convert_biter_entity(entity, force)
     pcall(function() entity.active = true end)
   end
   if entity.valid and entity.type == "unit" and force.name == CUSTOMER_FORCE_NAME and entity.commandable then
-    give_customer_wander_command(entity)
+    local commute = entity.unit_number and customer_charging_commutes()[entity.unit_number]
+    if not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging") then
+      give_customer_wander_command(entity)
+    end
     pcall(function()
       entity.color = CUSTOMER_UNIT_BASE_BY_NAME[entity.name] == entity.name and CUSTOMER_UNIT_COLOR or nil
     end)
@@ -2499,6 +2763,8 @@ local function show_station_info_panel(player, station)
   local friendly_here = assignment and #assignment.operational_settlements or 0
   local growth_state = customer_growth_states()[station.unit_number] or {}
   local spare_growth_stalls = math.max(0, config.stalls - friendly_here)
+  local commute_counts = customer_commute_station_counts()[station.unit_number]
+    or {en_route = 0, charging = 0}
   local panel = player.gui.left.add{
     type = "frame",
     name = STATION_INFO_PANEL_NAME,
@@ -2520,6 +2786,11 @@ local function show_station_info_panel(player, station)
   add_station_info_label(panel, string.format("This charger tier: %d EVs per stall / %d EVs total", config.evs_per_stall, config.stalls * config.evs_per_stall))
   add_station_info_label(panel, string.format("Potential local stall demand: %d", potential_demand))
   add_station_info_label(panel, string.format("Active stalls: %d/%d", active_stalls, config.stalls))
+  add_station_info_label(panel, string.format(
+    "Customer commutes: %d approaching, %d charging",
+    commute_counts.en_route,
+    commute_counts.charging
+  ))
   add_station_info_label(panel, string.format(
     "Player EV charging: %d nearby / %d powered stalls",
     #vehicle_assignment.vehicles,
@@ -3554,10 +3825,17 @@ function complete_reserved_vehicle_sale(office, recipe_name)
       customer_vehicle_owners()[unit_number] = {
         vehicle = sale.item,
         settlement_key = home.settlement_key,
-        market_force_name = office.force.name
+        market_force_name = office.force.name,
+        sold_tick = game.tick
       }
       buyer_reserved_by_unit()[unit_number] = nil
-      replace_customer_vehicle_entity(entity, customer_vehicle_owners()[unit_number])
+      local replacement = replace_customer_vehicle_entity(entity, customer_vehicle_owners()[unit_number])
+      local owner_unit_number = replacement and replacement.valid and replacement.unit_number or unit_number
+      customer_charging_commutes()[owner_unit_number] = {
+        phase = "roaming",
+        next_charge_tick = game.tick + CUSTOMER_COMMUTE_FIRST_VISIT_TICKS,
+        completed_visits = 0
+      }
       assigned = assigned + 1
     end
   end
@@ -3661,6 +3939,7 @@ local function progress_snapshot(force)
     or researched(force, "x-capital-scaling")
   local terrestrial_ai = ai_efficiency_track_status(force, "terrestrial")
   local agi = agi_training_status(force)
+  local commutes = customer_commute_summary(force)
   return {
     sales_office_researched = researched(force, "x-sales-office"),
     ev_production_researched = researched(force, "x-premium-ev-program"),
@@ -3685,6 +3964,9 @@ local function progress_snapshot(force)
     active_stalls = market.active_customer_stalls,
     customer_ev_fleet = market.customer_ev_fleet,
     customer_ev_sales_lifetime = lifetime_customer_ev_sales_size(force),
+    customer_commutes_en_route = commutes.en_route,
+    customer_commutes_charging = commutes.charging,
+    customer_commutes_completed = commutes.completed,
     friendly_settlements = market.friendly_settlements,
     angry_settlements = market.angry_settlements,
     stranded_evs = market.stranded_evs,
@@ -3871,6 +4153,12 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Customer settlements", tostring(snapshot.customer_settlements))
   add_progress_metric(metrics, "Charging stalls", string.format("%d / %d active", snapshot.active_stalls, snapshot.charging_capacity))
   add_progress_metric(metrics, "Active customer vehicles", tostring(snapshot.customer_ev_fleet))
+  add_progress_metric(
+    metrics,
+    "Customer charging commutes",
+    string.format("%d approaching, %d charging", snapshot.customer_commutes_en_route, snapshot.customer_commutes_charging)
+  )
+  add_progress_metric(metrics, "Completed charging visits", tostring(snapshot.customer_commutes_completed))
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
@@ -4493,6 +4781,8 @@ script.on_event(defines.events.on_entity_damaged, function(event)
   end
 end)
 
+script.on_event(defines.events.on_ai_command_completed, handle_customer_commute_command_completed)
+
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
   refresh_sales_office_coverage(player)
@@ -4691,6 +4981,7 @@ script.on_nth_tick(60, function()
   for _, force in pairs(game.forces) do
     generate_station_reservations(force)
   end
+  process_customer_charging_commutes()
   for _, player in pairs(game.connected_players) do
     refresh_progress_panel(player)
   end
@@ -4734,6 +5025,10 @@ remote.add_interface("factoryx", {
       result[track_name] = ai_efficiency_track_status(force, track_name)
     end
     return result
+  end,
+  customer_charging_commutes = function(force_name)
+    local force = game.forces[force_name or "player"]
+    return force and customer_commute_summary(force) or nil
   end,
   agi_training_status = function(force_name)
     local force = game.forces[force_name or "player"]

@@ -1585,7 +1585,7 @@ icons, and bounded working animations. Remaining work is narrower:
 
 ### Phase 2.6: Physical Customer Charging Commutes
 
-Future implementation; explicitly not part of the current runtime:
+Implemented V1:
 
 - Only customers who own sold EVs need to charge. Unsold `$` buyers continue
   wandering near their home settlement.
@@ -1604,17 +1604,24 @@ Future implementation; explicitly not part of the current runtime:
 - Long-range Battery research increases time between charging visits.
   Supercharging Power Electronics reduces the powered charging duration while
   increasing the stall's grid draw.
-- Use event-driven `go_to_location`, timed `stop`, and
-  `on_ai_command_completed` transitions. Do not poll every customer every tick
-  or pre-request paths before issuing movement commands.
-- Move customers in bounded script-driven cohorts, approximately 4-8 units per
-  group. Start with global caps of 64 active cohorts and 512 moving customers,
-  plus exponential retry delays for blocked paths.
+- Uses event-driven `go_to_location` and `on_ai_command_completed` transitions.
+  The one-second scheduler starts at most eight new trips and never permits more
+  than 512 moving or charging owners at once; it does not pre-request paths.
+- Blocked routes return the owner to local wandering and retry with exponential
+  delays from 30 seconds through five minutes.
 - Settlement-level powered capacity remains authoritative in V1. Physical
   commuters visualize service and can raise a local route-blocked alert, but a
   pathfinding failure alone does not invalidate an otherwise healthy market.
-- Benchmark 128, 256, 512, and 1,024 simultaneous commuters against a save with
-  roughly 12,000 customer units before choosing production limits.
+- Fully powered charging takes about 30 seconds. The sampled station power
+  fraction advances that clock, so low power extends the visit and zero power
+  pauses it. Supercharging research accelerates the visit; Long-range Battery
+  research adds 25% per level to the interval between visits.
+- Initial class intervals are deliberately exaggerated and readable: Roadster
+  3 minutes, Mass-market EV 5, Premium EV 6, Robotaxi 7, and Cybertruck 8.
+- The charger inspector reports approaching and charging owners. FactoryX
+  Progress reports network-wide commute activity and completed visits.
+- Still benchmark 128, 256, and 512 simultaneous commuters against the roughly
+  12,000 customer units in the large save before increasing the production cap.
 
 ### Phase 2.7: Robotaxi Service Center
 

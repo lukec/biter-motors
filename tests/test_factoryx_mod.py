@@ -1482,6 +1482,30 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('track_factoryx_compute_machine(entity)', control)
         self.assertIn('rebuild_factoryx_compute_machines()', control)
 
+    def test_customer_ev_owners_physically_commute_to_chargers(self):
+        control = (MOD / "control.lua").read_text()
+        roadmap = (ROOT / "factoryX.md").read_text()
+        for fragment in [
+            "CUSTOMER_COMMUTE_MAX_ACTIVE = 512",
+            "CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8",
+            "CUSTOMER_COMMUTE_CHARGE_SECONDS = 30",
+            "CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS = 2 * 60 * 60",
+            "function select_customer_commute_station",
+            "function process_customer_charging_commutes",
+            "defines.command.go_to_location",
+            "defines.events.on_ai_command_completed",
+            "handle_customer_commute_command_completed",
+            "CUSTOMER_COMMUTE_RETRY_BASE_TICKS * (2 ^ (attempts - 1))",
+            "fraction * (1 + supercharging * 0.1)",
+            "customer_commute_interval_ticks",
+            "customer_commute_totals",
+            '"Customer charging commutes"',
+            '"Completed charging visits"',
+            "customer_charging_commutes = function",
+        ]:
+            self.assertIn(fragment, control)
+        self.assertIn("Implemented V1", roadmap[roadmap.index("### Phase 2.6"):])
+
     def test_factoryx_avoids_capex_language(self):
         combined = "\n".join(
             [

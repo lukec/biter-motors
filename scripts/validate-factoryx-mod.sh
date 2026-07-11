@@ -697,6 +697,15 @@ script.on_nth_tick(18500, function()
   }
 end)
 
+script.on_nth_tick(8000, function()
+  if game.tick < 8000 then return end
+  write_report{
+    tick = game.tick,
+    status = "customer_commutes",
+    commutes = remote.call("factoryx", "customer_charging_commutes", "player")
+  }
+end)
+
 script.on_nth_tick(18520, function()
   if game.tick < 18520 then return end
   local surface = game.get_surface(storage.surface_index or 1)
@@ -1077,10 +1086,13 @@ brownout = next((record for record in records if record.get("status") == "custom
 overload = next((record for record in records if record.get("status") == "customer_overload"), None)
 recovery = next((record for record in records if record.get("status") == "customer_recovery"), None)
 compute_brownout = next((record for record in records if record.get("status") == "compute_brownout"), None)
+commutes = next((record for record in records if record.get("status") == "customer_commutes"), None)
 if compute_brownout is None or compute_brownout.get("progress_before", 0) <= 0:
     raise SystemExit(f"compute brownout test did not begin during an active run: {compute_brownout}")
 if compute_brownout.get("progress_after") != 0:
     raise SystemExit(f"underpowered datacenter did not discard run progress: {compute_brownout}")
+if commutes is None or commutes.get("commutes", {}).get("completed", 0) < 1:
+    raise SystemExit(f"customer EV owners did not complete a physical charging commute: {commutes}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):
