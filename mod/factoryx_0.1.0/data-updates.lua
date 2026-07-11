@@ -92,6 +92,18 @@ big_drill_tech.prerequisites = {"x-industrial-supply-chain", "engine"}
 big_drill_tech.research_trigger = nil
 big_drill_tech.unit = science(100, {"automation-science-pack", "logistic-science-pack"}, 30)
 
+-- The terrestrial drill must not drag Vulcanus tungsten into the Nauvis
+-- progression. Restore tungsten steel to an actual Vulcanus discovery.
+local tungsten_steel_tech = data.raw.technology["tungsten-steel"]
+if tungsten_steel_tech then
+  tungsten_steel_tech.prerequisites = {"big-mining-drill", "planet-discovery-vulcanus"}
+  tungsten_steel_tech.unit = nil
+  tungsten_steel_tech.research_trigger = {
+    type = "mine-entity",
+    entities = {"tungsten-ore"}
+  }
+end
+
 rewrite_recipe("foundry", {
   categories = {"crafting", "advanced-crafting"},
   ingredients = ingredients(

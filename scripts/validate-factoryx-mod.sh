@@ -833,6 +833,11 @@ for technology_name, expected in expected_branch_prerequisites.items():
     actual = set(data["technology"][technology_name].get("prerequisites", []))
     if actual != expected:
         raise SystemExit(f"{technology_name} prerequisite mismatch: {sorted(actual)}")
+tungsten_steel = data["technology"]["tungsten-steel"]
+if set(tungsten_steel.get("prerequisites", [])) != {"big-mining-drill", "planet-discovery-vulcanus"}:
+    raise SystemExit(f"Tungsten steel leaked into terrestrial progression: {tungsten_steel}")
+if tungsten_steel.get("research_trigger", {}).get("entities") != ["tungsten-ore"]:
+    raise SystemExit(f"Tungsten steel is not triggered by mining tungsten ore: {tungsten_steel}")
 foundry_unlocks = {
     effect["recipe"] for effect in data["technology"]["foundry"].get("effects", [])
     if effect.get("type") == "unlock-recipe"
