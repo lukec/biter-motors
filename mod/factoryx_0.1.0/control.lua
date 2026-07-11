@@ -90,6 +90,7 @@ ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5
 ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100
 ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60
 local RESERVATION_NAME = "x-ev-reservation"
+WRECKED_EV_NAME = "x-wrecked-ev"
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
@@ -3408,6 +3409,22 @@ local function top_up_station_reservations(station, amount)
   }
 end
 
+generate_station_wrecks = function(station, completed_charges)
+  local inventory = station_reservation_inventory(station)
+  if not inventory or completed_charges <= 0 then return 0 end
+  local wrecks = 0
+  for _ = 1, completed_charges do
+    if math.random() < 0.01 then wrecks = wrecks + 1 end
+  end
+  if wrecks == 0 then return 0 end
+  local inserted = inventory.insert{name = WRECKED_EV_NAME, count = wrecks}
+  if inserted > 0 then
+    local statistics = station.force.get_item_production_statistics(station.surface)
+    statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + inserted)
+  end
+  return inserted
+end
+
 local function reservation_print_progress()
   storage.factoryx_reservation_print_progress = storage.factoryx_reservation_print_progress or {}
   return storage.factoryx_reservation_print_progress
@@ -3431,6 +3448,7 @@ local function generate_station_reservations(force)
         local ready = math.floor(accumulated / RESERVATION_SAMPLES_PER_PRINT)
         if ready > 0 then
           local inserted = top_up_station_reservations(station, ready)
+          generate_station_wrecks(station, inserted)
           accumulated = accumulated - inserted * RESERVATION_SAMPLES_PER_PRINT
           if inserted == 0 then
             accumulated = math.min(accumulated, RESERVATION_SAMPLES_PER_PRINT)
@@ -3675,10 +3693,21 @@ function process_robotaxi_service_centers()
             end
           end
           local retirements = math.floor(state.attrition)
-          if retirements > 0 and input then
-            local removed = input.remove{name = ROBOTAXI_ITEM_NAME, count = retirements}
+          if retirements > 0 and input and output then
+            local wreck_capacity = output.get_insertable_count(WRECKED_EV_NAME)
+            local removed = input.remove{
+              name = ROBOTAXI_ITEM_NAME,
+              count = math.min(retirements, wreck_capacity)
+            }
             state.attrition = state.attrition - removed
             state.vehicles_retired = state.vehicles_retired + removed
+            if removed > 0 then
+              local wrecks = output.insert{name = WRECKED_EV_NAME, count = removed}
+              if wrecks > 0 then
+                local statistics = center.force.get_item_production_statistics(center.surface)
+                statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + wrecks)
+              end
+            end
           end
         end
       end

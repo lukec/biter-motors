@@ -292,7 +292,7 @@ local function copied_reservation_output_site(source_name, new_name, icons, mina
   prototype.damaged_trigger_effect = table.deepcopy(source.damaged_trigger_effect)
   prototype.drawing_box_vertical_extension = source.drawing_box_vertical_extension
   prototype.impact_category = source.impact_category
-  prototype.inventory_size = 1
+  prototype.inventory_size = 2
   prototype.logistic_mode = "passive-provider"
   prototype.render_not_in_network_icon = false
   prototype.fast_replaceable_group = new_name
@@ -472,6 +472,11 @@ end
 
 local dollar_icon = icon64("__base__/graphics/icons/coin.png", {r = 1.0, g = 0.86, b = 0.25, a = 1.0})
 local ev_reservation_icon = generated_icon("ev-reservation")
+local wrecked_ev_icon = layered_icon64(
+  "__base__/graphics/icons/car.png",
+  "__space-age__/graphics/icons/scrap.png",
+  {r = 0.55, g = 0.55, b = 0.55, a = 1.0}
+)
 local ai_token_icon = generated_icon("ai-token")
 local planetary_grid_segment_icon = generated_icon("planetary-grid-segment")
 local agi_model_icon = generated_icon("agi-model")
@@ -620,6 +625,7 @@ data:extend({
 data:extend({
   item("x-dollar", dollar_icon, "x-factoryx-capital", "a[dollar]", 100000),
   item("x-ev-reservation", ev_reservation_icon, "raw-material", "z[factoryx-ev-reservation]", 1000),
+  item("x-wrecked-ev", wrecked_ev_icon, "intermediate-product", "z[factoryx-wrecked-ev]", 50),
   item("x-gigafactory-module", gigafactory_module_icon, "x-factoryx-components", "c[gigafactory-module]", 100),
   item("x-gigacast", gigacast_icon, "x-factoryx-components", "d[gigacast]", 10),
   item("x-ai-token", ai_token_icon, "science-pack", "h[x-ai-token]", 1000000, {weight = 1}),
@@ -1134,6 +1140,15 @@ data:extend({
   recipe("x-operate-robotaxis", {"x-robotaxi-service"}, "x-factoryx-capital", "i[operate-robotaxis]",
     {},
     {{type = "item", name = "x-dollar", amount = 1}}, 100000000
+  ),
+  recipe("x-wrecked-ev-recycling", {"recycling"}, "intermediate-product", "z[factoryx-wrecked-ev-recycling]",
+    {{type = "item", name = "x-wrecked-ev", amount = 1}},
+    {
+      {type = "item", name = "steel-plate", amount = 5, independent_probability = 0.8},
+      {type = "item", name = "electronic-circuit", amount = 4, independent_probability = 0.5},
+      {type = "item", name = "battery", amount = 4, independent_probability = 0.5},
+      {type = "item", name = "x-battery-pack", amount = 1, independent_probability = 0.1}
+    }, 4, {allow_productivity = false, auto_recycle = false, icons = wrecked_ev_icon}
   ),
 
   recipe("x-small-launch-service", {"advanced-crafting"}, "space-related", "x-a[small-launch-service]",

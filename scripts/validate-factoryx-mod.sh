@@ -750,6 +750,10 @@ if missing:
 print("Graphics references OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --dump-data >/tmp/factoryx-dump-data.log 2>&1
+if grep -qE ' Error |Error while loading|Modifications: ' /tmp/factoryx-dump-data.log; then
+  cat /tmp/factoryx-dump-data.log
+  exit 1
+fi
 python3 - "$tmp/script-output/data-raw-dump.json" <<'PY'
 import json
 import math
@@ -789,6 +793,31 @@ for technology_name, (count, time, ingredients) in expected_research.items():
             f"{technology_name} research mismatch: count={unit['count']} time={unit['time']} "
             f"ingredients={sorted(actual_ingredients)}"
         )
+
+expected_terrestrial_recipes = {
+    "electric-furnace": {"steel-plate": 10, "electronic-circuit": 10, "stone-brick": 10},
+    "big-mining-drill": {"electric-mining-drill": 4, "engine-unit": 20, "electronic-circuit": 20},
+    "foundry": {"electric-furnace": 25, "electronic-circuit": 50, "refined-concrete": 200},
+    "recycler": {"steel-plate": 20, "iron-gear-wheel": 40, "electronic-circuit": 20, "concrete": 20},
+    "teslagun": {"x-battery-pack": 4, "processing-unit": 10, "steel-plate": 20},
+    "tesla-turret": {"teslagun": 1, "x-battery-pack": 10, "processing-unit": 20, "accumulator": 4},
+    "tesla-ammo": {"x-battery-pack": 1, "advanced-circuit": 2, "copper-cable": 10},
+}
+for recipe_name, expected in expected_terrestrial_recipes.items():
+    recipe = data["recipe"][recipe_name]
+    actual = {row["name"]: row["amount"] for row in recipe["ingredients"]}
+    if actual != expected or recipe.get("surface_conditions"):
+        raise SystemExit(f"{recipe_name} terrestrial recipe mismatch: {recipe}")
+for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "foundry", "recycling"):
+    packs = {row[0] for row in data["technology"][technology_name]["unit"]["ingredients"]}
+    if packs != {"automation-science-pack", "logistic-science-pack"}:
+        raise SystemExit(f"{technology_name} is not red-green terrestrial research: {packs}")
+calcite_control = data["planet"]["nauvis"]["map_gen_settings"]["autoplace_controls"].get("calcite")
+if calcite_control != {"frequency": 0.5, "size": 0.7, "richness": 0.8}:
+    raise SystemExit(f"Nauvis calcite autoplace mismatch: {calcite_control}")
+if not data["resource"]["calcite"].get("autoplace", {}).get("probability_expression"):
+    raise SystemExit("Calcite has no terrestrial autoplace probability expression")
+print("FactoryX terrestrial industrial supply chain prototypes OK.")
 
 ev_production_line = data["technology"]["x-premium-ev-program"]
 ev_line_unlocks = {
@@ -1027,7 +1056,7 @@ prototype_roadster = data["recipe"]["x-prototype-roadster"]
 for tier, (charger, sink, selection_box, stall_power) in chargers.items():
     if charger["selection_box"] != selection_box:
         raise SystemExit(f"EV Charging Station {tier} footprint mismatch: {charger['selection_box']}")
-    if charger["inventory_size"] != 1 or charger["logistic_mode"] != "passive-provider" or charger.get("render_not_in_network_icon") is not False:
+    if charger["inventory_size"] != 2 or charger["logistic_mode"] != "passive-provider" or charger.get("render_not_in_network_icon") is not False:
         raise SystemExit(f"EV Charging Station {tier} paperwork output mismatch: {charger}")
     if sink["energy_usage"] != stall_power or sink["energy_source"]["input_flow_limit"] != stall_power:
         raise SystemExit(f"EV Charging Station {tier} stall power mismatch: {sink}")
@@ -1079,6 +1108,10 @@ for vehicle_name in (
 print("FactoryX custom vehicle engine sprites OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/factoryx-create.log 2>&1
+if grep -qE ' errored when running|Error:|Error while loading|Modifications: ' /tmp/factoryx-create.log; then
+  cat /tmp/factoryx-create.log
+  exit 1
+fi
 if grep -qE "non-recoverable error|Error while running event" /tmp/factoryx-create.log; then
   tail -80 /tmp/factoryx-create.log >&2
   exit 1
