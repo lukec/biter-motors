@@ -157,6 +157,11 @@ class FactoryXModTest(unittest.TestCase):
             "lamp",
             "construction-robotics",
             "logistic-robotics",
+            "modular-armor",
+            "solar-panel-equipment",
+            "battery-equipment",
+            "night-vision-equipment",
+            "personal-roboport-equipment",
         ]:
             self.assertIn(f'"{technology}"', control)
         self.assertIn('remote.call("freeplay", "set_ship_items"', control)
@@ -173,6 +178,11 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('["roboport"] = 20', jumpstart)
         self.assertIn('["construction-robot"] = 400', jumpstart)
         self.assertIn('["logistic-robot"] = 400', jumpstart)
+        self.assertIn('["modular-armor"] = 2', jumpstart)
+        self.assertIn('["personal-roboport-equipment"] = 2', jumpstart)
+        self.assertIn('["battery-equipment"] = 4', jumpstart)
+        self.assertIn('["solar-panel-equipment"] = 16', jumpstart)
+        self.assertIn('["night-vision-equipment"] = 2', jumpstart)
         self.assertIn('["electric-furnace"] = 24', control)
         self.assertIn('["lamp"] = 50', control)
         self.assertIn('FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"', control)

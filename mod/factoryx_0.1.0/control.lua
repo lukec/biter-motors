@@ -226,7 +226,12 @@ FACTORYX_START_TECHNOLOGIES = {
   "battery",
   "robotics",
   "construction-robotics",
-  "logistic-robotics"
+  "logistic-robotics",
+  "modular-armor",
+  "solar-panel-equipment",
+  "battery-equipment",
+  "night-vision-equipment",
+  "personal-roboport-equipment"
 }
 FACTORYX_START_SHIP_ITEMS = {
   ["steel-plate"] = 100,
@@ -255,7 +260,12 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["substation"] = 40,
   ["roboport"] = 20,
   ["construction-robot"] = 400,
-  ["logistic-robot"] = 400
+  ["logistic-robot"] = 400,
+  ["modular-armor"] = 2,
+  ["personal-roboport-equipment"] = 2,
+  ["battery-equipment"] = 4,
+  ["solar-panel-equipment"] = 16,
+  ["night-vision-equipment"] = 2
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
@@ -784,7 +794,7 @@ function grant_factoryx_energy_jumpstart(player)
     "",
     "[FactoryX] Captain's Chest recovered at ",
     string.format("[gps=%.1f,%.1f,%s]", position.x, position.y, surface.name),
-    ": two expedition kits containing 108 legendary solar arrays (81 MW peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary Roboports, and 400 legendary robots of each type."
+    ": two expedition kits containing 108 legendary solar arrays (81 MW peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary Roboports, 400 legendary robots of each type, and two complete legendary personal robotics loadouts."
   })
   return chest
 end

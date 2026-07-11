@@ -177,7 +177,11 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - The Captain's Chest contains 108 legendary High-density Solar Arrays (81 MW
   peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
   Roboports, 400 legendary Construction Robots, and 400 legendary Logistic
-  Robots. This is two finite expedition kits; normal versions of the recovered
+  Robots. It also contains two legendary personal kits: two Modular Armors,
+  two Personal Roboports, four Battery equipment items, 16 Portable Solar Panels, and two
+  Night-vision units. Their corresponding technologies start researched, so
+  normal-quality replacements are craftable. This is two finite expedition
+  kits; normal versions of the recovered
   base-game infrastructure are craftable immediately, while FactoryX energy
   products still require their normal FactoryX progression.
 - A spoiler-light opening message explains the customer economy and long-term
