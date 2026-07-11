@@ -94,18 +94,18 @@ def build_roadster():
     bpy.context.collection.objects.link(root)
 
     parts = []
-    parts.append(cube("Low battery skateboard", (0, 0, 0.5), (1.9, 0.88, 0.16), RED, 0.16))
-    parts.append(wedge("Long low hood", 2.08, 0.25, 0.86, 0.55, 0.69, 0.92, RED_LIGHT))
-    parts.append(wedge("Rear haunch", 0.25, -2.0, 0.9, 0.54, 0.98, 0.72, RED))
-    parts.append(wedge("Dark glass canopy", 0.42, -1.0, 0.67, 0.91, 1.18, 1.42, GLASS))
-    parts.append(cube("Canopy roof", (-0.48, 0, 1.37), (0.48, 0.61, 0.06), GLASS, 0.08))
+    parts.append(cube("Low battery skateboard", (0, 0, 0.47), (1.95, 0.85, 0.14), RED, 0.15))
+    parts.append(wedge("Long low hood", 2.1, 0.34, 0.83, 0.52, 0.66, 0.87, RED_LIGHT))
+    parts.append(wedge("Rear haunch", 0.34, -2.02, 0.87, 0.51, 0.88, 0.68, RED))
+    parts.append(wedge("Integrated glass canopy", 0.48, -1.18, 0.64, 0.84, 1.03, 1.25, GLASS))
+    parts.append(wedge("Rear canopy taper", -0.5, -1.35, 0.6, 0.82, 1.23, 0.9, GLASS))
     parts.append(cube("Front splitter", (2.02, 0, 0.39), (0.12, 0.82, 0.07), RUBBER, 0.035))
     parts.append(cube("Rear diffuser", (-1.98, 0, 0.4), (0.12, 0.78, 0.08), RUBBER, 0.035))
     parts.append(cube("Left headlight", (1.95, -0.57, 0.68), (0.09, 0.2, 0.055), LIGHT, 0.025))
     parts.append(cube("Right headlight", (1.95, 0.57, 0.68), (0.09, 0.2, 0.055), LIGHT, 0.025))
     parts.append(cube("Left tail light", (-1.93, -0.55, 0.68), (0.07, 0.21, 0.05), TAIL, 0.02))
     parts.append(cube("Right tail light", (-1.93, 0.55, 0.68), (0.07, 0.21, 0.05), TAIL, 0.02))
-    for x, y, label in [(1.25, -0.88, "front left"), (1.25, 0.88, "front right"), (-1.25, -0.88, "rear left"), (-1.25, 0.88, "rear right")]:
+    for x, y, label in [(1.28, -0.86, "front left"), (1.28, 0.86, "front right"), (-1.28, -0.86, "rear left"), (-1.28, 0.86, "rear right")]:
         before = set(bpy.context.scene.objects)
         wheel(label, x, y)
         parts.extend([obj for obj in bpy.context.scene.objects if obj not in before])
