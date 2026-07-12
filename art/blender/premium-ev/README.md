@@ -1,14 +1,13 @@
 # Premium EV Blender Study
 
-The black Premium EV is a distinct long-wheelbase four-door fastback built on
-the same Factorio orthographic camera and lighting conventions as the Prototype
-Roadster.
+The black Premium EV is a distinct long-wheelbase four-door fastback built with
+the Roadster's high-overhead Factorio camera, weathered paint, warm industrial
+lighting, readable panel detail, and separate shadow frames.
 
 ```sh
 /opt/homebrew/bin/blender --background \
   --python art/blender/premium-ev/render_premium_ev.py
 ```
 
-The script produces a transparent master, 64 directional frames, and an
-editable `.blend`. Direction frames remain generated local output until the
-vehicle family is approved and packed into Factorio sprite sheets.
+The script produces a transparent master, 64 body frames, 64 shadow frames,
+and an editable `.blend`.

@@ -74,8 +74,7 @@ def build_icon(item_name: str, folder: str, master_stem: str) -> None:
 def main() -> None:
     for item_name, (folder, frame_stem, master_stem) in VEHICLES.items():
         build_sheet(item_name, folder, frame_stem)
-        if item_name == "prototype-roadster":
-            build_shadow_sheet(item_name, folder, frame_stem)
+        build_shadow_sheet(item_name, folder, frame_stem)
         build_icon(item_name, folder, master_stem)
         print(f"Built {item_name} vehicle sheet and icon")
 

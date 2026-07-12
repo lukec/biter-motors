@@ -5,7 +5,7 @@ import bpy
 from mathutils import Vector
 
 
-def material(name, color, metallic=0.0, roughness=0.4, coat=0.35):
+def material(name, color, metallic=0.0, roughness=0.4, coat=0.18, variation=None):
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = color
     mat.use_nodes = True
@@ -14,7 +14,19 @@ def material(name, color, metallic=0.0, roughness=0.4, coat=0.35):
     bsdf.inputs["Metallic"].default_value = metallic
     bsdf.inputs["Roughness"].default_value = roughness
     bsdf.inputs["Coat Weight"].default_value = coat
-    bsdf.inputs["Coat Roughness"].default_value = 0.16
+    bsdf.inputs["Coat Roughness"].default_value = 0.3
+    if variation:
+        noise = mat.node_tree.nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = variation.get("scale", 8.0)
+        noise.inputs["Detail"].default_value = 3.0
+        noise.inputs["Roughness"].default_value = 0.72
+        ramp = mat.node_tree.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].position = 0.24
+        ramp.color_ramp.elements[0].color = variation["dark"]
+        ramp.color_ramp.elements[1].position = 0.78
+        ramp.color_ramp.elements[1].color = color
+        mat.node_tree.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+        mat.node_tree.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
     return mat
 
 
@@ -92,18 +104,18 @@ def setup_scene(ortho_scale=6.8):
     scene.render.image_settings.color_mode = "RGBA"
     scene.render.resolution_percentage = 100
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.world.color = (0.03, 0.04, 0.055)
+    scene.world.color = (0.025, 0.021, 0.017)
     for location, energy, size, color in [
-        ((3, -4.5, 8), 1500, 5.0, (1.0, 0.78, 0.58)),
-        ((-4, 3, 5), 1450, 4.0, (0.35, 0.68, 1.0)),
-        ((0, 0, 8), 900, 5.0, (0.82, 0.9, 1.0)),
+        ((3, -4.5, 8), 1250, 5.0, (1.0, 0.82, 0.64)),
+        ((-4, 3, 5), 280, 4.0, (0.72, 0.76, 0.78)),
+        ((0, 0, 8), 850, 5.0, (1.0, 0.96, 0.88)),
     ]:
         bpy.ops.object.light_add(type="AREA", location=location)
         lamp = bpy.context.object
         lamp.data.energy = energy
         lamp.data.size = size
         lamp.data.color = color
-    bpy.ops.object.camera_add(location=(8.4, -10.0, 7.6))
+    bpy.ops.object.camera_add(location=(7.8, -9.2, 15.0))
     camera = bpy.context.object
     camera.name = "Factorio orthographic camera"
     camera.data.type = "ORTHO"
@@ -122,6 +134,11 @@ def render_vehicle(script_file, build, stem, blend_name, ortho_scale=6.8):
     bpy.ops.object.delete(use_global=False)
     scene = setup_scene(ortho_scale)
     vehicle = build()
+    shadow = bpy.data.objects.get("Ground contact shadow")
+    color_parts = [
+        obj for obj in scene.objects
+        if obj != shadow and obj != scene.camera and obj.type not in {"LIGHT", "EMPTY"}
+    ]
     vehicle.rotation_euler.z = math.radians(18)
     scene.render.resolution_x = 768
     scene.render.resolution_y = 768
@@ -131,6 +148,16 @@ def render_vehicle(script_file, build, stem, blend_name, ortho_scale=6.8):
     scene.render.resolution_y = 192
     for index in range(64):
         vehicle.rotation_euler.z = 2 * math.pi * index / 64
+        if shadow:
+            shadow.hide_render = True
         scene.render.filepath = os.path.join(frames, f"{stem}-{index:02d}.png")
         bpy.ops.render.render(write_still=True)
+        for part in color_parts:
+            part.hide_render = True
+        if shadow:
+            shadow.hide_render = False
+        scene.render.filepath = os.path.join(frames, f"{stem}-shadow-{index:02d}.png")
+        bpy.ops.render.render(write_still=True)
+        for part in color_parts:
+            part.hide_render = False
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(root_dir, blend_name))

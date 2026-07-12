@@ -352,9 +352,9 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
         scale = profile.sprite_scale or 0.72
       }
     }
-    if profile.artwork == "prototype-roadster" then
+    if profile.artwork then
       animation_layers[#animation_layers + 1] = {
-        filename = "__factoryx__/graphics/entity/vehicles/prototype-roadster-shadow.png",
+        filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. "-shadow.png",
         priority = "high",
         width = 192,
         height = 192,

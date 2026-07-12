@@ -1174,12 +1174,19 @@ for vehicle_name in (
     "x-cybertruck", "x-robotaxi-fleet",
 ):
     vehicle = data["car"][vehicle_name]
-    layer = vehicle["animation"]["layers"][0]
+    layers = vehicle["animation"]["layers"]
+    layer = layers[0]
     expected_file = f"__factoryx__/graphics/entity/vehicles/{vehicle_name[2:]}.png"
     if layer.get("filename") != expected_file:
         raise SystemExit(f"{vehicle_name} custom vehicle sheet mismatch: {layer}")
     if layer.get("direction_count") != 64 or layer.get("line_length") != 8:
         raise SystemExit(f"{vehicle_name} direction layout mismatch: {layer}")
+    expected_shadow = f"__factoryx__/graphics/entity/vehicles/{vehicle_name[2:]}-shadow.png"
+    shadow_layers = [candidate for candidate in layers if candidate.get("draw_as_shadow")]
+    if len(shadow_layers) != 1 or shadow_layers[0].get("filename") != expected_shadow:
+        raise SystemExit(f"{vehicle_name} separate shadow layer mismatch: {layers}")
+    if shadow_layers[0].get("direction_count") != 64 or shadow_layers[0].get("line_length") != 8:
+        raise SystemExit(f"{vehicle_name} shadow direction layout mismatch: {shadow_layers[0]}")
     if vehicle.get("turret_animation") is not None or vehicle.get("light_animation") is not None:
         raise SystemExit(f"{vehicle_name} retained mismatched vanilla overlay art")
 print("FactoryX custom vehicle engine sprites OK.")

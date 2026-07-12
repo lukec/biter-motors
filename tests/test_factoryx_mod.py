@@ -280,10 +280,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("line_length = 8", data)
         self.assertIn("prototype.turret_animation = nil", data)
         self.assertIn("prototype.light_animation = nil", data)
-        self.assertIn('profile.artwork == "prototype-roadster"', data)
-        self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/prototype-roadster-shadow.png"', data)
+        self.assertIn('profile.artwork .. "-shadow.png"', data)
         self.assertIn("draw_as_shadow = true", data)
-        self.assertTrue((MOD / "graphics/entity/vehicles/prototype-roadster-shadow.png").exists())
+        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck", "robotaxi-fleet"]:
+            self.assertTrue((MOD / f"graphics/entity/vehicles/{artwork}-shadow.png").exists())
         self.assertIn("x-electric-drive=Electric drive", locale)
         self.assertIn("x-electric-drive-charge=Stored battery charge", locale)
         self.assertIn("no manually inserted fuel is required", locale)
