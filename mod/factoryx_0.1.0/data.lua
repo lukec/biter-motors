@@ -1009,9 +1009,13 @@ local electric_vehicles = {
   copied_electric_vehicle(
     "x-prototype-roadster", generated_icon("prototype-roadster"),
     {r = 0.90, g = 0.02, b = 0.01, a = 1}, {r = 1.00, g = 0.18, b = 0.08, a = 1},
-    {consumption = "600kW", weight = 450, max_health = 300, rotation_multiplier = 1.35,
+    {consumption = "600kW", weight = 450, max_health = 120, rotation_multiplier = 1.35,
       braking_multiplier = 8.0, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20,
-      artwork = "prototype-roadster"}
+      artwork = "prototype-roadster", resistances = {
+        {type = "impact", percent = -50},
+        {type = "acid", percent = 10},
+        {type = "fire", percent = 20}
+      }}
   ),
   copied_electric_vehicle(
     "x-premium-ev", generated_icon("premium-ev"),

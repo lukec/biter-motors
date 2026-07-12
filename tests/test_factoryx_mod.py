@@ -349,7 +349,7 @@ class FactoryXModTest(unittest.TestCase):
                 self.assertEqual(image.size, (1536, 1536))
                 self.assertEqual(image.mode, "RGBA")
         for fragment in [
-            '{consumption = "600kW", weight = 450, max_health = 300',
+            '{consumption = "600kW", weight = 450, max_health = 120',
             '{consumption = "320kW", weight = 750, max_health = 550',
             '{consumption = "240kW", weight = 800, max_health = 500',
             '{consumption = "600kW", weight = 1800, max_health = 1400',
@@ -358,6 +358,10 @@ class FactoryXModTest(unittest.TestCase):
             '{type = "impact", decrease = 150, percent = 70}',
         ]:
             self.assertIn(fragment, data)
+        vehicle_table = data.index("local electric_vehicles")
+        roadster = data[data.index('"x-prototype-roadster", generated_icon("prototype-roadster")', vehicle_table):
+                        data.index('"x-premium-ev", generated_icon("premium-ev")', vehicle_table)]
+        self.assertIn('{type = "impact", percent = -50}', roadster)
         for name, batteries in {
             "x-prototype-roadster": 3,
             "x-premium-ev": 4,
