@@ -1597,6 +1597,7 @@ beyond the MVP tech-and-recipe loop.
 | Ground Station | Converts the current Ground Station Network item into visible satellite infrastructure. | Yes | Could increase orbital compute output or satellite constellation capacity. |
 | Satellite Constellation Controller | Tracks constellation scale and links launch products to compute bonuses. | Yes | Might be a radar/combinator-like entity rather than a normal assembler. |
 | Market Exchange | Alternative or upgrade to Sales Office for late product sales. | Yes | Only worth adding if Sales Office recipes become too crowded. |
+| Biter Diner | Mass-market hospitality side path and 80-stall V5-class charging destination. | Yes | Large diner-and-charging-campus art should make the restaurant, parking, and chargers readable within a square footprint. |
 | Fictional Disruption Spawner | Optional event/enemy source if we add competition or disruption. | Yes | Not MVP. Avoid direct real-world political labels. |
 
 ### Items And Products
@@ -1759,6 +1760,59 @@ icons, and bounded working animations. Remaining work is narrower:
     mass-market sale bonuses.
   - Add a dashboard or command report that shows coverage, demand, and sales
     bottlenecks.
+
+### Phase 2.4: Biter Diner Side Path
+
+Add a deliberately playful terrestrial expansion during the Mass-market EV
+stage. It is powerful, but optional and expensive enough that ordinary V2-V4
+charging remains the straightforward path.
+
+- `Biter Hospitality` becomes researchable after Mass-market EV Production. A
+  provisional cost is 1,000 cycles using red, green, blue, purple, and yellow
+  science. It unlocks both the `Biter Diner` and a FactoryX-retuned version of
+  the existing Space Age `fish-breeding` recipe.
+- The Biter Diner is a 12x12, stack-size-1 specialty V5-class charger with 80
+  public stalls and a 224-tile customer radius. Each stall supports 50 EV
+  owners, matching V4 throughput, for 4,000 supported owners at one campus.
+- Each occupied stall draws 500 kW, for 40 MW peak site demand. Empty stalls do
+  not draw their full charging load. Quality and the existing Long-range
+  Battery and Supercharging research apply through the normal charger rules.
+- Diner stalls produce EV Reservations at the normal one-per-active-stall rate.
+  The economic bonus is separate: a consumer EV sold to a buyer whose home
+  settlement is assigned to a Diner yields three times that sale recipe's base
+  Dollar profit. This applies once, even with overlapping Diners. It does not
+  multiply Robotaxi Service Center trip income.
+- Bonus Dollars still emerge physically from the Sales Office. Implementation
+  must reserve enough output space for the full 3x payout before starting the
+  sale, so the bonus cannot disappear when output is nearly full.
+- Proposed four-ingredient recipe: `1 V3 Supercharger + 100 Raw fish + 500
+  Refined concrete + 1,000 Dollars -> 1 Biter Diner`. The inherited V3 contains
+  the electrical equipment; fish creates the exploration/automation sidequest;
+  concrete and capital reflect the large destination campus.
+- Retune `fish-breeding` for the established no-Gleba terrestrial game:
+  `2 Raw fish + 20 Wood + 100 Water -> 3 Raw fish` in a Chemical Plant, 30
+  seconds, Nauvis only, with no productivity or quality. This preserves the
+  vanilla recipe and chemical-plant affordance while removing nutrients and
+  agricultural science. A player can catch the initial fish manually, then
+  scale hatcheries to supply one or more Diners.
+- Do not use Spoilage as the initial breeding gate. Raw fish take a little over
+  two hours to spoil in Space Age, so requiring the player to wait for the first
+  Spoilage would be obscure and inert. Spoilage can remain a future optional
+  efficiency recipe if playtesting shows that the fish loop needs another sink.
+- Assignment should prefer normal spare charging before overloading a Diner or
+  vice versa according to the existing owners-per-capacity balancing. The
+  settlement inspector must identify `Biter Diner`, show its 3x hospitality
+  bonus, and report local capacity and underserved owners normally.
+- Required art: a footprint-aligned square diner campus with a clearly visible
+  restaurant core, parking/drive-through circulation, and charger banks. Avoid
+  angled presentation art; all 12x12 boundaries should read at game zoom.
+
+Balance questions for playtesting, not blockers for first implementation:
+
+- Whether 1,000 Dollars sufficiently offsets the jump to 4,000-owner capacity.
+- Whether the Diner should use 40 MW or add a small always-on restaurant load.
+- Whether 100 fish creates a satisfying ten-to-twenty-minute hatchery sidequest
+  once several Chemical Plants are running.
 
 ### Phase 2.5: Biter Customers
 
