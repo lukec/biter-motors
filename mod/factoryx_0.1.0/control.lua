@@ -6233,6 +6233,14 @@ remote.add_interface("factoryx", {
   repair_customer_populations = function()
     return rebuild_customer_settlement_population_cache()
   end,
+  sync_sales_offices = function()
+    sync_sales_office_buyers()
+    local enabled = 0
+    for _, office in pairs(registered_factoryx_entities("sales_offices")) do
+      if office.valid and not office.disabled_by_script then enabled = enabled + 1 end
+    end
+    return enabled
+  end,
   sales_office_status = function(force_name)
     local force = game.forces[force_name or "player"]
     if not force then return nil end
