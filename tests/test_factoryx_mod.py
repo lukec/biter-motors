@@ -20,6 +20,15 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("defines.riding.acceleration.reversing", control)
         self.assertIn("update_ev_reverse_warnings()", control)
 
+    def test_sales_office_panel_explains_market_saturation(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("Customers who already own EVs: %d / %d", control)
+        self.assertIn("Market saturated - expand to new settlements", control)
+        self.assertIn("FACTORYX_STATE_COLORS", control)
+        self.assertIn("add_station_info_label(state_row, state_text, state_color)", control)
+        self.assertIn('if entity.name ~= SALES_OFFICE_NAME then', control)
+        self.assertNotIn('add_station_info_label(panel, "Recipe: none selected")', control)
+
     def test_ev_progression_is_gated_by_completed_sales(self):
         control = (MOD / "control.lua").read_text()
         data = (MOD / "data.lua").read_text()

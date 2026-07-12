@@ -3504,12 +3504,14 @@ function opened_factoryx_entities()
   return storage.factoryx_opened_entities
 end
 
-local function add_station_info_label(parent, caption)
-  parent.add{
+local function add_station_info_label(parent, caption, color)
+  local label = parent.add{
     type = "label",
     caption = caption,
     single_line = false
   }
+  if color then label.style.font_color = color end
+  return label
 end
 
 local function station_next_step(station, covered_settlements, hostile_settlements, offices)
@@ -4657,6 +4659,7 @@ end
 
 function sales_office_buyer_status(office)
   local service = customer_service_for_force(office.force)
+  local vehicle_summary = active_customer_vehicle_summary(office.force)
   local eligible_keys = {}
   local settlements = 0
   for key in pairs(service.operational_keys) do
@@ -4668,6 +4671,8 @@ function sales_office_buyer_status(office)
     end
   end
   local available = 0
+  local customers = 0
+  local owned = 0
   for key in pairs(eligible_keys) do
     local population = customer_settlement_populations()[key]
     local queue = buyer_queue_for(office.force.name, key)
@@ -4676,8 +4681,19 @@ function sales_office_buyer_status(office)
       0,
       (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
     )
+    owned = owned + (vehicle_summary.by_settlement[key] or 0)
+    customers = customers + (population.physical or 0) + (population.virtual_unowned or 0)
+    for _, count in pairs(population.virtual_by_vehicle or {}) do
+      customers = customers + count
+    end
   end
-  return {available = available, settlements = settlements}
+  return {
+    available = available,
+    settlements = settlements,
+    customers = customers,
+    owned = owned,
+    unowned = math.max(0, customers - owned)
+  }
 end
 
 function reserve_office_buyers(office, recipe_name, sale)
@@ -5412,6 +5428,40 @@ local function entity_status_text(entity)
   return "Idle"
 end
 
+FACTORYX_STATE_COLORS = {
+  good = {r = 0.35, g = 0.90, b = 0.35},
+  warning = {r = 1.00, g = 0.72, b = 0.20},
+  bad = {r = 1.00, g = 0.30, b = 0.25},
+  neutral = {r = 0.75, g = 0.75, b = 0.75}
+}
+
+function entity_status_presentation(entity)
+  if entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
+    local buyers = sales_office_buyer_status(entity)
+    if buyers.settlements == 0 then
+      return "No customer settlements in coverage", FACTORYX_STATE_COLORS.bad
+    elseif buyers.unowned == 0 then
+      return "Market saturated - expand to new settlements", FACTORYX_STATE_COLORS.warning
+    end
+    return "Waiting for an available mobile buyer", FACTORYX_STATE_COLORS.warning
+  end
+  local status = entity.status
+  if status == defines.entity_status.working then
+    return "Working", FACTORYX_STATE_COLORS.good
+  elseif status == defines.entity_status.no_power or status == defines.entity_status.low_power then
+    return entity_status_text(entity), FACTORYX_STATE_COLORS.bad
+  elseif status == defines.entity_status.no_ingredients
+    or status == defines.entity_status.item_ingredient_shortage
+    or status == defines.entity_status.fluid_ingredient_shortage
+    or status == defines.entity_status.full_output
+    or status == defines.entity_status.disabled_by_control_behavior then
+    return entity_status_text(entity), FACTORYX_STATE_COLORS.bad
+  elseif status == defines.entity_status.no_recipe then
+    return entity_status_text(entity), FACTORYX_STATE_COLORS.warning
+  end
+  return entity_status_text(entity), FACTORYX_STATE_COLORS.neutral
+end
+
 local function add_item_inventory_row(parent, item_name, current, required)
   local row = parent.add{type = "flow", direction = "horizontal"}
   row.add{type = "sprite", sprite = "item/" .. item_name}
@@ -5454,7 +5504,10 @@ local function show_manufacturer_info_panel(player, entity)
     anchor = factoryx_relative_anchor(entity)
   }
   panel.style.width = 380
-  add_station_info_label(panel, "State: " .. entity_status_text(entity))
+  local state_text, state_color = entity_status_presentation(entity)
+  local state_row = panel.add{type = "flow", direction = "horizontal"}
+  state_row.add{type = "label", caption = "State: "}
+  add_station_info_label(state_row, state_text, state_color)
 
   if entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
     local snapshot = robotaxi_service_snapshot(entity)
@@ -5500,9 +5553,15 @@ local function show_manufacturer_info_panel(player, entity)
   end
 
   if entity.name == SALES_OFFICE_NAME then
+    local buyer_status = sales_office_buyer_status(entity)
     add_station_info_label(panel, string.format(
       "Customer settlements in office coverage: %d",
       count_customer_settlements_near_office(entity)
+    ))
+    add_station_info_label(panel, string.format(
+      "Customers who already own EVs: %d / %d",
+      buyer_status.owned,
+      buyer_status.customers
     ))
   else
     local config = GIGAFACTORY_CONFIGS[entity.name]
@@ -5548,12 +5607,13 @@ local function show_manufacturer_info_panel(player, entity)
       and "Next: select the available sales contract for the product you are supplying."
       or config.recipe_prompt
       or "Next: select " .. config.default_product .. ", an Energy Product, or a vertically integrated component recipe."
-    add_station_info_label(panel, "Recipe: none selected")
     add_station_info_label(panel, next_step)
     return
   end
 
-  add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
+  if entity.name ~= SALES_OFFICE_NAME then
+    add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
+  end
   if entity.name == SALES_OFFICE_NAME and CUSTOMER_EV_SALE_RECIPES[recipe.name] then
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
@@ -5598,7 +5658,10 @@ local function show_manufacturer_info_panel(player, entity)
       and "Blocked: Dollar output is full. Remove Dollars; sales and EV Reservation consumption are paused."
       or "Blocked: remove finished products from the output inventory."
   elseif entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
-    next_step = "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
+    local buyers = sales_office_buyer_status(entity)
+    next_step = buyers.unowned == 0
+      and "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
+      or "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
   elseif missing_name then
     local item = prototypes.item[missing_name]
     local display_name = item and item.localised_name or missing_name
