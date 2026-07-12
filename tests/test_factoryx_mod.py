@@ -11,6 +11,15 @@ MOD = ROOT / "mod" / "factoryx_0.1.0"
 
 
 class FactoryXModTest(unittest.TestCase):
+    def test_electric_vehicles_use_ev_audio(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("__factoryx__/sound/ev-drivetrain-loop.wav", data)
+        self.assertIn('name = "x-ev-reverse-warning"', data)
+        self.assertIn("function update_ev_reverse_warnings()", control)
+        self.assertIn("defines.riding.acceleration.reversing", control)
+        self.assertIn("update_ev_reverse_warnings()", control)
+
     def test_ev_progression_is_gated_by_completed_sales(self):
         control = (MOD / "control.lua").read_text()
         data = (MOD / "data.lua").read_text()

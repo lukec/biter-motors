@@ -5904,6 +5904,26 @@ script.on_event(defines.events.on_player_driving_changed_state, function()
   refresh_ev_driver_overlays()
 end)
 
+function update_ev_reverse_warnings()
+  storage.factoryx_ev_reverse_warning_tick = storage.factoryx_ev_reverse_warning_tick or {}
+  for _, player in pairs(game.connected_players) do
+    local vehicle = player.vehicle
+    local reversing = vehicle and vehicle.valid and ELECTRIC_VEHICLE_NAMES[vehicle.name]
+      and player.riding_state.acceleration == defines.riding.acceleration.reversing
+      and math.abs(vehicle.speed or 0) > 0.005
+    local last_tick = storage.factoryx_ev_reverse_warning_tick[player.index] or -60
+    if reversing and game.tick - last_tick >= 60 then
+      vehicle.surface.play_sound({
+        path = "x-ev-reverse-warning",
+        position = vehicle.position
+      })
+      storage.factoryx_ev_reverse_warning_tick[player.index] = game.tick
+    elseif not reversing then
+      storage.factoryx_ev_reverse_warning_tick[player.index] = nil
+    end
+  end
+end
+
 script.on_event(defines.events.on_entity_damaged, function(event)
   local victim = event.entity
   local attacker = event.cause
@@ -6111,6 +6131,7 @@ script.on_nth_tick(1, reset_underpowered_compute_progress)
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()
   refresh_ev_driver_overlays()
+  update_ev_reverse_warnings()
   feed_tracked_electric_vehicles()
   sync_sales_office_buyers()
   accelerate_consumer_ev_sales()

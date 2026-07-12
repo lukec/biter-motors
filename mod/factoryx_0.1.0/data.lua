@@ -340,6 +340,29 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
   prototype.energy_per_hit_point = profile.energy_per_hit_point
   prototype.inventory_size = profile.inventory_size
   prototype.resistances = profile.resistances or prototype.resistances
+  prototype.working_sound = {
+    main_sounds = {
+      {
+        sound = {
+          filename = "__factoryx__/sound/ev-drivetrain-loop.wav",
+          volume = 0.42,
+          audible_distance_modifier = 0.65
+        },
+        match_volume_to_activity = true,
+        activity_to_volume_modifiers = {
+          multiplier = 1.25,
+          offset = 0.12
+        },
+        match_speed_to_activity = true,
+        activity_to_speed_modifiers = {
+          multiplier = 1.15,
+          minimum = 0.72,
+          maximum = 1.9,
+          offset = 0.05
+        }
+      }
+    }
+  }
   if profile.artwork then
     local animation_layers = {
       {
@@ -375,6 +398,16 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
   end
   return prototype
 end
+
+data:extend({
+  {
+    type = "sound",
+    name = "x-ev-reverse-warning",
+    filename = "__factoryx__/sound/ev-reverse-warning.wav",
+    volume = 0.34,
+    audible_distance_modifier = 0.55
+  }
+})
 
 local function shifted_two_thirds_scale_sprite_layer(source, x, y)
   local layer = table.deepcopy(source)
