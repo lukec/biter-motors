@@ -310,7 +310,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_empty_customer_settlements_seed_initial_mobile_buyer(self):
         control = (MOD / "control.lua").read_text()
 
-        self.assertIn("local function ensure_seed_customer(settlement, market_force)", control)
+        self.assertIn("function ensure_seed_customer(settlement, market_force)", control)
         self.assertIn('settlement.name == "spitter-spawner" and "small-spitter" or "small-biter"', control)
         self.assertIn('mark_factoryx_market_dirty(market_force, "settlement-seed-customer")', control)
         self.assertIn("ensure_seed_customer(settlement, force)", control)
@@ -319,7 +319,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_existing_mobile_enemies_convert_across_charger_service_area(self):
         control = (MOD / "control.lua").read_text()
 
-        self.assertIn("local function convert_station_area_customers(market_force, service)", control)
+        self.assertIn("function convert_station_area_customers(market_force, service)", control)
         self.assertIn("area_around(station.position, config.customer_radius)", control)
         self.assertIn('if entity.type == "unit"', control)
         self.assertIn("position_has_sales_coverage(entity.surface, entity.position, offices)", control)
@@ -328,7 +328,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()
 
-        self.assertIn("local function refresh_ev_driver_overlays()", control)
+        self.assertIn("function refresh_ev_driver_overlays()", control)
         self.assertIn("local vehicle = player.vehicle", control)
         self.assertIn("config.vehicle_charge_radius", control)
         self.assertIn("vehicle_charge_radius = 8", control)
@@ -1790,7 +1790,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('["show-logistic-network"] = false', control)
         self.assertIn("MapViewSettings is write-only", control)
         self.assertNotIn("local settings = player.map_view_settings", control)
-        self.assertIn("local function set_charger_placement_overlay(player, enabled)", control)
+        self.assertIn("function set_charger_placement_overlay(player, enabled)", control)
         self.assertIn("if not player or not player.valid or not player.connected then", control)
         self.assertIn("local ok, error_message = pcall(function()", control)
         self.assertIn("Charger placement overlay unavailable for player", control)

@@ -2290,12 +2290,12 @@ function charge_station_vehicles(station)
   return charged
 end
 
-local function ev_driver_overlay_states()
+function ev_driver_overlay_states()
   storage.factoryx_ev_driver_overlay_states = storage.factoryx_ev_driver_overlay_states or {}
   return storage.factoryx_ev_driver_overlay_states
 end
 
-local function destroy_ev_driver_overlay(player_index)
+function destroy_ev_driver_overlay(player_index)
   local states = ev_driver_overlay_states()
   local state = states[player_index]
   if not state then return end
@@ -2305,7 +2305,7 @@ local function destroy_ev_driver_overlay(player_index)
   states[player_index] = nil
 end
 
-local function create_ev_driver_overlay(player, vehicle)
+function create_ev_driver_overlay(player, vehicle)
   destroy_ev_driver_overlay(player.index)
   local state = {
     vehicle = vehicle,
@@ -2371,7 +2371,7 @@ local function create_ev_driver_overlay(player, vehicle)
   return state
 end
 
-local function refresh_ev_driver_overlays()
+function refresh_ev_driver_overlays()
   local activity = storage.factoryx_vehicle_charge_activity or {}
   local connected = {}
   for _, player in pairs(game.connected_players) do
@@ -2842,7 +2842,7 @@ function charger_placement_overlay_states()
   return storage.factoryx_charger_placement_overlay_states
 end
 
-local function set_charger_placement_overlay(player, enabled)
+function set_charger_placement_overlay(player, enabled)
   if not player or not player.valid or not player.connected then
     return false
   end
@@ -2969,7 +2969,7 @@ function update_customer_settlement_alerts(force, service)
   end
 end
 
-local function ensure_seed_customer(settlement, market_force)
+function ensure_seed_customer(settlement, market_force)
   local key, population = customer_settlement_population(settlement, market_force)
   local population_size = (population.physical or 0)
     + (population.virtual_unowned or 0)
@@ -3007,7 +3007,7 @@ local function ensure_seed_customer(settlement, market_force)
   return nil
 end
 
-local function convert_station_area_customers(market_force, service)
+function convert_station_area_customers(market_force, service)
   local enemy = game.forces.enemy
   local customers = customer_force()
   local offices = force_sales_offices(market_force)
