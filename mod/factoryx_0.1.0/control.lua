@@ -6246,12 +6246,31 @@ remote.add_interface("factoryx", {
         local station = service.assignment_by_settlement_key[key]
         local config = station and station_config(station)
         local queue = buyer_queue_for(force.name, key)
+        local valid_entities = 0
+        local customer_force_entities = 0
+        local unowned_entities = 0
+        local matching_homes = 0
+        for index = queue.head, #queue.units do
+          local unit_number = queue.units[index]
+          local entity = customer_unit_registry()[unit_number]
+          local home = customer_home_settlements()[unit_number]
+          if entity and entity.valid then
+            valid_entities = valid_entities + 1
+            if entity.force.name == CUSTOMER_FORCE_NAME then customer_force_entities = customer_force_entities + 1 end
+            if not customer_vehicle_owners()[unit_number] then unowned_entities = unowned_entities + 1 end
+          end
+          if home and home.settlement_key == key then matching_homes = matching_homes + 1 end
+        end
         settlements[#settlements + 1] = {
           key = key,
           position = population and population.position,
           in_coverage = population and population.surface_index == office.surface.index
             and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) or false,
           queued = math.max(0, #queue.units - queue.head + 1),
+          valid_entities = valid_entities,
+          customer_force_entities = customer_force_entities,
+          unowned_entities = unowned_entities,
+          matching_homes = matching_homes,
           owned = vehicle_summary.by_settlement[key] or 0,
           capacity = config and config.evs_per_stall or 0
         }
@@ -6260,6 +6279,9 @@ remote.add_interface("factoryx", {
         unit_number = office.unit_number,
         position = office.position,
         disabled = office.disabled_by_script,
+        recipe = office.get_recipe() and office.get_recipe().name,
+        has_inputs = office.get_recipe() and office_has_all_sale_inputs(office, office.get_recipe()) or false,
+        crafting_progress = office.crafting_progress,
         buyer_status = sales_office_buyer_status(office),
         settlements = settlements
       }
