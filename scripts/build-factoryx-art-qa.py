@@ -13,7 +13,7 @@ OUTPUT_DIR = ROOT / "art/factoryx-qa"
 GRAPHICS = ROOT / "mod/factoryx_0.1.0/graphics"
 
 ENTITIES = [
-    ("Sales Office", "sales-office/sales-office.png", "sales-office.png", 3, 512, 0.18, "generated-final"),
+    ("Sales Office", "sales-office/sales-office.png", "sales-office.png", 3, 512, 0.19, "generated-final"),
     ("EV Charging Station", "ev-charging-station/ev-charging-station.png", "ev-charging-station.png", 2, 512, 0.14, "aligned-final"),
     ("EV Charging Station V2", "ev-charging-station-v2/ev-charging-station-v2.png", "ev-charging-station-v2.png", 4, 512, 0.26, "aligned-final"),
     ("V3 Supercharger", "ev-charging-station-v3/ev-charging-station-v3.png", "ev-charging-station-v3.png", 5, 512, 0.35, "aligned-final"),

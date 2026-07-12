@@ -745,8 +745,8 @@ sales_office.graphics_set = {
         height = 512,
         frame_count = 1,
         line_length = 1,
-        shift = {0, -0.2},
-        scale = 0.18
+        shift = {0, 0},
+        scale = 0.19
       }
     }
   },
