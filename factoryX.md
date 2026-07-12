@@ -535,6 +535,10 @@ Current implementation:
   underserved; and a white lightning pulse means a sampled customer is
   physically charging. The visualization uses aggregate market state and is
   capped at the charger tier's fixed stall count, never the customer count.
+- Placing or removing a charger immediately invalidates and rebuilds charging
+  assignments after the entity registry changes. Buyer eligibility, stall
+  lights, open entity inspectors, and FactoryX Progress refresh in the same
+  event; periodic service reconciliation is only a fallback for missed events.
 - A settlement that loses its stall because of overload, charger removal, or a
   power shortage stays friendly for three minutes. Anger checks then ramp from
   5% to 25% per minute. Restored powered service makes it friendly immediately

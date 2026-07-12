@@ -563,9 +563,9 @@ function charger_stall_visual_state(service, station, assignment, stall_index, c
   return "low", charging_available
 end
 
-function update_charger_stall_visuals()
+function update_charger_stall_visuals(force_refresh)
   local frame_index = math.floor(game.tick / 30) % 8 + 1
-  local refresh_states = game.tick % 120 == 0
+  local refresh_states = force_refresh == true or game.tick % 120 == 0
   local commute_counts = refresh_states and customer_commute_station_counts() or {}
   local seen = {}
   local services = {}
@@ -6211,6 +6211,28 @@ local function handle_station_built(entity, event)
   update_station_alerts(entity)
 end
 
+function refresh_factoryx_infrastructure_change(entity)
+  if not entity or not entity.valid or not entity.force then return end
+  mark_factoryx_market_dirty(entity.force, "infrastructure-changed")
+  sync_customer_settlements()
+  sync_sales_office_buyers()
+  update_charger_stall_visuals(true)
+  for _, player in pairs(entity.force.connected_players) do
+    local opened = opened_factoryx_entities()[player.index]
+    if is_station(opened) then
+      close_entity_info_panel(player)
+      show_station_info_panel(player, opened)
+    elseif is_factoryx_manufacturer(opened) then
+      close_station_info_panel(player)
+      show_manufacturer_info_panel(player, opened)
+    elseif is_customer_settlement_entity(opened) then
+      close_station_info_panel(player)
+      show_customer_settlement_info_panel(player, opened)
+    end
+    refresh_progress_panel(player)
+  end
+end
+
 local function sync_biter_customer_diplomacy()
   if not biter_customer_mode_enabled() then
     return
@@ -6471,12 +6493,17 @@ for _, event_name in pairs({
   if event_name then
 	    script.on_event(event_name, function(event)
 	      local entity = event.entity or event.created_entity
+	      track_factoryx_entity(entity)
+	      if entity and entity.valid and (is_station(entity)
+	        or entity.name == SALES_OFFICE_NAME
+	        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME) then
+	        mark_factoryx_market_dirty(entity.force, "infrastructure-built")
+	      end
 	      handle_station_built(entity, event)
 	      track_grid_controller(entity)
 	      track_factoryx_compute_machine(entity)
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity, true)
-	      track_factoryx_entity(entity)
 	      attach_factoryx_runtime_visual(entity)
 	      if entity and entity.valid and GIGAFACTORY_ENTITY_NAMES[entity.name] then
 	        unlock_gigafactory_logistics(entity.force, true)
@@ -6487,13 +6514,12 @@ for _, event_name in pairs({
 	        ensure_robotaxi_service_power(entity)
 	      end
 	      if entity and entity.valid and entity.name == SALES_OFFICE_NAME then
-	        sync_customer_settlements()
 	        mark_sales_office_coverage_dirty()
 	      end
 	      if entity and entity.valid and (is_station(entity)
 	        or entity.name == SALES_OFFICE_NAME
 	        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME) then
-	        mark_factoryx_market_dirty(entity.force, "infrastructure-built")
+	        refresh_factoryx_infrastructure_change(entity)
 	      end
 	    end)
 	  end
@@ -6508,6 +6534,9 @@ for _, event_name in pairs({
   if event_name then
     script.on_event(event_name, function(event)
       local entity = event.entity
+      local refresh_infrastructure = entity and entity.valid and (is_station(entity)
+        or entity.name == SALES_OFFICE_NAME
+        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME)
       if event_name == defines.events.on_player_mined_entity
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
@@ -6551,6 +6580,9 @@ for _, event_name in pairs({
         local power = robotaxi_service_power_entities()[entity.unit_number]
         if power and power.valid then power.destroy() end
         robotaxi_service_power_entities()[entity.unit_number] = nil
+      end
+      if refresh_infrastructure and entity.valid then
+        refresh_factoryx_infrastructure_change(entity)
       end
     end)
   end

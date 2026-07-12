@@ -589,7 +589,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
-        self.assertIn("function update_charger_stall_visuals()", control)
+        self.assertIn("function update_charger_stall_visuals(force_refresh)", control)
         self.assertIn('object.sprite = "x-charger-stall-" .. state .. "-frame-" .. frame_index', control)
         self.assertIn('sprite_prefix = "x-robotaxi-dispatch-lights-frame-"', control)
         self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)
@@ -612,7 +612,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("for stall_index = 1, config.stalls do", control)
         self.assertIn("assignment.stall_loads[stall_index]", control)
         self.assertIn("customer_commute_station_counts()", control)
-        self.assertIn("local refresh_states = game.tick % 120 == 0", control)
+        self.assertIn("local refresh_states = force_refresh == true or game.tick % 120 == 0", control)
         self.assertIn("local state = entry.states[stall_index] or \"idle\"", control)
         for state in ["idle", "low", "medium", "full", "overload", "charging"]:
             self.assertIn(f'{{state = "{state}"', data)
@@ -1883,6 +1883,25 @@ class FactoryXModTest(unittest.TestCase):
         commute_start = control.index("function process_customer_charging_commutes")
         commute_end = control.index("function handle_customer_commute_command_completed", commute_start)
         self.assertNotIn("pairs(customer_vehicle_owners())", control[commute_start:commute_end])
+
+    def test_charger_changes_refresh_market_capacity_immediately(self):
+        control = (MOD / "control.lua").read_text()
+        built_start = control.index("defines.events.on_built_entity")
+        built_end = control.index("defines.events.on_player_mined_entity", built_start)
+        built = control[built_start:built_end]
+        self.assertLess(built.index("track_factoryx_entity(entity)"), built.index("handle_station_built(entity, event)"))
+        self.assertLess(built.index('mark_factoryx_market_dirty(entity.force, "infrastructure-built")'),
+                        built.index("handle_station_built(entity, event)"))
+        self.assertIn("refresh_factoryx_infrastructure_change(entity)", built)
+        refresh_start = control.index("function refresh_factoryx_infrastructure_change")
+        refresh_end = control.index("local function sync_biter_customer_diplomacy", refresh_start)
+        refresh = control[refresh_start:refresh_end]
+        self.assertIn("sync_customer_settlements()", refresh)
+        self.assertIn("sync_sales_office_buyers()", refresh)
+        self.assertIn("update_charger_stall_visuals(true)", refresh)
+        self.assertIn("refresh_progress_panel(player)", refresh)
+        removed = control[built_end:control.index("script.on_nth_tick(1", built_end)]
+        self.assertIn("refresh_factoryx_infrastructure_change(entity)", removed)
 
     def test_factoryx_scale_benchmark_and_runtime_modules_exist(self):
         timing_wheel = (MOD / "runtime/timing_wheel.lua").read_text()
