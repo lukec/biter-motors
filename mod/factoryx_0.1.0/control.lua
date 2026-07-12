@@ -2847,6 +2847,84 @@ function update_customer_settlement_alerts(force, service)
   end
 end
 
+local function ensure_seed_customer(settlement, market_force)
+  local key, population = customer_settlement_population(settlement, market_force)
+  local population_size = (population.physical or 0)
+    + (population.virtual_unowned or 0)
+    + (population.virtual_reserved or 0)
+  for _, count in pairs(population.virtual_by_vehicle or {}) do
+    population_size = population_size + count
+  end
+  if population_size > 0 then
+    return nil
+  end
+
+  local unit_name = settlement.name == "spitter-spawner" and "small-spitter" or "small-biter"
+  local target = {
+    x = settlement.position.x + 3,
+    y = settlement.position.y + 3
+  }
+  local position = settlement.surface.find_non_colliding_position(unit_name, target, 12, 0.5)
+  if not position then
+    return nil
+  end
+  local customer = settlement.surface.create_entity{
+    name = unit_name,
+    position = position,
+    force = customer_force()
+  }
+  if customer and register_customer_unit(customer, settlement, market_force) then
+    draw_customer_marker(customer)
+    give_customer_wander_command(customer, true)
+    mark_factoryx_market_dirty(market_force, "settlement-seed-customer")
+    return customer
+  end
+  if customer and customer.valid then
+    customer.destroy()
+  end
+  return nil
+end
+
+local function convert_station_area_customers(market_force, service)
+  local enemy = game.forces.enemy
+  local customers = customer_force()
+  local offices = force_sales_offices(market_force)
+  local converted = 0
+  for _, assignment in pairs(service.assignments or {}) do
+    local station = assignment.station
+    local config = station and station.valid and station_config(station)
+    if config and #assignment.settlements > 0 then
+      local area = area_around(station.position, config.customer_radius)
+      for _, source_force in pairs({enemy, customers}) do
+        scan_biter_customer_entities(station.surface, source_force, area, function(entity)
+          if entity.type == "unit"
+            and within_radius(station, entity, config.customer_radius)
+            and position_has_sales_coverage(entity.surface, entity.position, offices) then
+            local nearest
+            local nearest_distance
+            for _, settlement in pairs(assignment.settlements) do
+              local dx = settlement.position.x - entity.position.x
+              local dy = settlement.position.y - entity.position.y
+              local distance = dx * dx + dy * dy
+              if not nearest_distance or distance < nearest_distance then
+                nearest = settlement
+                nearest_distance = distance
+              end
+            end
+            if nearest and register_customer_unit(entity, nearest, market_force) then
+              if convert_biter_entity(entity, customers) then
+                converted = converted + 1
+              end
+              draw_customer_marker(entity)
+            end
+          end
+        end)
+      end
+    end
+  end
+  return converted
+end
+
 function sync_customer_settlements()
   if not biter_customer_mode_enabled() then
     return {customer_settlements = 0, converted_to_customer = 0, reverted_to_enemy = 0, reverted_hostile_worms = 0}
@@ -2872,6 +2950,7 @@ function sync_customer_settlements()
           customer_settlements = customer_settlements + 1
         end
       end
+      converted = converted + convert_station_area_customers(force, service)
       for _, settlement in pairs(service.served_settlements) do
         if settlement.valid then
           local area = area_around(settlement.position, CUSTOMER_MOBILE_SERVICE_RADIUS)
@@ -2890,6 +2969,7 @@ function sync_customer_settlements()
               end
             end)
           end
+          ensure_seed_customer(settlement, force)
         end
       end
     end

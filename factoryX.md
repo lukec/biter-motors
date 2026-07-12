@@ -653,6 +653,14 @@ Implemented v1 behavior:
   not form the fleet. Successive charger generations serve 12, 20, 32, and 50
   owners per stall. Overload, charger removal, and brownouts use one local
   three-minute grace-and-anger path; restored service recovers immediately.
+- A served settlement with no physical or virtual population seeds one small
+  mobile prospective customer. This prevents the first Reservation and sale
+  from deadlocking on quiet, unpolluted spawners while preserving the rule that
+  every sold EV must be assigned to a distinct owner.
+- Existing mobile biters and spitters inside overlapping Sales Office and
+  charger coverage convert as prospective customers across the charger's full
+  tier-specific service radius. They are assigned to the nearest settlement
+  served by that charger; hostile worms are never converted.
 - Every active stall contributes one adoption point per second. Five active
   stall-minutes grow one new customer spawner when that charger still has a
   spare settlement stall and there are no stranded EVs.
@@ -2186,8 +2194,8 @@ Current validation state, 2026-07-10:
   EV Reservation, verifies 1 Dollar in the Sales Office output, and verifies
   that the sale enables Small Orbital Launch.
 - The engine smoke test places a drivable Prototype Roadster beside a powered
-  V2 charger, verifies two embedded battery equipment items, measures 8.3 MJ
-  stored during the test window, and verifies battery energy is transformed
+  V2 charger, verifies three embedded battery equipment items, measures stored
+  energy during the test window, and verifies battery energy is transformed
   into the hidden electric-drive fuel used by the car prototype.
 - Unpowered charger alerts use `LuaPlayer.add_custom_alert`; Factorio 2.1 has no
   `defines.alert_type.no_power`. The copied-save GUI gate verifies the supported

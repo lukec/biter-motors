@@ -307,6 +307,24 @@ class FactoryXModTest(unittest.TestCase):
         }.items():
             self.assertIn(f'["{name}"] = {batteries}', control)
 
+    def test_empty_customer_settlements_seed_initial_mobile_buyer(self):
+        control = (MOD / "control.lua").read_text()
+
+        self.assertIn("local function ensure_seed_customer(settlement, market_force)", control)
+        self.assertIn('settlement.name == "spitter-spawner" and "small-spitter" or "small-biter"', control)
+        self.assertIn('mark_factoryx_market_dirty(market_force, "settlement-seed-customer")', control)
+        self.assertIn("ensure_seed_customer(settlement, force)", control)
+        self.assertIn("if population_size > 0 then", control)
+
+    def test_existing_mobile_enemies_convert_across_charger_service_area(self):
+        control = (MOD / "control.lua").read_text()
+
+        self.assertIn("local function convert_station_area_customers(market_force, service)", control)
+        self.assertIn("area_around(station.position, config.customer_radius)", control)
+        self.assertIn('if entity.type == "unit"', control)
+        self.assertIn("position_has_sales_coverage(entity.surface, entity.position, offices)", control)
+        self.assertIn("converted = converted + convert_station_area_customers(force, service)", control)
+
     def test_quality_scales_physical_assets_not_abstract_outputs(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
