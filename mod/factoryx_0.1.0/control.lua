@@ -5949,10 +5949,10 @@ for _, event_name in pairs({
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
         if event.buffer then
-          event.buffer.remove{
-            name = ELECTRIC_DRIVE_FUEL_NAME,
-            count = event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)
-          }
+          local hidden_charge_count = event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)
+          if hidden_charge_count > 0 then
+            event.buffer.remove{name = ELECTRIC_DRIVE_FUEL_NAME, count = hidden_charge_count}
+          end
         end
       end
       if entity and entity.valid and entity.unit_number and customer_unit_registry()[entity.unit_number] then
