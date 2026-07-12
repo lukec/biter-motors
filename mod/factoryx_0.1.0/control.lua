@@ -3011,16 +3011,21 @@ end
 
 function send_customer_home_after_charging(entity, state)
   local home = entity and entity.unit_number and customer_home_settlements()[entity.unit_number]
-  local surface = home and game.get_surface(home.surface_index)
-  if not entity or not entity.valid or not entity.commandable or surface ~= entity.surface then
+  local population = home and home.settlement_key
+    and customer_settlement_populations()[home.settlement_key]
+  local surface_index = population and population.surface_index or (home and home.surface_index)
+  local surface = surface_index and game.get_surface(surface_index) or (entity and entity.surface)
+  local home_position = population and population.position or (home and home.position)
+  if not entity or not entity.valid or not entity.commandable or not home_position
+    or surface ~= entity.surface then
     return false
   end
   local visit = state.completed_visits or 0
   local angle = ((entity.unit_number * 0.61803398875) + visit * 2.399963) % (2 * math.pi)
   local radius = 8 + ((entity.unit_number * 7 + visit * 11) % 13)
   local target = {
-    x = home.position.x + math.cos(angle) * radius,
-    y = home.position.y + math.sin(angle) * radius
+    x = home_position.x + math.cos(angle) * radius,
+    y = home_position.y + math.sin(angle) * radius
   }
   local destination = surface.find_non_colliding_position(entity.name, target, 12, 0.5) or target
   entity.commandable.set_command{

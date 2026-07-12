@@ -1905,8 +1905,12 @@ class FactoryXModTest(unittest.TestCase):
         home_return = control[control.index("function send_customer_home_after_charging"):
                               control.index("function complete_customer_charging_commute")]
         self.assertIn("customer_home_settlements()[entity.unit_number]", home_return)
-        self.assertIn("game.get_surface(home.surface_index)", home_return)
+        self.assertIn("customer_settlement_populations()[home.settlement_key]", home_return)
+        self.assertIn("population and population.surface_index", home_return)
+        self.assertIn("population and population.position", home_return)
+        self.assertIn("surface_index and game.get_surface(surface_index)", home_return)
         self.assertNotIn("game.surfaces[home.surface_index]", home_return)
+        self.assertNotIn("game.get_surface(home.surface_index)", home_return)
         self.assertIn("local radius = 8 +", home_return)
         self.assertIn("defines.command.go_to_location", home_return)
         self.assertIn("surface.find_non_colliding_position", home_return)
