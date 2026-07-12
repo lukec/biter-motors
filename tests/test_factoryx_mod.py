@@ -253,6 +253,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_factoryx_evs_are_drivable_and_charge_from_powered_stalls(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/factoryx.cfg").read_text()
         self.assertIn("local function copied_electric_vehicle", data)
         self.assertIn('profile.equipment_grid or "medium-equipment-grid"', data)
         self.assertIn('fuel_categories = {"x-electric-drive"}', data)
@@ -262,6 +263,10 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(f'place_result = "{name}"', data[item_start:item_start + 300])
             self.assertIn(f'"{name}"', control[control.index("ELECTRIC_VEHICLE_BATTERIES ="):control.index("ELECTRIC_DRIVE_FUEL_NAME =")])
         self.assertIn("install_vehicle_batteries", control)
+        self.assertIn("install_vehicle_batteries(entity, charge_new_batteries)", control)
+        self.assertIn("equipment.energy = equipment.max_energy", control)
+        self.assertIn("track_electric_vehicle(entity, true)", control)
+        self.assertIn("track_electric_vehicle(entity, false)", control)
         self.assertIn("feed_electric_drive_from_batteries", control)
         self.assertIn("nearby_uncharged_vehicles", control)
         self.assertIn("charge_station_vehicles(station)", control)
@@ -272,6 +277,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("line_length = 8", data)
         self.assertIn("prototype.turret_animation = nil", data)
         self.assertIn("prototype.light_animation = nil", data)
+        self.assertIn("x-electric-drive=Electric drive", locale)
+        self.assertIn("x-electric-drive-charge=Stored battery charge", locale)
+        self.assertIn("no manually inserted fuel is required", locale)
+        self.assertIn("begins with a full battery", locale)
         for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck", "robotaxi-fleet"]:
             self.assertIn(f'artwork = "{artwork}"', data)
             sheet = MOD / f"graphics/entity/vehicles/{artwork}.png"

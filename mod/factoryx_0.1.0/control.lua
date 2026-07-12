@@ -895,7 +895,7 @@ function electric_vehicle_battery_target(entity)
   return ELECTRIC_VEHICLE_BATTERIES[entity.name] + quality_level
 end
 
-function install_vehicle_batteries(entity)
+function install_vehicle_batteries(entity, charge_new_batteries)
   if not is_electric_vehicle(entity) or not entity.grid then
     return
   end
@@ -913,17 +913,20 @@ function install_vehicle_batteries(entity)
       end
       local equipment = entity.grid.put{name = "battery-equipment", position = {x, y}}
       if equipment then
+        if charge_new_batteries then
+          equipment.energy = equipment.max_energy
+        end
         needed = needed - 1
       end
     end
   end
 end
 
-function track_electric_vehicle(entity)
+function track_electric_vehicle(entity, charge_new_batteries)
   if not is_electric_vehicle(entity) or not entity.unit_number then
     return
   end
-  install_vehicle_batteries(entity)
+  install_vehicle_batteries(entity, charge_new_batteries)
   electric_vehicle_registry()[entity.unit_number] = entity
 end
 
@@ -932,7 +935,7 @@ function rebuild_electric_vehicles()
   for _, surface in pairs(game.surfaces) do
     for vehicle_name in pairs(ELECTRIC_VEHICLE_BATTERIES) do
       for _, entity in pairs(surface.find_entities_filtered{name = vehicle_name}) do
-        track_electric_vehicle(entity)
+        track_electric_vehicle(entity, false)
       end
     end
   end
@@ -5665,7 +5668,7 @@ for _, event_name in pairs({
 	      track_grid_controller(entity)
 	      track_factoryx_compute_machine(entity)
 	      track_sales_office(entity)
-	      track_electric_vehicle(entity)
+	      track_electric_vehicle(entity, true)
 	      track_factoryx_entity(entity)
 	      attach_factoryx_runtime_visual(entity)
 	      if entity and entity.valid and GIGAFACTORY_ENTITY_NAMES[entity.name] then

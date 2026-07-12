@@ -335,6 +335,29 @@ script.on_event(defines.events.on_tick, function()
   end
 end)
 
+script.on_nth_tick(30, function()
+  if storage.roadster_factory_charge_checked then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local roadster = surface and find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
+  if not roadster or not roadster.grid then return end
+  local battery_count = 0
+  local charged_count = 0
+  for _, equipment in pairs(roadster.grid.equipment) do
+    if equipment.type == "battery-equipment" then
+      battery_count = battery_count + 1
+      if equipment.energy == equipment.max_energy then
+        charged_count = charged_count + 1
+      end
+      equipment.energy = 0
+    end
+  end
+  if roadster.burner and roadster.burner.inventory then
+    roadster.burner.inventory.clear()
+  end
+  storage.roadster_started_charged = battery_count > 0 and charged_count == battery_count
+  storage.roadster_factory_charge_checked = true
+end)
+
 script.on_nth_tick(60, function()
   if not storage.preproduction_market then
     storage.preproduction_market = remote.call("factoryx", "biter_customer_market", "player")
@@ -612,6 +635,7 @@ script.on_nth_tick(3720, function()
     v2_power_sinks = v2_power_sinks,
     v2_power_sinks_created = v2_power_sinks == 3,
     roadster_created = roadster ~= nil,
+    roadster_started_charged = storage.roadster_started_charged,
     roadster_batteries = roadster_batteries,
     roadster_battery_energy = roadster_battery_energy,
     roadster_electric_fuel = roadster_fuel,
@@ -1272,6 +1296,8 @@ if not checked.get("v2_power_sinks_created"):
     raise SystemExit(f"EV Charging Station V2 should create two customer sinks plus one nearby player-EV charging sink: {checked}")
 if not checked.get("roadster_created") or checked.get("roadster_batteries") != 1:
     raise SystemExit(f"placed Roadster did not receive its single short-range battery equipment item: {checked}")
+if not checked.get("roadster_started_charged"):
+    raise SystemExit(f"FactoryX EVs should leave the factory with a full starter charge: {checked}")
 if checked.get("roadster_battery_energy", 0) <= 0 or checked.get("roadster_electric_fuel", 0) != 1:
     raise SystemExit(f"powered V2 charger did not charge the Roadster and produce electric drive fuel: {checked}")
 if not checked.get("ev_charging_station_v3_enabled"):
