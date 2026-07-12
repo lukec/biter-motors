@@ -107,11 +107,12 @@ The MVP already has these major loops:
 6. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
 7. Scale charging stations and the completed EV fleet to print more reservations
    for Premium and Mass-market sales.
-8. Research EV Production Line and build ten Gigafactory Modules plus the EV
-   components.
-9. Research Energy Products to unlock Gigafactory construction.
-10. Combine the modules with two Substations, then build Premium and
-    Mass-Market EVs only in Gigafactories.
+8. Research EV Production Line, then build the first ten Premium EVs in
+   ordinary advanced assemblers as a pilot run.
+9. Producing ten Premium EVs unlocks Gigafactory Modules and Gigafactory
+   construction together.
+10. Combine ten modules with two Substations, then move Premium EV production
+    into the Gigafactory. Mass-market EVs remain Gigafactory-only.
 11. Build silver Megatrucks after Mass-market EV Production, then sell each
     one with an EV Reservation for 2 Dollars of profit.
 12. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
@@ -940,11 +941,13 @@ Implemented design:
   the truly large science jump for mass-market scale.
 - The first completed `Sell hopes and dreams` sale prints a next-step message
   telling the player to research EV Production Line.
-- EV Production Line unlocks `Gigafactory Module`, `Battery Pack`, `Electric
-  Drivetrain`, `Premium EV`, and `Sell premium product`.
-- Energy Products is the next required technology and unlocks the Gigafactory
-  construction recipe. This makes the energy platform a prerequisite for the
-  factory that produces Premium EVs.
+- EV Production Line unlocks `Battery Pack`, `Electric Drivetrain`, `Premium
+  EV`, and `Sell premium product` after the existing 50-Roadster market gate.
+- Premium EVs can initially be built in ordinary advanced assemblers. Producing
+  ten completes the pilot run and unlocks both `Gigafactory Module` and the
+  Gigafactory construction recipe.
+- Energy Products remains a parallel power branch for High-density Solar
+  Arrays and Megapacks, and is required before mass-market scaling.
 - Every Sales Office recipe uses the sold product as its dominant icon with a
   small gold coin badge. EV, Megapack, launch-service, and Robotaxi sales are
   visually distinct in the recipe chooser.
@@ -977,8 +980,9 @@ Gigafactory design:
   comparable to a rocket silo.
 - Dollars, machinery, line logistics, and concrete are embodied in the modules,
   so the Gigafactory recipe does not bill those inputs a second time.
-- Dedicated FactoryX vehicle-assembly recipe category. Ordinary assemblers
-  cannot build Premium EVs or Mass-Market EVs.
+- Premium EVs use both advanced crafting and the FactoryX vehicle-assembly
+  category, allowing the first ten to be built slowly in AM2/AM3 machines and
+  later scaled in a Gigafactory. Mass-market EVs remain Gigafactory-only.
 - Prototype Roadsters remain craftable in ordinary advanced assemblers because
   they precede the production-line investment.
 - Active power draw is 20 MW, with a native unpowered/low-power
@@ -999,17 +1003,18 @@ Gigafactory design:
 - The Gigafactory uses a centered, axis-aligned 9x9 static sprite whose visible
   base fills the collision footprint. A later animation pass should preserve
   that footprint-readable silhouette.
-- EV Production Line unlocks the Gigafactory Module recipe, but Energy Products
-  unlocks the Gigafactory itself. Gigafactory Modules remain useful as
-  repeatable capital inputs for later datacenters and more Gigafactories.
+- The ten-Premium-EV pilot milestone unlocks the Gigafactory Module and
+  Gigafactory recipes together. Gigafactory Modules remain useful as repeatable
+  capital inputs for later datacenters and more Gigafactories.
 - Both Gigafactory tiers manufacture energy hardware through the dedicated
-  `x-energy-products` recipe category. Research is possible before the factory;
-  manufacturing begins after the research unlocks Gigafactory construction.
+  `x-energy-products` recipe category. Energy Products research can proceed in
+  parallel; its hardware recipes become available in an unlocked Gigafactory.
 
 Gameplay loop:
 
 - Manufacture battery packs and drivetrains.
-- Build a Gigafactory and assemble Premium EVs in it.
+- Build ten pilot Premium EVs in ordinary assemblers.
+- Use the newly unlocked modules to build a Gigafactory and scale production.
 - Sell Premium EVs through Sales Offices for more Dollars.
 - Premium sales are faster than `Sell hopes and dreams`, because the business
   has moved from hand-built prototype to limited production: 30 seconds per EV
@@ -1713,14 +1718,15 @@ icons, and bounded working animations. Remaining work is narrower:
   Implemented as a first-Dollar force message.
 - Make the first post-dollar tech consume Dollars, not only conventional science.
   Implemented on EV Production Line research.
-- Add the 9x9 Gigafactory as the physical result of EV Production Line research.
-  It consumes ten Gigafactory Modules plus Substations and assembles Premium
-  EVs. Implemented.
+- Add the 9x9 Gigafactory as the physical scale-up after a ten-Premium-EV pilot
+  run in ordinary assemblers. It consumes ten Gigafactory Modules plus
+  Substations and then scales Premium EV assembly. Implemented.
 - Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
   consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
   and fast-replaces V1. Implemented.
-- Move Gigafactory Modules into EV Production Line with the production-cell
-  recipe `Dollars + Assembling Machine 2s + Labs + Refined Concrete`. Implemented.
+- Unlock Gigafactory Modules with the ten-Premium-EV pilot milestone, using the
+  production-cell recipe `Dollars + Assembling Machine 2s + Labs + Refined
+  Concrete`. Implemented.
 - Change mass-market sales from a five-car batch to the literal contract
   `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`. Implemented.
 - Ensure every Sales Office recipe has a sensible sale time:
@@ -2306,7 +2312,7 @@ items.
 
 | Vehicle | Driving role | Batteries | Health | Cargo | Character |
 | --- | --- | ---: | ---: | ---: | --- |
-| Prototype Roadster | Sprint car | 3 | 300 | 20 | Fastest response and sharpest steering; shortest EV range and fragile in collisions |
+| Prototype Roadster | Sprint car | 3 | 120 | Fastest response and sharpest steering; shortest EV range and severe impact vulnerability |
 | Premium EV | Grand tourer | 4 | 550 | 40 | Fast, composed, strong braking, and good range |
 | Mass-market EV | All-rounder | 3 | 500 | 50 | Predictable handling and the most practical general-purpose balance |
 | Megatruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |

@@ -124,6 +124,7 @@ script.on_init(function()
       force.technologies[technology_name].researched = true
     end
   end
+  force.get_item_production_statistics(surface).set_output_count("x-premium-ev", 10)
 
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
@@ -927,8 +928,9 @@ energy_product_unlocks = {
     effect["recipe"] for effect in data["technology"]["x-energy-products"].get("effects", [])
     if effect.get("type") == "unlock-recipe"
 }
-if "x-gigafactory-building" in ev_line_unlocks or "x-gigafactory-building" not in energy_product_unlocks:
-    raise SystemExit("Gigafactory construction must be unlocked by Energy Products, not EV Production Line")
+for runtime_recipe in ("x-gigafactory-module", "x-gigafactory-building"):
+    if runtime_recipe in ev_line_unlocks or runtime_recipe in energy_product_unlocks:
+        raise SystemExit(f"{runtime_recipe} must be owned by the ten-Premium-EV runtime milestone")
 
 sale_recipe_products = {
     "x-sell-prototype-roadster": "prototype-roadster.png",
@@ -1069,7 +1071,13 @@ for technology_name, technology in data["technology"].items():
     for effect in technology.get("effects", []):
         if effect.get("type") == "unlock-recipe":
             technology_unlocks.add(effect["recipe"])
-runtime_milestone_recipes = {"x-prototype-roadster", "x-ev-charging-station-v4", "x-agi-training-run"}
+runtime_milestone_recipes = {
+    "x-prototype-roadster",
+    "x-ev-charging-station-v4",
+    "x-gigafactory-module",
+    "x-gigafactory-building",
+    "x-agi-training-run",
+}
 missing_unlocks = factoryx_recipes - technology_unlocks - runtime_milestone_recipes
 if missing_unlocks:
     raise SystemExit(f"FactoryX recipes without a progression owner: {sorted(missing_unlocks)}")

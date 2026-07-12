@@ -1180,7 +1180,7 @@ data:extend({
     },
     {{type = "item", name = "x-prototype-roadster", amount = 1}}, 30
   ),
-  recipe("x-premium-ev", {"x-vehicle-assembly"}, "transport", "x-b[premium-ev]",
+  recipe("x-premium-ev", {"advanced-crafting", "x-vehicle-assembly"}, "transport", "x-b[premium-ev]",
     {
       {type = "item", name = "car", amount = 1},
       {type = "item", name = "x-battery-pack", amount = 8},
@@ -1476,7 +1476,6 @@ data:extend({
     {
       unlock("x-battery-pack"),
       unlock("x-electric-drivetrain"),
-      unlock("x-gigafactory-module"),
       unlock("x-premium-ev"),
       unlock("x-sell-premium-ev")
     },
@@ -1536,7 +1535,6 @@ data:extend({
     "__factoryx__/graphics/icons/megapack.png",
     {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy", "production-science-pack"},
     {
-      unlock("x-gigafactory-building"),
       unlock("x-high-density-solar-array"),
       unlock("x-megapack"),
       unlock("x-sell-megapack")

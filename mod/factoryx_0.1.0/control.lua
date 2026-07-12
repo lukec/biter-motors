@@ -105,6 +105,7 @@ FACTORYX_COMPUTE_RECIPES = {
 local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
+GIGAFACTORY_PRODUCTION_GATE = 10
 local FIRST_PROTOTYPE_SALE_RECIPE = "x-sell-prototype-roadster"
 local PREMIUM_EV_SALE_RECIPE = "x-sell-premium-ev"
 local MASS_MARKET_EV_SALE_RECIPE = "x-sell-mass-market-ev"
@@ -2236,6 +2237,31 @@ function sync_ev_sales_recipe_gates(force, announce)
     }
   end
   return result
+end
+
+function gigafactory_gate_announcements()
+  storage.factoryx_gigafactory_gate_announcements =
+    storage.factoryx_gigafactory_gate_announcements or {}
+  return storage.factoryx_gigafactory_gate_announcements
+end
+
+function sync_gigafactory_production_gate(force, announce)
+  if not force or not force.valid then return false end
+  local produced = count_item_produced(force, PREMIUM_EV_NAME)
+  local unlocked = researched(force, "x-premium-ev-program")
+    and produced >= GIGAFACTORY_PRODUCTION_GATE
+  for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
+    local recipe = force.recipes and force.recipes[recipe_name]
+    if recipe then recipe.enabled = unlocked end
+  end
+  local announcements = gigafactory_gate_announcements()
+  if unlocked and not announcements[force.name] then
+    announcements[force.name] = true
+    if announce ~= false then
+      force.print("[FactoryX] Premium pilot run complete: 10 Premium EVs produced. Gigafactory Modules and Gigafactory construction are now available.")
+    end
+  end
+  return unlocked
 end
 
 function customer_ev_fleet_size(force)
@@ -4610,7 +4636,7 @@ local function announce_first_ev_production_line_hint(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] First Dollars earned. Next: research EV Production Line to unlock Gigafactory Modules, EV components, Premium EV design, and Sell premium product.")
+  force.print("[FactoryX] First Dollars earned. Next: research EV Production Line to unlock EV components, Premium EV pilot production, and Sell premium product.")
 end
 
 local function announce_ev_production_line_researched(force)
@@ -4689,7 +4715,7 @@ end
 
 local RESEARCH_COMPLETION_MESSAGES = {
   ["x-sales-office"] = "[FactoryX] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
-  ["x-energy-products"] = "[FactoryX] Energy Products researched. Gigafactory construction is now unlocked. Build one from 10 Gigafactory Modules and 2 Substations, then manufacture Premium EVs, High-density Solar Arrays, and Megapacks.",
+  ["x-energy-products"] = "[FactoryX] Energy Products researched. High-density Solar Arrays and Megapacks are now available for the power demands of mass-market scale.",
   ["x-small-orbital-launch"] = "[FactoryX] Small Orbital Launch researched. Manufacture a Small Launch Service, then sell the physical service through a Sales Office to fund reusable launch development.",
   ["x-reusable-launch"] = "[FactoryX] Reusable Launch researched. Build Reusable Boosters, combine them into Reusable Launch Services, and sell those services through a Sales Office.",
   ["x-satellite-constellation"] = "[FactoryX] Satellite Constellation researched. Manufacture Satellite Buses and Ground Station Networks; both become physical inputs to orbital compute and the planetary grid.",
@@ -4809,12 +4835,20 @@ local function progression_integrity_status(force)
       table.insert(disabled, PROTOTYPE_ROADSTER_NAME)
     end
   end
+  if researched(force, "x-premium-ev-program")
+    and count_item_produced(force, PREMIUM_EV_NAME) >= GIGAFACTORY_PRODUCTION_GATE then
+    for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
+      local recipe = force.recipes and force.recipes[recipe_name]
+      if recipe and not recipe.enabled then table.insert(disabled, recipe_name) end
+    end
+  end
   table.sort(disabled)
   return {ok = #disabled == 0, disabled_recipes = disabled}
 end
 
 local function sync_force_unlocks(force)
   repair_researched_factoryx_unlocks(force)
+  sync_gigafactory_production_gate(force, false)
   sync_agi_training_unlock(force, false)
   if force_has_gigafactory(force) then
     unlock_gigafactory_logistics(force, false)
@@ -5492,6 +5526,7 @@ local function progress_snapshot(force)
     dollars_produced = count_item_produced(force, DOLLAR_NAME),
     prototype_evs_produced = count_item_produced(force, PROTOTYPE_ROADSTER_NAME),
     premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME),
+    gigafactory_production_gate = GIGAFACTORY_PRODUCTION_GATE,
     mass_market_evs_produced = count_item_produced(force, "x-mass-market-ev"),
     robotaxi_fleets_produced = count_item_produced(force, "x-robotaxi-fleet"),
     robotaxi_service_centers = count_entities(force, ROBOTAXI_SERVICE_CENTER_NAME),
@@ -5522,17 +5557,19 @@ local function current_progress_objective(snapshot)
     end
     return "Prototype revenue", "Run Sell hopes and dreams.", "Supply one Prototype Roadster and one EV Reservation, then remove the Dollars after the 60-second sale."
   elseif not snapshot.ev_production_researched then
-    return "Premium production", "Research EV Production Line.", "Invest 250 cycles of red, green, blue science, and Dollars; Energy Products unlocks the factory itself."
+    return "Premium production", "Research EV Production Line.", "Invest 250 cycles of red, green, blue science, and Dollars to unlock Premium EV pilot production."
   elseif not snapshot.premium_ev_gate.market_ready then
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
-  elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products.", "Invest 500 cycles through production science plus Dollars to unlock Gigafactory construction, High-density Solar Arrays, and Megapacks."
+  elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
+    return "Premium pilot production", "Build 10 Premium EVs in assemblers.", string.format("Pilot vehicles produced: %d / 10. Completing the pilot run unlocks Gigafactory Modules and Gigafactory construction.", snapshot.premium_evs_produced)
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
     return "Premium production", "Produce and sell a Premium EV.", "Select Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
   elseif not snapshot.mass_market_ev_gate.market_ready then
     return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
+  elseif not snapshot.energy_products_researched then
+    return "Energy products", "Research Energy Products.", "Invest 500 cycles through production science plus Dollars to unlock High-density Solar Arrays and Megapacks for mass-market scale."
   elseif not snapshot.charging_network_researched then
     return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
   elseif snapshot.chargers_v2 == 0 then
@@ -5698,6 +5735,11 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Premium EV gate", string.format("%d / 50 Roadsters", snapshot.roadsters_sold))
   if snapshot.ev_production_researched then
+    add_progress_metric(metrics, "Premium pilot run", string.format(
+      "%d / %d produced",
+      math.min(snapshot.premium_evs_produced, snapshot.gigafactory_production_gate),
+      snapshot.gigafactory_production_gate
+    ))
     add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
   end
   if snapshot.mass_market_researched then
@@ -6748,6 +6790,7 @@ script.on_nth_tick(60, function()
   end
   for _, force in pairs(game.forces) do
     process_customer_growth(force)
+    sync_gigafactory_production_gate(force, true)
   end
   local allocations_by_force = {}
   for _, surface in pairs(game.surfaces) do
