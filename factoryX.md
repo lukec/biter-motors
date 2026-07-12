@@ -668,6 +668,10 @@ Implemented v1 behavior:
 - Settlement population records are derived from live spawners, registered
   customers, and home-settlement assignments. Sales synchronization rebuilds
   that cache automatically if a same-version mod restart leaves it empty.
+- An unowned mobile buyer from a saturated settlement may adopt a covered
+  settlement with spare charging capacity when a sale is reserved. This keeps
+  ownership physical while preventing one prolific spawner from blocking a
+  larger multi-settlement charging network.
 - Player EVs recharge at 3% of installed battery capacity per second while a
   powered stall serves them. Mining an EV never returns the hidden drive-fuel
   token; only the physical vehicle returns to inventory.

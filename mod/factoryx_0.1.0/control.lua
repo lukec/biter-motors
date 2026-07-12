@@ -4519,6 +4519,45 @@ function dequeue_available_buyer(queue, office, expected_settlement_key)
   end)
 end
 
+function rehome_customer_buyer(unit_number, target_settlement_key)
+  local home = customer_home_settlements()[unit_number]
+  if not home or home.settlement_key == target_settlement_key then return end
+  local source = customer_settlement_populations()[home.settlement_key]
+  local target = customer_settlement_populations()[target_settlement_key]
+  if source then source.physical = math.max(0, (source.physical or 0) - 1) end
+  if target then target.physical = (target.physical or 0) + 1 end
+  home.settlement_key = target_settlement_key
+  customer_population_members()[unit_number] = target_settlement_key
+end
+
+function dequeue_rehomed_buyer(office, target_settlement_key)
+  local by_settlement = customer_buyer_queues()[office.force.name] or {}
+  local keys = {}
+  for key in pairs(by_settlement) do
+    if key ~= target_settlement_key then keys[#keys + 1] = key end
+  end
+  table.sort(keys)
+  for _, source_key in pairs(keys) do
+    local queue = by_settlement[source_key]
+    local unit_number = BuyerQueues.pop_valid(queue, function(candidate)
+      local entity = customer_unit_registry()[candidate]
+      local home = customer_home_settlements()[candidate]
+      local available = entity and entity.valid and home
+        and home.market_force_name == office.force.name
+        and entity.force.name == CUSTOMER_FORCE_NAME
+        and not customer_vehicle_owners()[candidate]
+        and not buyer_reserved_by_unit()[candidate]
+      if available and entity.surface == office.surface then return true, false end
+      return false, available == true
+    end)
+    if unit_number then
+      rehome_customer_buyer(unit_number, target_settlement_key)
+      return unit_number
+    end
+  end
+  return nil
+end
+
 function eligible_customer_buyers(office, needed)
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
@@ -4573,6 +4612,7 @@ function eligible_customer_buyers(office, needed)
       break
     end
     local unit_number = dequeue_available_buyer(pool.queue, office, pool.key)
+      or dequeue_rehomed_buyer(office, pool.key)
     if unit_number then
       buyers[#buyers + 1] = unit_number
       pool.load = pool.load + 1
