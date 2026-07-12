@@ -307,7 +307,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("capacity * 0.03", control)
         self.assertIn("event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
         self.assertIn("if hidden_charge_count > 0 then", control)
-        self.assertIn("braking_multiplier = 4.0", data)
+        self.assertIn("braking_multiplier = 8.0", data)
         self.assertIn("customer_requested_stalls", control)
         self.assertIn("Player EV charging", control)
         self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png"', data)
