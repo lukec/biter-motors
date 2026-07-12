@@ -508,8 +508,8 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
       </div>
     </article>
     <article class="asset animation-card" data-kind="animations" data-id="animation-2">
-      <header><h2>Charger status lights</h2><p>Demand active | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-status-lights.png');--fw:64px;--fh:64px"></div></div>
+      <header><h2>Charger stall idle</h2><p>Unused | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-stall-idle.png');--fw:32px;--fh:32px"></div></div>
 
       <div class="review" role="group" aria-label="Review animation-2">
         <button type="button" data-review="approve" data-id="animation-2">Approve</button>
@@ -517,8 +517,8 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
       </div>
     </article>
     <article class="asset animation-card" data-kind="animations" data-id="animation-3">
-      <header><h2>Gigafactory presses</h2><p>Crafting only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/gigafactory-press.png');--fw:128px;--fh:96px"></div></div>
+      <header><h2>Charger stall partial</h2><p>Moderate utilization | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-stall-medium.png');--fw:32px;--fh:32px"></div></div>
 
       <div class="review" role="group" aria-label="Review animation-3">
         <button type="button" data-review="approve" data-id="animation-3">Approve</button>
@@ -526,8 +526,8 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
       </div>
     </article>
     <article class="asset animation-card" data-kind="animations" data-id="animation-4">
-      <header><h2>Datacenter cooling fans</h2><p>Compute active | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/datacenter-cooling-fans.png');--fw:128px;--fh:64px"></div></div>
+      <header><h2>Charger stall full</h2><p>Near capacity | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-stall-full.png');--fw:32px;--fh:32px"></div></div>
 
       <div class="review" role="group" aria-label="Review animation-4">
         <button type="button" data-review="approve" data-id="animation-4">Approve</button>
@@ -535,8 +535,8 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
       </div>
     </article>
     <article class="asset animation-card" data-kind="animations" data-id="animation-5">
-      <header><h2>Robotaxi dispatch lights</h2><p>Fleet allocated | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/robotaxi-dispatch-lights.png');--fw:128px;--fh:64px"></div></div>
+      <header><h2>Charger stall overload</h2><p>Underserved customers | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-stall-overload.png');--fw:32px;--fh:32px"></div></div>
 
       <div class="review" role="group" aria-label="Review animation-5">
         <button type="button" data-review="approve" data-id="animation-5">Approve</button>
@@ -544,12 +544,48 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
       </div>
     </article>
     <article class="asset animation-card" data-kind="animations" data-id="animation-6">
-      <header><h2>Grid charge stages</h2><p>Charging only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/grid-charge-stages.png');--fw:128px;--fh:128px"></div></div>
+      <header><h2>Charger stall charging</h2><p>Physical charging visit | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/charger-stall-charging.png');--fw:32px;--fh:32px"></div></div>
 
       <div class="review" role="group" aria-label="Review animation-6">
         <button type="button" data-review="approve" data-id="animation-6">Approve</button>
         <button type="button" data-review="revise" data-id="animation-6">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-7">
+      <header><h2>Gigafactory presses</h2><p>Crafting only | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/gigafactory-press.png');--fw:128px;--fh:96px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-7">
+        <button type="button" data-review="approve" data-id="animation-7">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-7">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-8">
+      <header><h2>Datacenter cooling fans</h2><p>Compute active | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/datacenter-cooling-fans.png');--fw:128px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-8">
+        <button type="button" data-review="approve" data-id="animation-8">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-8">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-9">
+      <header><h2>Robotaxi dispatch lights</h2><p>Fleet allocated | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/robotaxi-dispatch-lights.png');--fw:128px;--fh:64px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-9">
+        <button type="button" data-review="approve" data-id="animation-9">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-9">Revise</button>
+      </div>
+    </article>
+    <article class="asset animation-card" data-kind="animations" data-id="animation-10">
+      <header><h2>Grid charge stages</h2><p>Charging only | 8 frames</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/factoryx_0.1.0/graphics/animation/grid-charge-stages.png');--fw:128px;--fh:128px"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation-10">
+        <button type="button" data-review="approve" data-id="animation-10">Approve</button>
+        <button type="button" data-review="revise" data-id="animation-10">Revise</button>
       </div>
     </article>
     <article class="asset technology-card" data-kind="technology" data-id="technology-0">

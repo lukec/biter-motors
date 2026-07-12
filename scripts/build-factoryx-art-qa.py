@@ -30,7 +30,11 @@ ENTITIES = [
 ANIMATIONS = [
     ("Sales Office working beacon", "sales-office-status-green.png", 64, 64, "Working"),
     ("Sales Office stopped beacon", "sales-office-status-red.png", 64, 64, "Stopped or blocked"),
-    ("Charger status lights", "charger-status-lights.png", 64, 64, "Demand active"),
+    ("Charger stall idle", "charger-stall-idle.png", 32, 32, "Unused"),
+    ("Charger stall partial", "charger-stall-medium.png", 32, 32, "Moderate utilization"),
+    ("Charger stall full", "charger-stall-full.png", 32, 32, "Near capacity"),
+    ("Charger stall overload", "charger-stall-overload.png", 32, 32, "Underserved customers"),
+    ("Charger stall charging", "charger-stall-charging.png", 32, 32, "Physical charging visit"),
     ("Gigafactory presses", "gigafactory-press.png", 128, 96, "Crafting only"),
     ("Datacenter cooling fans", "datacenter-cooling-fans.png", 128, 64, "Compute active"),
     ("Robotaxi dispatch lights", "robotaxi-dispatch-lights.png", 128, 64, "Fleet allocated"),

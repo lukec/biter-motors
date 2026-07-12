@@ -304,11 +304,13 @@ local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
     offset = {1.03, -1.18},
     scale = 0.5
   },
-  ["x-ev-charging-station"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.35}, scale = 0.55},
-  ["x-ev-charging-station-v2"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.2}, scale = 0.85},
-  ["x-ev-charging-station-v3"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.1}, scale = 1.0},
-  ["x-ev-charging-station-v4"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, 0}, scale = 1.2},
   ["x-robotaxi-service-center"] = {sprite_prefix = "x-robotaxi-dispatch-lights-frame-", offset = {0, -0.55}, scale = 0.9}
+}
+CHARGER_STALL_VISUAL_LAYOUTS = {
+  ["x-ev-charging-station"] = {columns = 4, spacing_x = 0.34, spacing_y = 0.34, offset_y = -0.35, scale = 0.42},
+  ["x-ev-charging-station-v2"] = {columns = 4, spacing_x = 0.48, spacing_y = 0.48, offset_y = -0.15, scale = 0.5},
+  ["x-ev-charging-station-v3"] = {columns = 6, spacing_x = 0.5, spacing_y = 0.5, offset_y = -0.05, scale = 0.52},
+  ["x-ev-charging-station-v4"] = {columns = 5, spacing_x = 0.62, spacing_y = 0.52, offset_y = 0, scale = 0.55}
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
@@ -484,6 +486,124 @@ local function update_factoryx_runtime_visuals()
       end
     end
   end
+end
+
+function charger_stall_visuals()
+  storage.factoryx_charger_stall_visuals = storage.factoryx_charger_stall_visuals or {}
+  return storage.factoryx_charger_stall_visuals
+end
+
+function destroy_charger_stall_visuals(unit_number)
+  if not unit_number then return end
+  local entry = charger_stall_visuals()[unit_number]
+  for _, object in pairs(entry and entry.objects or {}) do
+    if object and object.valid then object.destroy() end
+  end
+  charger_stall_visuals()[unit_number] = nil
+end
+
+function ensure_charger_stall_visuals(station)
+  if not station or not station.valid or not station.unit_number then return nil end
+  local config = station_config(station)
+  local layout = CHARGER_STALL_VISUAL_LAYOUTS[station.name]
+  if not config or not layout then return nil end
+  local entry = charger_stall_visuals()[station.unit_number]
+  local complete = entry and entry.entity and entry.entity.valid and #entry.objects == config.stalls
+  for _, object in pairs(complete and entry.objects or {}) do
+    if not object or not object.valid then
+      complete = false
+      break
+    end
+  end
+  if complete then return entry end
+  destroy_charger_stall_visuals(station.unit_number)
+  entry = {entity = station, objects = {}}
+  local rows = math.ceil(config.stalls / layout.columns)
+  for stall_index = 1, config.stalls do
+    local column = (stall_index - 1) % layout.columns
+    local row = math.floor((stall_index - 1) / layout.columns)
+    entry.objects[stall_index] = rendering.draw_sprite{
+      sprite = "x-charger-stall-idle-frame-1",
+      surface = station.surface,
+      target = station,
+      target_offset = {
+        (column - (layout.columns - 1) / 2) * layout.spacing_x,
+        layout.offset_y + (row - (rows - 1) / 2) * layout.spacing_y
+      },
+      x_scale = layout.scale,
+      y_scale = layout.scale,
+      render_layer = "higher-object-above"
+    }
+  end
+  charger_stall_visuals()[station.unit_number] = entry
+  return entry
+end
+
+function charger_stall_visual_state(service, station, assignment, stall_index, charging_available)
+  local load = assignment and assignment.stall_loads and assignment.stall_loads[stall_index] or 0
+  if load <= 0 then return "idle", charging_available end
+  local settlement = assignment and assignment.settlements[stall_index]
+  local key = settlement and (
+    settlement.surface.index .. ":" .. (settlement.unit_number or string.format(
+      "%s:%.1f:%.1f",
+      settlement.name,
+      settlement.position.x,
+      settlement.position.y
+    ))
+  )
+  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
+  local owned = key and (vehicle_summary.by_settlement[key] or 0) or 0
+  local capacity = key and (service.assigned_capacity_by_settlement_key[key] or 0) or 0
+  if owned > capacity then return "overload", charging_available end
+  if charging_available > 0 then return "charging", charging_available - 1 end
+  local config = station_config(station)
+  local fraction = config and load / config.evs_per_stall or 0
+  if fraction >= 0.9 then return "full", charging_available end
+  if fraction >= 0.34 then return "medium", charging_available end
+  return "low", charging_available
+end
+
+function update_charger_stall_visuals()
+  local frame_index = math.floor(game.tick / 30) % 8 + 1
+  local refresh_states = game.tick % 120 == 0
+  local commute_counts = refresh_states and customer_commute_station_counts() or {}
+  local seen = {}
+  local services = {}
+  for _, station in pairs(registered_factoryx_entities("stations")) do
+    if station.valid and station.unit_number then
+      seen[station.unit_number] = true
+      local entry = ensure_charger_stall_visuals(station)
+      if refresh_states or not entry.states then
+        services[station.force.index] = services[station.force.index]
+          or customer_service_for_force(station.force)
+        local service = services[station.force.index]
+        local assignment = service.assignments[station.unit_number]
+        local charging_available = (commute_counts[station.unit_number] or {}).charging or 0
+        entry.states = {}
+        for stall_index = 1, #entry.objects do
+          entry.states[stall_index], charging_available = charger_stall_visual_state(
+            service, station, assignment, stall_index, charging_available
+          )
+        end
+      end
+      for stall_index, object in ipairs(entry and entry.objects or {}) do
+        local state = entry.states[stall_index] or "idle"
+        if object and object.valid then
+          object.sprite = "x-charger-stall-" .. state .. "-frame-" .. frame_index
+        end
+      end
+    end
+  end
+  for unit_number in pairs(charger_stall_visuals()) do
+    if not seen[unit_number] then destroy_charger_stall_visuals(unit_number) end
+  end
+end
+
+function rebuild_charger_stall_visuals()
+  for unit_number in pairs(charger_stall_visuals()) do
+    destroy_charger_stall_visuals(unit_number)
+  end
+  update_charger_stall_visuals()
 end
 
 function sales_office_showroom_renderings()
@@ -2242,6 +2362,7 @@ customer_service_for_force = function(force, advance_mood)
   local candidates = office_covered_settlements(offices)
   service.candidate_settlements = candidates
   local vehicle_summary = active_customer_vehicle_summary(force)
+  service.vehicle_summary = vehicle_summary
   local stations = {}
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
@@ -2282,6 +2403,7 @@ customer_service_for_force = function(force, advance_mood)
       settlements = {},
       operational_settlements = {},
       requested_settlement_keys = {},
+      stall_loads = {},
       customer_requested_stalls = 0,
       requested_stalls = 0,
       powered_stalls = 0
@@ -2295,10 +2417,14 @@ customer_service_for_force = function(force, advance_mood)
           (service.assigned_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
       end
     end
-    for _, settlement in pairs(assignment.settlements) do
+    for stall_index, settlement in ipairs(assignment.settlements) do
       local key = settlement_key(settlement.surface, settlement)
       local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
       local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
+      assignment.stall_loads[stall_index] = math.max(
+        0,
+        math.min(config.evs_per_stall, vehicle_count - requested_capacity)
+      )
       if vehicle_count > requested_capacity then
         assignment.customer_requested_stalls = assignment.customer_requested_stalls + 1
         assignment.requested_settlement_keys[key] = true
@@ -6109,6 +6235,7 @@ script.on_init(function()
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
   rebuild_factoryx_runtime_visuals()
+  rebuild_charger_stall_visuals()
   rebuild_sales_office_showrooms()
 end)
 
@@ -6131,6 +6258,7 @@ script.on_configuration_changed(function()
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
   rebuild_factoryx_runtime_visuals()
+  rebuild_charger_stall_visuals()
   rebuild_sales_office_showrooms()
 end)
 
@@ -6379,6 +6507,7 @@ for _, event_name in pairs({
       if entity and entity.unit_number then
         untrack_factoryx_entity(entity)
         destroy_factoryx_runtime_visual(entity.unit_number)
+        destroy_charger_stall_visuals(entity.unit_number)
         destroy_sales_office_showroom_rendering(entity.unit_number)
         factoryx_compute_machines()[entity.unit_number] = nil
         factoryx_compute_power_failures()[entity.unit_number] = nil
@@ -6408,6 +6537,7 @@ script.on_nth_tick(1, reset_underpowered_compute_progress)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()
+  update_charger_stall_visuals()
   update_sales_office_showrooms()
   refresh_ev_driver_overlays()
   update_ev_reverse_warnings()

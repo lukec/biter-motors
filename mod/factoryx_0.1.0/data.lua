@@ -575,7 +575,6 @@ local cybertruck_icon = generated_icon("cybertruck")
 local runtime_visual_sprites = {}
 for frame_index = 1, 8 do
   for _, visual in pairs({
-    {name = "charger-status-lights", width = 64, height = 64},
     {name = "robotaxi-dispatch-lights", width = 128, height = 64}
   }) do
     runtime_visual_sprites[#runtime_visual_sprites + 1] = {
@@ -590,6 +589,28 @@ for frame_index = 1, 8 do
   end
 end
 data:extend(runtime_visual_sprites)
+
+local charger_stall_visual_sprites = {}
+for frame_index = 1, 8 do
+  for _, visual in pairs({
+    {state = "idle", filename = "__factoryx__/graphics/animation/charger-stall-idle.png"},
+    {state = "low", filename = "__factoryx__/graphics/animation/charger-stall-low.png"},
+    {state = "medium", filename = "__factoryx__/graphics/animation/charger-stall-medium.png"},
+    {state = "full", filename = "__factoryx__/graphics/animation/charger-stall-full.png"},
+    {state = "overload", filename = "__factoryx__/graphics/animation/charger-stall-overload.png"},
+    {state = "charging", filename = "__factoryx__/graphics/animation/charger-stall-charging.png"}
+  }) do
+    charger_stall_visual_sprites[#charger_stall_visual_sprites + 1] = {
+      type = "sprite",
+      name = "x-charger-stall-" .. visual.state .. "-frame-" .. frame_index,
+      filename = visual.filename,
+      width = 32,
+      height = 32,
+      x = (frame_index - 1) * 32
+    }
+  end
+end
+data:extend(charger_stall_visual_sprites)
 
 local sales_office_status_sprites = {}
 for frame_index = 1, 8 do

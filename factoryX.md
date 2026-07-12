@@ -523,6 +523,12 @@ Current implementation:
   stalls are the requested stalls multiplied by power satisfaction and rounded
   down, so a 50% brownout serves roughly half the requested stalls and prints
   half the paperwork.
+- Each charger renders one small status light per physical stall. A dark light
+  is unused; cyan pulses move from slow to faster as that stall rises through
+  low, medium, and near-full utilization; red means sold vehicles are
+  underserved; and a white lightning pulse means a sampled customer is
+  physically charging. The visualization uses aggregate market state and is
+  capped at the charger tier's fixed stall count, never the customer count.
 - A settlement that loses its stall because of overload, charger removal, or a
   power shortage stays friendly for three minutes. Anger checks then ramp from
   5% to 25% per minute. Restored powered service makes it friendly immediately

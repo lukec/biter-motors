@@ -542,7 +542,12 @@ class FactoryXModTest(unittest.TestCase):
         animation_sizes = {
             "sales-office-status-green.png": (512, 64),
             "sales-office-status-red.png": (512, 64),
-            "charger-status-lights.png": (512, 64),
+            "charger-stall-idle.png": (256, 32),
+            "charger-stall-low.png": (256, 32),
+            "charger-stall-medium.png": (256, 32),
+            "charger-stall-full.png": (256, 32),
+            "charger-stall-overload.png": (256, 32),
+            "charger-stall-charging.png": (256, 32),
             "gigafactory-press.png": (1024, 96),
             "datacenter-cooling-fans.png": (1024, 64),
             "robotaxi-dispatch-lights.png": (1024, 64),
@@ -584,7 +589,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
-        self.assertIn('sprite_prefix = "x-charger-status-lights-frame-"', control)
+        self.assertIn("function update_charger_stall_visuals()", control)
+        self.assertIn('object.sprite = "x-charger-stall-" .. state .. "-frame-" .. frame_index', control)
         self.assertIn('sprite_prefix = "x-robotaxi-dispatch-lights-frame-"', control)
         self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)
         self.assertIn("update_factoryx_runtime_visuals()", control)
@@ -598,6 +604,20 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Directional vehicle production math", page)
         self.assertIn("data-filter=\"animations\"", page)
         self.assertGreaterEqual(page.count('class="asset '), 50)
+
+    def test_charger_stall_visuals_are_bounded_and_explain_utilization(self):
+        control = (MOD / "control.lua").read_text()
+        data = (MOD / "data.lua").read_text()
+        self.assertIn("CHARGER_STALL_VISUAL_LAYOUTS", control)
+        self.assertIn("for stall_index = 1, config.stalls do", control)
+        self.assertIn("assignment.stall_loads[stall_index]", control)
+        self.assertIn("customer_commute_station_counts()", control)
+        self.assertIn("local refresh_states = game.tick % 120 == 0", control)
+        self.assertIn("local state = entry.states[stall_index] or \"idle\"", control)
+        for state in ["idle", "low", "medium", "full", "overload", "charging"]:
+            self.assertIn(f'{{state = "{state}"', data)
+            self.assertIn(f'return "{state}"', control)
+        self.assertNotIn('sprite_prefix = "x-charger-status-lights-frame-"', control)
 
     def test_sales_office_starts_with_showroom_and_charger(self):
         data = (MOD / "data.lua").read_text()

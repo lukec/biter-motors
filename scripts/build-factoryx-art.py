@@ -105,7 +105,7 @@ def animation_sheet(name: str, width: int, height: int, painter) -> None:
         sheet.alpha_composite(frame, (frame_index * width, 0))
     ANIMATION_DIR.mkdir(parents=True, exist_ok=True)
     sheet.save(ANIMATION_DIR / f"{name}.png", optimize=True)
-    if name in {"charger-status-lights", "robotaxi-dispatch-lights"}:
+    if name == "robotaxi-dispatch-lights":
         for frame_index in range(frame_count):
             left = frame_index * width
             sheet.crop((left, 0, left + width, height)).save(
@@ -129,11 +129,25 @@ def paint_sales_status_light(frame: Image.Image, index: int, count: int, color: 
     draw.ellipse((25, 25, 39, 39), fill=(*color, 255), outline=(235, 245, 240, 235), width=2)
 
 
-def paint_charger_lights(frame: Image.Image, index: int, count: int) -> None:
+def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state: str) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
-    for stall in range(4):
-        active = stall == index % 4 or stall == (index - 1) % 4
-        glow(draw, (13 + stall * 13, 32), 3, (60, 225, 255), 235 if active else 65)
+    if state == "idle":
+        draw.ellipse((10, 10, 22, 22), fill=(22, 38, 42, 225), outline=(80, 112, 118, 210), width=2)
+        return
+    frequency = {"low": 1, "medium": 2, "full": 4, "overload": 3, "charging": 4}[state]
+    pulse = (math.sin(index / count * math.tau * frequency) + 1) / 2
+    color = {
+        "low": (48, 178, 205),
+        "medium": (52, 222, 247),
+        "full": (98, 245, 255),
+        "overload": (255, 54, 38),
+        "charging": (245, 252, 255),
+    }[state]
+    base_alpha = {"low": 70, "medium": 105, "full": 145, "overload": 150, "charging": 180}[state]
+    glow(draw, (16, 16), 4, color, round(base_alpha + pulse * (245 - base_alpha)))
+    draw.ellipse((11, 11, 21, 21), fill=(*color, round(150 + pulse * 105)), outline=(225, 240, 242, 225), width=1)
+    if state == "charging":
+        draw.line((15, 8, 12, 16, 17, 14, 14, 24), fill=(255, 255, 255, 245), width=2)
 
 
 def paint_press(frame: Image.Image, index: int, count: int) -> None:
@@ -183,7 +197,11 @@ def paint_grid_charge(frame: Image.Image, index: int, count: int) -> None:
 def build_animations() -> None:
     animation_sheet("sales-office-status-green", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (72, 255, 105)))
     animation_sheet("sales-office-status-red", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (255, 54, 42)))
-    animation_sheet("charger-status-lights", 64, 64, paint_charger_lights)
+    for state in ("idle", "low", "medium", "full", "overload", "charging"):
+        animation_sheet(
+            f"charger-stall-{state}", 32, 32,
+            lambda frame, index, count, state=state: paint_charger_stall_light(frame, index, count, state),
+        )
     animation_sheet("gigafactory-press", 128, 96, paint_press)
     animation_sheet("datacenter-cooling-fans", 128, 64, paint_fans)
     animation_sheet("robotaxi-dispatch-lights", 128, 64, paint_dispatch_lights)

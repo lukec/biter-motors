@@ -48,7 +48,11 @@
   "animations": [
     "Sales Office working beacon",
     "Sales Office stopped beacon",
-    "Charger status lights",
+    "Charger stall idle",
+    "Charger stall partial",
+    "Charger stall full",
+    "Charger stall overload",
+    "Charger stall charging",
     "Gigafactory presses",
     "Datacenter cooling fans",
     "Robotaxi dispatch lights",
