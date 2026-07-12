@@ -6185,6 +6185,39 @@ remote.add_interface("factoryx", {
   repair_customer_populations = function()
     return rebuild_customer_settlement_population_cache()
   end,
+  sales_office_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local rows = {}
+    local service = customer_service_for_force(force)
+    local vehicle_summary = active_customer_vehicle_summary(force)
+    for _, office in pairs(registered_factoryx_entities("sales_offices", force)) do
+      local settlements = {}
+      for key in pairs(service.operational_keys) do
+        local population = customer_settlement_populations()[key]
+        local station = service.assignment_by_settlement_key[key]
+        local config = station and station_config(station)
+        local queue = buyer_queue_for(force.name, key)
+        settlements[#settlements + 1] = {
+          key = key,
+          position = population and population.position,
+          in_coverage = population and population.surface_index == office.surface.index
+            and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) or false,
+          queued = math.max(0, #queue.units - queue.head + 1),
+          owned = vehicle_summary.by_settlement[key] or 0,
+          capacity = config and config.evs_per_stall or 0
+        }
+      end
+      rows[#rows + 1] = {
+        unit_number = office.unit_number,
+        position = office.position,
+        disabled = office.disabled_by_script,
+        buyer_status = sales_office_buyer_status(office),
+        settlements = settlements
+      }
+    end
+    return rows
+  end,
   performance_test_seed_owner = function(entity, spawner, force_name, vehicle_name, due_tick)
     if not script.active_mods["factoryx_perf_benchmark"] then return false end
     local force = game.forces[force_name or "player"]

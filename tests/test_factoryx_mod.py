@@ -351,6 +351,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("rebuild_customer_buyer_queues()", control)
         self.assertIn("customer_population_records = population_records", control)
         self.assertIn("repair_customer_populations = function()", control)
+        self.assertIn("sales_office_status = function(force_name)", control)
 
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()
