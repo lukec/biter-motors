@@ -168,7 +168,7 @@ local function customer_radius_visualisation(distance)
       width = 12,
       height = 12,
       priority = "extra-high-no-scale",
-      tint = {r = 0.25, g = 0.85, b = 1.0, a = 0.35}
+      tint = {r = 0.18, g = 0.48, b = 0.24, a = 0.16}
     },
     distance = distance,
     draw_in_cursor = true,

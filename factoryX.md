@@ -522,7 +522,9 @@ Current implementation:
   status, covered biter customer settlements, active stalls, power draw,
   reservation rate, active EV Sales Offices, and the next progression step.
 - Holding or selecting a station shows a 64-tile customer coverage radius using
-  Factorio's native radius visualization.
+  Factorio's native radius visualization. The field uses a muted leaf-green
+  tint at low opacity so it remains readable without washing out terrain or
+  looking like an aggressive warning overlay.
 - The Sales Office technology enables the Sales Office, EV Charging Station,
   and `Sell hopes and dreams`.
 - The first covered biter customer charging site enables the Prototype Roadster

@@ -540,6 +540,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("radius_visualisation_specification", data)
         self.assertIn("draw_in_cursor = true", data)
         self.assertIn("draw_on_selection = true", data)
+        self.assertIn("tint = {r = 0.18, g = 0.48, b = 0.24, a = 0.16}", data)
+        self.assertNotIn("tint = {r = 0.25, g = 0.85, b = 1.0, a = 0.35}", data)
         self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', data)
         self.assertIn('generated_entity_animation("orbital-compute-array")', data)
         for slug in [
