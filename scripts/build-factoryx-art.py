@@ -125,8 +125,31 @@ def paint_sales_lights(frame: Image.Image, index: int, count: int) -> None:
 def paint_sales_status_light(frame: Image.Image, index: int, count: int, color: tuple[int, int, int]) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     pulse = (math.sin(index / count * math.tau) + 1) / 2
-    glow(draw, (32, 32), 9, color, round(150 + pulse * 95))
-    draw.ellipse((25, 25, 39, 39), fill=(*color, 255), outline=(235, 245, 240, 235), width=2)
+    center = (32, 32)
+    radius = round(13 + pulse * 5)
+    glow(draw, center, radius, color, round(125 + pulse * 120))
+    draw.ellipse(
+        (32 - radius, 32 - radius, 32 + radius, 32 + radius),
+        outline=(*color, round(105 + pulse * 140)),
+        width=3,
+    )
+    angle = index / count * math.tau
+    for spoke in range(3):
+        theta = angle + spoke * math.tau / 3
+        inner = 9
+        outer = 23
+        draw.line(
+            (
+                32 + math.cos(theta) * inner,
+                32 + math.sin(theta) * inner,
+                32 + math.cos(theta) * outer,
+                32 + math.sin(theta) * outer,
+            ),
+            fill=(245, 255, 248, 245),
+            width=4,
+        )
+    glow(draw, center, 5, color, 255)
+    draw.ellipse((29, 29, 35, 35), fill=(245, 255, 248, 255))
 
 
 def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state: str) -> None:
@@ -134,7 +157,7 @@ def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state:
     if state == "idle":
         draw.ellipse((10, 10, 22, 22), fill=(22, 38, 42, 225), outline=(80, 112, 118, 210), width=2)
         return
-    frequency = {"low": 1, "medium": 2, "full": 4, "overload": 3, "charging": 4}[state]
+    frequency = {"low": 1, "medium": 1, "full": 2, "overload": 2, "charging": 2}[state]
     pulse = (math.sin(index / count * math.tau * frequency) + 1) / 2
     color = {
         "low": (48, 178, 205),
@@ -144,10 +167,12 @@ def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state:
         "charging": (245, 252, 255),
     }[state]
     base_alpha = {"low": 70, "medium": 105, "full": 145, "overload": 150, "charging": 180}[state]
-    glow(draw, (16, 16), 4, color, round(base_alpha + pulse * (245 - base_alpha)))
-    draw.ellipse((11, 11, 21, 21), fill=(*color, round(150 + pulse * 105)), outline=(225, 240, 242, 225), width=1)
+    glow(draw, (16, 16), 6, color, round(base_alpha + pulse * (245 - base_alpha)))
+    draw.rounded_rectangle((6, 10, 26, 22), 4, fill=(*color, round(95 + pulse * 125)), outline=(225, 240, 242, 235), width=2)
+    sweep_x = 8 + round(index / (count - 1) * 16)
+    draw.line((sweep_x, 11, sweep_x, 21), fill=(255, 255, 255, 245), width=3)
     if state == "charging":
-        draw.line((15, 8, 12, 16, 17, 14, 14, 24), fill=(255, 255, 255, 245), width=2)
+        draw.line((15, 6, 11, 15, 17, 13, 13, 26), fill=(255, 255, 255, 255), width=3)
 
 
 def paint_press(frame: Image.Image, index: int, count: int) -> None:

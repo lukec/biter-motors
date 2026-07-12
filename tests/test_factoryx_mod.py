@@ -3,7 +3,7 @@ import re
 import unittest
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -581,6 +581,17 @@ class FactoryXModTest(unittest.TestCase):
                 self.assertEqual(image.mode, "RGBA")
                 self.assertGreater(image.getchannel("A").getbbox()[2], 0)
 
+                frame_width = expected_size[0] // 8
+                first = image.crop((0, 0, frame_width, expected_size[1]))
+                fourth = image.crop((frame_width * 3, 0, frame_width * 4, expected_size[1]))
+                if filename not in {"charger-stall-idle.png"}:
+                    channels = ImageChops.difference(first, fourth).split()
+                    changed = channels[0]
+                    for channel in channels[1:]:
+                        changed = ImageChops.lighter(changed, channel)
+                    changed_pixels = changed.point(lambda value: 255 if value else 0).histogram()[255]
+                    self.assertGreater(changed_pixels, 20, filename)
+
         for technology in [
             "sales-office",
             "ev-charging-network",
@@ -610,7 +621,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
         self.assertIn("function update_charger_stall_visuals(force_refresh)", control)
-        self.assertIn('object.sprite = "x-charger-stall-" .. state .. "-frame-" .. frame_index', control)
+        self.assertIn('object.sprite = "x-charger-stall-" .. state .. "-frame-" .. staggered_frame', control)
         self.assertIn('sprite_prefix = "x-robotaxi-dispatch-lights-frame-"', control)
         self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)
         self.assertIn("update_factoryx_runtime_visuals()", control)

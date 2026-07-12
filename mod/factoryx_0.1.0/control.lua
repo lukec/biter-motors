@@ -473,7 +473,7 @@ local function rebuild_factoryx_runtime_visuals()
 end
 
 local function update_factoryx_runtime_visuals()
-  local frame_index = math.floor(game.tick / 30) % 8 + 1
+  local frame_index = math.floor(game.tick / 15) % 8 + 1
   for unit_number, entry in pairs(factoryx_runtime_visuals()) do
     if not entry.entity or not entry.entity.valid or not entry.object or not entry.object.valid then
       destroy_factoryx_runtime_visual(unit_number)
@@ -566,7 +566,7 @@ function charger_stall_visual_state(service, station, assignment, stall_index, c
 end
 
 function update_charger_stall_visuals(force_refresh)
-  local frame_index = math.floor(game.tick / 30) % 8 + 1
+  local frame_index = math.floor(game.tick / 15) % 8 + 1
   local refresh_states = force_refresh == true or game.tick % 120 == 0
   local commute_counts = refresh_states and customer_commute_station_counts() or {}
   local seen = {}
@@ -591,7 +591,8 @@ function update_charger_stall_visuals(force_refresh)
       for stall_index, object in ipairs(entry and entry.objects or {}) do
         local state = entry.states[stall_index] or "idle"
         if object and object.valid then
-          object.sprite = "x-charger-stall-" .. state .. "-frame-" .. frame_index
+          local staggered_frame = (frame_index + (stall_index - 1) * 2 - 1) % 8 + 1
+          object.sprite = "x-charger-stall-" .. state .. "-frame-" .. staggered_frame
         end
       end
     end
