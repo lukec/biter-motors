@@ -2717,28 +2717,46 @@ function charger_placement_overlay_states()
   return storage.factoryx_charger_placement_overlay_states
 end
 
+local function set_charger_placement_overlay(player, enabled)
+  if not player or not player.valid or not player.connected then
+    return false
+  end
+  local ok, error_message = pcall(function()
+    player.map_view_settings = {
+      ["show-electric-network"] = enabled,
+      ["show-logistic-network"] = false
+    }
+  end)
+  if not ok then
+    storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
+    if not storage.factoryx_charger_overlay_warnings[player.index] then
+      storage.factoryx_charger_overlay_warnings[player.index] = true
+      log("[FactoryX] Charger placement overlay unavailable for player "
+        .. player.index .. ": " .. tostring(error_message))
+    end
+  end
+  return ok
+end
+
 function sync_charger_placement_overlay(player)
   if not player or not player.valid then
     return
   end
+  local states = charger_placement_overlay_states()
+  if not player.connected then
+    states[player.index] = nil
+    return
+  end
   local stack = player.cursor_stack
   local holding_charger = stack and stack.valid_for_read and STATION_CONFIGS[stack.name] ~= nil
-  local states = charger_placement_overlay_states()
   local previous = states[player.index]
   if holding_charger then
-    if not previous then
+    if not previous and set_charger_placement_overlay(player, true) then
       states[player.index] = true
-      player.map_view_settings = {
-        ["show-electric-network"] = true,
-        ["show-logistic-network"] = false
-      }
     end
   elseif previous then
     -- MapViewSettings is write-only, so FactoryX can only clear the overlay it enabled.
-    player.map_view_settings = {
-      ["show-electric-network"] = false,
-      ["show-logistic-network"] = false
-    }
+    set_charger_placement_overlay(player, false)
     states[player.index] = nil
   end
 end
@@ -5556,8 +5574,20 @@ script.on_event(defines.events.on_ai_command_completed, handle_customer_commute_
 
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
+  sync_charger_placement_overlay(player)
   refresh_sales_office_coverage(player)
   refresh_progress_panel(player)
+end)
+
+script.on_event(defines.events.on_player_left_game, function(event)
+  charger_placement_overlay_states()[event.player_index] = nil
+end)
+
+script.on_event(defines.events.on_player_removed, function(event)
+  charger_placement_overlay_states()[event.player_index] = nil
+  sales_office_coverage_enabled()[event.player_index] = nil
+  storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
+  storage.factoryx_charger_overlay_warnings[event.player_index] = nil
 end)
 
 script.on_event(defines.events.on_player_changed_force, function(event)

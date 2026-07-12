@@ -1,4 +1,5 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -1741,10 +1742,19 @@ class FactoryXModTest(unittest.TestCase):
     def test_charger_placement_prefers_power_overlay(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn("on_player_cursor_stack_changed", control)
-        self.assertIn('["show-electric-network"] = true', control)
+        self.assertIn('["show-electric-network"] = enabled', control)
         self.assertIn('["show-logistic-network"] = false', control)
         self.assertIn("MapViewSettings is write-only", control)
         self.assertNotIn("local settings = player.map_view_settings", control)
+        self.assertIn("local function set_charger_placement_overlay(player, enabled)", control)
+        self.assertIn("if not player or not player.valid or not player.connected then", control)
+        self.assertIn("local ok, error_message = pcall(function()", control)
+        self.assertIn("Charger placement overlay unavailable for player", control)
+        self.assertIn("defines.events.on_player_left_game", control)
+        self.assertIn("defines.events.on_player_removed", control)
+
+        reads = re.findall(r"(?:local\s+\w+\s*=|return)\s*player\.map_view_settings", control)
+        self.assertEqual([], reads, "LuaPlayer.map_view_settings is write-only")
 
     def test_friendly_customer_attack_commands_are_interrupted(self):
         control = (MOD / "control.lua").read_text()
