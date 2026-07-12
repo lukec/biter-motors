@@ -739,7 +739,8 @@ script.on_nth_tick(18320, function()
   write_report{
     tick = game.tick,
     status = "customer_overload",
-    market = remote.call("factoryx", "refresh_biter_customer_market", "player")
+    market = remote.call("factoryx", "refresh_biter_customer_market", "player"),
+    sales_offices = remote.call("factoryx", "sales_office_status", "player")
   }
 end)
 
@@ -1422,6 +1423,16 @@ if overload is None or overload.get("market", {}).get("stranded_evs", 0) < 1:
     raise SystemExit(f"charging overload did not report stranded EVs: {overload}")
 if overload.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"full outage should not immediately turn a customer settlement hostile: {overload}")
+overload_offices = overload.get("sales_offices", [])
+overload_settlements = [
+    settlement
+    for office in overload_offices
+    for settlement in office.get("settlements", [])
+]
+if not any(settlement.get("underserved", 0) > 0 for settlement in overload_settlements):
+    raise SystemExit(f"Sales Office status hid friendly underserved settlements: {overload}")
+if not any(office.get("buyer_status", {}).get("friendly_settlements", 0) > 0 for office in overload_offices):
+    raise SystemExit(f"charging overload became an immediate Sales Office hard stop: {overload}")
 if recovery is None or recovery.get("market", {}).get("stranded_evs") != 0:
     raise SystemExit(f"restored charging capacity did not clear stranded EVs: {recovery}")
 if recovery.get("market", {}).get("angry_settlements") != 0:

@@ -416,9 +416,15 @@ A sale also requires a real mobile customer. Unsold mobile biters and spitters
 show `$`; a Sales Office reserves one eligible buyer per represented vehicle
 and pauses when none is available. A completed sale assigns the vehicle to that
 customer and replaces `$` with the vehicle's item icon. Buyer selection favors
-the least-loaded settlements, so scaling sales requires reaching additional
-colonies. If an owner dies, its vehicle leaves the active fleet immediately;
-lifetime sales remain in the economic statistics.
+the least-utilized friendly settlements. Charging capacity is a preference, not
+a sales hard cap: if real buyers remain, the Sales Office can sell beyond local
+powered capacity. Excess owners become underserved, receive the settlement
+alert, and enter the same three-minute grace followed by stochastic anger used
+for charger removal and brownouts. Adding powered stalls restores service and
+friendliness immediately. Once all mobile buyers own vehicles, scaling sales
+still requires reaching additional colonies. If an owner dies, its vehicle
+leaves the active fleet immediately; lifetime sales remain in the economic
+statistics.
 
 Holding or selecting a Sales Office shows its 128-tile customer conversion
 radius. Hostile biter entities inside that radius are converted into customer
@@ -657,8 +663,10 @@ Implemented v1 behavior:
   customers instead of immediately reverting to enemy force.
 - Completed sales assign cars to living mobile customers; production alone does
   not form the fleet. Successive charger generations serve 12, 20, 32, and 50
-  owners per stall. Overload, charger removal, and brownouts use one local
-  three-minute grace-and-anger path; restored service recovers immediately.
+  owners per stall. Sales may exceed that capacity while unowned friendly buyers
+  remain. Only owners beyond powered capacity count as underserved. Overload,
+  charger removal, and brownouts use one local three-minute grace-and-anger
+  path; restored service recovers immediately.
 - A served settlement with no physical or virtual population seeds one small
   mobile prospective customer. This prevents the first Reservation and sale
   from deadlocking on quiet, unpolluted spawners while preserving the rule that
@@ -674,10 +682,11 @@ Implemented v1 behavior:
 - Settlement population records are derived from live spawners, registered
   customers, and home-settlement assignments. Sales synchronization rebuilds
   that cache automatically if a same-version mod restart leaves it empty.
-- An unowned mobile buyer from a saturated settlement may adopt a covered
-  settlement with spare charging capacity when a sale is reserved. This keeps
-  ownership physical while preventing one prolific spawner from blocking a
-  larger multi-settlement charging network.
+- An unowned mobile buyer may adopt another covered friendly settlement when a
+  sale is reserved. Selection favors the lowest owners-per-capacity ratio, so
+  spare charging is consumed before any settlement is deliberately oversold.
+  This keeps ownership physical while preventing one prolific spawner from
+  blocking a larger multi-settlement charging network.
 - Registered mobile customers follow the service state of their home
   settlement, not whether wandering has carried them outside a short scan
   circle. Roaming cannot silently turn a served customer back into an enemy.
@@ -1733,11 +1742,12 @@ icons, and bounded working animations. Remaining work is narrower:
 
 - Move beyond simple active-stall count.
 - Implemented: multiple grid-connected chargers can contribute separate stalls
-  to the same settlement. Each additional V1 stall opens 12 more supported EV
-  sales, so a pre-V2 player can resolve a full market by building more V1
-  infrastructure. Assignment favors settlements with the least existing
-  capacity. Extra stalls begin drawing power only as sold EV ownership grows
-  beyond the capacity of earlier stalls.
+  to the same settlement. Each additional V1 stall supports 12 more EV owners,
+  so a pre-V2 player can resolve an underserved market by building more V1
+  infrastructure. The Sales Office does not hard-stop at this capacity: it can
+  oversell to remaining mobile buyers, visibly creating customer-service risk.
+  Assignment favors settlements with the least existing capacity. Extra stalls
+  begin drawing power only as sold EV ownership grows beyond earlier stalls.
 - Possible mechanics:
   - Count unique chunks covered by charging stations.
   - Require stations to be powered.

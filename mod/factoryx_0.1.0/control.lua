@@ -553,7 +553,7 @@ function charger_stall_visual_state(service, station, assignment, stall_index, c
   )
   local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
   local owned = key and (vehicle_summary.by_settlement[key] or 0) or 0
-  local capacity = key and (service.assigned_capacity_by_settlement_key[key] or 0) or 0
+  local capacity = key and (service.powered_capacity_by_settlement_key[key] or 0) or 0
   if owned > capacity then return "overload", charging_available end
   if charging_available > 0 then return "charging", charging_available - 1 end
   local config = station_config(station)
@@ -2352,7 +2352,8 @@ customer_service_for_force = function(force, advance_mood)
     powered_stall_capacity = 0,
     supported_ev_capacity = 0,
     average_evs_per_stall = 0,
-    stranded_evs = 0
+    stranded_evs = 0,
+    underserved_settlements = 0
   }
   if not player_market_force(force) then
     return service
@@ -2463,8 +2464,9 @@ customer_service_for_force = function(force, advance_mood)
       or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
       service.operational_keys[key] = true
     end
-    if vehicle_count > 0 and not service.operational_keys[key] then
-      service.stranded_evs = service.stranded_evs + vehicle_count
+    if vehicle_count > powered_capacity then
+      service.stranded_evs = service.stranded_evs + (vehicle_count - powered_capacity)
+      service.underserved_settlements = service.underserved_settlements + 1
     end
     local friendly, angry = settlement_friendly_after_service_check(
       force,
@@ -4914,7 +4916,7 @@ function eligible_customer_buyers(office, needed)
     end
   end
   local pools = {}
-  for key in pairs(service.operational_keys) do
+  for key in pairs(service.served_keys) do
     local assigned_station = service.assignment_by_settlement_key[key]
     local config = assigned_station and station_config(assigned_station)
     local capacity = service.capacity_by_settlement_key[key] or 0
@@ -4925,12 +4927,13 @@ function eligible_customer_buyers(office, needed)
     local settlement_in_office_coverage = population
       and population.surface_index == office.surface.index
       and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)
-    if config and settlement_in_office_coverage and load < capacity then
+    if config and capacity > 0 and settlement_in_office_coverage then
       pools[#pools + 1] = {
         key = key,
         queue = buyer_queue_for(office.force.name, key),
         load = load,
         capacity = capacity,
+        exhausted = false,
         virtual_available = population and math.max(
           0,
           (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
@@ -4942,14 +4945,15 @@ function eligible_customer_buyers(office, needed)
   local buyers = {}
   while #buyers < needed do
     table.sort(pools, function(left, right)
-      if left.load ~= right.load then
-        return left.load < right.load
-      end
+      local left_utilization = left.load / left.capacity
+      local right_utilization = right.load / right.capacity
+      if left_utilization ~= right_utilization then return left_utilization < right_utilization end
+      if left.load ~= right.load then return left.load < right.load end
       return left.key < right.key
     end)
     local pool
     for _, candidate in pairs(pools) do
-      if candidate.load < candidate.capacity then
+      if not candidate.exhausted then
         pool = candidate
         break
       end
@@ -4971,7 +4975,7 @@ function eligible_customer_buyers(office, needed)
       pool.virtual_available = pool.virtual_available - 1
       pool.load = pool.load + 1
     else
-      pool.load = pool.capacity
+      pool.exhausted = true
     end
   end
   return buyers
@@ -4982,18 +4986,22 @@ function sales_office_buyer_status(office)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
   local eligible_keys = {}
   local settlements = 0
-  for key in pairs(service.operational_keys) do
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    local key = settlement_key(settlement.surface, settlement)
     local population = customer_settlement_populations()[key]
-    if population and population.surface_index == office.surface.index
+    if (service.capacity_by_settlement_key[key] or 0) > 0
+      and population and population.surface_index == office.surface.index
       and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
-      eligible_keys[key] = true
-      settlements = settlements + 1
+        eligible_keys[key] = true
+        settlements = settlements + 1
     end
   end
   local available = 0
   local customers = 0
   local owned = 0
   local capacity = 0
+  local powered_capacity = 0
+  local friendly_settlements = 0
   for key in pairs(eligible_keys) do
     local population = customer_settlement_populations()[key]
     local queue = buyer_queue_for(office.force.name, key)
@@ -5004,6 +5012,8 @@ function sales_office_buyer_status(office)
     )
     owned = owned + (vehicle_summary.by_settlement[key] or 0)
     capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
+    powered_capacity = powered_capacity + (service.powered_capacity_by_settlement_key[key] or 0)
+    if service.served_keys[key] then friendly_settlements = friendly_settlements + 1 end
     customers = customers + (population.physical or 0) + (population.virtual_unowned or 0)
     for _, count in pairs(population.virtual_by_vehicle or {}) do
       customers = customers + count
@@ -5015,6 +5025,9 @@ function sales_office_buyer_status(office)
     customers = customers,
     owned = owned,
     capacity = capacity,
+    powered_capacity = powered_capacity,
+    underserved = math.max(0, owned - powered_capacity),
+    friendly_settlements = friendly_settlements,
     unowned = math.max(0, customers - owned)
   }
 end
@@ -5765,8 +5778,8 @@ function entity_status_presentation(entity)
       return "No customer settlements in coverage", FACTORYX_STATE_COLORS.bad
     elseif buyers.unowned == 0 then
       return "Market saturated - expand to new settlements", FACTORYX_STATE_COLORS.warning
-    elseif buyers.owned >= buyers.capacity then
-      return "Charging capacity full - add another powered charger", FACTORYX_STATE_COLORS.warning
+    elseif buyers.friendly_settlements == 0 then
+      return "Customers hostile - restore charging service", FACTORYX_STATE_COLORS.bad
     end
     return "Waiting for an available mobile buyer", FACTORYX_STATE_COLORS.warning
   end
@@ -5889,9 +5902,12 @@ local function show_manufacturer_info_panel(player, entity)
       buyer_status.customers
     ))
     add_station_info_label(panel, string.format(
-      "Charging capacity for covered settlements: %d / %d used",
-      buyer_status.owned,
-      buyer_status.capacity
+      "Powered charging capacity for covered settlements: %d EVs",
+      buyer_status.powered_capacity
+    ))
+    add_station_info_label(panel, string.format(
+      "Underserved EV owners: %d",
+      buyer_status.underserved
     ))
   else
     local config = GIGAFACTORY_CONFIGS[entity.name]
@@ -5991,8 +6007,8 @@ local function show_manufacturer_info_panel(player, entity)
     local buyers = sales_office_buyer_status(entity)
     if buyers.unowned == 0 then
       next_step = "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
-    elseif buyers.owned >= buyers.capacity then
-      next_step = "Blocked: charging capacity is full. Add another powered charger near these settlements; each V1 stall opens 12 more supported sales."
+    elseif buyers.friendly_settlements == 0 then
+      next_step = "Blocked: no friendly buyers remain here. Restore powered charging capacity to recover these settlements, or expand to another market."
     else
       next_step = "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
     end
@@ -6050,7 +6066,11 @@ local function show_customer_settlement_info_panel(player, settlement)
   }
   panel.style.width = 380
 
-  add_station_info_label(panel, "Status: " .. (friendly and "customer" or "hostile"))
+  local local_powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
+  local local_underserved = math.max(0, settlement_vehicles - local_powered_capacity)
+  local status = friendly and (local_underserved > 0 and "customer - charging underserved" or "customer")
+    or "hostile"
+  add_station_info_label(panel, "Status: " .. status)
   add_station_info_label(panel, "Sales Office coverage: " .. (sales_covered and "yes" or "no"))
   add_station_info_label(panel, string.format(
     "Settlement population: %d (%d visible representatives)",
@@ -6060,8 +6080,9 @@ local function show_customer_settlement_info_panel(player, settlement)
   add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
   add_station_info_label(panel, string.format(
     "Powered charging capacity at this settlement: %d",
-    service.capacity_by_settlement_key[key] or 0
+    local_powered_capacity
   ))
+  add_station_info_label(panel, string.format("Underserved vehicles: %d", local_underserved))
   add_station_info_label(panel, string.format("Active customer vehicles network-wide: %d", vehicle_summary.total))
   add_station_info_label(panel, string.format("Network vehicle capacity: %d", service.supported_ev_capacity))
 
@@ -6088,11 +6109,14 @@ local function show_customer_settlement_info_panel(player, settlement)
   if friendly and operational then
     reason = "Customer status: served by both market and powered charging coverage."
   elseif friendly then
-    reason = "Customer status: charging is disrupted, but this settlement is still friendly during its patience period."
+    reason = string.format(
+      "Customer status: %d EVs lack powered charging, but this settlement remains friendly during its patience period.",
+      local_underserved
+    )
   elseif angry then
     reason = string.format(
       "Hostile reason: %d sold EVs exceed reachable charging capacity. Add powered stalls to restore service.",
-      service.stranded_evs
+      local_underserved
     )
   elseif not sales_covered then
     reason = string.format(
@@ -6696,7 +6720,7 @@ remote.add_interface("factoryx", {
     local vehicle_summary = active_customer_vehicle_summary(force)
     for _, office in pairs(registered_factoryx_entities("sales_offices", force)) do
       local settlements = {}
-      for key in pairs(service.operational_keys) do
+      for key in pairs(service.served_keys) do
         local population = customer_settlement_populations()[key]
         local station = service.assignment_by_settlement_key[key]
         local config = station and station_config(station)
@@ -6727,7 +6751,13 @@ remote.add_interface("factoryx", {
           unowned_entities = unowned_entities,
           matching_homes = matching_homes,
           owned = vehicle_summary.by_settlement[key] or 0,
-          capacity = service.capacity_by_settlement_key[key] or 0
+          capacity = service.capacity_by_settlement_key[key] or 0,
+          powered_capacity = service.powered_capacity_by_settlement_key[key] or 0,
+          underserved = math.max(
+            0,
+            (vehicle_summary.by_settlement[key] or 0)
+              - (service.powered_capacity_by_settlement_key[key] or 0)
+          )
         }
       end
       rows[#rows + 1] = {
