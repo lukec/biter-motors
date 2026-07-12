@@ -3008,7 +3008,7 @@ end
 
 function send_customer_home_after_charging(entity, state)
   local home = entity and entity.unit_number and customer_home_settlements()[entity.unit_number]
-  local surface = home and game.surfaces[home.surface_index]
+  local surface = home and game.get_surface(home.surface_index)
   if not entity or not entity.valid or not entity.commandable or surface ~= entity.surface then
     return false
   end
