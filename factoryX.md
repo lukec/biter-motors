@@ -665,6 +665,9 @@ Implemented v1 behavior:
   unit's momentary position. A Sales Office can reserve an unowned mobile buyer
   when that buyer's operational home settlement is inside office coverage;
   wandering across the circle edge cannot pause an in-progress sale.
+- Settlement population records are derived from live spawners, registered
+  customers, and home-settlement assignments. Sales synchronization rebuilds
+  that cache automatically if a same-version mod restart leaves it empty.
 - Player EVs recharge at 3% of installed battery capacity per second while a
   powered stall serves them. Mining an EV never returns the hidden drive-fuel
   token; only the physical vehicle returns to inventory.

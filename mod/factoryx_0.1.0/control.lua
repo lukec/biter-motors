@@ -1725,6 +1725,54 @@ function rebuild_customer_vehicle_aggregates()
   )
 end
 
+function rebuild_customer_settlement_population_cache()
+  local previous = storage.factoryx_customer_settlement_populations or {}
+  storage.factoryx_customer_settlement_populations = {}
+  storage.factoryx_customer_population_members = {}
+
+  local settlements = {}
+  for _, surface in pairs(game.surfaces) do
+    for _, settlement in pairs(surface.find_entities_filtered{type = "unit-spawner"}) do
+      if BITER_SETTLEMENT_NAMES[settlement.name] then
+        settlements[settlement_key(surface, settlement)] = settlement
+      end
+    end
+  end
+
+  local restored = 0
+  for unit_number, entity in pairs(customer_unit_registry()) do
+    local home = customer_home_settlements()[unit_number]
+    local settlement = home and settlements[home.settlement_key]
+    local market_force = home and game.forces[home.market_force_name]
+    if entity and entity.valid and settlement and market_force then
+      local _, population = customer_settlement_population(settlement, market_force)
+      population.physical = (population.physical or 0) + 1
+      customer_population_members()[unit_number] = home.settlement_key
+      restored = restored + 1
+    end
+  end
+
+  for key, old in pairs(previous) do
+    local population = customer_settlement_populations()[key]
+    if population then
+      population.virtual_unowned = old.virtual_unowned or 0
+      population.virtual_reserved = old.virtual_reserved or 0
+      population.virtual_by_vehicle = old.virtual_by_vehicle or {}
+    end
+  end
+  rebuild_customer_vehicle_aggregates()
+  rebuild_customer_buyer_queues()
+  return restored
+end
+
+function ensure_customer_settlement_population_cache()
+  if next(customer_settlement_populations()) == nil
+    and next(customer_unit_registry()) ~= nil then
+    return rebuild_customer_settlement_population_cache()
+  end
+  return 0
+end
+
 function unregister_customer_unit(entity)
   if not entity or not entity.unit_number then
     return nil
@@ -4597,6 +4645,7 @@ function reserve_office_buyers(office, recipe_name, sale)
 end
 
 function sync_sales_office_buyers()
+  ensure_customer_settlement_population_cache()
   for _, office in pairs(registered_factoryx_entities("sales_offices")) do
       if office.valid and office.unit_number then
         local recipe = office.get_recipe()
@@ -6113,6 +6162,8 @@ remote.add_interface("factoryx", {
     local performance_state = PerformanceState.ensure(storage)
     local active = 0
     for _ in pairs(customer_active_commutes()) do active = active + 1 end
+    local population_records = 0
+    for _ in pairs(customer_settlement_populations()) do population_records = population_records + 1 end
     return {
       counters = storage.factoryx_perf_counters or {},
       registered_stations = #registered_factoryx_entities("stations", force),
@@ -6123,12 +6174,16 @@ remote.add_interface("factoryx", {
       visible_customer_limit = CUSTOMER_VISIBLE_GLOBAL_LIMIT,
       queued_commutes = due.size,
       active_commutes = active,
+      customer_population_records = population_records,
       market_invalidations = performance_state.invalidations,
       compute_queue_size = #factoryx_compute_queue().units,
       robotaxi_cache_tick = storage.factoryx_robotaxi_allocation_cache
         and storage.factoryx_robotaxi_allocation_cache[force.index]
         and storage.factoryx_robotaxi_allocation_cache[force.index].tick or nil
     }
+  end,
+  repair_customer_populations = function()
+    return rebuild_customer_settlement_population_cache()
   end,
   performance_test_seed_owner = function(entity, spawner, force_name, vehicle_name, due_tick)
     if not script.active_mods["factoryx_perf_benchmark"] then return false end

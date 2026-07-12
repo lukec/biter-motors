@@ -344,6 +344,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function sales_office_buyer_status(office)", control)
         self.assertIn("Available unassigned buyers: %d from %d covered settlements", control)
         self.assertIn("Waiting for an unassigned buyer from a powered settlement", control)
+        self.assertIn("function rebuild_customer_settlement_population_cache()", control)
+        self.assertIn("function ensure_customer_settlement_population_cache()", control)
+        self.assertIn("ensure_customer_settlement_population_cache()", control)
+        self.assertIn("rebuild_customer_vehicle_aggregates()", control)
+        self.assertIn("rebuild_customer_buyer_queues()", control)
+        self.assertIn("customer_population_records = population_records", control)
+        self.assertIn("repair_customer_populations = function()", control)
 
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()
