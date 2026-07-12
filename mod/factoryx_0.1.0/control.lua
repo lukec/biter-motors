@@ -4818,21 +4818,13 @@ local function refresh_progress_panel(player)
     "Industrial Supply Chain",
     snapshot.industrial_supply_chain_researched and "researched" or "available"
   )
-  add_progress_metric(
-    industry,
-    "Big Mining Drills",
-    snapshot.big_mining_drill_researched
-      and string.format("%d built", snapshot.big_mining_drills)
-      or "research locked"
-  )
-  add_progress_metric(
-    industry,
-    "Foundries",
-    snapshot.foundry_researched
-      and string.format("%d built", snapshot.foundries)
-      or "research locked"
-  )
-  add_progress_metric(industry, "Calcite mined", tostring(snapshot.calcite_mined))
+  if snapshot.big_mining_drill_researched then
+    add_progress_metric(industry, "Big Mining Drills", string.format("%d built", snapshot.big_mining_drills))
+  end
+  if snapshot.foundry_researched then
+    add_progress_metric(industry, "Foundries", string.format("%d built", snapshot.foundries))
+    add_progress_metric(industry, "Calcite mined", tostring(snapshot.calcite_mined))
+  end
   if snapshot.recycling_revealed or snapshot.recycling_researched or snapshot.wrecked_evs_produced > 0 then
     add_progress_metric(industry, "Wrecked EVs produced", tostring(snapshot.wrecked_evs_produced))
     add_progress_metric(
@@ -4865,67 +4857,102 @@ local function refresh_progress_panel(player)
   add_progress_metric(metrics, "Completed charging visits", tostring(snapshot.customer_commutes_completed))
   add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
   add_progress_metric(metrics, "Premium EV gate", string.format("%d / 50 Roadsters", snapshot.roadsters_sold))
-  add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
-  add_progress_metric(metrics, "Megatruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
-  add_progress_metric(metrics, "Robotaxi gate", string.format("%d / 5,000 consumer EVs", snapshot.consumer_evs_sold))
+  if snapshot.ev_production_researched then
+    add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
+  end
+  if snapshot.mass_market_researched then
+    add_progress_metric(metrics, "Megatruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
+  end
+  if snapshot.autonomous_logistics_researched then
+    add_progress_metric(metrics, "Robotaxi gate", string.format("%d / 5,000 consumer EVs", snapshot.consumer_evs_sold))
+  end
   add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
   add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
-  add_progress_metric(metrics, "Cumulative AI Tokens", string.format("%d / %d", snapshot.ai_tokens_produced, snapshot.agi_token_gate))
-  add_progress_metric(
-    metrics,
-    "AGI Training",
-    snapshot.victory and "complete"
-      or (snapshot.agi_training_unlocked
-        and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
-        or "locked")
-  )
-  add_progress_metric(
-    metrics,
-    "Terrestrial AI milestone progress",
-    snapshot.terrestrial_ai_next_threshold
-      and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
-      or string.format("%d; all milestones unlocked", snapshot.terrestrial_ai_tokens_generated)
-  )
-  add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
-  add_progress_metric(metrics, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+  if snapshot.terrestrial_ai_researched then
+    add_progress_metric(
+      metrics,
+      "Terrestrial AI milestone progress",
+      snapshot.terrestrial_ai_next_threshold
+        and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
+        or string.format("%d; all milestones unlocked", snapshot.terrestrial_ai_tokens_generated)
+    )
+  end
+  if snapshot.autonomous_logistics_researched then
+    add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
+    add_progress_metric(metrics, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+  end
+  if snapshot.planetary_grid_researched then
+    add_progress_metric(metrics, "Cumulative AI Tokens", string.format("%d / %d", snapshot.ai_tokens_produced, snapshot.agi_token_gate))
+    add_progress_metric(
+      metrics,
+      "AGI Training",
+      snapshot.victory and "complete"
+        or (snapshot.agi_training_unlocked
+          and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
+          or "locked")
+    )
+  end
 
   content.add{type = "line"}
   add_section_heading(content, "Terrestrial infrastructure")
   local infrastructure = content.add{type = "table", column_count = 2}
   infrastructure.style.horizontally_stretchable = true
   add_progress_metric(infrastructure, "Sales Offices", tostring(snapshot.sales_offices))
-  add_progress_metric(infrastructure, "Gigafactories", string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2))
-  add_progress_metric(infrastructure, "Energy Products", string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks))
-  add_progress_metric(infrastructure, "Terrestrial Datacenters", tostring(snapshot.datacenters))
-  add_progress_metric(infrastructure, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+  if snapshot.energy_products_researched then
+    add_progress_metric(infrastructure, "Gigafactories", string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2))
+    add_progress_metric(infrastructure, "Energy Products", string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks))
+  end
+  if snapshot.terrestrial_ai_researched then
+    add_progress_metric(infrastructure, "Terrestrial Datacenters", tostring(snapshot.datacenters))
+  end
+  if snapshot.autonomous_logistics_researched then
+    add_progress_metric(infrastructure, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+  end
 
-  content.add{type = "line"}
-  add_section_heading(content, "Continuous improvement")
-  local improvement_table = content.add{type = "table", column_count = 2}
-  improvement_table.style.horizontally_stretchable = true
-  add_progress_metric(improvement_table, "Supercharging electronics", "Level " .. snapshot.supercharging_level)
-  add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
-  add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
-  add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
-  add_progress_metric(
-    improvement_table,
-    "High-density solar productivity",
-    "Level " .. snapshot.solar_productivity_level,
-    "factoryx_solar_productivity_level_value"
-  )
-  add_progress_metric(
-    improvement_table,
-    "Megapack productivity",
-    "Level " .. snapshot.megapack_productivity_level,
-    "factoryx_megapack_productivity_level_value"
-  )
-  add_progress_metric(
-    improvement_table,
-    "Terrestrial AI efficiency",
-    snapshot.terrestrial_ai_next_threshold
-      and string.format("Level %d; next at %d", snapshot.terrestrial_ai_efficiency_level, snapshot.terrestrial_ai_next_threshold)
-      or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level)
-  )
+  local improvements_visible = snapshot.charging_network_researched
+    or snapshot.ev_production_researched
+    or snapshot.mass_market_researched
+    or snapshot.energy_products_researched
+    or snapshot.terrestrial_ai_researched
+  if improvements_visible then
+    content.add{type = "line"}
+    add_section_heading(content, "Continuous improvement")
+    local improvement_table = content.add{type = "table", column_count = 2}
+    improvement_table.style.horizontally_stretchable = true
+    if snapshot.charging_network_researched then
+      add_progress_metric(improvement_table, "Supercharging electronics", "Level " .. snapshot.supercharging_level)
+      add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
+    end
+    if snapshot.mass_market_researched then
+      add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
+    end
+    if snapshot.ev_production_researched then
+      add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
+    end
+    if snapshot.energy_products_researched then
+      add_progress_metric(
+        improvement_table,
+        "High-density solar productivity",
+        "Level " .. snapshot.solar_productivity_level,
+        "factoryx_solar_productivity_level_value"
+      )
+      add_progress_metric(
+        improvement_table,
+        "Megapack productivity",
+        "Level " .. snapshot.megapack_productivity_level,
+        "factoryx_megapack_productivity_level_value"
+      )
+    end
+    if snapshot.terrestrial_ai_researched then
+      add_progress_metric(
+        improvement_table,
+        "Terrestrial AI efficiency",
+        snapshot.terrestrial_ai_next_threshold
+          and string.format("Level %d; next at %d", snapshot.terrestrial_ai_efficiency_level, snapshot.terrestrial_ai_next_threshold)
+          or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level)
+      )
+    end
+  end
 
   content.add{type = "line"}
   add_section_heading(content, "Progression")
