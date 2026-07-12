@@ -977,8 +977,9 @@ function configure_factoryx_new_game()
     remote.call("freeplay", "set_custom_intro_message", {
       "",
       "FACTORYX\n\n",
-      "Your expedition survived atmospheric entry, but the industrial world you expected does not exist. Native settlements control the surrounding land. They can become customers, provided you build the energy, transportation, and manufacturing systems they need.\n\n",
-      "Recover the supplies scattered through the wreckage. Rebuild electric industry, establish a Sales Office, and turn physical products into capital. Your long-term objective is to scale energy and computation far beyond one factory."
+      "You arrived to establish a permanent colony. An advance landing party was supposed to prepare the site, but they never made it. No base, no beacon, and no survivors are waiting for you.\n\n",
+      "Your ship carried advanced equipment, but the crash destroyed much of its technical archive. Recover the scattered cargo and use the surviving solar, storage, and robotics hardware carefully: you possess machines that you cannot yet reproduce.\n\n",
+      "Restore red and green science as quickly as possible. The Industrial Supply Chain recovers plans for Big Mining Drills, electric furnaces, and foundries that can accelerate the colony. From there, rebuild industry, establish trade with native settlements, and scale energy and computation far beyond one factory."
     })
   end
 end

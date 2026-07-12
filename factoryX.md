@@ -73,6 +73,10 @@ Rules for the rest of the design:
 - Infrastructure should explain itself through power draw, coverage, stalls,
   recipes, and status panels. If the player clicks a machine, the next step
   should be visible in-game.
+- The recovered legendary Megapacks can carry the opening grid all the way to
+  Energy Products. This is desirable: the crash kit bypasses ordinary
+  accumulator construction without making replacement Megapacks reproducible
+  before their technology is recovered.
 - Runtime milestone unlocks must be idempotent. Configuration changes can reset
   a recipe to its data-stage disabled state while milestone storage and
   production history survive. Recipe repair must always run; only the player
@@ -198,8 +202,13 @@ by default. It is deliberately a light start rather than a prebuilt base:
   it would otherwise be empty: steel from large hull sections, iron from medium
   sections, and five copper plates directly into the mining output from each
   small fragment.
-- A spoiler-light opening message explains the customer economy and long-term
-  energy/computation objective.
+- The opening message establishes that this is a colony mission whose advance
+  landing party never arrived. The crash preserved advanced hardware but
+  destroyed much of its technical archive, explaining why recovered equipment
+  cannot initially be reproduced. It directs the player toward immediate red
+  and green science so Industrial Supply Chain can recover Big Mining Drill,
+  electric-furnace, and foundry plans before introducing the broader customer
+  economy and long-term energy/computation objective.
 - Disabling the setting restores the ordinary Factorio freeplay start.
 
 ## Customer Population Scaling

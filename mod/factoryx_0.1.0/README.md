@@ -5,12 +5,12 @@ Space Age. This is a clean-break namespace: the mod id is `factoryx`, custom
 prototype ids use the `x-` prefix, and no compatibility aliases are retained.
 
 With `FactoryX accelerated start` enabled, the first player also finds a red
-wreckage chest containing 54 legendary High-density Solar Arrays (40.5 MW
-peak), 12 legendary Megapacks, 20 legendary Substations, 10 legendary
-Roboports, 200 legendary Construction Robots, and 200 legendary Logistic
-Robots. Nothing is prebuilt, and Robotics research is not granted: the cache
-enables a solar-first opening and a finite recovered logistics network while
-leaving layout, replacement, and expansion to the player.
+wreckage chest containing 54 legendary High-density Solar Arrays, 24 legendary
+Megapacks, 40 legendary Substations, 20 legendary Roboports, and limited
+legendary construction and logistic robots. Nothing is prebuilt. The recovered
+cache enables a solar-first opening and a finite logistics network, while the
+missing technical archive leaves FactoryX replacements locked behind their
+normal research progression.
 
 The MVP loop is intentionally physical:
 

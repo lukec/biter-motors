@@ -239,7 +239,11 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('factoryx_copy_table(FACTORYX_START_SHIP_ITEMS)', control)
         self.assertIn('remote.call("freeplay", "set_debris_items"', control)
         self.assertIn('remote.call("freeplay", "set_custom_intro_message"', control)
-        self.assertIn("Recover the supplies scattered through the wreckage", control)
+        self.assertIn("An advance landing party was supposed to prepare the site", control)
+        self.assertIn("the crash destroyed much of its technical archive", control)
+        self.assertIn("you possess machines that you cannot yet reproduce", control)
+        self.assertIn("Restore red and green science as quickly as possible", control)
+        self.assertIn("The Industrial Supply Chain recovers plans for Big Mining Drills", control)
         configure = control[control.index("function configure_factoryx_new_game"):control.index("function grant_factoryx_energy_jumpstart")]
         self.assertNotIn("surface.create_entity", configure)
         jumpstart = control[control.index("FACTORYX_ENERGY_JUMPSTART_ITEMS"):control.index("local STATION_GRID_CONNECTION_DISTANCE")]
