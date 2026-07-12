@@ -2727,19 +2727,18 @@ function sync_charger_placement_overlay(player)
   local previous = states[player.index]
   if holding_charger then
     if not previous then
-      local settings = player.map_view_settings
-      previous = {
-        show_electric_network = settings.show_electric_network,
-        show_logistic_network = settings.show_logistic_network
+      states[player.index] = true
+      player.map_view_settings = {
+        ["show-electric-network"] = true,
+        ["show-logistic-network"] = false
       }
-      states[player.index] = previous
     end
-    player.map_view_settings = {
-      show_electric_network = true,
-      show_logistic_network = false
-    }
   elseif previous then
-    player.map_view_settings = previous
+    -- MapViewSettings is write-only, so FactoryX can only clear the overlay it enabled.
+    player.map_view_settings = {
+      ["show-electric-network"] = false,
+      ["show-logistic-network"] = false
+    }
     states[player.index] = nil
   end
 end

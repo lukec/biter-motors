@@ -1741,9 +1741,10 @@ class FactoryXModTest(unittest.TestCase):
     def test_charger_placement_prefers_power_overlay(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn("on_player_cursor_stack_changed", control)
-        self.assertIn("show_electric_network = true", control)
-        self.assertIn("show_logistic_network = false", control)
-        self.assertIn("player.map_view_settings = previous", control)
+        self.assertIn('["show-electric-network"] = true', control)
+        self.assertIn('["show-logistic-network"] = false', control)
+        self.assertIn("MapViewSettings is write-only", control)
+        self.assertNotIn("local settings = player.map_view_settings", control)
 
     def test_friendly_customer_attack_commands_are_interrupted(self):
         control = (MOD / "control.lua").read_text()
