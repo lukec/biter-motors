@@ -581,6 +581,15 @@ script.on_nth_tick(3720, function()
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
   local v2_power_sinks = #surface.find_entities_filtered{name = V2_POWER_SINK, force = game.forces.player}
   local customer_force = game.forces[CUSTOMER_FORCE]
+  local prospect_units = #surface.find_entities_filtered{
+    name = {
+      "x-small-biter-prospect", "x-medium-biter-prospect",
+      "x-big-biter-prospect", "x-behemoth-biter-prospect",
+      "x-small-spitter-prospect", "x-medium-spitter-prospect",
+      "x-big-spitter-prospect", "x-behemoth-spitter-prospect"
+    },
+    force = customer_force
+  }
   local biter_spawner_customer = biter_spawner and customer_force and biter_spawner.force.name == CUSTOMER_FORCE
   local far_biter_spawner_enemy = far_biter_spawner and far_biter_spawner.force.name == "enemy"
   local hostile_worm_enemy = hostile_worm and hostile_worm.force.name == "enemy"
@@ -606,6 +615,7 @@ script.on_nth_tick(3720, function()
   write_report{
     tick = game.tick,
     status = "checked",
+    prospect_units = prospect_units,
     ev_charging_station_enabled = station_recipe and station_recipe.enabled,
     ev_charging_station_v2_created = find_unit(surface, STATION_V2, storage.station_v2_unit_number) ~= nil,
     ev_charging_station_v2_enabled = station_v2_recipe and station_v2_recipe.enabled,
@@ -1244,6 +1254,8 @@ if performance.get("active_commutes", 999999) > 512:
     raise SystemExit(f"active commute cap was exceeded: {performance}")
 if checked.get("vehicle_ownership", {}).get("registered_buyers", 0) <= 5:
     raise SystemExit(f"naturally spawned customer units were not registered: {checked}")
+if checked.get("prospect_units", 0) <= 0:
+    raise SystemExit(f"friendly unowned customers did not migrate to prospect prototypes: {checked}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):

@@ -361,6 +361,9 @@ CUSTOMER_UNIT_BASE_NAMES = {
 CUSTOMER_UNIT_BASE_BY_NAME = {}
 for _, base_name in pairs(CUSTOMER_UNIT_BASE_NAMES) do
   CUSTOMER_UNIT_BASE_BY_NAME[base_name] = base_name
+  local prospect_name = "x-" .. base_name .. "-prospect"
+  CUSTOMER_UNIT_BASE_BY_NAME[prospect_name] = base_name
+  BITER_CUSTOMER_ENTITY_NAMES[prospect_name] = true
   for _, class_name in pairs(CUSTOMER_VEHICLE_CLASS_BY_ITEM) do
     local variant_name = "x-" .. base_name .. "-" .. class_name
     CUSTOMER_UNIT_BASE_BY_NAME[variant_name] = base_name
@@ -1773,6 +1776,7 @@ function register_customer_unit(entity, settlement, market_force)
     and not buyer_reserved_by_unit()[entity.unit_number] then
     enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
   end
+  enqueue_customer_variant_migration(entity.unit_number)
   mark_factoryx_market_dirty(market_force, "customer-registered")
   return true
 end
@@ -2879,6 +2883,63 @@ function customer_vehicle_variant_name(entity_name, vehicle_name)
   return "x-" .. base_name .. "-" .. class_name
 end
 
+function customer_prospect_variant_name(entity_name)
+  local base_name = CUSTOMER_UNIT_BASE_BY_NAME[entity_name]
+  if not base_name then return nil end
+  return "x-" .. base_name .. "-prospect"
+end
+
+function replace_customer_prospect_entity(entity)
+  if not entity or not entity.valid or not entity.unit_number
+    or customer_vehicle_owners()[entity.unit_number] then
+    return entity
+  end
+  local target_name = customer_prospect_variant_name(entity.name)
+  if not target_name or entity.name == target_name then return entity end
+
+  local old_unit_number = entity.unit_number
+  local home = customer_home_settlements()[old_unit_number]
+  local reserved_office = buyer_reserved_by_unit()[old_unit_number]
+  local health_ratio = entity.get_health_ratio and entity.get_health_ratio() or 1
+  local replacement = entity.surface.create_entity{
+    name = target_name,
+    position = entity.position,
+    direction = entity.direction,
+    force = entity.force
+  }
+  if not replacement or not replacement.valid or not replacement.unit_number then return entity end
+
+  replacement.health = math.max(1, replacement.max_health * health_ratio)
+  customer_unit_registry()[replacement.unit_number] = replacement
+  customer_home_settlements()[replacement.unit_number] = home
+  customer_population_members()[replacement.unit_number] = customer_population_members()[old_unit_number]
+  if home then
+    local queue = buyer_queue_for(home.market_force_name, home.settlement_key)
+    for index = queue.head, #queue.units do
+      if queue.units[index] == old_unit_number then queue.units[index] = replacement.unit_number end
+    end
+  end
+  if reserved_office then
+    buyer_reserved_by_unit()[replacement.unit_number] = reserved_office
+    local reservation = office_buyer_reservations()[reserved_office]
+    if reservation then
+      for index, unit_number in pairs(reservation.buyers or {}) do
+        if unit_number == old_unit_number then reservation.buyers[index] = replacement.unit_number end
+      end
+    end
+  end
+
+  destroy_customer_marker(entity)
+  customer_unit_registry()[old_unit_number] = nil
+  customer_home_settlements()[old_unit_number] = nil
+  customer_population_members()[old_unit_number] = nil
+  buyer_reserved_by_unit()[old_unit_number] = nil
+  entity.destroy()
+  give_customer_wander_command(replacement, true)
+  draw_customer_marker(replacement)
+  return replacement
+end
+
 function replace_customer_vehicle_entity(entity, ownership)
   if not entity or not entity.valid or not entity.unit_number or not ownership then
     return entity
@@ -2936,15 +2997,24 @@ end
 
 function queue_customer_vehicle_variant_migration()
   local queue = {}
-  for unit_number, ownership in pairs(customer_vehicle_owners()) do
-    local entity = customer_unit_registry()[unit_number]
-    if entity and entity.valid
-      and customer_vehicle_variant_name(entity.name, ownership.vehicle) ~= entity.name then
+  for unit_number, entity in pairs(customer_unit_registry()) do
+    local ownership = customer_vehicle_owners()[unit_number]
+    local target_name = entity and entity.valid and (ownership
+      and customer_vehicle_variant_name(entity.name, ownership.vehicle)
+      or customer_prospect_variant_name(entity.name))
+    if entity and entity.valid and target_name and target_name ~= entity.name then
       queue[#queue + 1] = unit_number
     end
   end
   storage.factoryx_customer_vehicle_variant_queue = queue
   return #queue
+end
+
+function enqueue_customer_variant_migration(unit_number)
+  if not unit_number then return end
+  storage.factoryx_customer_vehicle_variant_queue = storage.factoryx_customer_vehicle_variant_queue or {}
+  local queue = storage.factoryx_customer_vehicle_variant_queue
+  queue[#queue + 1] = unit_number
 end
 
 function process_customer_vehicle_variant_migration(limit)
@@ -2954,8 +3024,12 @@ function process_customer_vehicle_variant_migration(limit)
     local unit_number = table.remove(queue)
     local entity = customer_unit_registry()[unit_number]
     local ownership = customer_vehicle_owners()[unit_number]
-    if entity and entity.valid and ownership then
-      replace_customer_vehicle_entity(entity, ownership)
+    if entity and entity.valid then
+      if ownership then
+        replace_customer_vehicle_entity(entity, ownership)
+      else
+        replace_customer_prospect_entity(entity)
+      end
       migrated = migrated + 1
     end
   end

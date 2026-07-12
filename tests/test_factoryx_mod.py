@@ -1650,6 +1650,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("animation_mask_tint(prototype.run_animation, class)", data)
         self.assertIn("CUSTOMER_UNIT_BASE_BY_NAME[variant_name] = base_name", control)
 
+    def test_unowned_customers_use_baked_prospect_prototypes(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        self.assertIn('label = "EV prospect (friendly)"', data)
+        self.assertIn('prototype.name = "x-" .. base_name .. "-" .. class_name', data)
+        self.assertIn('and {"", class.label, " - ", base.localised_name', data)
+        self.assertIn('local prospect_name = "x-" .. base_name .. "-prospect"', control)
+        self.assertIn("function replace_customer_prospect_entity(entity)", control)
+        self.assertIn("queue.units[index] = replacement.unit_number", control)
+        self.assertIn("replace_customer_prospect_entity(entity)", control)
+        self.assertIn("enqueue_customer_variant_migration(entity.unit_number)", control)
+
     def test_worms_remain_hostile_inside_customer_coverage(self):
         control = (MOD / "control.lua").read_text()
         customer_entities = control[

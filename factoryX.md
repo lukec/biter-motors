@@ -707,16 +707,19 @@ Implemented v1 behavior:
   and progress toward the next colony.
 - Visual behavior:
   - Customer spawning remains natural and FactoryX does not cap or cull mobile
-    populations. Friendly non-owners use an engine-native green tint and hostile
-    units retain their normal appearance.
-  - Vehicle owners use 32 explicit baked prototypes: eight vanilla mobile forms
-    multiplied by Roadster, Premium EV, Mass-market EV, Megatruck, and
-    Robotaxi classes. Roadster is red, Premium is black, Mass-market is white,
-    Megatruck is silver, and Robotaxi is gold.
+    populations. Friendly non-owners use eight baked green prospect prototypes
+    with native hover names such as `EV prospect (friendly) - Small biter`;
+    hostile units retain their normal appearance.
+  - Vehicle owners use 40 explicit baked prototypes: eight vanilla mobile forms
+    multiplied by Roadster, Premium EV, Mass-market EV, Megatruck, and Robotaxi
+    classes. Roadster is red, Premium is black, Mass-market is white, Megatruck
+    is silver, and Robotaxi is gold.
   - Completed sales replace the selected mobile buyer with its class prototype
     while preserving position, health ratio, force, settlement, and ownership.
-    Existing owners migrate at 50 units per second. No per-owner Lua car-icon
-    render object remains; only settlement `$` markers use custom rendering.
+    Existing owners and unowned prospects migrate at a combined 50 units per
+    second. Prospect replacement rewrites the settlement buyer queue to the new
+    unit number. No per-owner Lua car-icon render object remains; only settlement
+    `$` markers use custom rendering.
   - Friendly mobile customers wander independently near their conversion point.
     Commands are assigned only when a unit is converted, stopped, or carrying a
     non-wander command; the once-per-second service sync does not reset an

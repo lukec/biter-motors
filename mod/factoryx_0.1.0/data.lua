@@ -1890,6 +1890,12 @@ for _, recipe_name in pairs({
 end
 
 local customer_vehicle_classes = {
+  prospect = {
+    label = "EV prospect (friendly)",
+    prospect = true,
+    primary = {r = 0.25, g = 0.95, b = 0.35, a = 1},
+    secondary = {r = 0.55, g = 1.00, b = 0.62, a = 1}
+  },
   roadster = {
     label = "Roadster",
     primary = {r = 0.90, g = 0.02, b = 0.01, a = 1},
@@ -1948,7 +1954,9 @@ for _, base_name in pairs(customer_mobile_bases) do
   for class_name, class in pairs(customer_vehicle_classes) do
     local prototype = table.deepcopy(base)
     prototype.name = "x-" .. base_name .. "-" .. class_name
-    prototype.localised_name = {"", class.label, " customer ", base.localised_name or {"entity-name." .. base_name}}
+    prototype.localised_name = class.prospect
+      and {"", class.label, " - ", base.localised_name or {"entity-name." .. base_name}}
+      or {"", class.label, " customer - ", base.localised_name or {"entity-name." .. base_name}}
     prototype.autoplace = nil
     prototype.icons = {{icon = base.icon, icon_size = base.icon_size or 64, tint = class.primary}}
     prototype.icon = nil
