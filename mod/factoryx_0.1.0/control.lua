@@ -2980,6 +2980,31 @@ function retry_customer_charging_commute(entity, state)
   if entity and entity.valid then give_customer_wander_command(entity, true) end
 end
 
+function send_customer_home_after_charging(entity, state)
+  local home = entity and entity.unit_number and customer_home_settlements()[entity.unit_number]
+  local surface = home and game.surfaces[home.surface_index]
+  if not entity or not entity.valid or not entity.commandable or surface ~= entity.surface then
+    return false
+  end
+  local visit = state.completed_visits or 0
+  local angle = ((entity.unit_number * 0.61803398875) + visit * 2.399963) % (2 * math.pi)
+  local radius = 8 + ((entity.unit_number * 7 + visit * 11) % 13)
+  local target = {
+    x = home.position.x + math.cos(angle) * radius,
+    y = home.position.y + math.sin(angle) * radius
+  }
+  local destination = surface.find_non_colliding_position(entity.name, target, 12, 0.5) or target
+  entity.commandable.set_command{
+    type = defines.command.go_to_location,
+    destination = destination,
+    distraction = defines.distraction.none,
+    radius = 2
+  }
+  state.phase = "returning_home"
+  state.return_destination = destination
+  return true
+end
+
 function complete_customer_charging_commute(entity, ownership, state)
   state.phase = "roaming"
   state.station = nil
@@ -2994,7 +3019,9 @@ function complete_customer_charging_commute(entity, ownership, state)
   state.next_charge_tick = game.tick + customer_commute_interval_ticks(entity, ownership)
   customer_active_commutes()[entity.unit_number] = nil
   enqueue_customer_commute(entity.unit_number)
-  give_customer_wander_command(entity, true)
+  if not send_customer_home_after_charging(entity, state) then
+    give_customer_wander_command(entity, true)
+  end
 end
 
 function process_customer_charging_commutes()
@@ -3088,10 +3115,18 @@ end
 
 function handle_customer_commute_command_completed(event)
   local state = event.unit_number and customer_charging_commutes()[event.unit_number]
-  if not state or state.phase ~= "to_charger" then return end
+  if not state then return end
   local entity = customer_unit_registry()[event.unit_number]
   if not entity or not entity.valid then
     customer_charging_commutes()[event.unit_number] = nil
+    return
+  end
+  if state.phase == "returning_home" then
+    state.phase = "roaming"
+    state.return_destination = nil
+    give_customer_wander_command(entity, true)
+    return
+  elseif state.phase ~= "to_charger" then
     return
   end
   local destination = state.destination
@@ -3347,7 +3382,8 @@ local function convert_biter_entity(entity, force)
   end
   if entity.valid and entity.type == "unit" and force.name == CUSTOMER_FORCE_NAME and entity.commandable then
     local commute = entity.unit_number and customer_charging_commutes()[entity.unit_number]
-    if not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging") then
+    if not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging"
+      and commute.phase ~= "returning_home") then
       give_customer_wander_command(entity)
     end
     pcall(function()

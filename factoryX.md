@@ -1859,9 +1859,10 @@ Implemented V1:
   available powered customer stall. This allows customers to float between
   charger sites as the player expands or power conditions change.
 - Customers physically walk to a non-colliding staging position around the
-  selected charger, wait there for a charging interval, then return to normal
-  free roaming. Returning to the original spawner is optional; the important
-  state transition is back to an uncommanded local wander.
+  selected charger and wait there for a charging interval. After charging,
+  each customer walks back to a dispersed non-colliding point 8-20 tiles from
+  its registered home settlement, then resumes local wandering there. Return
+  trips do not consume the capped moving-or-charging commute slots.
 - Charging duration scales inversely with available power. A fully powered
   stall charges at its tier rate; a brownout lengthens the wait approximately
   by `1 / power_fraction`. Zero useful power pauses charging without instantly

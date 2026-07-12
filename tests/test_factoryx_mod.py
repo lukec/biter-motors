@@ -1889,8 +1889,21 @@ class FactoryXModTest(unittest.TestCase):
             "customer_charging_commutes = function",
             "customer_commute_timing_wheel",
             "customer_active_commutes",
+            "function send_customer_home_after_charging",
+            'state.phase = "returning_home"',
+            "state.return_destination = destination",
         ]:
             self.assertIn(fragment, control)
+        home_return = control[control.index("function send_customer_home_after_charging"):
+                              control.index("function complete_customer_charging_commute")]
+        self.assertIn("customer_home_settlements()[entity.unit_number]", home_return)
+        self.assertIn("local radius = 8 +", home_return)
+        self.assertIn("defines.command.go_to_location", home_return)
+        self.assertIn("surface.find_non_colliding_position", home_return)
+        completion = control[control.index("function complete_customer_charging_commute"):
+                             control.index("function process_customer_charging_commutes")]
+        self.assertIn("send_customer_home_after_charging(entity, state)", completion)
+        self.assertNotIn("customer_active_commutes()[entity.unit_number] = true", home_return)
         self.assertIn("Implemented V1", roadmap[roadmap.index("### Phase 2.6"):])
 
     def test_customer_scale_paths_are_cached_queued_and_event_driven(self):
