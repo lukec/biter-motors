@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +42,22 @@ def build_sheet(item_name: str, folder: str, frame_stem: str) -> None:
     sheet.save(ENTITY_OUTPUT / f"{item_name}.png", optimize=True)
 
 
+def build_shadow_sheet(item_name: str, folder: str, frame_stem: str) -> None:
+    source = ART / folder / "renders" / "directions"
+    sheet = Image.new("RGBA", (FRAME_SIZE * 8, FRAME_SIZE * 8), (0, 0, 0, 0))
+    for direction in range(DIRECTION_COUNT):
+        source_index = factorio_source_frame(direction)
+        frame = Image.open(source / f"{frame_stem}-shadow-{source_index:02d}.png").convert("RGBA")
+        alpha = frame.getchannel("A").filter(ImageFilter.GaussianBlur(4))
+        alpha = alpha.point(lambda value: round(value * 0.42))
+        softened = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+        softened.putalpha(alpha)
+        shifted = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+        shifted.alpha_composite(softened, (4, 5))
+        sheet.alpha_composite(shifted, ((direction % 8) * FRAME_SIZE, (direction // 8) * FRAME_SIZE))
+    sheet.save(ENTITY_OUTPUT / f"{item_name}-shadow.png", optimize=True)
+
+
 def build_icon(item_name: str, folder: str, master_stem: str) -> None:
     master = Image.open(ART / folder / "renders" / f"{master_stem}-master.png").convert("RGBA")
     alpha = master.getchannel("A")
@@ -58,6 +74,8 @@ def build_icon(item_name: str, folder: str, master_stem: str) -> None:
 def main() -> None:
     for item_name, (folder, frame_stem, master_stem) in VEHICLES.items():
         build_sheet(item_name, folder, frame_stem)
+        if item_name == "prototype-roadster":
+            build_shadow_sheet(item_name, folder, frame_stem)
         build_icon(item_name, folder, master_stem)
         print(f"Built {item_name} vehicle sheet and icon")
 

@@ -4,6 +4,11 @@ This is the first FactoryX vehicle-model pipeline test. It produces a
 transparent 768 px master and 64 deterministic directional renders from one
 Blender scene.
 
+The production pass uses a high overhead orthographic camera, weathered paint,
+warm industrial lighting, added panel and underbody detail, and separate
+shadow-only frames. The packing script softens and offsets those shadow frames
+into `prototype-roadster-shadow.png` for Factorio's shadow render layer.
+
 Run:
 
 ```sh
@@ -19,6 +24,5 @@ Review:
 - `prototype-roadster.blend`: editable source model, materials, lights, and
   orthographic camera.
 
-The individual directional frames are generated locally and ignored. After
-the model direction is approved, a deterministic packing step should build the
-Factorio sprite sheet and final icon.
+The individual directional frames are generated locally and ignored. The
+deterministic packing step builds the body sheet, shadow sheet, and final icon.

@@ -341,18 +341,31 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
   prototype.inventory_size = profile.inventory_size
   prototype.resistances = profile.resistances or prototype.resistances
   if profile.artwork then
-    prototype.animation = {
-      layers = {
-        {
-          filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png",
-          priority = "high",
-          width = 192,
-          height = 192,
-          direction_count = 64,
-          line_length = 8,
-          scale = profile.sprite_scale or 0.72
-        }
+    local animation_layers = {
+      {
+        filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png",
+        priority = "high",
+        width = 192,
+        height = 192,
+        direction_count = 64,
+        line_length = 8,
+        scale = profile.sprite_scale or 0.72
       }
+    }
+    if profile.artwork == "prototype-roadster" then
+      animation_layers[#animation_layers + 1] = {
+        filename = "__factoryx__/graphics/entity/vehicles/prototype-roadster-shadow.png",
+        priority = "high",
+        width = 192,
+        height = 192,
+        direction_count = 64,
+        line_length = 8,
+        scale = profile.sprite_scale or 0.72,
+        draw_as_shadow = true
+      }
+    end
+    prototype.animation = {
+      layers = animation_layers
     }
     prototype.turret_animation = nil
     prototype.light_animation = nil

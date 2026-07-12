@@ -172,7 +172,7 @@ script.on_init(function()
 
   for _, entity in pairs({
     milestone_office, reservation_office, robotaxi_office,
-    station, station_v2, robotaxi_center
+    station, station_v2, robotaxi_center, roadster
   }) do
     script.raise_script_built{entity = entity}
   end
@@ -338,23 +338,32 @@ end)
 script.on_nth_tick(30, function()
   if storage.roadster_factory_charge_checked then return end
   local surface = game.get_surface(storage.surface_index or 1)
-  local roadster = surface and find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
+  local roadster
+  for _, candidate in pairs(surface and surface.find_entities_filtered{name = PROTOTYPE_ROADSTER} or {}) do
+    if candidate.unit_number == storage.roadster_unit_number then
+      roadster = candidate
+      break
+    end
+  end
   if not roadster or not roadster.grid then return end
   local battery_count = 0
-  local charged_count = 0
+  local battery_energy = 0
+  local battery_capacity = 0
   for _, equipment in pairs(roadster.grid.equipment) do
     if equipment.type == "battery-equipment" then
       battery_count = battery_count + 1
-      if equipment.energy == equipment.max_energy then
-        charged_count = charged_count + 1
-      end
+      battery_energy = battery_energy + equipment.energy
+      battery_capacity = battery_capacity + equipment.max_energy
       equipment.energy = 0
     end
   end
+  local drive_charge = 0
   if roadster.burner and roadster.burner.inventory then
+    drive_charge = roadster.burner.inventory.get_item_count("x-electric-drive-charge") * 1000000
     roadster.burner.inventory.clear()
   end
-  storage.roadster_started_charged = battery_count > 0 and charged_count == battery_count
+  storage.roadster_started_charged = battery_count > 0
+    and battery_energy + drive_charge >= battery_capacity
   storage.roadster_factory_charge_checked = true
 end)
 
