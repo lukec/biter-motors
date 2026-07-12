@@ -2095,6 +2095,13 @@ AI-datacenter opposition dynamic:
 
 ## Terrestrial Interface Cleanup
 
+- FactoryX Progress includes a spoiler-aware `Terrestrial industry` section.
+  It reports Industrial Supply Chain research, built Big Mining Drills, built
+  Foundries, and lifetime calcite mined. Wrecked EV and Vehicle Recycling rows
+  remain absent until the first wreck reveals that branch.
+- The progress body is scrollable with a bounded height so the industrial
+  section does not push later market, infrastructure, and improvement metrics
+  off-screen.
 - The FactoryX Progress panel uses explicit terrestrial labels rather than
   mixing the terrestrial economy into generic infrastructure counters.
 - AI output distinguishes Factorio's item production statistic from the

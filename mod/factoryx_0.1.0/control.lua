@@ -4580,6 +4580,11 @@ local function progress_snapshot(force)
   local sales_gates = sync_ev_sales_recipe_gates(force, false)
   local sold = sold_customer_evs(force)
   return {
+    industrial_supply_chain_researched = researched(force, "x-industrial-supply-chain"),
+    big_mining_drill_researched = researched(force, "big-mining-drill"),
+    foundry_researched = researched(force, "foundry"),
+    recycling_revealed = (force.technologies.recycling and force.technologies.recycling.enabled) or false,
+    recycling_researched = researched(force, "recycling"),
     sales_office_researched = researched(force, "x-sales-office"),
     ev_production_researched = researched(force, "x-premium-ev-program"),
     charging_network_researched = researched(force, "x-ev-charging-network"),
@@ -4597,6 +4602,11 @@ local function progress_snapshot(force)
     mass_market_sale_complete = first_mass_market_ev_sales()[force.name] == true,
     robotaxi_sale_complete = first_robotaxi_sales()[force.name] == true,
     sales_offices = count_entities(force, SALES_OFFICE_NAME),
+    big_mining_drills = count_entities(force, "big-mining-drill"),
+    foundries = count_entities(force, "foundry"),
+    recyclers = count_entities(force, "recycler"),
+    calcite_mined = count_item_produced(force, "calcite"),
+    wrecked_evs_produced = count_item_produced(force, WRECKED_EV_NAME),
     customer_settlements = count_sales_office_customer_settlements(force),
     powered_stations = market.powered_stations,
     charging_capacity = market.charging_stall_capacity,
@@ -4739,6 +4749,7 @@ end
 
 local function progress_stages(snapshot)
   return {
+    {name = "Terrestrial industry", complete = snapshot.foundry_researched and snapshot.foundries > 0},
     {name = "Customer market", complete = snapshot.customer_settlements > 0 and snapshot.powered_stations > 0},
     {name = "Prototype revenue", complete = snapshot.first_sale_complete},
     {name = "Premium production", complete = snapshot.premium_sale_complete},
@@ -4783,10 +4794,12 @@ local function refresh_progress_panel(player)
   local snapshot = progress_snapshot(player.force)
   local stage, objective, detail = current_progress_objective(snapshot)
   local content = panel.add{
-    type = "flow",
+    type = "scroll-pane",
     name = PROGRESS_CONTENT_NAME,
     direction = "vertical"
   }
+  content.style.maximal_height = 760
+  content.style.horizontally_stretchable = true
 
   local stage_label = content.add{type = "label", caption = stage, style = "bold_label"}
   stage_label.style.font_color = {r = 1.0, g = 0.72, b = 0.2}
@@ -4797,6 +4810,41 @@ local function refresh_progress_panel(player)
   detail_label.style.maximal_width = 440
   content.add{type = "line"}
 
+  add_section_heading(content, "Terrestrial industry")
+  local industry = content.add{type = "table", column_count = 2}
+  industry.style.horizontally_stretchable = true
+  add_progress_metric(
+    industry,
+    "Industrial Supply Chain",
+    snapshot.industrial_supply_chain_researched and "researched" or "available"
+  )
+  add_progress_metric(
+    industry,
+    "Big Mining Drills",
+    snapshot.big_mining_drill_researched
+      and string.format("%d built", snapshot.big_mining_drills)
+      or "research locked"
+  )
+  add_progress_metric(
+    industry,
+    "Foundries",
+    snapshot.foundry_researched
+      and string.format("%d built", snapshot.foundries)
+      or "research locked"
+  )
+  add_progress_metric(industry, "Calcite mined", tostring(snapshot.calcite_mined))
+  if snapshot.recycling_revealed or snapshot.recycling_researched or snapshot.wrecked_evs_produced > 0 then
+    add_progress_metric(industry, "Wrecked EVs produced", tostring(snapshot.wrecked_evs_produced))
+    add_progress_metric(
+      industry,
+      "Vehicle Recycling",
+      snapshot.recycling_researched
+        and string.format("researched; %d Recyclers", snapshot.recyclers)
+        or "research available"
+    )
+  end
+
+  content.add{type = "line"}
   add_section_heading(content, "Market and throughput")
   local metrics = content.add{type = "table", column_count = 2}
   metrics.style.horizontally_stretchable = true
