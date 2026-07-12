@@ -282,7 +282,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("capacity * 0.03", control)
         self.assertIn("event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
         self.assertIn("if hidden_charge_count > 0 then", control)
-        self.assertIn("braking_multiplier = 2.5", data)
+        self.assertIn("braking_multiplier = 4.0", data)
         self.assertIn("customer_requested_stalls", control)
         self.assertIn("Player EV charging", control)
         self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png"', data)
@@ -306,7 +306,7 @@ class FactoryXModTest(unittest.TestCase):
                 self.assertEqual(image.size, (1536, 1536))
                 self.assertEqual(image.mode, "RGBA")
         for fragment in [
-            '{consumption = "450kW", weight = 500, max_health = 300',
+            '{consumption = "600kW", weight = 450, max_health = 300',
             '{consumption = "320kW", weight = 750, max_health = 550',
             '{consumption = "240kW", weight = 800, max_health = 500',
             '{consumption = "600kW", weight = 1800, max_health = 1400',
