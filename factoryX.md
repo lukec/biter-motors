@@ -2095,6 +2095,27 @@ AI-datacenter opposition dynamic:
   - Later, some fictional competitor or market event could create timed
     pressure, but the core joke should stay "sell EVs to biters."
 
+### Roadmap Idea: Quality Dollar Denominations
+
+- Explore using item quality as deterministic currency denominations:
+  Normal = 1 Dollar, Uncommon = 10, Rare = 100, Epic = 1,000, and Legendary =
+  10,000. Since one game Dollar represents roughly US$10,000 of profit, one
+  Legendary Dollar would represent roughly US$100 million.
+- Sales should continue producing Normal Dollars. Quality modules must not
+  randomly create more valuable money.
+- Add a physical Treasury or Capital Consolidator that converts ten Dollars of
+  one denomination into one Dollar of the next quality. Support the reverse
+  recipe so players can make change for smaller capital inputs.
+- Disable quality effects on sales and currency-conversion recipes. The value
+  increase comes only from explicit consolidation, not probabilistic crafting.
+- Use denominations to make Hyperscalers, launch infrastructure, and other
+  multi-million-Dollar projects logistically practical without abandoning the
+  physical capital economy.
+- Evaluate belt clogging, quality-aware filters, logistics requests, circuit
+  signals, recipe ingredient quality, and player discoverability before
+  implementation. Mixed-quality currency should create useful denomination
+  logistics, not accidental deadlocks.
+
 ## Open Design Questions
 - Should Dollars be allowed as lab science forever, or should late capital be
   spent mostly through recipes and structures?
