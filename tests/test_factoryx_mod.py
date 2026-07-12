@@ -29,6 +29,20 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('if entity.name ~= SALES_OFFICE_NAME then', control)
         self.assertNotIn('add_station_info_label(panel, "Recipe: none selected")', control)
 
+    def test_sales_office_showroom_tracks_active_sale_recipe(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        art_script = (ROOT / "scripts/build-factoryx-art.py").read_text()
+        self.assertIn('name = "x-sales-office-showroom-" .. vehicle_name', data)
+        for vehicle in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"]:
+            self.assertIn(f'"{vehicle}"', data)
+            self.assertTrue((MOD / f"graphics/entity/sales-office/showroom/{vehicle}.png").exists())
+        self.assertIn("SALES_OFFICE_SHOWROOM_SPRITES", control)
+        self.assertIn("office.status == defines.entity_status.working", control)
+        self.assertIn("function update_sales_office_showrooms()", control)
+        self.assertIn("destroy_sales_office_showroom_rendering(entity.unit_number)", control)
+        self.assertIn("build_sales_office_showroom_vehicles()", art_script)
+
     def test_ev_progression_is_gated_by_completed_sales(self):
         control = (MOD / "control.lua").read_text()
         data = (MOD / "data.lua").read_text()

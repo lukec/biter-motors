@@ -591,6 +591,23 @@ for frame_index = 1, 8 do
 end
 data:extend(runtime_visual_sprites)
 
+local sales_office_showroom_sprites = {}
+for _, vehicle_name in pairs({
+  "prototype-roadster",
+  "premium-ev",
+  "mass-market-ev",
+  "cybertruck"
+}) do
+  sales_office_showroom_sprites[#sales_office_showroom_sprites + 1] = {
+    type = "sprite",
+    name = "x-sales-office-showroom-" .. vehicle_name,
+    filename = "__factoryx__/graphics/entity/sales-office/showroom/" .. vehicle_name .. ".png",
+    width = 128,
+    height = 80
+  }
+end
+data:extend(sales_office_showroom_sprites)
+
 data:extend({
   {
     type = "shortcut",

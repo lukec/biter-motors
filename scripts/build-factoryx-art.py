@@ -14,6 +14,7 @@ MOD_GRAPHICS = ROOT / "mod/factoryx_0.1.0/graphics"
 ICON_DIR = MOD_GRAPHICS / "icons"
 ANIMATION_DIR = MOD_GRAPHICS / "animation"
 TECHNOLOGY_DIR = MOD_GRAPHICS / "technology"
+SHOWROOM_DIR = MOD_GRAPHICS / "entity/sales-office/showroom"
 ICON_SOURCE_DIR = ROOT / "art/factoryx-icon-sources"
 MASTER_DIR = ROOT / "art/factoryx-masters/final"
 
@@ -64,6 +65,28 @@ def derive_and_normalize_icons() -> None:
         normalized_icon(Image.open(source)).save(ICON_DIR / source.name, optimize=True)
 
     normalized_icon(Image.open(MASTER_DIR / "agi-model.png")).save(ICON_DIR / "agi-model.png", optimize=True)
+
+
+def build_sales_office_showroom_vehicles() -> None:
+    SHOWROOM_DIR.mkdir(parents=True, exist_ok=True)
+    for name in ("prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"):
+        sheet = Image.open(MOD_GRAPHICS / f"entity/vehicles/{name}.png").convert("RGBA")
+        frame_index = 16
+        left = (frame_index % 8) * 192
+        top = (frame_index // 8) * 192
+        frame = sheet.crop((left, top, left + 192, top + 192))
+        bbox = alpha_bbox(frame)
+        if not bbox:
+            raise RuntimeError(f"Vehicle showroom frame is empty: {name}")
+        vehicle = frame.crop(bbox)
+        scale = min(104 / vehicle.width, 54 / vehicle.height)
+        vehicle = vehicle.resize(
+            (max(1, round(vehicle.width * scale)), max(1, round(vehicle.height * scale))),
+            Image.Resampling.LANCZOS,
+        )
+        canvas = Image.new("RGBA", (128, 80))
+        canvas.alpha_composite(vehicle, ((128 - vehicle.width) // 2, (80 - vehicle.height) // 2))
+        canvas.save(SHOWROOM_DIR / f"{name}.png", optimize=True)
 
 
 def glow(draw: ImageDraw.ImageDraw, center: tuple[float, float], radius: int, color: tuple[int, int, int], alpha: int) -> None:
@@ -192,9 +215,11 @@ def build_technology_icons() -> None:
 
 def main() -> int:
     derive_and_normalize_icons()
+    build_sales_office_showroom_vehicles()
     build_animations()
     build_technology_icons()
     print(f"Built normalized icons in {ICON_DIR}")
+    print(f"Built Sales Office vehicle overlays in {SHOWROOM_DIR}")
     print(f"Built animation overlays in {ANIMATION_DIR}")
     print(f"Built technology icons in {TECHNOLOGY_DIR}")
     return 0

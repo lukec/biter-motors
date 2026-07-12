@@ -1555,7 +1555,7 @@ FactoryX products live beside the vanilla systems they extend:
 
 | Prototype | Player Name | Current Base | Needs New Artwork? | Notes |
 | --- | --- | --- | --- | --- |
-| `x-sales-office` | Sales Office | Final footprint-aligned generated master | No | The approved showroom design was re-rendered on a clean 3x3 slab, extracted to alpha, normalized into an entity icon, and given crafting status-light animation. |
+| `x-sales-office` | Sales Office | Final footprint-aligned generated master | No | The square 3x3 showroom is empty while idle. During an active sale, a runtime overlay derived from the corresponding drivable vehicle sheet displays the Roadster, Premium EV, Mass-market EV, or Megatruck on the showroom pad. |
 | `x-ev-charging-station` | EV Charging Station | Dedicated aligned 2x2, four-stall sprite | No | Square footprint-filling art and matching icon are wired. |
 | `x-ev-charging-station-v2` | EV Charging Station V2 | Dedicated aligned 4x4, eight-stall sprite | No | Larger transformers and cyan high-power treatment distinguish V2. |
 | `x-ev-charging-station-v3` | V3 Supercharger | Dedicated aligned 5x5, 12-stall sprite | No | Twelve visible charger pedestals and liquid-cooled edge equipment distinguish V3. |

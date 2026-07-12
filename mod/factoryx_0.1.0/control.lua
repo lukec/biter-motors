@@ -117,6 +117,12 @@ CUSTOMER_EV_SALE_RECIPES = {
   [CYBERTRUCK_SALE_RECIPE] = {item = "x-cybertruck", vehicles = 1},
   [ROBOTAXI_SALE_RECIPE] = {item = "x-robotaxi-fleet", vehicles = 3}
 }
+SALES_OFFICE_SHOWROOM_SPRITES = {
+  [FIRST_PROTOTYPE_SALE_RECIPE] = "x-sales-office-showroom-prototype-roadster",
+  [PREMIUM_EV_SALE_RECIPE] = "x-sales-office-showroom-premium-ev",
+  [MASS_MARKET_EV_SALE_RECIPE] = "x-sales-office-showroom-mass-market-ev",
+  [CYBERTRUCK_SALE_RECIPE] = "x-sales-office-showroom-cybertruck"
+}
 EV_SALES_GATES = {
   premium = {
     item = "x-prototype-roadster",
@@ -458,6 +464,60 @@ local function update_factoryx_runtime_visuals()
       if entry.enabled then entry.object.sprite = entry.sprite_prefix .. frame_index end
     end
   end
+end
+
+function sales_office_showroom_renderings()
+  storage.factoryx_sales_office_showroom_renderings =
+    storage.factoryx_sales_office_showroom_renderings or {}
+  return storage.factoryx_sales_office_showroom_renderings
+end
+
+function destroy_sales_office_showroom_rendering(unit_number)
+  if not unit_number then return end
+  local entry = sales_office_showroom_renderings()[unit_number]
+  if entry and entry.object and entry.object.valid then entry.object.destroy() end
+  sales_office_showroom_renderings()[unit_number] = nil
+end
+
+function update_sales_office_showrooms()
+  local seen = {}
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
+    if office.valid and office.unit_number then
+      seen[office.unit_number] = true
+      local recipe = office.get_recipe()
+      local sprite = recipe and SALES_OFFICE_SHOWROOM_SPRITES[recipe.name]
+      local active = sprite and office.status == defines.entity_status.working
+      local entry = sales_office_showroom_renderings()[office.unit_number]
+      if active and (not entry or entry.sprite ~= sprite or not entry.object or not entry.object.valid) then
+        destroy_sales_office_showroom_rendering(office.unit_number)
+        local object = rendering.draw_sprite{
+          sprite = sprite,
+          surface = office.surface,
+          target = office,
+          target_offset = {0, 0.55},
+          x_scale = 0.2,
+          y_scale = 0.2,
+          render_layer = "higher-object-above"
+        }
+        sales_office_showroom_renderings()[office.unit_number] = {
+          object = object,
+          sprite = sprite
+        }
+      elseif not active and entry then
+        destroy_sales_office_showroom_rendering(office.unit_number)
+      end
+    end
+  end
+  for unit_number in pairs(sales_office_showroom_renderings()) do
+    if not seen[unit_number] then destroy_sales_office_showroom_rendering(unit_number) end
+  end
+end
+
+function rebuild_sales_office_showrooms()
+  for unit_number in pairs(sales_office_showroom_renderings()) do
+    destroy_sales_office_showroom_rendering(unit_number)
+  end
+  update_sales_office_showrooms()
 end
 
 local function station_reservation_inventory(station)
@@ -5897,6 +5957,7 @@ script.on_init(function()
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
   rebuild_factoryx_runtime_visuals()
+  rebuild_sales_office_showrooms()
 end)
 
 script.on_configuration_changed(function()
@@ -5918,6 +5979,7 @@ script.on_configuration_changed(function()
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
   rebuild_factoryx_runtime_visuals()
+  rebuild_sales_office_showrooms()
 end)
 
 script.on_event(defines.events.on_lua_shortcut, function(event)
@@ -6165,6 +6227,7 @@ for _, event_name in pairs({
       if entity and entity.unit_number then
         untrack_factoryx_entity(entity)
         destroy_factoryx_runtime_visual(entity.unit_number)
+        destroy_sales_office_showroom_rendering(entity.unit_number)
         factoryx_compute_machines()[entity.unit_number] = nil
         factoryx_compute_power_failures()[entity.unit_number] = nil
         factoryx_compute_queue().members[entity.unit_number] = nil
@@ -6193,6 +6256,7 @@ script.on_nth_tick(1, reset_underpowered_compute_progress)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()
+  update_sales_office_showrooms()
   refresh_ev_driver_overlays()
   update_ev_reverse_warnings()
   feed_tracked_electric_vehicles()
