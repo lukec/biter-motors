@@ -571,6 +571,16 @@ script.on_nth_tick(3720, function()
   local progress = remote.call("factoryx", "progress_status", "player")
   local progression_integrity = remote.call("factoryx", "progression_integrity", "player")
   local vehicle_ownership = remote.call("factoryx", "customer_vehicle_ownership", "player")
+  local sales_office_status = remote.call("factoryx", "sales_office_status", "player")
+  local maximum_settlement_capacity = 0
+  for _, office_status in pairs(sales_office_status or {}) do
+    for _, settlement_status in pairs(office_status.settlements or {}) do
+      maximum_settlement_capacity = math.max(
+        maximum_settlement_capacity,
+        settlement_status.capacity or 0
+      )
+    end
+  end
   local ai_efficiency = remote.call("factoryx", "ai_efficiency_status", "player")
   local datacenter_input = datacenter and datacenter.get_inventory(input_inventory_id())
   local datacenter_output = datacenter and datacenter.get_inventory(output_inventory_id())
@@ -676,6 +686,7 @@ script.on_nth_tick(3720, function()
     progress = progress,
     progression_integrity = progression_integrity,
     vehicle_ownership = vehicle_ownership,
+    maximum_settlement_capacity = maximum_settlement_capacity,
     preproduction_market = storage.preproduction_market,
     biter_customer_mode = market and market.biter_customer_mode,
     customer_force_created = customer_force ~= nil,
@@ -1391,6 +1402,8 @@ if checked.get("market", {}).get("charging_stall_capacity") != 12:
     raise SystemExit(f"expected mixed V1/V2 charging capacity of 12 stalls: {checked}")
 if checked.get("market", {}).get("supported_ev_capacity") != 40:
     raise SystemExit(f"expected two powered V2 stalls to support 40 active customer EVs: {checked}")
+if checked.get("maximum_settlement_capacity", 0) <= 20:
+    raise SystemExit(f"overlapping chargers did not add sale capacity at a settlement: {checked}")
 if checked.get("market", {}).get("evs_per_stall") != 20:
     raise SystemExit(f"expected the active V2 stalls to support 20 EVs each: {checked}")
 if brownout is None or brownout.get("market", {}).get("active_customer_stalls") != 1:

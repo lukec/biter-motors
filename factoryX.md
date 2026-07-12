@@ -1726,6 +1726,12 @@ icons, and bounded working animations. Remaining work is narrower:
 ### Phase 2: Better Charging Coverage
 
 - Move beyond simple active-stall count.
+- Implemented: multiple grid-connected chargers can contribute separate stalls
+  to the same settlement. Each additional V1 stall opens 12 more supported EV
+  sales, so a pre-V2 player can resolve a full market by building more V1
+  infrastructure. Assignment favors settlements with the least existing
+  capacity. Extra stalls begin drawing power only as sold EV ownership grows
+  beyond the capacity of earlier stalls.
 - Possible mechanics:
   - Count unique chunks covered by charging stations.
   - Require stations to be powered.

@@ -28,6 +28,8 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         self.assertIn("Customers who already own EVs: %d / %d", control)
         self.assertIn("Market saturated - expand to new settlements", control)
+        self.assertIn("Charging capacity full - add another powered charger", control)
+        self.assertIn("Charging capacity for covered settlements: %d / %d used", control)
         self.assertIn("FACTORYX_STATE_COLORS", control)
         self.assertIn("add_station_info_label(state_row, state_text, state_color)", control)
         self.assertIn('if entity.name ~= SALES_OFFICE_NAME then', control)
@@ -1661,6 +1663,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("queue.units[index] = replacement.unit_number", control)
         self.assertIn("replace_customer_prospect_entity(entity)", control)
         self.assertIn("enqueue_customer_variant_migration(entity.unit_number)", control)
+
+    def test_multiple_chargers_add_settlement_sale_capacity(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("assigned_capacity_by_settlement_key", control)
+        self.assertIn("requested_capacity_by_settlement_key", control)
+        self.assertIn("powered_capacity_by_settlement_key", control)
+        self.assertIn("left_capacity < right_capacity", control)
+        self.assertIn("load < capacity", control)
+        self.assertIn("Charging capacity full - add another powered charger", control)
+        self.assertIn("each V1 stall opens 12 more supported sales", control)
 
     def test_worms_remain_hostile_inside_customer_coverage(self):
         control = (MOD / "control.lua").read_text()

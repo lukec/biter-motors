@@ -2220,6 +2220,10 @@ customer_service_for_force = function(force, advance_mood)
   local service = {
     assignments = {},
     assignment_by_settlement_key = {},
+    assigned_capacity_by_settlement_key = {},
+    requested_capacity_by_settlement_key = {},
+    powered_capacity_by_settlement_key = {},
+    capacity_by_settlement_key = {},
     operational_keys = {},
     served_keys = {},
     served_settlements = {},
@@ -2238,7 +2242,6 @@ customer_service_for_force = function(force, advance_mood)
   local candidates = office_covered_settlements(offices)
   service.candidate_settlements = candidates
   local vehicle_summary = active_customer_vehicle_summary(force)
-  local assigned = {}
   local stations = {}
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
@@ -2259,25 +2262,47 @@ customer_service_for_force = function(force, advance_mood)
         station_candidates[#station_candidates + 1] = settlement
       end
     end
+    table.sort(station_candidates, function(left, right)
+      local left_key = settlement_key(left.surface, left)
+      local right_key = settlement_key(right.surface, right)
+      local left_capacity = service.assigned_capacity_by_settlement_key[left_key] or 0
+      local right_capacity = service.assigned_capacity_by_settlement_key[right_key] or 0
+      if left_capacity ~= right_capacity then return left_capacity < right_capacity end
+      local left_dx = left.position.x - station.position.x
+      local left_dy = left.position.y - station.position.y
+      local right_dx = right.position.x - station.position.x
+      local right_dy = right.position.y - station.position.y
+      local left_distance = left_dx * left_dx + left_dy * left_dy
+      local right_distance = right_dx * right_dx + right_dy * right_dy
+      if left_distance ~= right_distance then return left_distance < right_distance end
+      return entity_sort_key(left) < entity_sort_key(right)
+    end)
     local assignment = {
       station = station,
       settlements = {},
       operational_settlements = {},
+      requested_settlement_keys = {},
       customer_requested_stalls = 0,
       requested_stalls = 0,
       powered_stalls = 0
     }
     for _, settlement in pairs(station_candidates) do
       local key = settlement_key(station.surface, settlement)
-      if not assigned[key] and #assignment.settlements < config.stalls then
-        assigned[key] = true
+      if #assignment.settlements < config.stalls then
         assignment.settlements[#assignment.settlements + 1] = settlement
-        service.assignment_by_settlement_key[key] = station
+        service.assignment_by_settlement_key[key] = service.assignment_by_settlement_key[key] or station
+        service.assigned_capacity_by_settlement_key[key] =
+          (service.assigned_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
       end
     end
     for _, settlement in pairs(assignment.settlements) do
-      if settlement_vehicle_count(vehicle_summary, settlement) > 0 then
+      local key = settlement_key(settlement.surface, settlement)
+      local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
+      local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
+      if vehicle_count > requested_capacity then
         assignment.customer_requested_stalls = assignment.customer_requested_stalls + 1
+        assignment.requested_settlement_keys[key] = true
+        service.requested_capacity_by_settlement_key[key] = requested_capacity + config.evs_per_stall
       end
     end
     assignment.requested_stalls = assignment.customer_requested_stalls
@@ -2286,14 +2311,10 @@ customer_service_for_force = function(force, advance_mood)
     for _, settlement in pairs(assignment.settlements) do
       local key = settlement_key(settlement.surface, settlement)
       local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
-      local operational = vehicle_count == 0
-      if vehicle_count > 0 and powered_remaining > 0 and vehicle_count <= config.evs_per_stall then
-        operational = true
+      if assignment.requested_settlement_keys[key] and powered_remaining > 0 then
+        service.powered_capacity_by_settlement_key[key] =
+          (service.powered_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
         powered_remaining = powered_remaining - 1
-      end
-      if operational then
-        service.operational_keys[key] = true
-        assignment.operational_settlements[#assignment.operational_settlements + 1] = settlement
       end
     end
     if #station_candidates > 0 then
@@ -2309,6 +2330,13 @@ customer_service_for_force = function(force, advance_mood)
     local key = settlement_key(settlement.surface, settlement)
     customer_settlement_market_forces()[key] = force.name
     local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
+    local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
+    local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
+    service.capacity_by_settlement_key[key] = assigned_capacity
+    if (vehicle_count == 0 and assigned_capacity > 0)
+      or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
+      service.operational_keys[key] = true
+    end
     if vehicle_count > 0 and not service.operational_keys[key] then
       service.stranded_evs = service.stranded_evs + vehicle_count
     end
@@ -2323,6 +2351,15 @@ customer_service_for_force = function(force, advance_mood)
       service.served_settlements[#service.served_settlements + 1] = settlement
     elseif angry then
       service.angry_keys[key] = true
+    end
+  end
+
+  for _, assignment in pairs(service.assignments) do
+    for _, settlement in pairs(assignment.settlements) do
+      local key = settlement_key(settlement.surface, settlement)
+      if service.operational_keys[key] then
+        assignment.operational_settlements[#assignment.operational_settlements + 1] = settlement
+      end
     end
   end
 
@@ -3573,11 +3610,16 @@ end
 
 function waiting_market_buyers_at_station(station, service)
   service = service or customer_service_for_force(station.force)
+  local assignment = service.assignments[station.unit_number]
+  local assigned_keys = {}
+  for _, settlement in pairs(assignment and assignment.settlements or {}) do
+    assigned_keys[settlement_key(settlement.surface, settlement)] = true
+  end
   local count = 0
   for key, population in pairs(customer_settlement_populations()) do
     if population.market_force_name == station.force.name
       and service.operational_keys[key]
-      and service.assignment_by_settlement_key[key] == station then
+      and assigned_keys[key] then
       count = count + math.max(
         0,
         (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
@@ -3588,7 +3630,7 @@ function waiting_market_buyers_at_station(station, service)
     local home = customer_home_settlements()[unit_number]
     if entity and entity.valid and entity.force.name == CUSTOMER_FORCE_NAME
       and home and service.operational_keys[home.settlement_key]
-      and service.assignment_by_settlement_key[home.settlement_key] == station
+      and assigned_keys[home.settlement_key]
       and not customer_vehicle_owners()[unit_number]
       and not buyer_reserved_by_unit()[unit_number] then
       count = count + 1
@@ -4749,6 +4791,7 @@ function eligible_customer_buyers(office, needed)
   for key in pairs(service.operational_keys) do
     local assigned_station = service.assignment_by_settlement_key[key]
     local config = assigned_station and station_config(assigned_station)
+    local capacity = service.capacity_by_settlement_key[key] or 0
     local population = customer_settlement_populations()[key]
     local load = (vehicle_summary.by_settlement[key] or 0)
       + (reserved_by_settlement[key] or 0)
@@ -4756,12 +4799,12 @@ function eligible_customer_buyers(office, needed)
     local settlement_in_office_coverage = population
       and population.surface_index == office.surface.index
       and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)
-    if config and settlement_in_office_coverage and load < config.evs_per_stall then
+    if config and settlement_in_office_coverage and load < capacity then
       pools[#pools + 1] = {
         key = key,
         queue = buyer_queue_for(office.force.name, key),
         load = load,
-        capacity = config.evs_per_stall,
+        capacity = capacity,
         virtual_available = population and math.max(
           0,
           (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
@@ -4824,6 +4867,7 @@ function sales_office_buyer_status(office)
   local available = 0
   local customers = 0
   local owned = 0
+  local capacity = 0
   for key in pairs(eligible_keys) do
     local population = customer_settlement_populations()[key]
     local queue = buyer_queue_for(office.force.name, key)
@@ -4833,6 +4877,7 @@ function sales_office_buyer_status(office)
       (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
     )
     owned = owned + (vehicle_summary.by_settlement[key] or 0)
+    capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
     customers = customers + (population.physical or 0) + (population.virtual_unowned or 0)
     for _, count in pairs(population.virtual_by_vehicle or {}) do
       customers = customers + count
@@ -4843,6 +4888,7 @@ function sales_office_buyer_status(office)
     settlements = settlements,
     customers = customers,
     owned = owned,
+    capacity = capacity,
     unowned = math.max(0, customers - owned)
   }
 end
@@ -5593,6 +5639,8 @@ function entity_status_presentation(entity)
       return "No customer settlements in coverage", FACTORYX_STATE_COLORS.bad
     elseif buyers.unowned == 0 then
       return "Market saturated - expand to new settlements", FACTORYX_STATE_COLORS.warning
+    elseif buyers.owned >= buyers.capacity then
+      return "Charging capacity full - add another powered charger", FACTORYX_STATE_COLORS.warning
     end
     return "Waiting for an available mobile buyer", FACTORYX_STATE_COLORS.warning
   end
@@ -5714,6 +5762,11 @@ local function show_manufacturer_info_panel(player, entity)
       buyer_status.owned,
       buyer_status.customers
     ))
+    add_station_info_label(panel, string.format(
+      "Charging capacity for covered settlements: %d / %d used",
+      buyer_status.owned,
+      buyer_status.capacity
+    ))
   else
     local config = GIGAFACTORY_CONFIGS[entity.name]
     add_station_info_label(panel, "Rated demand: " .. config.power)
@@ -5810,9 +5863,13 @@ local function show_manufacturer_info_panel(player, entity)
       or "Blocked: remove finished products from the output inventory."
   elseif entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
-    next_step = buyers.unowned == 0
-      and "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
-      or "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
+    if buyers.unowned == 0 then
+      next_step = "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
+    elseif buyers.owned >= buyers.capacity then
+      next_step = "Blocked: charging capacity is full. Add another powered charger near these settlements; each V1 stall opens 12 more supported sales."
+    else
+      next_step = "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
+    end
   elseif missing_name then
     local item = prototypes.item[missing_name]
     local display_name = item and item.localised_name or missing_name
@@ -5875,6 +5932,10 @@ local function show_customer_settlement_info_panel(player, settlement)
     population.physical or 0
   ))
   add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
+  add_station_info_label(panel, string.format(
+    "Powered charging capacity at this settlement: %d",
+    service.capacity_by_settlement_key[key] or 0
+  ))
   add_station_info_label(panel, string.format("Active customer vehicles network-wide: %d", vehicle_summary.total))
   add_station_info_label(panel, string.format("Network vehicle capacity: %d", service.supported_ev_capacity))
 
@@ -6536,7 +6597,7 @@ remote.add_interface("factoryx", {
           unowned_entities = unowned_entities,
           matching_homes = matching_homes,
           owned = vehicle_summary.by_settlement[key] or 0,
-          capacity = config and config.evs_per_stall or 0
+          capacity = service.capacity_by_settlement_key[key] or 0
         }
       end
       rows[#rows + 1] = {
