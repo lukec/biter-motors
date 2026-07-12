@@ -1702,6 +1702,13 @@ icons, and bounded working animations. Remaining work is narrower:
   adding more invisible mechanics. Implemented for global progression, Sales
   Offices, EV Charging Stations, and both Gigafactory tiers; future placeable
   infrastructure should extend the same model.
+- Roadmap: make the Prototype Roadster conversion explicitly electric. By the
+  FactoryX entry point, lubricant and Electric Engine Units are normally
+  available, so use `Car + Electric Engine Units + Batteries + Advanced
+  Circuits`. The Car remains the physical chassis donor; later purpose-built
+  EVs continue consuming the higher-level Electric Drivetrain intermediate.
+  Audit prerequisite ordering so Electric Engine Units are always craftable
+  before the Roadster recipe becomes available.
 
 ### Phase 1: Art Pass
 
