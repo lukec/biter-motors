@@ -661,6 +661,10 @@ Implemented v1 behavior:
   charger coverage convert as prospective customers across the charger's full
   tier-specific service radius. They are assigned to the nearest settlement
   served by that charger; hostile worms are never converted.
+- Sales eligibility follows the buyer's home settlement, not the wandering
+  unit's momentary position. A Sales Office can reserve an unowned mobile buyer
+  when that buyer's operational home settlement is inside office coverage;
+  wandering across the circle edge cannot pause an in-progress sale.
 - While a player drives a FactoryX EV, powered chargers within 256 tiles show a
   private translucent green circle matching that tier's real player-vehicle
   charge radius. While energy is flowing, the EV shows a pulsing battery icon

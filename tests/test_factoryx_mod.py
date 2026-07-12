@@ -329,6 +329,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("position_has_sales_coverage(entity.surface, entity.position, offices)", control)
         self.assertIn("converted = converted + convert_station_area_customers(force, service)", control)
 
+    def test_sales_follow_covered_home_settlements_not_wandering_unit_positions(self):
+        control = (MOD / "control.lua").read_text()
+
+        self.assertIn("local settlement_in_office_coverage = population", control)
+        self.assertIn("population.surface_index == office.surface.index", control)
+        self.assertIn("within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)", control)
+        dequeue = control[control.index("function dequeue_available_buyer"):control.index("function eligible_customer_buyers")]
+        self.assertNotIn("within_radius(office, entity", dequeue)
+        self.assertIn("function sales_office_buyer_status(office)", control)
+        self.assertIn("Available unassigned buyers: %d from %d covered settlements", control)
+        self.assertIn("Waiting for an unassigned buyer from a powered settlement", control)
+
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()
 

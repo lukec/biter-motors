@@ -4461,8 +4461,7 @@ function dequeue_available_buyer(queue, office, expected_settlement_key)
       and entity.force.name == CUSTOMER_FORCE_NAME
       and not customer_vehicle_owners()[unit_number]
       and not buyer_reserved_by_unit()[unit_number]
-    if available and entity.surface == office.surface
-      and within_radius(office, entity, SALES_OFFICE_CUSTOMER_RADIUS) then
+    if available and entity.surface == office.surface then
       return true, false
     end
     return false, available == true
@@ -4487,7 +4486,10 @@ function eligible_customer_buyers(office, needed)
     local load = (vehicle_summary.by_settlement[key] or 0)
       + (reserved_by_settlement[key] or 0)
       + (population and population.virtual_reserved or 0)
-    if config and load < config.evs_per_stall then
+    local settlement_in_office_coverage = population
+      and population.surface_index == office.surface.index
+      and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)
+    if config and settlement_in_office_coverage and load < config.evs_per_stall then
       pools[#pools + 1] = {
         key = key,
         queue = buyer_queue_for(office.force.name, key),
@@ -4536,6 +4538,31 @@ function eligible_customer_buyers(office, needed)
     end
   end
   return buyers
+end
+
+function sales_office_buyer_status(office)
+  local service = customer_service_for_force(office.force)
+  local eligible_keys = {}
+  local settlements = 0
+  for key in pairs(service.operational_keys) do
+    local population = customer_settlement_populations()[key]
+    if population and population.surface_index == office.surface.index
+      and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
+      eligible_keys[key] = true
+      settlements = settlements + 1
+    end
+  end
+  local available = 0
+  for key in pairs(eligible_keys) do
+    local population = customer_settlement_populations()[key]
+    local queue = buyer_queue_for(office.force.name, key)
+    available = available + math.max(0, #queue.units - queue.head + 1)
+    available = available + math.max(
+      0,
+      (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
+    )
+  end
+  return {available = available, settlements = settlements}
 end
 
 function reserve_office_buyers(office, recipe_name, sale)
@@ -5413,10 +5440,16 @@ local function show_manufacturer_info_panel(player, entity)
   if entity.name == SALES_OFFICE_NAME and CUSTOMER_EV_SALE_RECIPES[recipe.name] then
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
+    local buyer_status = sales_office_buyer_status(entity)
     add_station_info_label(panel, string.format(
       "Reserved mobile buyers: %d / %d",
       reserved,
       CUSTOMER_EV_SALE_RECIPES[recipe.name].vehicles
+    ))
+    add_station_info_label(panel, string.format(
+      "Available unassigned buyers: %d from %d covered settlements",
+      buyer_status.available,
+      buyer_status.settlements
     ))
   end
   add_station_info_label(panel, string.format("Cycle progress: %d%%", math.floor((entity.crafting_progress or 0) * 100)))
@@ -5448,7 +5481,7 @@ local function show_manufacturer_info_panel(player, entity)
       and "Blocked: Dollar output is full. Remove Dollars; sales and EV Reservation consumption are paused."
       or "Blocked: remove finished products from the output inventory."
   elseif entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
-    next_step = "Blocked: no eligible mobile customer is ready to buy this vehicle. Expand powered customer coverage."
+    next_step = "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
   elseif missing_name then
     local item = prototypes.item[missing_name]
     local display_name = item and item.localised_name or missing_name
