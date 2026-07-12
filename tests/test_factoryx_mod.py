@@ -26,13 +26,18 @@ class FactoryXModTest(unittest.TestCase):
 
     def test_sales_office_panel_explains_market_saturation(self):
         control = (MOD / "control.lua").read_text()
-        self.assertIn("Customers who already own EVs: %d / %d", control)
-        self.assertIn("Market saturated - expand to new settlements", control)
-        self.assertIn("Powered charging capacity for covered settlements: %d EVs", control)
-        self.assertIn("Underserved EV owners: %d", control)
+        self.assertIn('label = "EV owners"', control)
+        self.assertIn('return "Market saturated", FACTORYX_STATE_COLORS.warning', control)
+        self.assertIn('label = "Charging"', control)
+        self.assertIn('label = "Underserved"', control)
         self.assertIn("FACTORYX_STATE_COLORS", control)
         self.assertIn("add_station_info_label(state_row, state_text, state_color)", control)
-        self.assertIn('if entity.name ~= SALES_OFFICE_NAME then', control)
+        sales_panel = control[control.index("if entity.name == SALES_OFFICE_NAME then", control.index("local function show_manufacturer_info_panel")):
+                              control.index("  else\n    local config = GIGAFACTORY_CONFIGS", control.index("local function show_manufacturer_info_panel"))]
+        self.assertIn("add_factoryx_metric_table", sales_panel)
+        self.assertNotIn("Cycle progress", sales_panel)
+        self.assertNotIn("Inputs", sales_panel)
+        self.assertNotIn("Outputs", sales_panel)
         self.assertNotIn('add_station_info_label(panel, "Recipe: none selected")', control)
 
     def test_sales_office_showroom_tracks_active_sale_recipe(self):
@@ -322,7 +327,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("if hidden_charge_count > 0 then", control)
         self.assertIn("braking_multiplier = 8.0", data)
         self.assertIn("customer_requested_stalls", control)
-        self.assertIn("Player EV charging", control)
+        self.assertIn('label = "Commutes"', control)
         self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png"', data)
         self.assertIn("direction_count = 64", data)
         self.assertIn("line_length = 8", data)
@@ -389,7 +394,7 @@ class FactoryXModTest(unittest.TestCase):
         dequeue = control[control.index("function dequeue_available_buyer"):control.index("function eligible_customer_buyers")]
         self.assertNotIn("within_radius(office, entity", dequeue)
         self.assertIn("function sales_office_buyer_status(office)", control)
-        self.assertIn("Available unassigned buyers: %d from %d covered settlements", control)
+        self.assertIn('label = "Buyers"', control)
         self.assertIn("Waiting for an unassigned buyer from a powered settlement", control)
         self.assertIn("function rebuild_customer_settlement_population_cache()", control)
         self.assertIn("function ensure_customer_settlement_population_cache()", control)
@@ -1334,7 +1339,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("entity_status_text", control)
         self.assertIn("recipe_missing_item", control)
         self.assertIn("add_item_inventory_row", control)
-        self.assertIn("Customer settlements in office coverage", control)
+        self.assertIn("add_factoryx_metric_table", control)
         self.assertIn("Cycle progress", control)
         self.assertIn("Blocked: restore electric power", control)
         self.assertIn("Blocked: remove finished products", control)
@@ -1379,7 +1384,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("unregister_customer_unit(entity)", control)
         self.assertIn("Active customer vehicles", control)
         self.assertIn("Lifetime EV sales", control)
-        self.assertIn("Reserved mobile buyers", control)
+        self.assertIn('label = "Reserved"', control)
         self.assertIn("no eligible mobile customer", control)
 
     def test_charger_power_and_customer_patience_are_proportional(self):
@@ -1388,7 +1393,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("sample_station_power_service", control)
         self.assertIn("flow.secondary_demand_usage", control)
         self.assertIn("powered_station_stalls", control)
-        self.assertIn("Stall power availability", control)
+        self.assertIn("power_state.power_fraction", control)
         self.assertIn("CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60", control)
         self.assertIn("CUSTOMER_MOOD_CHECK_TICKS = 60 * 60", control)
         self.assertIn("if random() < chance", control)
@@ -1477,12 +1482,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("opened_factoryx_entities()[player.index]", control)
         self.assertNotIn("player.gui.left", control)
         self.assertIn('caption = "FactoryX " .. config.display_name', control)
-        self.assertIn("Customer settlements in charger range", control)
-        self.assertIn("Hostile spawners nearby, not customers yet", control)
+        self.assertIn('label = "Settlements"', control)
+        self.assertIn("nearby spawners are still hostile", control)
         self.assertIn("Put a Sales Office within %d tiles", control)
         self.assertIn("Sales Office-converted customer settlements", control)
-        self.assertIn("Active stalls", control)
-        self.assertIn("Power draw", control)
+        self.assertIn('label = "Stalls"', control)
+        self.assertIn('label = "Power"', control)
         self.assertIn("Next: craft Prototype Roadsters", control)
         self.assertIn("Dollar output is full", control)
         self.assertIn("EV Reservation consumption are paused", control)
@@ -1497,8 +1502,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("top_up_station_reservations", control)
         self.assertIn("defines.inventory.chest", control)
         self.assertIn("inventory.set_filter(1, RESERVATION_NAME)", control)
-        self.assertIn("Paperwork output", control)
-        self.assertIn("Paperwork waiting for pickup", control)
+        self.assertIn('label = "Reservations"', control)
+        self.assertIn('label = "Stored"', control)
         self.assertNotIn("distribute_reservations", control)
 
     def test_charging_utilization_uses_living_vehicle_owners(self):
@@ -1521,7 +1526,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("refresh_station_power_state(station, allocations_by_force[force_index])", control)
         self.assertIn("customer_ev_fleet = customer_ev_fleet_size(force)", control)
         self.assertIn("Active customer vehicles", control)
-        self.assertIn("Potential local stall demand", control)
+        self.assertIn('label = "EV capacity"', control)
         self.assertIn("market.customer_ev_fleet", control)
         self.assertIn("refresh_biter_customer_market", control)
 
@@ -1714,7 +1719,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("load < capacity", buyer_selection)
         self.assertIn("vehicle_count - powered_capacity", control)
         self.assertIn("Underserved vehicles: %d", control)
-        self.assertIn("Customers hostile - restore charging service", control)
+        self.assertIn('return "Customers hostile", FACTORYX_STATE_COLORS.bad', control)
 
     def test_worms_remain_hostile_inside_customer_coverage(self):
         control = (MOD / "control.lua").read_text()
@@ -1764,7 +1769,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05", control)
         self.assertIn("CUSTOMER_MOOD_MAX_ANGER_CHANCE = 0.25", control)
         self.assertIn("settlement_friendly_after_service_check", control)
-        self.assertIn("This charger tier: %d EVs per stall / %d EVs total", control)
+        self.assertIn("active_stalls * config.evs_per_stall", control)
         self.assertIn("stranded_evs", control)
         self.assertIn("angry_keys", control)
         self.assertIn("process_customer_growth(force)", control)
@@ -1789,8 +1794,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("local random = customer_growth_random()", growth)
         self.assertIn("random() < hostile_worm_chance(evolution)", growth)
         self.assertNotIn("Customer settlement expanded", growth)
-        self.assertIn("others may be in the grace period", control)
-        self.assertIn("Next settlement:", control)
+        self.assertIn("remains friendly during its patience period", control)
+        self.assertIn('summary, summary_color = string.format("%d stalls available."', control)
 
     def test_factoryx_victory_is_agi_training_run(self):
         data = (MOD / "data.lua").read_text()

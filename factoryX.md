@@ -434,9 +434,12 @@ that player's force. The chart-only circles use a dark teal translucent fill and
 restrained outline, so they remain readable without washing out Remote View.
 
 Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
-shows customer settlements in office coverage, machine state, selected sales
-contract, cycle progress, exact item counts for every input and output, and one
-specific blocker such as missing power, a missing item, or blocked output.
+uses a compact native icon/label/value table for state, settlements, available
+buyers, EV owners, powered charging capacity, underserved owners, and reserved
+buyers. It deliberately omits recipe, cycle, input, and output details already
+visible in Factorio's machine GUI. Fixed short labels and a right-aligned value
+column prevent truncation; one colored status strip gives the current action or
+blocker.
 
 A full Dollar output inventory stops the selected sale recipe. No EV or EV
 Reservation is consumed while blocked; inputs back up at the Sales Office,

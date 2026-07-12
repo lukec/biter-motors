@@ -3907,6 +3907,34 @@ local function add_station_info_label(parent, caption, color)
   return label
 end
 
+function add_factoryx_metric_table(parent, rows)
+  local metrics = parent.add{type = "table", column_count = 3}
+  metrics.style.horizontal_spacing = 8
+  metrics.style.vertical_spacing = 4
+  for _, row in pairs(rows) do
+    local icon = metrics.add{type = "sprite", sprite = row.sprite, tooltip = row.tooltip}
+    icon.style.width = 24
+    icon.style.height = 24
+    icon.style.stretch_image_to_widget_size = true
+    local label = metrics.add{type = "label", caption = row.label}
+    label.style.width = 112
+    local value = metrics.add{type = "label", caption = row.value}
+    value.style.width = 190
+    value.style.horizontal_align = "right"
+    if row.color then value.style.font_color = row.color end
+  end
+  return metrics
+end
+
+function add_factoryx_status_strip(parent, caption, color)
+  local line = parent.add{type = "line"}
+  line.style.top_margin = 4
+  local label = parent.add{type = "label", caption = caption, single_line = false}
+  label.style.top_margin = 4
+  if color then label.style.font_color = color end
+  return label
+end
+
 local function station_next_step(station, covered_settlements, hostile_settlements, offices)
   if covered_settlements == 0 then
     if hostile_settlements > 0 then
@@ -3946,10 +3974,7 @@ local function show_station_info_panel(player, station)
   local hostile_settlements = count_hostile_biter_settlements_near_station(station)
   local allocations = calculate_station_utilization(station.force)
   local active_stalls = active_station_stalls(station, allocations)
-  local customer_evs = customer_ev_fleet_size(station.force)
-  local potential_demand = math.min(config.stalls, covered_settlements)
-  local offices = #find_sales_offices(station.force)
-  local service, growth = customer_growth_summary(station.force)
+  local service = customer_growth_summary(station.force)
   local reservation_rate = station_reservation_demand(station, active_stalls, service)
     * RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE
   local reservation_inventory = station_reservation_inventory(station)
@@ -3958,18 +3983,23 @@ local function show_station_info_panel(player, station)
   local power_draw_kw = active_stalls * researched_power_per_stall_kw
   local power_state = station_power_service()[station.unit_number] or {power_fraction = grid_connected and 1 or 0}
   local assignment = service.assignments[station.unit_number]
-  local vehicle_assignments = storage.factoryx_station_vehicle_assignments
-    and storage.factoryx_station_vehicle_assignments[station.force.index] or {}
-  local vehicle_assignment = vehicle_assignments[station.unit_number] or {vehicles = {}, customer_requested_stalls = 0}
-  local powered_vehicle_stalls = math.max(
-    0,
-    (power_state.powered_stalls or 0) - (vehicle_assignment.customer_requested_stalls or 0)
-  )
   local friendly_here = assignment and #assignment.operational_settlements or 0
-  local growth_state = customer_growth_states()[station.unit_number] or {}
-  local spare_growth_stalls = math.max(0, config.stalls - friendly_here)
   local commute_counts = customer_commute_station_counts()[station.unit_number]
     or {en_route = 0, charging = 0}
+  local underserved_here = 0
+  local seen_settlements = {}
+  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
+  for _, settlement in pairs(assignment and assignment.settlements or {}) do
+    local key = settlement_key(settlement.surface, settlement)
+    if not seen_settlements[key] then
+      underserved_here = underserved_here + math.max(
+        0,
+        (vehicle_summary.by_settlement[key] or 0)
+          - (service.powered_capacity_by_settlement_key[key] or 0)
+      )
+      seen_settlements[key] = true
+    end
+  end
   local panel = player.gui.relative.add{
     type = "frame",
     name = STATION_INFO_PANEL_NAME,
@@ -3977,57 +4007,41 @@ local function show_station_info_panel(player, station)
     direction = "vertical",
     anchor = factoryx_relative_anchor(station)
   }
+  panel.style.width = 380
 
-  add_station_info_label(panel, grid_connected and "Grid: connected" or "Grid: not connected")
-  add_station_info_label(panel, string.format("Customer settlements in charger range: %d", covered_settlements))
-  if hostile_settlements > 0 then
-    add_station_info_label(panel, string.format("Hostile spawners nearby, not customers yet: %d", hostile_settlements))
+  local power_percent = math.floor((power_state.power_fraction or 0) * 100 + 0.5)
+  local state_text = grid_connected and (power_percent > 0 and "Powered" or "No power") or "No grid"
+  local state_color = grid_connected and (power_percent > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad)
+    or FACTORYX_STATE_COLORS.bad
+  local state_row = panel.add{type = "flow", direction = "horizontal"}
+  state_row.add{type = "label", caption = "State: "}
+  add_station_info_label(state_row, state_text, state_color)
+
+  add_factoryx_metric_table(panel, {
+    {sprite = "item/x-ev-charging-station", label = "Stalls", value = string.format("%d / %d active", active_stalls, config.stalls)},
+    {sprite = "item/x-mass-market-ev", label = "EV capacity", value = string.format("%d / %d", active_stalls * config.evs_per_stall, config.stalls * config.evs_per_stall)},
+    {sprite = "entity/biter-spawner", label = "Settlements", value = string.format("%d served", friendly_here)},
+    {sprite = "item/x-ev-charging-station", label = "Underserved", value = tostring(underserved_here), color = underserved_here > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good},
+    {sprite = "item/x-prototype-roadster", label = "Commutes", value = string.format("%d in / %d charging", commute_counts.en_route, commute_counts.charging)},
+    {sprite = "item/accumulator", label = "Power", value = string.format("%.0f / %.0f kW", power_draw_kw, config.stalls * researched_power_per_stall_kw)},
+    {sprite = "item/x-ev-reservation", label = "Reservations", value = string.format("%d / min", reservation_rate)},
+    {sprite = "item/x-ev-reservation", label = "Stored", value = tostring(reservation_stock)}
+  })
+
+  local summary
+  local summary_color
+  if not grid_connected or power_percent == 0 then
+    summary, summary_color = "Connect and power this charger.", FACTORYX_STATE_COLORS.bad
+  elseif underserved_here > 0 then
+    summary, summary_color = string.format("%d EVs need charging capacity.", underserved_here), FACTORYX_STATE_COLORS.bad
+  elseif hostile_settlements > 0 and covered_settlements == 0 then
+    summary, summary_color = "Add Sales Office coverage.", FACTORYX_STATE_COLORS.warning
+  elseif active_stalls < config.stalls then
+    summary, summary_color = string.format("%d stalls available.", config.stalls - active_stalls), FACTORYX_STATE_COLORS.good
+  else
+    summary, summary_color = "Charger operating at capacity.", FACTORYX_STATE_COLORS.good
   end
-  add_station_info_label(panel, string.format("Active customer vehicles: %d", customer_evs))
-  add_station_info_label(panel, string.format(
-    "Reachable network capacity: %d EVs (weighted average %d per stall)",
-    growth.supported_ev_capacity,
-    growth.evs_per_stall
-  ))
-  add_station_info_label(panel, string.format("This charger tier: %d EVs per stall / %d EVs total", config.evs_per_stall, config.stalls * config.evs_per_stall))
-  add_station_info_label(panel, string.format("Potential local stall demand: %d", potential_demand))
-  add_station_info_label(panel, string.format("Active stalls: %d/%d", active_stalls, config.stalls))
-  add_station_info_label(panel, string.format(
-    "Customer commutes: %d approaching, %d charging",
-    commute_counts.en_route,
-    commute_counts.charging
-  ))
-  add_station_info_label(panel, string.format(
-    "Player EV charging: %d nearby / %d powered stalls",
-    #vehicle_assignment.vehicles,
-    math.min(powered_vehicle_stalls, #vehicle_assignment.vehicles)
-  ))
-  add_station_info_label(panel, string.format("Player EV charge radius: %d tiles", config.vehicle_charge_radius))
-  add_station_info_label(panel, string.format(
-    "Stall power availability: %d%% (%d requested)",
-    math.floor((power_state.power_fraction or 0) * 100 + 0.5),
-    allocations[station.unit_number] or 0
-  ))
-  add_station_info_label(panel, string.format("Friendly settlements served here: %d", friendly_here))
-  add_station_info_label(panel, string.format("Stranded EVs: %d", growth.stranded_evs))
-  add_station_info_label(panel, growth.stranded_evs > 0
-    and string.format("Customer mood: %d angry; others may be in the grace period", growth.angry_settlements)
-    or "Customer mood: friendly")
-  add_station_info_label(panel, string.format("Spare settlement capacity: %d", spare_growth_stalls))
-  add_station_info_label(panel, string.format(
-    "Next settlement: %d/%d active stall-minutes",
-    math.floor((growth_state.progress or 0) / 60),
-    CUSTOMER_GROWTH_STALL_MINUTES
-  ))
-  add_station_info_label(panel, string.format(
-    "Power draw: %.0f kW / %.0f kW max",
-    power_draw_kw,
-    config.stalls * researched_power_per_stall_kw
-  ))
-  add_station_info_label(panel, string.format("Paperwork output: %d EV Reservations per minute", reservation_rate))
-  add_station_info_label(panel, string.format("Paperwork waiting for pickup: %d", reservation_stock))
-  add_station_info_label(panel, string.format("Active EV Sales Offices: %d", offices))
-  add_station_info_label(panel, station_next_step(station, covered_settlements, hostile_settlements, offices))
+  add_factoryx_status_strip(panel, summary, summary_color)
 end
 
 local function biter_customer_market_summary(force)
@@ -5847,13 +5861,13 @@ function entity_status_presentation(entity)
   if entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
     if buyers.settlements == 0 then
-      return "No customer settlements in coverage", FACTORYX_STATE_COLORS.bad
+      return "No customer settlements", FACTORYX_STATE_COLORS.bad
     elseif buyers.unowned == 0 then
-      return "Market saturated - expand to new settlements", FACTORYX_STATE_COLORS.warning
+      return "Market saturated", FACTORYX_STATE_COLORS.warning
     elseif buyers.friendly_settlements == 0 then
-      return "Customers hostile - restore charging service", FACTORYX_STATE_COLORS.bad
+      return "Customers hostile", FACTORYX_STATE_COLORS.bad
     end
-    return "Waiting for an available mobile buyer", FACTORYX_STATE_COLORS.warning
+    return "Waiting for buyer", FACTORYX_STATE_COLORS.warning
   end
   local status = entity.status
   if status == defines.entity_status.working then
@@ -5964,23 +5978,43 @@ local function show_manufacturer_info_panel(player, entity)
 
   if entity.name == SALES_OFFICE_NAME then
     local buyer_status = sales_office_buyer_status(entity)
-    add_station_info_label(panel, string.format(
-      "Customer settlements in office coverage: %d",
-      count_customer_settlements_near_office(entity)
-    ))
-    add_station_info_label(panel, string.format(
-      "Customers who already own EVs: %d / %d",
-      buyer_status.owned,
-      buyer_status.customers
-    ))
-    add_station_info_label(panel, string.format(
-      "Powered charging capacity for covered settlements: %d EVs",
-      buyer_status.powered_capacity
-    ))
-    add_station_info_label(panel, string.format(
-      "Underserved EV owners: %d",
-      buyer_status.underserved
-    ))
+    local recipe = entity.get_recipe()
+    local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
+    local buyer_reservation = office_buyer_reservations()[entity.unit_number]
+    local reserved = buyer_reservation and #buyer_reservation.buyers or 0
+    add_factoryx_metric_table(panel, {
+      {sprite = "entity/biter-spawner", label = "Settlements", value = tostring(count_customer_settlements_near_office(entity))},
+      {sprite = "entity/small-biter", label = "Buyers", value = string.format("%d available", buyer_status.available)},
+      {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
+      {sprite = "item/x-ev-charging-station", label = "Charging", value = string.format("%d capacity", buyer_status.powered_capacity)},
+      {sprite = "item/x-ev-charging-station", label = "Underserved", value = tostring(buyer_status.underserved), color = buyer_status.underserved > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good},
+      {sprite = "item/x-ev-reservation", label = "Reserved", value = sale and string.format("%d / %d", reserved, sale.vehicles) or "-"}
+    })
+
+    local summary
+    local summary_color
+    if not recipe then
+      summary, summary_color = "Select a sales contract.", FACTORYX_STATE_COLORS.warning
+    elseif entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power then
+      summary, summary_color = "Restore power.", FACTORYX_STATE_COLORS.bad
+    elseif entity.status == defines.entity_status.full_output then
+      summary, summary_color = "Clear the Dollar output.", FACTORYX_STATE_COLORS.bad
+    elseif entity.disabled_by_script then
+      if buyer_status.unowned == 0 then
+        summary = "Market saturated. Expand coverage."
+      elseif buyer_status.friendly_settlements == 0 then
+        summary = "Restore customer charging service."
+      else
+        summary = "Waiting for an available buyer."
+      end
+      summary_color = FACTORYX_STATE_COLORS.warning
+    elseif entity.status == defines.entity_status.working then
+      summary, summary_color = "Sales active.", FACTORYX_STATE_COLORS.good
+    else
+      summary, summary_color = "Waiting for product inputs.", FACTORYX_STATE_COLORS.neutral
+    end
+    add_factoryx_status_strip(panel, summary, summary_color)
+    return
   else
     local config = GIGAFACTORY_CONFIGS[entity.name]
     add_station_info_label(panel, "Rated demand: " .. config.power)
@@ -6029,24 +6063,7 @@ local function show_manufacturer_info_panel(player, entity)
     return
   end
 
-  if entity.name ~= SALES_OFFICE_NAME then
-    add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
-  end
-  if entity.name == SALES_OFFICE_NAME and CUSTOMER_EV_SALE_RECIPES[recipe.name] then
-    local buyer_reservation = office_buyer_reservations()[entity.unit_number]
-    local reserved = buyer_reservation and #buyer_reservation.buyers or 0
-    local buyer_status = sales_office_buyer_status(entity)
-    add_station_info_label(panel, string.format(
-      "Reserved mobile buyers: %d / %d",
-      reserved,
-      CUSTOMER_EV_SALE_RECIPES[recipe.name].vehicles
-    ))
-    add_station_info_label(panel, string.format(
-      "Available unassigned buyers: %d from %d covered settlements",
-      buyer_status.available,
-      buyer_status.settlements
-    ))
-  end
+  add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
   add_station_info_label(panel, string.format("Cycle progress: %d%%", math.floor((entity.crafting_progress or 0) * 100)))
   add_section_heading(panel, "Inputs")
   local input_inventory = entity.get_inventory(crafter_input_inventory_id())
@@ -6745,6 +6762,24 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  open_entity_info = function(player_index, entity)
+    local player = game.get_player(player_index)
+    if not player or not entity or not entity.valid then return false end
+    if is_station(entity) then
+      close_entity_info_panel(player)
+      show_station_info_panel(player, entity)
+      return player.gui.relative[STATION_INFO_PANEL_NAME] ~= nil
+    elseif is_factoryx_manufacturer(entity) then
+      close_station_info_panel(player)
+      show_manufacturer_info_panel(player, entity)
+      return player.gui.relative[ENTITY_INFO_PANEL_NAME] ~= nil
+    elseif is_customer_settlement_entity(entity) then
+      close_station_info_panel(player)
+      show_customer_settlement_info_panel(player, entity)
+      return player.gui.relative[ENTITY_INFO_PANEL_NAME] ~= nil
+    end
+    return false
+  end,
   grant_energy_jumpstart = function(player_index)
     local player = game.get_player(player_index)
     local chest = grant_factoryx_energy_jumpstart(player)
