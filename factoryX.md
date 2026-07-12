@@ -661,6 +661,14 @@ Implemented v1 behavior:
   charger coverage convert as prospective customers across the charger's full
   tier-specific service radius. They are assigned to the nearest settlement
   served by that charger; hostile worms are never converted.
+- While a player drives a FactoryX EV, powered chargers within 256 tiles show a
+  private translucent green circle matching that tier's real player-vehicle
+  charge radius. While energy is flowing, the EV shows a pulsing battery icon
+  and live `CHARGING N%` label. These renderings are per connected player and
+  never attach to customer units.
+- Player-driven EVs must park physically at the site: V1 charges within 8 tiles
+  and V2 through V4 within 10 tiles. Higher tiers scale charging power and stall
+  throughput rather than becoming long-range wireless chargers.
 - Every active stall contributes one adoption point per second. Five active
   stall-minutes grow one new customer spawner when that charger still has a
   spare settlement stall and there are no stranded EVs.

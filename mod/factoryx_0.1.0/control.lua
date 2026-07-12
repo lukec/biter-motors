@@ -37,7 +37,7 @@ local STATION_CONFIGS = {
     evs_per_stall = 32,
     power_per_stall_kw = 250,
     customer_radius = 128,
-    vehicle_charge_radius = 12,
+    vehicle_charge_radius = 10,
     power_sink_name = "x-ev-charging-v3-power-sink"
   },
   ["x-ev-charging-station-v4"] = {
@@ -46,7 +46,7 @@ local STATION_CONFIGS = {
     evs_per_stall = 50,
     power_per_stall_kw = 500,
     customer_radius = 160,
-    vehicle_charge_radius = 14,
+    vehicle_charge_radius = 10,
     power_sink_name = "x-ev-charging-v4-power-sink"
   }
 }
@@ -2278,11 +2278,133 @@ function charge_station_vehicles(station)
   local charged = 0
   local joules = station_stall_power_watts(station)
   for index = 1, math.min(vehicle_stalls, #assignment.vehicles) do
-    if charge_vehicle(assignment.vehicles[index], joules) > 0 then
+    local vehicle = assignment.vehicles[index]
+    if charge_vehicle(vehicle, joules) > 0 then
       charged = charged + 1
+      if vehicle and vehicle.valid and vehicle.unit_number then
+        storage.factoryx_vehicle_charge_activity = storage.factoryx_vehicle_charge_activity or {}
+        storage.factoryx_vehicle_charge_activity[vehicle.unit_number] = game.tick
+      end
     end
   end
   return charged
+end
+
+local function ev_driver_overlay_states()
+  storage.factoryx_ev_driver_overlay_states = storage.factoryx_ev_driver_overlay_states or {}
+  return storage.factoryx_ev_driver_overlay_states
+end
+
+local function destroy_ev_driver_overlay(player_index)
+  local states = ev_driver_overlay_states()
+  local state = states[player_index]
+  if not state then return end
+  for _, object in pairs(state.objects or {}) do
+    if object and object.valid then object.destroy() end
+  end
+  states[player_index] = nil
+end
+
+local function create_ev_driver_overlay(player, vehicle)
+  destroy_ev_driver_overlay(player.index)
+  local state = {
+    vehicle = vehicle,
+    vehicle_unit_number = vehicle.unit_number,
+    objects = {},
+    rebuilt_tick = game.tick,
+    market_generation = factoryx_market_generation()[vehicle.force.index] or 0,
+    rebuilt_position = {x = vehicle.position.x, y = vehicle.position.y}
+  }
+  for _, station in pairs(find_stations(vehicle.surface, vehicle.force)) do
+    local config = station_config(station)
+    local dx = station.position.x - vehicle.position.x
+    local dy = station.position.y - vehicle.position.y
+    if config and station_has_grid_access(station) and dx * dx + dy * dy <= 256 * 256 then
+      state.objects[#state.objects + 1] = rendering.draw_circle{
+        color = {r = 0.10, g = 0.75, b = 0.35, a = 0.16},
+        radius = config.vehicle_charge_radius,
+        width = 1,
+        filled = true,
+        draw_on_ground = true,
+        target = station,
+        surface = station.surface,
+        players = {player}
+      }
+      state.objects[#state.objects + 1] = rendering.draw_circle{
+        color = {r = 0.20, g = 1.0, b = 0.50, a = 0.8},
+        radius = config.vehicle_charge_radius,
+        width = 3,
+        filled = false,
+        draw_on_ground = true,
+        target = station,
+        surface = station.surface,
+        players = {player}
+      }
+    end
+  end
+  state.charge_icon = rendering.draw_sprite{
+    sprite = "item/x-electric-drive-charge",
+    surface = vehicle.surface,
+    target = vehicle,
+    target_offset = {0, -2.1},
+    x_scale = 0.55,
+    y_scale = 0.55,
+    tint = {r = 0.35, g = 1.0, b = 0.45, a = 1},
+    render_layer = "air-object",
+    players = {player},
+    visible = false
+  }
+  state.objects[#state.objects + 1] = state.charge_icon
+  state.charge_text = rendering.draw_text{
+    text = "",
+    surface = vehicle.surface,
+    target = vehicle,
+    target_offset = {0, -2.9},
+    color = {r = 0.55, g = 1.0, b = 0.60, a = 1},
+    alignment = "center",
+    scale = 0.85,
+    players = {player},
+    visible = false
+  }
+  state.objects[#state.objects + 1] = state.charge_text
+  ev_driver_overlay_states()[player.index] = state
+  return state
+end
+
+local function refresh_ev_driver_overlays()
+  local activity = storage.factoryx_vehicle_charge_activity or {}
+  local connected = {}
+  for _, player in pairs(game.connected_players) do
+    connected[player.index] = true
+    local vehicle = player.vehicle
+    if not is_electric_vehicle(vehicle) or not vehicle.unit_number then
+      destroy_ev_driver_overlay(player.index)
+    else
+      local state = ev_driver_overlay_states()[player.index]
+      local moved_far = state and state.rebuilt_position
+        and ((vehicle.position.x - state.rebuilt_position.x) ^ 2
+          + (vehicle.position.y - state.rebuilt_position.y) ^ 2 > 64 * 64)
+      local market_changed = state
+        and state.market_generation ~= (factoryx_market_generation()[vehicle.force.index] or 0)
+      if not state or state.vehicle_unit_number ~= vehicle.unit_number
+        or not state.vehicle or not state.vehicle.valid
+        or moved_far or market_changed then
+        state = create_ev_driver_overlay(player, vehicle)
+      end
+      local charging = game.tick - (activity[vehicle.unit_number] or -1000) <= 75
+      local energy, capacity = vehicle_battery_energy(vehicle)
+      local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
+      local pulse = 0.48 + (math.floor(game.tick / 10) % 2) * 0.14
+      state.charge_icon.visible = charging
+      state.charge_icon.x_scale = pulse
+      state.charge_icon.y_scale = pulse
+      state.charge_text.visible = charging
+      state.charge_text.text = string.format("CHARGING %d%%", percent)
+    end
+  end
+  for player_index in pairs(ev_driver_overlay_states()) do
+    if not connected[player_index] then destroy_ev_driver_overlay(player_index) end
+  end
 end
 
 local function destroy_customer_marker_key(key)
@@ -5625,6 +5747,10 @@ script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
   sync_charger_placement_overlay(game.get_player(event.player_index))
 end)
 
+script.on_event(defines.events.on_player_driving_changed_state, function()
+  refresh_ev_driver_overlays()
+end)
+
 script.on_event(defines.events.on_entity_damaged, function(event)
   local victim = event.entity
   local attacker = event.cause
@@ -5664,10 +5790,12 @@ end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
   charger_placement_overlay_states()[event.player_index] = nil
+  destroy_ev_driver_overlay(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_removed, function(event)
   charger_placement_overlay_states()[event.player_index] = nil
+  destroy_ev_driver_overlay(event.player_index)
   sales_office_coverage_enabled()[event.player_index] = nil
   storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
   storage.factoryx_charger_overlay_warnings[event.player_index] = nil
@@ -5791,6 +5919,9 @@ for _, event_name in pairs({
       end
       if entity and entity.unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
         electric_vehicle_registry()[entity.unit_number] = nil
+        if storage.factoryx_vehicle_charge_activity then
+          storage.factoryx_vehicle_charge_activity[entity.unit_number] = nil
+        end
       end
       if entity and entity.unit_number then
         untrack_factoryx_entity(entity)
@@ -5823,6 +5954,7 @@ script.on_nth_tick(1, reset_underpowered_compute_progress)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()
+  refresh_ev_driver_overlays()
   feed_tracked_electric_vehicles()
   sync_sales_office_buyers()
   accelerate_consumer_ev_sales()

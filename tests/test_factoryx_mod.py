@@ -325,6 +325,23 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("position_has_sales_coverage(entity.surface, entity.position, offices)", control)
         self.assertIn("converted = converted + convert_station_area_customers(force, service)", control)
 
+    def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
+        control = (MOD / "control.lua").read_text()
+
+        self.assertIn("local function refresh_ev_driver_overlays()", control)
+        self.assertIn("local vehicle = player.vehicle", control)
+        self.assertIn("config.vehicle_charge_radius", control)
+        self.assertIn("vehicle_charge_radius = 8", control)
+        self.assertEqual(3, control.count("vehicle_charge_radius = 10"))
+        self.assertIn("dx * dx + dy * dy <= 256 * 256", control)
+        self.assertIn('sprite = "item/x-electric-drive-charge"', control)
+        self.assertIn('string.format("CHARGING %d%%", percent)', control)
+        self.assertIn("storage.factoryx_vehicle_charge_activity[vehicle.unit_number] = game.tick", control)
+        self.assertIn("refresh_ev_driver_overlays()", control)
+        self.assertIn("defines.events.on_player_driving_changed_state", control)
+        self.assertIn("state.market_generation ~= (factoryx_market_generation()[vehicle.force.index] or 0)", control)
+        self.assertIn("destroy_ev_driver_overlay(event.player_index)", control)
+
     def test_quality_scales_physical_assets_not_abstract_outputs(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
