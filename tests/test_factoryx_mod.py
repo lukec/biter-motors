@@ -299,7 +299,7 @@ class FactoryXModTest(unittest.TestCase):
         ]:
             self.assertIn(fragment, data)
         for name, batteries in {
-            "x-prototype-roadster": 1,
+            "x-prototype-roadster": 3,
             "x-premium-ev": 4,
             "x-mass-market-ev": 3,
             "x-cybertruck": 8,

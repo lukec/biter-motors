@@ -310,7 +310,7 @@ CUSTOMER_VEHICLE_CLASS_BY_ITEM = {
   ["x-robotaxi-fleet"] = "robotaxi"
 }
 ELECTRIC_VEHICLE_BATTERIES = {
-  ["x-prototype-roadster"] = 1,
+  ["x-prototype-roadster"] = 3,
   ["x-premium-ev"] = 4,
   ["x-mass-market-ev"] = 3,
   ["x-cybertruck"] = 8,

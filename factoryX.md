@@ -2126,7 +2126,7 @@ items.
 
 | Vehicle | Driving role | Batteries | Health | Cargo | Character |
 | --- | --- | ---: | ---: | ---: | --- |
-| Prototype Roadster | Sprint car | 1 | 300 | 20 | Fastest response and sharpest steering; minimal range and fragile in collisions |
+| Prototype Roadster | Sprint car | 3 | 300 | 20 | Fastest response and sharpest steering; shortest EV range and fragile in collisions |
 | Premium EV | Grand tourer | 4 | 550 | 40 | Fast, composed, strong braking, and good range |
 | Mass-market EV | All-rounder | 3 | 500 | 50 | Predictable handling and the most practical general-purpose balance |
 | Megatruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
