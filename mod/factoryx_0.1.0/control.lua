@@ -334,6 +334,8 @@ ELECTRIC_VEHICLE_BATTERIES = {
 }
 ELECTRIC_DRIVE_FUEL_NAME = "x-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000
+EV_BATTERY_POPUP_TICKS = 2 * 60
+EV_BATTERY_POPUP_FADE_TICKS = 60
 SUPERCHARGING_TECH_NAME = "x-supercharging-power-electronics"
 LONG_RANGE_BATTERY_TECH_NAME = "x-long-range-battery"
 PREMIUM_AUDIO_TECH_NAME = "x-premium-audio-systems"
@@ -1154,6 +1156,17 @@ function vehicle_battery_energy(entity)
     end
   end
   return energy, capacity
+end
+
+function vehicle_total_charge_energy(entity)
+  local energy, capacity = vehicle_battery_energy(entity)
+  if not is_electric_vehicle(entity) or not entity.burner then return energy, capacity end
+  energy = energy + (entity.burner.remaining_burning_fuel or 0)
+  local inventory = entity.burner.inventory
+  if inventory and inventory.valid then
+    energy = energy + inventory.get_item_count(ELECTRIC_DRIVE_FUEL_NAME) * ELECTRIC_DRIVE_FUEL_JOULES
+  end
+  return math.min(capacity, energy), capacity
 end
 
 function vehicle_needs_charge(entity)
@@ -2590,6 +2603,65 @@ function ev_driver_overlay_states()
   return storage.factoryx_ev_driver_overlay_states
 end
 
+function ev_battery_popup_states()
+  storage.factoryx_ev_battery_popups = storage.factoryx_ev_battery_popups or {}
+  return storage.factoryx_ev_battery_popups
+end
+
+function destroy_ev_battery_popup(player_index)
+  local states = ev_battery_popup_states()
+  local state = states[player_index]
+  if state and state.object and state.object.valid then state.object.destroy() end
+  states[player_index] = nil
+end
+
+function show_ev_battery_popup(player, vehicle)
+  if not player or not player.valid or not is_electric_vehicle(vehicle) then return end
+  destroy_ev_battery_popup(player.index)
+  local energy, capacity = vehicle_total_charge_energy(vehicle)
+  local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
+  local color
+  if percent <= 20 then
+    color = {r = 1.0, g = 0.25, b = 0.18}
+  elseif percent <= 50 then
+    color = {r = 1.0, g = 0.72, b = 0.18}
+  else
+    color = {r = 0.38, g = 1.0, b = 0.48}
+  end
+  local object = rendering.draw_text{
+    text = string.format("BATTERY %d%%", percent),
+    surface = vehicle.surface,
+    target = vehicle,
+    target_offset = {0, -2.4},
+    color = {r = color.r, g = color.g, b = color.b, a = 1},
+    alignment = "center",
+    scale = 0.95,
+    players = {player}
+  }
+  ev_battery_popup_states()[player.index] = {
+    object = object,
+    color = color,
+    expires_tick = game.tick + EV_BATTERY_POPUP_TICKS
+  }
+end
+
+function update_ev_battery_popups()
+  for player_index, state in pairs(ev_battery_popup_states()) do
+    if not state.object or not state.object.valid or game.tick >= state.expires_tick then
+      destroy_ev_battery_popup(player_index)
+    else
+      local remaining = state.expires_tick - game.tick
+      local alpha = math.min(1, remaining / EV_BATTERY_POPUP_FADE_TICKS)
+      state.object.color = {
+        r = state.color.r,
+        g = state.color.g,
+        b = state.color.b,
+        a = alpha
+      }
+    end
+  end
+end
+
 function destroy_ev_driver_overlay(player_index)
   local states = ev_driver_overlay_states()
   local state = states[player_index]
@@ -2687,7 +2759,7 @@ function refresh_ev_driver_overlays()
         state = create_ev_driver_overlay(player, vehicle)
       end
       local charging = game.tick - (activity[vehicle.unit_number] or -1000) <= 75
-      local energy, capacity = vehicle_battery_energy(vehicle)
+      local energy, capacity = vehicle_total_charge_energy(vehicle)
       local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
       local pulse = 0.48 + (math.floor(game.tick / 10) % 2) * 0.14
       state.charge_icon.visible = charging
@@ -6351,7 +6423,12 @@ script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
   sync_charger_placement_overlay(game.get_player(event.player_index))
 end)
 
-script.on_event(defines.events.on_player_driving_changed_state, function()
+script.on_event(defines.events.on_player_driving_changed_state, function(event)
+  local player = game.get_player(event.player_index)
+  local prior_state = player and ev_driver_overlay_states()[player.index]
+  local prior_vehicle = prior_state and prior_state.vehicle
+  local vehicle = player and player.vehicle
+  show_ev_battery_popup(player, is_electric_vehicle(vehicle) and vehicle or prior_vehicle)
   refresh_ev_driver_overlays()
 end)
 
@@ -6590,6 +6667,8 @@ end
 
 
 script.on_nth_tick(1, reset_underpowered_compute_progress)
+
+script.on_nth_tick(6, update_ev_battery_popups)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()

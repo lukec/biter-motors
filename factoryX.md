@@ -711,6 +711,11 @@ Implemented v1 behavior:
 - Player-driven EVs must park physically at the site: V1 charges within 8 tiles
   and V2 through V4 within 10 tiles. Higher tiers scale charging power and stall
   throughput rather than becoming long-range wireless chargers.
+- Entering or exiting a FactoryX EV briefly shows its battery percentage above
+  that vehicle for two seconds. The private player-only label is green, amber,
+  or red by charge level, remains solid for one second, then fades for one
+  second. It uses the same embedded-battery measurement as the live charging
+  indicator.
 - Every active stall contributes one adoption point per second. Five active
   stall-minutes grow one new customer spawner when that charger still has a
   spare settlement stall and there are no stranded EVs.

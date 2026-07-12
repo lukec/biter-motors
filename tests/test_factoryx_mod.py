@@ -421,6 +421,21 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("state.market_generation ~= (factoryx_market_generation()[vehicle.force.index] or 0)", control)
         self.assertIn("destroy_ev_driver_overlay(event.player_index)", control)
 
+    def test_ev_enter_and_exit_show_a_two_second_battery_popup(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("EV_BATTERY_POPUP_TICKS = 2 * 60", control)
+        self.assertIn("EV_BATTERY_POPUP_FADE_TICKS = 60", control)
+        self.assertIn("function show_ev_battery_popup(player, vehicle)", control)
+        self.assertIn("function vehicle_total_charge_energy(entity)", control)
+        self.assertIn("entity.burner.remaining_burning_fuel", control)
+        self.assertIn("inventory.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
+        self.assertIn('text = string.format("BATTERY %d%%", percent)', control)
+        self.assertIn("players = {player}", control)
+        self.assertIn("local prior_vehicle = prior_state and prior_state.vehicle", control)
+        self.assertIn("is_electric_vehicle(vehicle) and vehicle or prior_vehicle", control)
+        self.assertIn("local alpha = math.min(1, remaining / EV_BATTERY_POPUP_FADE_TICKS)", control)
+        self.assertIn("script.on_nth_tick(6, update_ev_battery_popups)", control)
+
     def test_quality_scales_physical_assets_not_abstract_outputs(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
