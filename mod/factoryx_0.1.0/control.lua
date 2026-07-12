@@ -296,6 +296,14 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
 local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
+  ["x-sales-office"] = {
+    status = true,
+    sprite_prefix = "x-sales-office-status-red-frame-",
+    working_sprite_prefix = "x-sales-office-status-green-frame-",
+    stopped_sprite_prefix = "x-sales-office-status-red-frame-",
+    offset = {1.03, -1.18},
+    scale = 0.5
+  },
   ["x-ev-charging-station"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.35}, scale = 0.55},
   ["x-ev-charging-station-v2"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.2}, scale = 0.85},
   ["x-ev-charging-station-v3"] = {sprite_prefix = "x-charger-status-lights-frame-", offset = {0, -0.1}, scale = 1.0},
@@ -427,7 +435,10 @@ local function attach_factoryx_runtime_visual(entity)
     object = object,
     entity = entity,
     sprite_prefix = config.sprite_prefix,
-    enabled = false
+    working_sprite_prefix = config.working_sprite_prefix,
+    stopped_sprite_prefix = config.stopped_sprite_prefix,
+    status = config.status == true,
+    enabled = config.status == true
   }
 end
 
@@ -460,8 +471,14 @@ local function update_factoryx_runtime_visuals()
     if not entry.entity or not entry.entity.valid or not entry.object or not entry.object.valid then
       destroy_factoryx_runtime_visual(unit_number)
     else
-      entry.object.visible = entry.enabled
-      if entry.enabled then entry.object.sprite = entry.sprite_prefix .. frame_index end
+      entry.object.visible = entry.status or entry.enabled
+      if entry.status then
+        local prefix = entry.entity.status == defines.entity_status.working
+          and entry.working_sprite_prefix or entry.stopped_sprite_prefix
+        entry.object.sprite = prefix .. frame_index
+      elseif entry.enabled then
+        entry.object.sprite = entry.sprite_prefix .. frame_index
+      end
     end
   end
 end

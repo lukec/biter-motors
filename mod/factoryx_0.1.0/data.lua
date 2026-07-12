@@ -591,6 +591,24 @@ for frame_index = 1, 8 do
 end
 data:extend(runtime_visual_sprites)
 
+local sales_office_status_sprites = {}
+for frame_index = 1, 8 do
+  for _, status in pairs({
+    {color = "green", filename = "__factoryx__/graphics/animation/sales-office-status-green.png"},
+    {color = "red", filename = "__factoryx__/graphics/animation/sales-office-status-red.png"}
+  }) do
+    sales_office_status_sprites[#sales_office_status_sprites + 1] = {
+      type = "sprite",
+      name = "x-sales-office-status-" .. status.color .. "-frame-" .. frame_index,
+      filename = status.filename,
+      width = 64,
+      height = 64,
+      x = (frame_index - 1) * 64
+    }
+  end
+end
+data:extend(sales_office_status_sprites)
+
 local sales_office_showroom_sprites = {}
 for _, vehicle_name in pairs({
   "prototype-roadster",
@@ -766,9 +784,6 @@ sales_office.graphics_set = {
         scale = 0.19
       }
     }
-  },
-  working_visualisations = {
-    working_animation("sales-office-lights", 64, 64, 0.5, {0.55, -0.45}, 0.2, true)
   }
 }
 sales_office.radius_visualisation_specification = customer_radius_visualisation(128)

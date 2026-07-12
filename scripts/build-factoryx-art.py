@@ -122,6 +122,13 @@ def paint_sales_lights(frame: Image.Image, index: int, count: int) -> None:
         glow(draw, (18 + offset * 12, 47), 2, (255, 174, 48), 110 + 35 * ((index + offset) % 3))
 
 
+def paint_sales_status_light(frame: Image.Image, index: int, count: int, color: tuple[int, int, int]) -> None:
+    draw = ImageDraw.Draw(frame, "RGBA")
+    pulse = (math.sin(index / count * math.tau) + 1) / 2
+    glow(draw, (32, 32), 9, color, round(150 + pulse * 95))
+    draw.ellipse((25, 25, 39, 39), fill=(*color, 255), outline=(235, 245, 240, 235), width=2)
+
+
 def paint_charger_lights(frame: Image.Image, index: int, count: int) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     for stall in range(4):
@@ -174,7 +181,8 @@ def paint_grid_charge(frame: Image.Image, index: int, count: int) -> None:
 
 
 def build_animations() -> None:
-    animation_sheet("sales-office-lights", 64, 64, paint_sales_lights)
+    animation_sheet("sales-office-status-green", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (72, 255, 105)))
+    animation_sheet("sales-office-status-red", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (255, 54, 42)))
     animation_sheet("charger-status-lights", 64, 64, paint_charger_lights)
     animation_sheet("gigafactory-press", 128, 96, paint_press)
     animation_sheet("datacenter-cooling-fans", 128, 64, paint_fans)

@@ -28,7 +28,8 @@ ENTITIES = [
 ]
 
 ANIMATIONS = [
-    ("Sales Office sale lights", "sales-office-lights.png", 64, 64, "Crafting only"),
+    ("Sales Office working beacon", "sales-office-status-green.png", 64, 64, "Working"),
+    ("Sales Office stopped beacon", "sales-office-status-red.png", 64, 64, "Stopped or blocked"),
     ("Charger status lights", "charger-status-lights.png", 64, 64, "Demand active"),
     ("Gigafactory presses", "gigafactory-press.png", 128, 96, "Crafting only"),
     ("Datacenter cooling fans", "datacenter-cooling-fans.png", 128, 64, "Compute active"),

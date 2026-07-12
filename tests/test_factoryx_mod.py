@@ -47,6 +47,15 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("destroy_sales_office_showroom_rendering(entity.unit_number)", control)
         self.assertIn("build_sales_office_showroom_vehicles()", art_script)
 
+    def test_sales_office_beacon_reflects_working_state(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        self.assertIn('"x-sales-office-status-green-frame-"', control)
+        self.assertIn('"x-sales-office-status-red-frame-"', control)
+        self.assertIn("entry.entity.status == defines.entity_status.working", control)
+        self.assertIn('name = "x-sales-office-status-" .. status.color .. "-frame-" .. frame_index', data)
+        self.assertNotIn('working_animation("sales-office-lights"', data)
+
     def test_ev_progression_is_gated_by_completed_sales(self):
         control = (MOD / "control.lua").read_text()
         data = (MOD / "data.lua").read_text()
@@ -529,7 +538,8 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         animation_sizes = {
-            "sales-office-lights.png": (512, 64),
+            "sales-office-status-green.png": (512, 64),
+            "sales-office-status-red.png": (512, 64),
             "charger-status-lights.png": (512, 64),
             "gigafactory-press.png": (1024, 96),
             "datacenter-cooling-fans.png": (1024, 64),

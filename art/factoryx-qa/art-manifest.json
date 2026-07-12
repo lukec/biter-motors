@@ -46,7 +46,8 @@
     "terrestrial-datacenter.png"
   ],
   "animations": [
-    "Sales Office sale lights",
+    "Sales Office working beacon",
+    "Sales Office stopped beacon",
     "Charger status lights",
     "Gigafactory presses",
     "Datacenter cooling fans",
