@@ -96,12 +96,18 @@ big_drill_tech.unit = science(100, {"automation-science-pack", "logistic-science
 -- progression. Restore tungsten steel to an actual Vulcanus discovery.
 local tungsten_steel_tech = data.raw.technology["tungsten-steel"]
 if tungsten_steel_tech then
-  tungsten_steel_tech.prerequisites = {"big-mining-drill", "planet-discovery-vulcanus"}
+  tungsten_steel_tech.prerequisites = {"planet-discovery-vulcanus"}
   tungsten_steel_tech.unit = nil
   tungsten_steel_tech.research_trigger = {
     type = "mine-entity",
     entities = {"tungsten-ore"}
   }
+end
+
+-- Terrestrial recycling must not expose Fulgora's material branch early.
+local holmium_tech = data.raw.technology["holmium-processing"]
+if holmium_tech then
+  holmium_tech.prerequisites = {"recycling", "planet-discovery-fulgora"}
 end
 
 rewrite_recipe("foundry", {

@@ -270,6 +270,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("feed_electric_drive_from_batteries", control)
         self.assertIn("nearby_uncharged_vehicles", control)
         self.assertIn("charge_station_vehicles(station)", control)
+        self.assertIn("capacity * 0.03", control)
+        self.assertIn("event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
+        self.assertIn("braking_multiplier = 2.5", data)
         self.assertIn("customer_requested_stalls", control)
         self.assertIn("Player EV charging", control)
         self.assertIn('filename = "__factoryx__/graphics/entity/vehicles/" .. profile.artwork .. ".png"', data)
@@ -1018,7 +1021,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('{"electric-mining-drill", 4}', updates)
         self.assertIn('{"engine-unit", 20}', updates)
         self.assertIn('big_drill_tech.prerequisites = {"x-industrial-supply-chain", "engine"}', updates)
-        self.assertIn('tungsten_steel_tech.prerequisites = {"big-mining-drill", "planet-discovery-vulcanus"}', updates)
+        self.assertIn('tungsten_steel_tech.prerequisites = {"planet-discovery-vulcanus"}', updates)
+        self.assertIn('holmium_tech.prerequisites = {"recycling", "planet-discovery-fulgora"}', updates)
         self.assertIn('entities = {"tungsten-ore"}', updates)
         self.assertIn('"electric-mining-drill", "steel-processing"', updates)
         self.assertIn('{"electronic-circuit", 20}', updates)
@@ -1035,6 +1039,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('holmium-plate', updates)
         self.assertNotIn('superconductor', updates)
         self.assertIn('item("x-wrecked-ev"', data)
+        self.assertIn('item("x-wrecked-ev", wrecked_ev_icon, "transport"', data)
         self.assertIn('recipe("x-wrecked-ev-recycling"', data)
         self.assertIn('if math.random() < 0.01', control)
         recycling_unlock = control[
@@ -1043,6 +1048,7 @@ class FactoryXModTest(unittest.TestCase):
         ]
         self.assertIn('technology.enabled = true', recycling_unlock)
         self.assertNotIn('technology.researched = true', recycling_unlock)
+        self.assertNotIn('force.print', recycling_unlock)
         self.assertIn('output.insert{name = WRECKED_EV_NAME, count = removed}', control)
         self.assertIn('x-industrial-supply-chain=Industrial Supply Chain', locale)
 
@@ -1627,6 +1633,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("stranded_evs", control)
         self.assertIn("angry_keys", control)
         self.assertIn("process_customer_growth(force)", control)
+        self.assertIn("assignment.powered_stalls or 0", control)
         self.assertIn("spare_stalls > 0", control)
         self.assertIn("service.stranded_evs == 0", control)
         self.assertIn("grow_customer_settlement(station, state)", control)

@@ -665,6 +665,12 @@ Implemented v1 behavior:
   unit's momentary position. A Sales Office can reserve an unowned mobile buyer
   when that buyer's operational home settlement is inside office coverage;
   wandering across the circle edge cannot pause an in-progress sale.
+- Player EVs recharge at 3% of installed battery capacity per second while a
+  powered stall serves them. Mining an EV never returns the hidden drive-fuel
+  token; only the physical vehicle returns to inventory.
+- Customer-colony growth accrues from powered customer stalls and spare local
+  settlement capacity. It remains a five active-stall-minute process, while
+  hostile worms retain their normal randomized appearance.
 - While a player drives a FactoryX EV, powered chargers within 256 tiles show a
   private translucent green circle matching that tier's real player-vehicle
   charge radius. While energy is flowing, the EV shows a pulsing battery icon

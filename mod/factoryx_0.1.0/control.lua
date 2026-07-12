@@ -2276,9 +2276,10 @@ function charge_station_vehicles(station)
     (power_state.powered_stalls or 0) - (assignment.customer_requested_stalls or 0)
   )
   local charged = 0
-  local joules = station_stall_power_watts(station)
   for index = 1, math.min(vehicle_stalls, #assignment.vehicles) do
     local vehicle = assignment.vehicles[index]
+    local _, capacity = vehicle_battery_energy(vehicle)
+    local joules = math.max(station_stall_power_watts(station), capacity * 0.03)
     if charge_vehicle(vehicle, joules) > 0 then
       charged = charged + 1
       if vehicle and vehicle.valid and vehicle.unit_number then
@@ -3299,7 +3300,10 @@ local function process_customer_growth(force)
     if station and station.valid then
       local state = states[unit_number] or {progress = 0, colonies = 0}
       states[unit_number] = state
-      local active_stalls = active_customer_station_stalls(station, service)
+      local active_stalls = math.min(
+        assignment.requested_stalls or 0,
+        assignment.powered_stalls or 0
+      )
       local spare_stalls = station_config(station).stalls - #assignment.settlements
       if service.stranded_evs == 0 and active_stalls > 0 and spare_stalls > 0 then
         state.progress = (state.progress or 0) + active_stalls * referral_multiplier
@@ -3635,7 +3639,6 @@ unlock_vehicle_recycling = function(force)
   local technology = force.technologies and force.technologies.recycling
   if not technology or technology.enabled or technology.researched then return false end
   technology.enabled = true
-  force.print("[FactoryX] The first EV has wrecked. Recycling research is now available; complete it to build a Recycler and recover useful parts.")
   return true
 end
 
@@ -5945,6 +5948,12 @@ for _, event_name in pairs({
       if event_name == defines.events.on_player_mined_entity
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
+        if event.buffer then
+          event.buffer.remove{
+            name = ELECTRIC_DRIVE_FUEL_NAME,
+            count = event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)
+          }
+        end
       end
       if entity and entity.valid and entity.unit_number and customer_unit_registry()[entity.unit_number] then
         destroy_customer_marker(entity)

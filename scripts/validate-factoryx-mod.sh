@@ -642,7 +642,7 @@ script.on_nth_tick(3720, function()
     power_sinks = power_sinks,
     v1_power_sinks_capped = power_sinks == 0,
     v2_power_sinks = v2_power_sinks,
-    v2_power_sinks_created = v2_power_sinks == 3,
+    v2_power_sinks_created = v2_power_sinks == 2,
     roadster_created = roadster ~= nil,
     roadster_started_charged = storage.roadster_started_charged,
     roadster_batteries = roadster_batteries,
@@ -867,10 +867,13 @@ for technology_name, expected in expected_branch_prerequisites.items():
     if actual != expected:
         raise SystemExit(f"{technology_name} prerequisite mismatch: {sorted(actual)}")
 tungsten_steel = data["technology"]["tungsten-steel"]
-if set(tungsten_steel.get("prerequisites", [])) != {"big-mining-drill", "planet-discovery-vulcanus"}:
+if set(tungsten_steel.get("prerequisites", [])) != {"planet-discovery-vulcanus"}:
     raise SystemExit(f"Tungsten steel leaked into terrestrial progression: {tungsten_steel}")
 if tungsten_steel.get("research_trigger", {}).get("entities") != ["tungsten-ore"]:
     raise SystemExit(f"Tungsten steel is not triggered by mining tungsten ore: {tungsten_steel}")
+holmium = data["technology"]["holmium-processing"]
+if set(holmium.get("prerequisites", [])) != {"recycling", "planet-discovery-fulgora"}:
+    raise SystemExit(f"Holmium processing leaked before Fulgora discovery: {holmium}")
 foundry_unlocks = {
     effect["recipe"] for effect in data["technology"]["foundry"].get("effects", [])
     if effect.get("type") == "unlock-recipe"
@@ -1302,7 +1305,7 @@ if not checked.get("grid_connection_created"):
 if not checked.get("v1_power_sinks_capped"):
     raise SystemExit(f"V1 charger should receive no utilization after the single produced EV is allocated to the earlier V2 charger: {checked}")
 if not checked.get("v2_power_sinks_created"):
-    raise SystemExit(f"EV Charging Station V2 should create two customer sinks plus one nearby player-EV charging sink: {checked}")
+    raise SystemExit(f"EV Charging Station V2 should retain two customer sinks after the nearby Roadster finishes charging: {checked}")
 if not checked.get("roadster_created") or checked.get("roadster_batteries") != 3:
     raise SystemExit(f"placed Roadster did not receive its three short-range battery equipment items: {checked}")
 if not checked.get("roadster_started_charged"):

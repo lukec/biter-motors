@@ -644,7 +644,7 @@ data:extend({
 data:extend({
   item("x-dollar", dollar_icon, "x-factoryx-capital", "a[dollar]", 100000),
   item("x-ev-reservation", ev_reservation_icon, "raw-material", "z[factoryx-ev-reservation]", 1000),
-  item("x-wrecked-ev", wrecked_ev_icon, "intermediate-product", "z[factoryx-wrecked-ev]", 50),
+  item("x-wrecked-ev", wrecked_ev_icon, "transport", "x-f[wrecked-ev]", 50),
   item("x-gigafactory-module", gigafactory_module_icon, "x-factoryx-components", "c[gigafactory-module]", 100),
   item("x-gigacast", gigacast_icon, "x-factoryx-components", "d[gigacast]", 10),
   item("x-ai-token", ai_token_icon, "science-pack", "h[x-ai-token]", 1000000, {weight = 1}),
@@ -924,7 +924,7 @@ local electric_vehicles = {
     "x-prototype-roadster", generated_icon("prototype-roadster"),
     {r = 0.90, g = 0.02, b = 0.01, a = 1}, {r = 1.00, g = 0.18, b = 0.08, a = 1},
     {consumption = "450kW", weight = 500, max_health = 300, rotation_multiplier = 1.35,
-      braking_multiplier = 1.25, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20,
+      braking_multiplier = 2.5, friction_force = 1.6e-3, energy_per_hit_point = 1.5, inventory_size = 20,
       artwork = "prototype-roadster"}
   ),
   copied_electric_vehicle(
