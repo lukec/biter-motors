@@ -672,6 +672,9 @@ Implemented v1 behavior:
   settlement with spare charging capacity when a sale is reserved. This keeps
   ownership physical while preventing one prolific spawner from blocking a
   larger multi-settlement charging network.
+- Registered mobile customers follow the service state of their home
+  settlement, not whether wandering has carried them outside a short scan
+  circle. Roaming cannot silently turn a served customer back into an enemy.
 - Player EVs recharge at 3% of installed battery capacity per second while a
   powered stall serves them. Mining an EV never returns the hidden drive-fuel
   token; only the physical vehicle returns to inventory.

@@ -3104,6 +3104,7 @@ function sync_customer_settlements()
   local enemy = game.forces.enemy
   local customers = customer_force()
   local covered = {}
+  local served_home_keys = {}
   local converted = 0
   local customer_settlements = 0
   for _, force in pairs(game.forces) do
@@ -3114,6 +3115,7 @@ function sync_customer_settlements()
         if settlement.valid then
           local key = settlement_key(settlement.surface, settlement)
           covered[key] = true
+          served_home_keys[key] = true
           if convert_biter_entity(settlement, customers) then
             converted = converted + 1
           end
@@ -3146,6 +3148,16 @@ function sync_customer_settlements()
     end
   end
 
+  -- Customer status follows the served home settlement, not roaming position.
+  for unit_number, entity in pairs(customer_unit_registry()) do
+    local home = customer_home_settlements()[unit_number]
+    if entity and entity.valid and home and served_home_keys[home.settlement_key] then
+      covered[settlement_key(entity.surface, entity)] = true
+      if convert_biter_entity(entity, customers) then converted = converted + 1 end
+      draw_customer_marker(entity)
+    end
+  end
+
   local reverted = 0
   local reverted_hostile_worms = 0
   for _, surface in pairs(game.surfaces) do
@@ -3160,11 +3172,7 @@ function sync_customer_settlements()
         if covered[key] then
           draw_customer_marker(entity)
         elseif enemy then
-          if entity.unit_number and customer_vehicle_owners()[entity.unit_number] then
-            draw_customer_marker(entity)
-          else
-            destroy_customer_marker(entity)
-          end
+          destroy_customer_marker(entity)
           if convert_biter_entity(entity, enemy) then
             reverted = reverted + 1
           end

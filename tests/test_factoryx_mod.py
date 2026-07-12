@@ -1841,6 +1841,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("attacker.force.name == CUSTOMER_FORCE_NAME", control)
         self.assertIn("give_customer_wander_command(attacker, true)", control)
 
+    def test_registered_customers_follow_home_service_not_wander_position(self):
+        control = (MOD / "control.lua").read_text()
+        sync = control[control.index("function sync_customer_settlements()"):
+                       control.index("local function customer_growth_states()")]
+        self.assertIn("local served_home_keys = {}", sync)
+        self.assertIn("served_home_keys[key] = true", sync)
+        self.assertIn("for unit_number, entity in pairs(customer_unit_registry()) do", sync)
+        self.assertIn("served_home_keys[home.settlement_key]", sync)
+        self.assertNotIn("if entity.unit_number and customer_vehicle_owners()[entity.unit_number] then", sync)
+
     def test_customer_service_alerts_are_entity_local_and_quiet(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn("update_customer_settlement_alerts(force, service)", control)
