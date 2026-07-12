@@ -24,7 +24,7 @@ The MVP loop is intentionally physical:
 6. Feed one Roadster plus one EV Reservation into `Sell hopes and dreams`, then
    belt Dollars out.
 7. Spend first Dollars on EV Production Line research.
-8. Build ten pilot Premium EVs in ordinary advanced assemblers.
+8. Build 100 pilot Premium EVs in ordinary advanced assemblers.
 9. The completed pilot run unlocks Gigafactory Modules and Gigafactory
    construction together.
 10. Convert Dollars plus factory hardware into ten modules, then combine them
@@ -198,7 +198,7 @@ first Prototype, Premium, and Mass-market sales print concise next actions.
 EV Reservation takes 60 seconds to return 2 Dollars of profit. The first completed sale prints the next step:
 research EV Production Line. That technology costs Dollars plus red, green, and
 blue science for 250 cycles, then unlocks battery packs, electric drivetrains,
-Premium EVs, and `Sell premium product`. The first ten Premium EVs are built in
+Premium EVs, and `Sell premium product`. The first 100 Premium EVs are built in
 ordinary advanced assemblers; completing that pilot run unlocks Gigafactory
 Modules and Gigafactory construction together. Each production module consumes
 10 Dollars, 5 Assembling Machine 2s, 5 Labs, and 50 Refined Concrete. Ten

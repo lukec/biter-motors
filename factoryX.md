@@ -107,9 +107,9 @@ The MVP already has these major loops:
 6. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
 7. Scale charging stations and the completed EV fleet to print more reservations
    for Premium and Mass-market sales.
-8. Research EV Production Line, then build the first ten Premium EVs in
+8. Research EV Production Line, then build the first 100 Premium EVs in
    ordinary advanced assemblers as a pilot run.
-9. Producing ten Premium EVs unlocks Gigafactory Modules and Gigafactory
+9. Producing 100 Premium EVs unlocks Gigafactory Modules and Gigafactory
    construction together.
 10. Combine ten modules with two Substations, then move Premium EV production
     into the Gigafactory. Mass-market EVs remain Gigafactory-only.
@@ -944,7 +944,7 @@ Implemented design:
 - EV Production Line unlocks `Battery Pack`, `Electric Drivetrain`, `Premium
   EV`, and `Sell premium product` after the existing 50-Roadster market gate.
 - Premium EVs can initially be built in ordinary advanced assemblers. Producing
-  ten completes the pilot run and unlocks both `Gigafactory Module` and the
+  100 completes the pilot run and unlocks both `Gigafactory Module` and the
   Gigafactory construction recipe.
 - Energy Products remains a parallel power branch for High-density Solar
   Arrays and Megapacks, and is required before mass-market scaling.
@@ -1003,7 +1003,7 @@ Gigafactory design:
 - The Gigafactory uses a centered, axis-aligned 9x9 static sprite whose visible
   base fills the collision footprint. A later animation pass should preserve
   that footprint-readable silhouette.
-- The ten-Premium-EV pilot milestone unlocks the Gigafactory Module and
+- The 100-Premium-EV pilot milestone unlocks the Gigafactory Module and
   Gigafactory recipes together. Gigafactory Modules remain useful as repeatable
   capital inputs for later datacenters and more Gigafactories.
 - Both Gigafactory tiers manufacture energy hardware through the dedicated
@@ -1718,13 +1718,13 @@ icons, and bounded working animations. Remaining work is narrower:
   Implemented as a first-Dollar force message.
 - Make the first post-dollar tech consume Dollars, not only conventional science.
   Implemented on EV Production Line research.
-- Add the 9x9 Gigafactory as the physical scale-up after a ten-Premium-EV pilot
+- Add the 9x9 Gigafactory as the physical scale-up after a 100-Premium-EV pilot
   run in ordinary assemblers. It consumes ten Gigafactory Modules plus
   Substations and then scales Premium EV assembly. Implemented.
 - Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
   consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
   and fast-replaces V1. Implemented.
-- Unlock Gigafactory Modules with the ten-Premium-EV pilot milestone, using the
+- Unlock Gigafactory Modules with the 100-Premium-EV pilot milestone, using the
   production-cell recipe `Dollars + Assembling Machine 2s + Labs + Refined
   Concrete`. Implemented.
 - Change mass-market sales from a five-car batch to the literal contract

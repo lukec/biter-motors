@@ -124,7 +124,7 @@ script.on_init(function()
       force.technologies[technology_name].researched = true
     end
   end
-  force.get_item_production_statistics(surface).set_output_count("x-premium-ev", 10)
+  force.get_item_production_statistics(surface).set_output_count("x-premium-ev", 100)
 
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
@@ -930,7 +930,7 @@ energy_product_unlocks = {
 }
 for runtime_recipe in ("x-gigafactory-module", "x-gigafactory-building"):
     if runtime_recipe in ev_line_unlocks or runtime_recipe in energy_product_unlocks:
-        raise SystemExit(f"{runtime_recipe} must be owned by the ten-Premium-EV runtime milestone")
+        raise SystemExit(f"{runtime_recipe} must be owned by the 100-Premium-EV runtime milestone")
 
 sale_recipe_products = {
     "x-sell-prototype-roadster": "prototype-roadster.png",

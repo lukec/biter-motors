@@ -105,7 +105,7 @@ FACTORYX_COMPUTE_RECIPES = {
 local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
-GIGAFACTORY_PRODUCTION_GATE = 10
+GIGAFACTORY_PRODUCTION_GATE = 100
 local FIRST_PROTOTYPE_SALE_RECIPE = "x-sell-prototype-roadster"
 local PREMIUM_EV_SALE_RECIPE = "x-sell-premium-ev"
 local MASS_MARKET_EV_SALE_RECIPE = "x-sell-mass-market-ev"
@@ -2258,7 +2258,10 @@ function sync_gigafactory_production_gate(force, announce)
   if unlocked and not announcements[force.name] then
     announcements[force.name] = true
     if announce ~= false then
-      force.print("[FactoryX] Premium pilot run complete: 10 Premium EVs produced. Gigafactory Modules and Gigafactory construction are now available.")
+      force.print(string.format(
+        "[FactoryX] Premium pilot run complete: %d Premium EVs produced. Gigafactory Modules and Gigafactory construction are now available.",
+        GIGAFACTORY_PRODUCTION_GATE
+      ))
     end
   end
   return unlocked
@@ -5561,7 +5564,11 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.premium_ev_gate.market_ready then
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
-    return "Premium pilot production", "Build 10 Premium EVs in assemblers.", string.format("Pilot vehicles produced: %d / 10. Completing the pilot run unlocks Gigafactory Modules and Gigafactory construction.", snapshot.premium_evs_produced)
+    return "Premium pilot production", string.format("Build %d Premium EVs in assemblers.", snapshot.gigafactory_production_gate), string.format(
+      "Pilot vehicles produced: %d / %d. Completing the pilot run unlocks Gigafactory Modules and Gigafactory construction.",
+      snapshot.premium_evs_produced,
+      snapshot.gigafactory_production_gate
+    )
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
