@@ -18,6 +18,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-ev-reverse-warning"', data)
         self.assertIn("function update_ev_reverse_warnings()", control)
         self.assertIn("defines.riding.acceleration.reversing", control)
+        self.assertIn("ELECTRIC_VEHICLE_BATTERIES[vehicle.name]", control)
+        self.assertNotIn("ELECTRIC_VEHICLE_NAMES", control)
         self.assertIn("update_ev_reverse_warnings()", control)
 
     def test_sales_office_panel_explains_market_saturation(self):

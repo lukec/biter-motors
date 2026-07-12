@@ -6033,7 +6033,7 @@ function update_ev_reverse_warnings()
   storage.factoryx_ev_reverse_warning_tick = storage.factoryx_ev_reverse_warning_tick or {}
   for _, player in pairs(game.connected_players) do
     local vehicle = player.vehicle
-    local reversing = vehicle and vehicle.valid and ELECTRIC_VEHICLE_NAMES[vehicle.name]
+    local reversing = vehicle and vehicle.valid and ELECTRIC_VEHICLE_BATTERIES[vehicle.name]
       and player.riding_state.acceleration == defines.riding.acceleration.reversing
       and math.abs(vehicle.speed or 0) > 0.005
     local last_tick = storage.factoryx_ev_reverse_warning_tick[player.index] or -60
