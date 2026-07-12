@@ -345,8 +345,8 @@ local function copied_electric_vehicle(name, icons, primary, secondary, profile)
       {
         sound = {
           filename = "__factoryx__/sound/ev-drivetrain-loop.wav",
-          volume = 0.42,
-          audible_distance_modifier = 0.65
+          volume = 0.72,
+          audible_distance_modifier = 0.9
         },
         match_volume_to_activity = true,
         activity_to_volume_modifiers = {
@@ -404,8 +404,8 @@ data:extend({
     type = "sound",
     name = "x-ev-reverse-warning",
     filename = "__factoryx__/sound/ev-reverse-warning.wav",
-    volume = 0.34,
-    audible_distance_modifier = 0.55
+    volume = 0.58,
+    audible_distance_modifier = 0.75
   }
 })
 

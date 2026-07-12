@@ -16,6 +16,8 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         self.assertIn("__factoryx__/sound/ev-drivetrain-loop.wav", data)
         self.assertIn('name = "x-ev-reverse-warning"', data)
+        self.assertIn("volume = 0.72", data)
+        self.assertIn("volume = 0.58", data)
         self.assertIn("function update_ev_reverse_warnings()", control)
         self.assertIn("defines.riding.acceleration.reversing", control)
         self.assertIn("ELECTRIC_VEHICLE_BATTERIES[vehicle.name]", control)
