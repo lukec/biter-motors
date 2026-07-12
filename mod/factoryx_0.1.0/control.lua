@@ -3014,10 +3014,10 @@ function send_customer_home_after_charging(entity, state)
   local population = home and home.settlement_key
     and customer_settlement_populations()[home.settlement_key]
   local surface_index = population and population.surface_index or (home and home.surface_index)
-  local surface = surface_index and game.get_surface(surface_index) or (entity and entity.surface)
+  local surface = entity and entity.surface
   local home_position = population and population.position or (home and home.position)
   if not entity or not entity.valid or not entity.commandable or not home_position
-    or surface ~= entity.surface then
+    or (surface_index and surface_index ~= surface.index) then
     return false
   end
   local visit = state.completed_visits or 0
