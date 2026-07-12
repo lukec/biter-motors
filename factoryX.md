@@ -675,6 +675,9 @@ Implemented v1 behavior:
 - Registered mobile customers follow the service state of their home
   settlement, not whether wandering has carried them outside a short scan
   circle. Roaming cannot silently turn a served customer back into an enemy.
+- Operational inspectors open as relative panels attached to Factorio's native
+  entity window. Hovering or placing an entity never occupies the top-left HUD;
+  details appear only while the player has explicitly opened that entity.
 - Player EVs recharge at 3% of installed battery capacity per second while a
   powered stall serves them. Mining an EV never returns the hidden drive-fuel
   token; only the physical vehicle returns to inventory.

@@ -3483,10 +3483,25 @@ local function close_station_info_panel(player)
   if not player or not player.valid then
     return
   end
-  local panel = player.gui.left[STATION_INFO_PANEL_NAME]
+  local panel = player.gui.relative[STATION_INFO_PANEL_NAME]
   if panel then
     panel.destroy()
   end
+end
+
+function factoryx_relative_anchor(entity)
+  local gui_type = entity.type == "logistic-container"
+    and defines.relative_gui_type.container_gui
+    or defines.relative_gui_type.assembling_machine_gui
+  return {
+    gui = gui_type,
+    position = defines.relative_gui_position.right
+  }
+end
+
+function opened_factoryx_entities()
+  storage.factoryx_opened_entities = storage.factoryx_opened_entities or {}
+  return storage.factoryx_opened_entities
 end
 
 local function add_station_info_label(parent, caption)
@@ -3560,11 +3575,12 @@ local function show_station_info_panel(player, station)
   local spare_growth_stalls = math.max(0, config.stalls - friendly_here)
   local commute_counts = customer_commute_station_counts()[station.unit_number]
     or {en_route = 0, charging = 0}
-  local panel = player.gui.left.add{
+  local panel = player.gui.relative.add{
     type = "frame",
     name = STATION_INFO_PANEL_NAME,
     caption = "FactoryX " .. config.display_name,
-    direction = "vertical"
+    direction = "vertical",
+    anchor = factoryx_relative_anchor(station)
   }
 
   add_station_info_label(panel, grid_connected and "Grid: connected" or "Grid: not connected")
@@ -5358,7 +5374,7 @@ local function close_entity_info_panel(player)
   if not player or not player.valid then
     return
   end
-  local panel = player.gui.left[ENTITY_INFO_PANEL_NAME]
+  local panel = player.gui.relative[ENTITY_INFO_PANEL_NAME]
   if panel then
     panel.destroy()
   end
@@ -5430,11 +5446,12 @@ local function show_manufacturer_info_panel(player, entity)
     return
   end
 
-  local panel = player.gui.left.add{
+  local panel = player.gui.relative.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
     caption = {"", "FactoryX ", entity.prototype.localised_name},
-    direction = "vertical"
+    direction = "vertical",
+    anchor = factoryx_relative_anchor(entity)
   }
   panel.style.width = 380
   add_station_info_label(panel, "State: " .. entity_status_text(entity))
@@ -5624,11 +5641,15 @@ local function show_customer_settlement_info_panel(player, settlement)
   for _, count in pairs(population.virtual_by_vehicle or {}) do
     settlement_population = settlement_population + count
   end
-  local panel = player.gui.left.add{
+  local panel = player.gui.relative.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
     caption = "FactoryX Customer Settlement",
-    direction = "vertical"
+    direction = "vertical",
+    anchor = {
+      gui = defines.relative_gui_type.additional_entity_info_gui,
+      position = defines.relative_gui_position.right
+    }
   }
   panel.style.width = 380
 
@@ -5761,7 +5782,6 @@ local function handle_station_built(entity, event)
   local player = event and event.player_index and game.get_player(event.player_index)
   if player and player.valid then
     player.print(message)
-    show_station_info_panel(player, entity)
   end
   update_station_alerts(entity)
 end
@@ -5923,11 +5943,13 @@ end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
   charger_placement_overlay_states()[event.player_index] = nil
+  opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_removed, function(event)
   charger_placement_overlay_states()[event.player_index] = nil
+  opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
   sales_office_coverage_enabled()[event.player_index] = nil
   storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
@@ -5958,41 +5980,36 @@ script.on_event(defines.events.on_research_finished, function(event)
   end
 end)
 
-script.on_event(defines.events.on_selected_entity_changed, function(event)
-  local player = event.player_index and game.get_player(event.player_index)
-  if not player or not player.valid then
-    return
-  end
-  local selected = player.selected
-  if is_station(selected) then
-    close_entity_info_panel(player)
-    show_station_info_panel(player, selected)
-  elseif is_factoryx_manufacturer(selected) then
-    close_station_info_panel(player)
-    show_manufacturer_info_panel(player, selected)
-  elseif is_customer_settlement_entity(selected) then
-    close_station_info_panel(player)
-    show_customer_settlement_info_panel(player, selected)
-  else
-    close_station_info_panel(player)
-    close_entity_info_panel(player)
-  end
-end)
-
 script.on_event(defines.events.on_gui_opened, function(event)
   local player = event.player_index and game.get_player(event.player_index)
   local entity = event.entity
   if player and player.valid then
+    opened_factoryx_entities()[player.index] = nil
     if is_station(entity) then
+      opened_factoryx_entities()[player.index] = entity
       close_entity_info_panel(player)
       show_station_info_panel(player, entity)
     elseif is_factoryx_manufacturer(entity) then
+      opened_factoryx_entities()[player.index] = entity
       close_station_info_panel(player)
       show_manufacturer_info_panel(player, entity)
     elseif is_customer_settlement_entity(entity) then
+      opened_factoryx_entities()[player.index] = entity
       close_station_info_panel(player)
       show_customer_settlement_info_panel(player, entity)
+    else
+      close_station_info_panel(player)
+      close_entity_info_panel(player)
     end
+  end
+end)
+
+script.on_event(defines.events.on_gui_closed, function(event)
+  local player = event.player_index and game.get_player(event.player_index)
+  if player and player.valid then
+    opened_factoryx_entities()[player.index] = nil
+    close_station_info_panel(player)
+    close_entity_info_panel(player)
   end
 end)
 
@@ -6138,16 +6155,16 @@ end)
 
 script.on_nth_tick(UiRefresh.interval_ticks, function()
   for _, player in pairs(game.connected_players) do
-    local selected = player.selected
-    if is_station(selected) then
+    local opened = opened_factoryx_entities()[player.index]
+    if is_station(opened) then
       close_entity_info_panel(player)
-      show_station_info_panel(player, selected)
-    elseif is_factoryx_manufacturer(selected) then
+      show_station_info_panel(player, opened)
+    elseif is_factoryx_manufacturer(opened) then
       close_station_info_panel(player)
-      show_manufacturer_info_panel(player, selected)
-    elseif is_customer_settlement_entity(selected) then
+      show_manufacturer_info_panel(player, opened)
+    elseif is_customer_settlement_entity(opened) then
       close_station_info_panel(player)
-      show_customer_settlement_info_panel(player, selected)
+      show_customer_settlement_info_panel(player, opened)
     else
       close_station_info_panel(player)
       close_entity_info_panel(player)
