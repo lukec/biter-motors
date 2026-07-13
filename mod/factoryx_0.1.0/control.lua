@@ -5502,6 +5502,7 @@ local function progress_snapshot(force)
     reservation_stock = market.charger_reservation_stock,
     gigafactories = count_entities(force, "x-gigafactory-building"),
     gigafactories_v2 = count_entities(force, "x-gigafactory-v2"),
+    chargers_v1 = count_entities(force, "x-ev-charging-station"),
     chargers_v2 = count_entities(force, "x-ev-charging-station-v2"),
     chargers_v3 = count_entities(force, "x-ev-charging-station-v3"),
     chargers_v4 = count_entities(force, "x-ev-charging-station-v4"),
@@ -5627,18 +5628,15 @@ end
 
 local function progress_stages(snapshot)
   return {
-    {name = "Terrestrial industry", complete = snapshot.foundry_researched and snapshot.foundries > 0},
-    {name = "Customer market", complete = snapshot.customer_settlements > 0 and snapshot.powered_stations > 0},
-    {name = "Prototype revenue", complete = snapshot.first_sale_complete},
-    {name = "Premium production", complete = snapshot.premium_sale_complete},
-    {name = "Charging network", complete = snapshot.charging_network_researched and snapshot.chargers_v2 > 0},
-    {name = "Mass-market scale", complete = snapshot.mass_market_sale_complete},
-    {name = "Supercharging", complete = snapshot.chargers_v3 > 0 and snapshot.chargers_v4 > 0},
-    {name = "Energy products", complete = snapshot.energy_products_researched and snapshot.solar_arrays > 0 and snapshot.megapacks > 0},
-    {name = "AI and autonomy", complete = snapshot.autonomous_logistics_researched and snapshot.robotaxi_sale_complete},
-    {name = "Orbital compute", complete = snapshot.orbital_compute_researched},
-    {name = "Planetary grid", complete = snapshot.planetary_grid_researched and snapshot.grid_controllers > 0},
-    {name = "Achieving AGI", complete = snapshot.victory}
+    {name = "Customer market", sprite = "item/x-sales-office", complete = snapshot.first_sale_complete},
+    {name = "Premium EVs", sprite = "item/x-premium-ev", complete = snapshot.premium_sale_complete
+      and snapshot.premium_evs_produced >= snapshot.gigafactory_production_gate
+      and snapshot.gigafactories + snapshot.gigafactories_v2 > 0},
+    {name = "Mass-market EVs", sprite = "item/x-mass-market-ev", complete = snapshot.mass_market_sale_complete},
+    {name = "AI and autonomy", sprite = "item/x-ai-token", complete = snapshot.robotaxi_sale_complete},
+    {name = "Launch services", sprite = "item/x-small-launch-service", complete = snapshot.reusable_launch_researched},
+    {name = "Orbital compute", sprite = "item/x-orbital-compute-array", complete = snapshot.orbital_compute_researched},
+    {name = "AGI", sprite = "item/x-agi-model", complete = snapshot.victory}
   }
 end
 
@@ -5646,14 +5644,115 @@ local function add_section_heading(parent, caption)
   parent.add{type = "label", caption = caption, style = "bold_label"}
 end
 
-local function add_progress_metric(table_element, name, value, value_name)
-  table_element.add{type = "label", caption = name}
-  local value_label = table_element.add{
-    type = "label",
-    name = value_name,
-    caption = value
+function progress_objective_icon(stage)
+  local icons = {
+    ["Customer discovery"] = "item/x-sales-office",
+    ["Prototype revenue"] = "item/x-prototype-roadster",
+    ["Prototype market validation"] = "item/x-prototype-roadster",
+    ["Premium pilot production"] = "item/x-premium-ev",
+    ["Premium production"] = "item/x-premium-ev",
+    ["Premium market scale"] = "item/x-premium-ev",
+    ["Energy products"] = "item/x-high-density-solar-array",
+    ["Charging network"] = "item/x-ev-charging-station-v2",
+    ["Mass-market scale"] = "item/x-mass-market-ev",
+    ["Megatruck engineering"] = "item/x-cybertruck",
+    ["Supercharging"] = "item/x-ev-charging-station-v3",
+    ["Terrestrial AI"] = "item/x-terrestrial-datacenter",
+    ["Autonomy"] = "item/x-robotaxi-fleet",
+    ["Autonomy market scale"] = "item/x-robotaxi-fleet",
+    ["Launch services"] = "item/x-small-launch-service",
+    ["Orbital infrastructure"] = "item/x-satellite-bus",
+    ["Orbital compute"] = "item/x-orbital-compute-array",
+    ["Planetary grid"] = "item/x-planetary-grid-controller",
+    ["AGI infrastructure"] = "item/x-planetary-grid-controller",
+    ["AGI scale"] = "item/x-ai-token",
+    ["AGI training"] = "item/x-agi-training-dataset",
+    ["AGI achieved"] = "item/x-agi-model"
   }
-  value_label.style.horizontal_align = "right"
+  return icons[stage] or "item/x-dollar"
+end
+
+function progress_health(snapshot)
+  if snapshot.victory then
+    return "Complete", "AGI achieved.", FACTORYX_STATE_COLORS.good
+  elseif snapshot.sales_office_researched and snapshot.sales_offices == 0 then
+    return "Blocked", "Build a Sales Office to open the customer market.", FACTORYX_STATE_COLORS.bad
+  elseif snapshot.sales_offices > 0 and snapshot.customer_settlements == 0 then
+    return "Blocked", "No customer settlements are covered.", FACTORYX_STATE_COLORS.bad
+  elseif snapshot.customer_settlements > 0 and snapshot.powered_stations == 0 then
+    return "Blocked", "Customer settlements need a powered charger.", FACTORYX_STATE_COLORS.bad
+  elseif snapshot.angry_settlements > 0 then
+    return "Service alert", string.format(
+      "%d customer settlements lack reliable charging.", snapshot.angry_settlements
+    ), FACTORYX_STATE_COLORS.bad
+  elseif snapshot.stranded_evs > 0 then
+    return "Capacity alert", string.format(
+      "%d customer EVs are underserved.", snapshot.stranded_evs
+    ), FACTORYX_STATE_COLORS.bad
+  elseif snapshot.powered_stations > 0 and snapshot.first_sale_complete then
+    return "Operating", "Customer market and charging are online.", FACTORYX_STATE_COLORS.good
+  elseif snapshot.powered_stations > 0 then
+    return "Ready", "Charging is online; complete the first sale.", FACTORYX_STATE_COLORS.good
+  end
+  return "Next milestone", "Build the terrestrial business.", FACTORYX_STATE_COLORS.warning
+end
+
+function current_progress_measure(snapshot)
+  if snapshot.victory then return "AGI training", 1, 1 end
+  if snapshot.planetary_grid_researched and not snapshot.agi_training_unlocked then
+    return "Cumulative AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate
+  end
+  if snapshot.agi_training_unlocked and not snapshot.victory then
+    return "AGI training", snapshot.agi_training_progress, 1, true
+  end
+  if snapshot.autonomous_logistics_researched and not snapshot.robotaxi_gate.market_ready then
+    return "Consumer EV sales", snapshot.consumer_evs_sold, 5000
+  end
+  if snapshot.terrestrial_ai_researched and snapshot.ai_tokens_produced < 1000 then
+    return "AI Tokens", snapshot.ai_tokens_produced, 1000
+  end
+  if snapshot.mass_market_researched and not snapshot.cybertruck_gate.market_ready then
+    return "Mass-market EV sales", snapshot.mass_market_evs_sold, 2000
+  end
+  if snapshot.premium_sale_complete and not snapshot.mass_market_ev_gate.market_ready then
+    return "Premium EV sales", snapshot.premium_evs_sold, 250
+  end
+  if snapshot.ev_production_researched
+    and snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
+    return "Premium pilot production", snapshot.premium_evs_produced, snapshot.gigafactory_production_gate
+  end
+  if snapshot.first_sale_complete and not snapshot.premium_ev_gate.market_ready then
+    return "Prototype Roadster sales", snapshot.roadsters_sold, 50
+  end
+  return nil
+end
+
+function add_progress_metrics(parent, rows)
+  if #rows == 0 then return nil end
+  local metrics = parent.add{type = "table", column_count = 3}
+  metrics.style.horizontal_spacing = 8
+  metrics.style.vertical_spacing = 5
+  metrics.style.horizontally_stretchable = true
+  for _, row in ipairs(rows) do
+    local icon = metrics.add{type = "sprite", sprite = row.sprite, tooltip = row.tooltip}
+    icon.style.width = 24
+    icon.style.height = 24
+    icon.style.stretch_image_to_widget_size = true
+    local label = metrics.add{type = "label", caption = row.label}
+    label.style.width = 190
+    local value = metrics.add{type = "label", name = row.name, caption = row.value}
+    value.style.width = 230
+    value.style.horizontal_align = "right"
+    if row.color then value.style.font_color = row.color end
+  end
+  return metrics
+end
+
+function add_progress_section(parent, caption, rows)
+  if #rows == 0 then return end
+  parent.add{type = "line"}
+  add_section_heading(parent, caption)
+  add_progress_metrics(parent, rows)
 end
 
 local function refresh_progress_panel(player)
@@ -5679,118 +5778,247 @@ local function refresh_progress_panel(player)
   content.style.maximal_height = 760
   content.style.horizontally_stretchable = true
 
-  local stage_label = content.add{type = "label", caption = stage, style = "bold_label"}
-  stage_label.style.font_color = {r = 1.0, g = 0.72, b = 0.2}
-  local objective_label = content.add{type = "label", caption = objective, single_line = false}
+  local objective_row = content.add{type = "flow", direction = "horizontal"}
+  objective_row.style.vertical_align = "center"
+  local objective_icon = objective_row.add{type = "sprite", sprite = progress_objective_icon(stage)}
+  objective_icon.style.width = 40
+  objective_icon.style.height = 40
+  objective_icon.style.stretch_image_to_widget_size = true
+  local objective_text = objective_row.add{type = "flow", direction = "vertical"}
+  objective_text.style.left_margin = 8
+  local stage_label = objective_text.add{type = "label", caption = stage, style = "bold_label"}
+  stage_label.style.font_color = FACTORYX_STATE_COLORS.warning
+  local objective_label = objective_text.add{type = "label", caption = objective, single_line = false}
   objective_label.style.font = "default-bold"
   objective_label.style.maximal_width = 440
   local detail_label = content.add{type = "label", caption = detail, single_line = false}
-  detail_label.style.maximal_width = 440
-  content.add{type = "line"}
+  detail_label.style.maximal_width = 485
+  detail_label.style.top_margin = 6
 
-  add_section_heading(content, "Terrestrial industry")
-  local industry = content.add{type = "table", column_count = 2}
-  industry.style.horizontally_stretchable = true
-  add_progress_metric(
-    industry,
-    "Industrial Supply Chain",
-    snapshot.industrial_supply_chain_researched and "researched" or "available"
-  )
+  local health_state, health_detail, health_color = progress_health(snapshot)
+  local health = content.add{type = "flow", direction = "horizontal"}
+  health.style.top_margin = 8
+  local health_label = health.add{type = "label", caption = health_state, style = "bold_label"}
+  health_label.style.font_color = health_color
+  local health_text = health.add{type = "label", caption = health_detail, single_line = false}
+  health_text.style.left_margin = 8
+  health_text.style.maximal_width = 390
+
+  local measure_name, measure_current, measure_target, measure_fraction = current_progress_measure(snapshot)
+  if measure_name then
+    local progress_header = content.add{type = "flow", direction = "horizontal"}
+    progress_header.style.top_margin = 8
+    local progress_name = progress_header.add{type = "label", caption = measure_name}
+    progress_name.style.horizontally_stretchable = true
+    local progress_value = progress_header.add{
+      type = "label",
+      caption = measure_fraction
+        and string.format("%d%%", math.floor(math.min(1, measure_current) * 100))
+        or string.format("%d / %d", math.floor(measure_current), measure_target)
+    }
+    progress_value.style.font_color = measure_current >= measure_target
+      and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    local progress_bar = content.add{
+      type = "progressbar",
+      value = math.max(0, math.min(1, measure_current / math.max(1, measure_target)))
+    }
+    progress_bar.style.width = 485
+    progress_bar.style.color = measure_current >= measure_target
+      and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+  end
+
+  local industry_rows = {}
+  if snapshot.industrial_supply_chain_researched or snapshot.big_mining_drill_researched
+    or snapshot.foundry_researched or snapshot.recycling_revealed then
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/electric-mining-drill", label = "Industrial supply chain",
+      value = snapshot.industrial_supply_chain_researched and "Researched" or "Available",
+      color = snapshot.industrial_supply_chain_researched and FACTORYX_STATE_COLORS.good
+        or FACTORYX_STATE_COLORS.warning
+    }
+  end
   if snapshot.big_mining_drill_researched then
-    add_progress_metric(industry, "Big Mining Drills", string.format("%d built", snapshot.big_mining_drills))
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/big-mining-drill", label = "Big Mining Drills",
+      value = string.format("%d built", snapshot.big_mining_drills),
+      color = snapshot.big_mining_drills > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
   if snapshot.foundry_researched then
-    add_progress_metric(industry, "Foundries", string.format("%d built", snapshot.foundries))
-    add_progress_metric(industry, "Calcite mined", tostring(snapshot.calcite_mined))
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/foundry", label = "Foundries", value = string.format("%d built", snapshot.foundries),
+      color = snapshot.foundries > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/calcite", label = "Calcite mined", value = tostring(snapshot.calcite_mined)
+    }
   end
   if snapshot.recycling_revealed or snapshot.recycling_researched or snapshot.wrecked_evs_produced > 0 then
-    add_progress_metric(industry, "Wrecked EVs produced", tostring(snapshot.wrecked_evs_produced))
-    add_progress_metric(
-      industry,
-      "Vehicle Recycling",
-      snapshot.recycling_researched
-        and string.format("researched; %d Recyclers", snapshot.recyclers)
-        or "research available"
-    )
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/x-wrecked-ev", label = "Wrecked EVs", value = tostring(snapshot.wrecked_evs_produced)
+    }
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/recycler", label = "Vehicle recycling",
+      value = snapshot.recycling_researched and string.format("%d Recyclers", snapshot.recyclers)
+        or "Research available",
+      color = snapshot.recycling_researched and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
+  add_progress_section(content, "Terrestrial industry", industry_rows)
 
-  content.add{type = "line"}
-  add_section_heading(content, "Market and throughput")
-  local metrics = content.add{type = "table", column_count = 2}
-  metrics.style.horizontally_stretchable = true
-  add_progress_metric(
-    metrics,
-    "Dollars produced",
-    tostring(snapshot.dollars_produced),
-    "factoryx_dollars_produced_value"
-  )
-  add_progress_metric(metrics, "Customer settlements", tostring(snapshot.customer_settlements))
-  add_progress_metric(metrics, "Charging stalls", string.format("%d / %d active", snapshot.active_stalls, snapshot.charging_capacity))
-  add_progress_metric(metrics, "Active customer vehicles", tostring(snapshot.customer_ev_fleet))
-  add_progress_metric(
-    metrics,
-    "Customer charging commutes",
-    string.format("%d approaching, %d charging", snapshot.customer_commutes_en_route, snapshot.customer_commutes_charging)
-  )
-  add_progress_metric(metrics, "Completed charging visits", tostring(snapshot.customer_commutes_completed))
-  add_progress_metric(metrics, "Lifetime EV sales", tostring(snapshot.customer_ev_sales_lifetime))
-  add_progress_metric(metrics, "Premium EV gate", string.format("%d / 50 Roadsters", snapshot.roadsters_sold))
+  local market_rows = {}
+  if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-dollar", label = "Profit generated", value = tostring(snapshot.dollars_produced),
+      name = "factoryx_dollars_produced_value",
+      color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral
+    }
+    market_rows[#market_rows + 1] = {
+      sprite = "entity/biter-spawner", label = "Customer settlements",
+      value = tostring(snapshot.customer_settlements),
+      color = snapshot.customer_settlements > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+    }
+  end
+  if snapshot.charging_capacity > 0 or snapshot.powered_stations > 0 then
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-ev-charging-station", label = "Charging stalls",
+      value = string.format("%d / %d active", snapshot.active_stalls, snapshot.charging_capacity),
+      color = snapshot.powered_stations == 0 and FACTORYX_STATE_COLORS.bad
+        or (snapshot.active_stalls > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning)
+    }
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-ev-reservation", label = "EV Reservations",
+      value = string.format("%d stored, %d/min", snapshot.reservation_stock, snapshot.reservations_per_minute),
+      color = snapshot.reservations_per_minute > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
+  end
+  if snapshot.prototype_evs_produced > 0 or snapshot.first_sale_complete then
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-prototype-roadster", label = "Roadsters sold",
+      value = string.format("%d / 50", snapshot.roadsters_sold),
+      color = snapshot.roadsters_sold >= 50 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
+  end
   if snapshot.ev_production_researched then
-    add_progress_metric(metrics, "Premium pilot run", string.format(
-      "%d / %d produced",
-      math.min(snapshot.premium_evs_produced, snapshot.gigafactory_production_gate),
-      snapshot.gigafactory_production_gate
-    ))
-    add_progress_metric(metrics, "Mass-market EV gate", string.format("%d / 250 Premium EVs", snapshot.premium_evs_sold))
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-premium-ev", label = "Premium EVs",
+      value = snapshot.premium_evs_produced < snapshot.gigafactory_production_gate
+        and string.format("%d / %d pilot built", snapshot.premium_evs_produced, snapshot.gigafactory_production_gate)
+        or string.format("%d / 250 sold", snapshot.premium_evs_sold),
+      color = snapshot.premium_evs_sold >= 250 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
   if snapshot.mass_market_researched then
-    add_progress_metric(metrics, "Megatruck gate", string.format("%d / 2,000 Mass-market EVs", snapshot.mass_market_evs_sold))
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-mass-market-ev", label = "Mass-market EVs",
+      value = string.format("%d / 2,000 sold", snapshot.mass_market_evs_sold),
+      color = snapshot.mass_market_evs_sold >= 2000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
   if snapshot.autonomous_logistics_researched then
-    add_progress_metric(metrics, "Robotaxi gate", string.format("%d / 5,000 consumer EVs", snapshot.consumer_evs_sold))
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-robotaxi-fleet", label = "Consumer EV scale",
+      value = string.format("%d / 5,000 sold", snapshot.consumer_evs_sold),
+      color = snapshot.consumer_evs_sold >= 5000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
-  add_progress_metric(metrics, "Reservations at chargers", tostring(snapshot.reservation_stock))
-  add_progress_metric(metrics, "Reservation rate", string.format("%d / min", snapshot.reservations_per_minute))
+  if snapshot.first_sale_complete then
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-mass-market-ev", label = "Active customer EVs", value = tostring(snapshot.customer_ev_fleet)
+    }
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-ev-charging-station", label = "Charging service",
+      value = snapshot.stranded_evs > 0 and string.format("%d EVs underserved", snapshot.stranded_evs)
+        or "All owners served",
+      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
+    }
+    if snapshot.angry_settlements > 0 then
+      market_rows[#market_rows + 1] = {
+        sprite = "entity/biter-spawner", label = "Unhappy settlements",
+        value = tostring(snapshot.angry_settlements), color = FACTORYX_STATE_COLORS.bad
+      }
+    end
+    if snapshot.customer_commutes_en_route > 0 or snapshot.customer_commutes_charging > 0
+      or snapshot.customer_commutes_completed > 0 then
+      market_rows[#market_rows + 1] = {
+        sprite = "item/x-prototype-roadster", label = "Charging commutes",
+        value = string.format("%d inbound, %d charging", snapshot.customer_commutes_en_route, snapshot.customer_commutes_charging)
+      }
+    end
+  end
   if snapshot.terrestrial_ai_researched then
-    add_progress_metric(
-      metrics,
-      "Terrestrial AI milestone progress",
-      snapshot.terrestrial_ai_next_threshold
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-ai-token", label = "AI Tokens generated",
+      value = snapshot.terrestrial_ai_next_threshold
         and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
-        or string.format("%d; all milestones unlocked", snapshot.terrestrial_ai_tokens_generated)
-    )
-  end
-  if snapshot.autonomous_logistics_researched then
-    add_progress_metric(metrics, "Robotaxi Fleets", tostring(snapshot.robotaxi_fleets_produced))
-    add_progress_metric(metrics, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+        or string.format("%d; terrestrial ceiling", snapshot.terrestrial_ai_tokens_generated)
+    }
   end
   if snapshot.planetary_grid_researched then
-    add_progress_metric(metrics, "Cumulative AI Tokens", string.format("%d / %d", snapshot.ai_tokens_produced, snapshot.agi_token_gate))
-    add_progress_metric(
-      metrics,
-      "AGI Training",
-      snapshot.victory and "complete"
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-agi-training-dataset", label = "AGI training",
+      value = snapshot.victory and "Complete"
         or (snapshot.agi_training_unlocked
           and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
-          or "locked")
-    )
+          or string.format("%d / %d AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate)),
+      color = snapshot.victory and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
+  add_progress_section(content, "Business", market_rows)
 
-  content.add{type = "line"}
-  add_section_heading(content, "Terrestrial infrastructure")
-  local infrastructure = content.add{type = "table", column_count = 2}
-  infrastructure.style.horizontally_stretchable = true
-  add_progress_metric(infrastructure, "Sales Offices", tostring(snapshot.sales_offices))
-  if snapshot.energy_products_researched then
-    add_progress_metric(infrastructure, "Gigafactories", string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2))
-    add_progress_metric(infrastructure, "Energy Products", string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks))
+  local infrastructure_rows = {}
+  if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-sales-office", label = "Sales Offices", value = tostring(snapshot.sales_offices),
+      color = snapshot.sales_offices > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+    }
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-ev-charging-station", label = "V1 chargers", value = tostring(snapshot.chargers_v1),
+      color = snapshot.chargers_v1 > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
   end
-  if snapshot.terrestrial_ai_researched then
-    add_progress_metric(infrastructure, "Terrestrial Datacenters", tostring(snapshot.datacenters))
+  if snapshot.charging_network_researched then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-ev-charging-station-v2", label = "V2 chargers", value = tostring(snapshot.chargers_v2)
+    }
+  end
+  if snapshot.mass_market_researched then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-ev-charging-station-v3", label = "V3 Superchargers", value = tostring(snapshot.chargers_v3)
+    }
   end
   if snapshot.autonomous_logistics_researched then
-    add_progress_metric(infrastructure, "Robotaxi Service Centers", tostring(snapshot.robotaxi_service_centers))
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-ev-charging-station-v4", label = "V4 Superchargers", value = tostring(snapshot.chargers_v4)
+    }
   end
+  if snapshot.premium_evs_produced >= snapshot.gigafactory_production_gate
+    or snapshot.gigafactories > 0 or snapshot.gigafactories_v2 > 0 then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-gigafactory-building", label = "Gigafactories",
+      value = string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2),
+      color = snapshot.gigafactories + snapshot.gigafactories_v2 > 0
+        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+    }
+  end
+  if snapshot.energy_products_researched then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-high-density-solar-array", label = "Energy products",
+      value = string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks)
+    }
+  end
+  if snapshot.terrestrial_ai_researched then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-terrestrial-datacenter", label = "Terrestrial Datacenters", value = tostring(snapshot.datacenters)
+    }
+  end
+  if snapshot.autonomous_logistics_researched then
+    infrastructure_rows[#infrastructure_rows + 1] = {
+      sprite = "item/x-robotaxi-service-center", label = "Robotaxi Service Centers",
+      value = tostring(snapshot.robotaxi_service_centers)
+    }
+  end
+  add_progress_section(content, "Infrastructure", infrastructure_rows)
 
   local improvements_visible = snapshot.charging_network_researched
     or snapshot.ev_production_researched
@@ -5798,61 +6026,74 @@ local function refresh_progress_panel(player)
     or snapshot.energy_products_researched
     or snapshot.terrestrial_ai_researched
   if improvements_visible then
-    content.add{type = "line"}
-    add_section_heading(content, "Continuous improvement")
-    local improvement_table = content.add{type = "table", column_count = 2}
-    improvement_table.style.horizontally_stretchable = true
+    local improvement_rows = {}
     if snapshot.charging_network_researched then
-      add_progress_metric(improvement_table, "Supercharging electronics", "Level " .. snapshot.supercharging_level)
-      add_progress_metric(improvement_table, "Customer referrals", "Level " .. snapshot.referral_level)
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-ev-charging-station-v2", label = "Supercharging electronics",
+        value = "Level " .. snapshot.supercharging_level,
+        color = snapshot.supercharging_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      }
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "entity/biter-spawner", label = "Customer referrals", value = "Level " .. snapshot.referral_level,
+        color = snapshot.referral_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      }
     end
     if snapshot.mass_market_researched then
-      add_progress_metric(improvement_table, "Long-range battery", "Level " .. snapshot.battery_level)
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-battery-pack", label = "Long-range battery", value = "Level " .. snapshot.battery_level,
+        color = snapshot.battery_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      }
     end
     if snapshot.ev_production_researched then
-      add_progress_metric(improvement_table, "Premium audio", "Level " .. snapshot.audio_level)
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-premium-ev", label = "Premium audio", value = "Level " .. snapshot.audio_level,
+        color = snapshot.audio_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      }
     end
     if snapshot.energy_products_researched then
-      add_progress_metric(
-        improvement_table,
-        "High-density solar productivity",
-        "Level " .. snapshot.solar_productivity_level,
-        "factoryx_solar_productivity_level_value"
-      )
-      add_progress_metric(
-        improvement_table,
-        "Megapack productivity",
-        "Level " .. snapshot.megapack_productivity_level,
-        "factoryx_megapack_productivity_level_value"
-      )
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-high-density-solar-array", label = "Solar productivity",
+        value = "Level " .. snapshot.solar_productivity_level,
+        name = "factoryx_solar_productivity_level_value",
+        color = snapshot.solar_productivity_level > 0 and FACTORYX_STATE_COLORS.good
+          or FACTORYX_STATE_COLORS.warning
+      }
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-megapack", label = "Megapack productivity",
+        value = "Level " .. snapshot.megapack_productivity_level,
+        name = "factoryx_megapack_productivity_level_value",
+        color = snapshot.megapack_productivity_level > 0 and FACTORYX_STATE_COLORS.good
+          or FACTORYX_STATE_COLORS.warning
+      }
     end
     if snapshot.terrestrial_ai_researched then
-      add_progress_metric(
-        improvement_table,
-        "Terrestrial AI efficiency",
-        snapshot.terrestrial_ai_next_threshold
+      improvement_rows[#improvement_rows + 1] = {
+        sprite = "item/x-ai-token", label = "Terrestrial AI efficiency",
+        value = snapshot.terrestrial_ai_next_threshold
           and string.format("Level %d; next at %d", snapshot.terrestrial_ai_efficiency_level, snapshot.terrestrial_ai_next_threshold)
-          or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level)
-      )
+          or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level),
+        color = snapshot.terrestrial_ai_efficiency_level > 0 and FACTORYX_STATE_COLORS.good
+          or FACTORYX_STATE_COLORS.warning
+      }
     end
+    add_progress_section(content, "Continuous improvement", improvement_rows)
   end
 
   content.add{type = "line"}
-  add_section_heading(content, "Progression")
-  local stage_table = content.add{type = "table", column_count = 2}
-  for _, stage_info in pairs(progress_stages(snapshot)) do
-    local status = stage_table.add{
-      type = "label",
-      caption = stage_info.complete and "DONE" or "NEXT"
+  add_section_heading(content, "Journey")
+  local journey_rows = {}
+  for _, stage_info in ipairs(progress_stages(snapshot)) do
+    journey_rows[#journey_rows + 1] = {
+      sprite = stage_info.sprite,
+      label = stage_info.name,
+      value = stage_info.complete and "Complete" or "Current",
+      color = stage_info.complete and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
     }
-    status.style.font_color = stage_info.complete
-      and {r = 0.3, g = 0.9, b = 0.4}
-      or {r = 0.85, g = 0.85, b = 0.85}
-    stage_table.add{type = "label", caption = stage_info.name}
     if not stage_info.complete then
       break
     end
   end
+  add_progress_metrics(content, journey_rows)
 end
 
 local function open_progress_panel(player)
@@ -5869,7 +6110,7 @@ local function open_progress_panel(player)
     name = PROGRESS_PANEL_NAME,
     direction = "vertical"
   }
-  panel.style.width = 480
+  panel.style.width = 540
   panel.auto_center = true
   local titlebar = panel.add{type = "flow", direction = "horizontal"}
   titlebar.drag_target = panel

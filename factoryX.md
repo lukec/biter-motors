@@ -467,6 +467,17 @@ an automatic customer penalty.
   available throughout the game.
 - It opens a movable screen panel that derives the current stage and next
   physical action from live force state rather than a static checklist.
+- The panel is progressively disclosed. It shows the immediate objective and
+  current milestone first, then only business products, infrastructure,
+  improvements, and journey stages the force has actually reached. Robotaxi,
+  orbital, and AGI telemetry stays hidden until its enabling research is done.
+- The objective uses the relevant item icon and a progress bar when the current
+  milestone is numeric. Compact icon/label/value rows replace the old telemetry
+  table. Green means healthy or complete, yellow means available or in progress,
+  and red identifies a concrete customer, charging, or infrastructure blocker.
+- The Journey section contains completed milestones plus the current milestone
+  only. Parallel terrestrial-industry unlocks remain in their own section and
+  no longer block the main business journey display.
 - Its inputs include research, Sales Offices, converted customer settlements,
   grid-connected chargers, sold EVs, active stalls, reservation output,
   first sales, both Gigafactory tiers, Energy Products, datacenters, autonomy,

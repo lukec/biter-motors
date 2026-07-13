@@ -118,6 +118,15 @@ local function find_named(element, name)
   return nil
 end
 
+local function has_caption(element, caption)
+  if not element or not element.valid then return false end
+  if element.caption == caption then return true end
+  for _, child in pairs(element.children or {}) do
+    if has_caption(child, caption) then return true end
+  end
+  return false
+end
+
 script.on_event(defines.events.on_tick, function()
   if storage.complete then
     return
@@ -174,6 +183,10 @@ script.on_event(defines.events.on_tick, function()
   end)
   local sales_office_panel_created = player.gui.relative.factoryx_entity_info_panel ~= nil
   local progress_panel = player.gui.screen.factoryx_progress_panel
+  local progress_has_business = has_caption(progress_panel, "Business")
+  local progress_has_current_premium = has_caption(progress_panel, "Premium EVs")
+  local progress_has_future_robotaxi = has_caption(progress_panel, "Robotaxi Service Centers")
+  local progress_has_future_agi = has_caption(progress_panel, "AGI training")
   local dollars_label = find_named(progress_panel, "factoryx_dollars_produced_value")
   local dollars_caption = dollars_label and dollars_label.caption
   local solar_productivity_label = find_named(progress_panel, "factoryx_solar_productivity_level_value")
@@ -303,6 +316,10 @@ script.on_event(defines.events.on_tick, function()
     jumpstart_logistic_robots = jumpstart_logistic_robots,
     progress_result = progress_result,
     progress_panel_created = player.gui.screen.factoryx_progress_panel ~= nil,
+    progress_has_business = progress_has_business,
+    progress_has_current_premium = progress_has_current_premium,
+    progress_has_future_robotaxi = progress_has_future_robotaxi,
+    progress_has_future_agi = progress_has_future_agi,
     progress_status = progress_status,
     progress_dollars = progress_status and progress_status.snapshot.dollars_produced,
     progress_dollars_caption = dollars_caption,
@@ -361,6 +378,8 @@ for field in (
     "progress_call_ok",
     "progress_result",
     "progress_panel_created",
+    "progress_has_business",
+    "progress_has_current_premium",
     "progression_integrity_call_ok",
     "logistic_system_researched",
     "sales_office_found",
@@ -382,6 +401,9 @@ for field in (
 ):
     if not checked.get(field):
         raise SystemExit(f"FactoryX GUI check failed at {field}: {checked}")
+for field in ("progress_has_future_robotaxi", "progress_has_future_agi"):
+    if checked.get(field):
+        raise SystemExit(f"FactoryX progress panel revealed future content at {field}: {checked}")
 integrity = checked.get("progression_integrity", {})
 if not integrity.get("ok") or integrity.get("disabled_recipes"):
     raise SystemExit(f"FactoryX progressed-save integrity check failed: {checked}")

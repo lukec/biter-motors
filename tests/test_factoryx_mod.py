@@ -739,7 +739,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('{"x-gigafactory-module", "x-gigafactory-building"}', control)
         self.assertIn("Premium pilot run complete: %d Premium EVs produced", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
-        self.assertIn('"Premium pilot run"', control)
+        self.assertIn('"Premium pilot production"', control)
         self.assertIn("snapshot.gigafactory_production_gate", control)
         self.assertIn("Premium EV sales are working. Next: build EV Charging Network, then research Mass-market EV Production", control)
         self.assertIn("factoryx_first_premium_ev_sales", control)
@@ -1354,15 +1354,22 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('helpers.write_file("factoryx-playtest-notes.jsonl"', control)
         self.assertIn("Playtest note recorded", control)
         self.assertIn("progress_status = function", control)
-        self.assertIn("Dollars produced", control)
+        self.assertIn("Profit generated", control)
         self.assertIn("statistics.output_counts[item_name]", control)
         self.assertIn('"factoryx_dollars_produced_value"', control)
-        self.assertIn("Reservations at chargers", control)
+        self.assertIn("EV Reservations", control)
         self.assertIn("Gigafactories", control)
-        self.assertIn("Energy Products", control)
+        self.assertIn("Energy products", control)
         self.assertIn("Terrestrial Datacenters", control)
-        self.assertIn("Terrestrial infrastructure", control)
+        self.assertIn('add_progress_section(content, "Infrastructure"', control)
         self.assertIn("Terrestrial industry", control)
+        self.assertIn("progress_health", control)
+        self.assertIn("current_progress_measure", control)
+        self.assertIn('type = "progressbar"', control)
+        self.assertIn("add_progress_metrics", control)
+        self.assertIn("FACTORYX_STATE_COLORS.good", control)
+        self.assertIn("FACTORYX_STATE_COLORS.warning", control)
+        self.assertIn("FACTORYX_STATE_COLORS.bad", control)
         self.assertIn("industrial_supply_chain_researched", control)
         self.assertIn("big_mining_drills = count_entities", control)
         self.assertIn("foundries = count_entities", control)
@@ -1373,9 +1380,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("content.style.maximal_height = 760", control)
         self.assertIn("Cumulative AI Tokens", control)
         self.assertIn("if snapshot.planetary_grid_researched then", control)
-        self.assertIn("Terrestrial AI milestone progress", control)
+        self.assertIn("AI Tokens generated", control)
         self.assertIn("if snapshot.terrestrial_ai_researched then", control)
-        self.assertIn("High-density solar productivity", control)
+        self.assertIn("Solar productivity", control)
         self.assertIn("Megapack productivity", control)
         self.assertIn("local improvements_visible = snapshot.charging_network_researched", control)
         self.assertIn("if improvements_visible then", control)
@@ -1444,8 +1451,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('sprite = "item/" .. ownership.vehicle', control)
         self.assertIn('text = "$"', control)
         self.assertIn("unregister_customer_unit(entity)", control)
-        self.assertIn("Active customer vehicles", control)
-        self.assertIn("Lifetime EV sales", control)
+        self.assertIn("Active customer EVs", control)
+        self.assertIn("Roadsters sold", control)
         self.assertIn('label = "Reserved"', control)
         self.assertIn("no eligible mobile customer", control)
 
@@ -1598,7 +1605,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("allocations_by_force", control)
         self.assertIn("refresh_station_power_state(station, allocations_by_force[force_index])", control)
         self.assertIn("customer_ev_fleet = customer_ev_fleet_size(force)", control)
-        self.assertIn("Active customer vehicles", control)
+        self.assertIn("Active customer EVs", control)
         self.assertIn('label = "EV capacity"', control)
         self.assertIn("market.customer_ev_fleet", control)
         self.assertIn("refresh_biter_customer_market", control)
@@ -1942,8 +1949,8 @@ class FactoryXModTest(unittest.TestCase):
             "fraction * (1 + supercharging * 0.1)",
             "customer_commute_interval_ticks",
             "customer_commute_totals",
-            '"Customer charging commutes"',
-            '"Completed charging visits"',
+            'label = "Charging commutes"',
+            "snapshot.customer_commutes_completed > 0",
             "customer_charging_commutes = function",
             "customer_commute_timing_wheel",
             "customer_active_commutes",
