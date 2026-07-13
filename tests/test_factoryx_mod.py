@@ -413,9 +413,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("repair_customer_populations = function()", control)
         self.assertIn("sales_office_status = function(force_name)", control)
         self.assertIn("sync_sales_offices = function()", control)
-        self.assertIn("function rehome_customer_buyer(unit_number, target_settlement_key)", control)
-        self.assertIn("function dequeue_rehomed_buyer(office, target_settlement_key)", control)
-        self.assertIn("or dequeue_rehomed_buyer(office, pool.key)", control)
+        self.assertNotIn("function rehome_customer_buyer", control)
+        self.assertNotIn("function dequeue_rehomed_buyer", control)
+        self.assertNotIn("dequeue_rehomed_buyer(office, pool.key)", control)
+        eligible = control[control.index("function eligible_customer_buyers"):
+                           control.index("function sales_office_buyer_status")]
+        self.assertIn("dequeue_available_buyer(pool.queue, office, pool.key)", eligible)
+        self.assertIn("population.virtual_unowned", eligible)
 
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()

@@ -66,6 +66,10 @@ Rules for the rest of the design:
 - Sales Offices define customers. Hostile biters become peaceful customers only
   when a Sales Office covers them, and chargers turn those customer settlements
   into measured demand.
+- Sales markets are geographic. A Sales Office can assign vehicles only to
+  mobile or virtual buyers whose registered home settlement lies inside that
+  office's coverage. Never pull a spare buyer from another colony and rewrite
+  its home merely to keep a sale moving.
 - Opening salvage should invite exploration rather than explain itself. The
   Captain's Chest is visible but unannounced, contains one personal robotics
   kit and one stack of each robot type, and every mineable crash-site fragment
