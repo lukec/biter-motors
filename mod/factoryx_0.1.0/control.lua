@@ -3948,10 +3948,10 @@ local function close_station_info_panel(player)
   if not player or not player.valid then
     return
   end
-  local panel = player.gui.relative[STATION_INFO_PANEL_NAME]
-  if panel then
-    panel.destroy()
-  end
+  local screen_panel = player.gui.screen[STATION_INFO_PANEL_NAME]
+  if screen_panel then screen_panel.destroy() end
+  local legacy_panel = player.gui.relative[STATION_INFO_PANEL_NAME]
+  if legacy_panel then legacy_panel.destroy() end
 end
 
 function factoryx_relative_anchor(entity)
@@ -4072,14 +4072,27 @@ local function show_station_info_panel(player, station)
       seen_settlements[key] = true
     end
   end
-  local panel = player.gui.relative.add{
+  local panel = player.gui.screen.add{
     type = "frame",
     name = STATION_INFO_PANEL_NAME,
-    caption = "FactoryX " .. config.display_name,
-    direction = "vertical",
-    anchor = factoryx_relative_anchor(station)
+    direction = "vertical"
   }
   panel.style.width = 380
+  panel.auto_center = true
+  local titlebar = panel.add{type = "flow", direction = "horizontal"}
+  titlebar.drag_target = panel
+  titlebar.add{type = "label", caption = "FactoryX " .. config.display_name, style = "frame_title"}
+  local drag = titlebar.add{type = "empty-widget", style = "draggable_space_header"}
+  drag.style.horizontally_stretchable = true
+  drag.style.height = 24
+  drag.drag_target = panel
+  titlebar.add{
+    type = "sprite-button",
+    name = "factoryx_station_info_close",
+    sprite = "utility/close",
+    style = "frame_action_button",
+    tooltip = "Close"
+  }
 
   local power_percent = math.floor((power_state.power_fraction or 0) * 100 + 0.5)
   local state_text = grid_connected and (power_percent > 0 and "Powered" or "No power") or "No grid"
@@ -6507,13 +6520,18 @@ end)
 
 script.on_event(defines.events.on_gui_click, function(event)
   local element = event.element
-  if not element or not element.valid or element.name ~= PROGRESS_CLOSE_BUTTON_NAME then
+  if not element or not element.valid then
     return
   end
   local player = game.get_player(event.player_index)
-  local panel = player and player.gui.screen[PROGRESS_PANEL_NAME]
+  local panel_name = element.name == PROGRESS_CLOSE_BUTTON_NAME and PROGRESS_PANEL_NAME
+    or element.name == "factoryx_station_info_close" and STATION_INFO_PANEL_NAME
+  local panel = panel_name and player and player.gui.screen[panel_name]
   if panel then
     panel.destroy()
+  end
+  if panel_name == STATION_INFO_PANEL_NAME and player then
+    opened_factoryx_entities()[player.index] = nil
   end
 end)
 
@@ -6643,6 +6661,7 @@ script.on_event(defines.events.on_gui_opened, function(event)
   if player and player.valid then
     opened_factoryx_entities()[player.index] = nil
     if is_station(entity) then
+      player.opened = nil
       opened_factoryx_entities()[player.index] = entity
       close_entity_info_panel(player)
       show_station_info_panel(player, entity)
@@ -6664,6 +6683,10 @@ end)
 script.on_event(defines.events.on_gui_closed, function(event)
   local player = event.player_index and game.get_player(event.player_index)
   if player and player.valid then
+    local opened = opened_factoryx_entities()[player.index]
+    if is_station(opened) and player.gui.screen[STATION_INFO_PANEL_NAME] then
+      return
+    end
     opened_factoryx_entities()[player.index] = nil
     close_station_info_panel(player)
     close_entity_info_panel(player)
@@ -6859,9 +6882,11 @@ remote.add_interface("factoryx", {
     local player = game.get_player(player_index)
     if not player or not entity or not entity.valid then return false end
     if is_station(entity) then
+      player.opened = nil
+      opened_factoryx_entities()[player.index] = entity
       close_entity_info_panel(player)
       show_station_info_panel(player, entity)
-      return player.gui.relative[STATION_INFO_PANEL_NAME] ~= nil
+      return player.gui.screen[STATION_INFO_PANEL_NAME] ~= nil
     elseif is_factoryx_manufacturer(entity) then
       close_station_info_panel(player)
       show_manufacturer_info_panel(player, entity)

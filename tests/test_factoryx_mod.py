@@ -1511,6 +1511,14 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("opened_factoryx_entities()[player.index]", control)
         self.assertNotIn("player.gui.left", control)
         self.assertIn('caption = "FactoryX " .. config.display_name', control)
+        self.assertIn('player.gui.screen.add{', control)
+        self.assertIn('name = "factoryx_station_info_close"', control)
+        self.assertIn("if is_station(opened) and player.gui.screen[STATION_INFO_PANEL_NAME] then", control)
+        station_open = control[control.index("script.on_event(defines.events.on_gui_opened"):
+                               control.index("script.on_event(defines.events.on_gui_closed")]
+        self.assertIn("player.opened = nil", station_open)
+        self.assertNotIn("player.opened = panel", control)
+        self.assertIn("local legacy_panel = player.gui.relative[STATION_INFO_PANEL_NAME]", control)
         self.assertIn('label = "Settlements"', control)
         self.assertIn("nearby spawners are still hostile", control)
         self.assertIn("Put a Sales Office within %d tiles", control)

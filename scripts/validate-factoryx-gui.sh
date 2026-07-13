@@ -221,7 +221,7 @@ script.on_event(defines.events.on_tick, function()
         end)
         player.opened = charger
         remote.call("factoryx", "open_entity_info", player.index, charger)
-        charger_panel_created = player.gui.relative.factoryx_station_info_panel ~= nil
+        charger_panel_created = player.gui.screen.factoryx_station_info_panel ~= nil
       end
     end
     local position = surface.find_non_colliding_position(

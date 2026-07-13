@@ -521,6 +521,11 @@ Current implementation:
 - Selecting a station opens a small FactoryX panel that shows grid
   status, covered biter customer settlements, active stalls, power draw,
   reservation rate, active EV Sales Offices, and the next progression step.
+- Chargers remain passive-provider entities internally so logistic bots can
+  collect reservation paperwork. Clicking one suppresses Factorio's generic
+  logistic-container panel and opens only the movable FactoryX charger
+  inspector; logistic coverage and robot counts are implementation details and
+  are not shown as charger mechanics.
 - Holding or selecting a station shows a 64-tile customer coverage radius using
   Factorio's native radius visualization. The field uses a muted leaf-green
   tint at low opacity so it remains readable without washing out terrain or
