@@ -71,7 +71,9 @@ def build_sales_office_showroom_vehicles() -> None:
     SHOWROOM_DIR.mkdir(parents=True, exist_ok=True)
     for name in ("prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"):
         sheet = Image.open(MOD_GRAPHICS / f"entity/vehicles/{name}.png").convert("RGBA")
-        frame_index = 16
+        # A shallow isometric view matches the showroom floor better than the
+        # side-on driving frame and keeps each model recognizable behind glass.
+        frame_index = 12
         left = (frame_index % 8) * 192
         top = (frame_index // 8) * 192
         frame = sheet.crop((left, top, left + 192, top + 192))
@@ -79,13 +81,27 @@ def build_sales_office_showroom_vehicles() -> None:
         if not bbox:
             raise RuntimeError(f"Vehicle showroom frame is empty: {name}")
         vehicle = frame.crop(bbox)
-        scale = min(104 / vehicle.width, 54 / vehicle.height)
+        scale = min(190 / vehicle.width, 78 / vehicle.height)
         vehicle = vehicle.resize(
             (max(1, round(vehicle.width * scale)), max(1, round(vehicle.height * scale))),
             Image.Resampling.LANCZOS,
         )
-        canvas = Image.new("RGBA", (128, 80))
-        canvas.alpha_composite(vehicle, ((128 - vehicle.width) // 2, (80 - vehicle.height) // 2))
+        canvas = Image.new("RGBA", (256, 128))
+        shadow = Image.new("RGBA", canvas.size)
+        shadow_draw = ImageDraw.Draw(shadow, "RGBA")
+        shadow_draw.ellipse((38, 62, 218, 108), fill=(8, 13, 15, 125))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(radius=7))
+        canvas.alpha_composite(shadow)
+        vehicle_x = (canvas.width - vehicle.width) // 2
+        vehicle_y = 58 - vehicle.height // 2
+        canvas.alpha_composite(vehicle, (vehicle_x, vehicle_y))
+
+        glass = Image.new("RGBA", canvas.size)
+        glass_draw = ImageDraw.Draw(glass, "RGBA")
+        glass_draw.line((42, 28, 112, 8), fill=(184, 225, 235, 48), width=5)
+        glass_draw.line((143, 116, 222, 91), fill=(184, 225, 235, 35), width=4)
+        glass_draw.line((27, 108, 229, 108), fill=(112, 168, 181, 52), width=3)
+        canvas.alpha_composite(glass)
         canvas.save(SHOWROOM_DIR / f"{name}.png", optimize=True)
 
 

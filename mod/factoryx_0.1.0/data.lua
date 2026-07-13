@@ -643,8 +643,8 @@ for _, vehicle_name in pairs({
     type = "sprite",
     name = "x-sales-office-showroom-" .. vehicle_name,
     filename = "__factoryx__/graphics/entity/sales-office/showroom/" .. vehicle_name .. ".png",
-    width = 128,
-    height = 80
+    width = 256,
+    height = 128
   }
 end
 data:extend(sales_office_showroom_sprites)

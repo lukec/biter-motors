@@ -47,7 +47,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-sales-office-showroom-" .. vehicle_name', data)
         for vehicle in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"]:
             self.assertIn(f'"{vehicle}"', data)
-            self.assertTrue((MOD / f"graphics/entity/sales-office/showroom/{vehicle}.png").exists())
+            showroom_path = MOD / f"graphics/entity/sales-office/showroom/{vehicle}.png"
+            self.assertTrue(showroom_path.exists())
+            with Image.open(showroom_path) as image:
+                self.assertEqual(image.size, (256, 128))
         self.assertIn("SALES_OFFICE_SHOWROOM_SPRITES", control)
         self.assertIn("office.status == defines.entity_status.working", control)
         self.assertIn("function update_sales_office_showrooms()", control)
