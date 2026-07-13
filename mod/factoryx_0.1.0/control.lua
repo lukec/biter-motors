@@ -142,7 +142,7 @@ EV_SALES_GATES = {
   cybertruck = {
     item = "x-mass-market-ev",
     threshold = 2000,
-    technology = "x-capital-scaling",
+    technology = "x-megatruck-engineering",
     recipes = {"x-cybertruck", "x-sell-cybertruck"},
     label = "Megatruck"
   },
@@ -4682,7 +4682,7 @@ local function announce_mass_market_production_researched(force)
     return
   end
 
-  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatrucks require 2,000 Mass-market EV sales.")
+  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatruck Engineering requires Tank technology and 2,000 Mass-market EV sales.")
 end
 
 local function announce_ev_charging_network_researched(force)
@@ -5576,6 +5576,8 @@ local function current_progress_objective(snapshot)
     return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Gigafactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
   elseif not snapshot.cybertruck_gate.market_ready then
     return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Megatruck production.", snapshot.mass_market_evs_sold)
+  elseif not snapshot.cybertruck_gate.technology_ready then
+    return "Megatruck engineering", "Research Megatruck Engineering.", "Develop Tank technology, then invest science and Dollars to adapt armored-vehicle engineering for the Megatruck."
   elseif snapshot.chargers_v3 == 0 then
     return "Supercharging", "Craft and place a V3 Supercharger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.megapacks == 0 then

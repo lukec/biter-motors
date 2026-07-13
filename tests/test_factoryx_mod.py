@@ -281,6 +281,7 @@ class FactoryXModTest(unittest.TestCase):
 
     def test_cybertruck_and_ev_sales_are_balanced_as_profit(self):
         data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
         locale = (MOD / "locale/en/factoryx.cfg").read_text()
         locale = (MOD / "locale/en/factoryx.cfg").read_text()
         expected = {
@@ -306,6 +307,14 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("}}, 10", cybertruck_sale)
         self.assertIn("x-cybertruck=Megatruck", locale)
         self.assertIn("x-sell-cybertruck=Sell Megatruck", locale)
+        megatruck_tech = data[data.index('tech("x-megatruck-engineering"'):data.index('tech("x-ev-charging-network"')]
+        self.assertIn('{"x-capital-scaling", "tank"}', megatruck_tech)
+        self.assertIn('unlock("x-cybertruck")', megatruck_tech)
+        self.assertIn('unlock("x-sell-cybertruck")', megatruck_tech)
+        capital_tech = data[data.index('tech("x-capital-scaling"'):data.index('tech("x-megatruck-engineering"')]
+        self.assertNotIn('unlock("x-cybertruck")', capital_tech)
+        self.assertIn('technology = "x-megatruck-engineering"', control)
+        self.assertIn('Research Megatruck Engineering.', control)
         self.assertNotIn("Cybertruck", locale)
         self.assertIn("Dollars of profit", locale)
 

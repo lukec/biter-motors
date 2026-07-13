@@ -1503,8 +1503,6 @@ data:extend({
       unlock("x-gigafactory-v2"),
       unlock("x-mass-market-ev"),
       unlock("x-sell-mass-market-ev"),
-      unlock("x-cybertruck"),
-      unlock("x-sell-cybertruck"),
       unlock("x-ev-charging-station-v3")
     },
     1000,
@@ -1517,6 +1515,23 @@ data:extend({
       {"x-dollar", 1}
     },
     60
+  ),
+  tech("x-megatruck-engineering",
+    "__factoryx__/graphics/icons/cybertruck.png",
+    {"x-capital-scaling", "tank"},
+    {
+      unlock("x-cybertruck"),
+      unlock("x-sell-cybertruck")
+    },
+    250,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"military-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    30
   ),
   tech("x-ev-charging-network",
     "__factoryx__/graphics/icons/ev-charging-station-v2.png",
