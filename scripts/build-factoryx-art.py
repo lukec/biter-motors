@@ -171,7 +171,8 @@ def paint_sales_status_light(frame: Image.Image, index: int, count: int, color: 
 def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state: str) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     if state == "idle":
-        draw.ellipse((10, 10, 22, 22), fill=(22, 38, 42, 225), outline=(80, 112, 118, 210), width=2)
+        draw.rounded_rectangle((3, 6, 29, 26), 6, fill=(17, 28, 31, 235), outline=(91, 126, 132, 235), width=3)
+        draw.ellipse((12, 12, 20, 20), fill=(60, 83, 88, 225))
         return
     frequency = {"low": 1, "medium": 1, "full": 2, "overload": 2, "charging": 2}[state]
     pulse = (math.sin(index / count * math.tau * frequency) + 1) / 2
@@ -180,15 +181,16 @@ def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state:
         "medium": (52, 222, 247),
         "full": (98, 245, 255),
         "overload": (255, 54, 38),
-        "charging": (245, 252, 255),
+        "charging": (54, 201, 255),
     }[state]
     base_alpha = {"low": 70, "medium": 105, "full": 145, "overload": 150, "charging": 180}[state]
-    glow(draw, (16, 16), 6, color, round(base_alpha + pulse * (245 - base_alpha)))
-    draw.rounded_rectangle((6, 10, 26, 22), 4, fill=(*color, round(95 + pulse * 125)), outline=(225, 240, 242, 235), width=2)
+    glow(draw, (16, 16), 9, color, round(base_alpha + pulse * (245 - base_alpha)))
+    draw.rounded_rectangle((2, 5, 30, 27), 6, fill=(12, 25, 29, 235), outline=(*color, 245), width=3)
+    draw.rounded_rectangle((6, 9, 26, 23), 3, fill=(*color, round(120 + pulse * 120)))
     sweep_x = 8 + round(index / (count - 1) * 16)
-    draw.line((sweep_x, 11, sweep_x, 21), fill=(255, 255, 255, 245), width=3)
+    draw.line((sweep_x, 10, sweep_x, 22), fill=(255, 255, 255, 250), width=3)
     if state == "charging":
-        draw.line((15, 6, 11, 15, 17, 13, 13, 26), fill=(255, 255, 255, 255), width=3)
+        draw.line((16, 3, 10, 15, 17, 13, 12, 29), fill=(255, 255, 255, 255), width=4)
 
 
 def paint_press(frame: Image.Image, index: int, count: int) -> None:

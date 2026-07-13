@@ -638,6 +638,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
         self.assertIn("function update_charger_stall_visuals(force_refresh)", control)
+        self.assertIn('scale = 0.75', control)
+        self.assertIn('scale = 0.78', control)
         self.assertIn('object.sprite = "x-charger-stall-" .. state .. "-frame-" .. staggered_frame', control)
         self.assertIn('sprite_prefix = "x-robotaxi-dispatch-lights-frame-"', control)
         self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)

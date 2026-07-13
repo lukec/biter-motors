@@ -308,10 +308,10 @@ local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
   ["x-robotaxi-service-center"] = {sprite_prefix = "x-robotaxi-dispatch-lights-frame-", offset = {0, -0.55}, scale = 0.9}
 }
 CHARGER_STALL_VISUAL_LAYOUTS = {
-  ["x-ev-charging-station"] = {columns = 4, spacing_x = 0.34, spacing_y = 0.34, offset_y = -0.35, scale = 0.42},
-  ["x-ev-charging-station-v2"] = {columns = 4, spacing_x = 0.48, spacing_y = 0.48, offset_y = -0.15, scale = 0.5},
-  ["x-ev-charging-station-v3"] = {columns = 6, spacing_x = 0.5, spacing_y = 0.5, offset_y = -0.05, scale = 0.52},
-  ["x-ev-charging-station-v4"] = {columns = 5, spacing_x = 0.62, spacing_y = 0.52, offset_y = 0, scale = 0.55}
+  ["x-ev-charging-station"] = {columns = 4, spacing_x = 0.7, spacing_y = 0.7, offset_y = -0.35, scale = 0.75},
+  ["x-ev-charging-station-v2"] = {columns = 4, spacing_x = 0.78, spacing_y = 0.72, offset_y = -0.15, scale = 0.78},
+  ["x-ev-charging-station-v3"] = {columns = 6, spacing_x = 0.76, spacing_y = 0.72, offset_y = -0.05, scale = 0.72},
+  ["x-ev-charging-station-v4"] = {columns = 5, spacing_x = 0.9, spacing_y = 0.78, offset_y = 0, scale = 0.78}
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
