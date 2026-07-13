@@ -41,6 +41,27 @@ cat > "$smoke/info.json" <<'EOF_INFO'
 }
 EOF_INFO
 
+cat > "$smoke/data.lua" <<'EOF_DATA'
+data:extend({
+  {
+    type = "recipe",
+    name = "factoryx-smoke-premium-ev-economics",
+    categories = {"x-vehicle-assembly"},
+    enabled = true,
+    hidden = true,
+    energy_required = 20,
+    allow_productivity = false,
+    ingredients = {
+      {type = "item", name = "car", amount = 1},
+      {type = "item", name = "x-battery-pack", amount = 8},
+      {type = "item", name = "x-electric-drivetrain", amount = 2},
+      {type = "item", name = "advanced-circuit", amount = 10}
+    },
+    results = {{type = "item", name = "x-premium-ev", amount = 1}}
+  }
+})
+EOF_DATA
+
 cat > "$smoke/control.lua" <<'EOF_LUA'
 local REPORT = "factoryx-smoke.jsonl"
 local CONTROLLER = "x-planetary-grid-controller"
@@ -70,6 +91,7 @@ local GIGAFACTORY_V2 = "x-gigafactory-v2"
 local GIGAFACTORY_RECIPE = "x-gigafactory-building"
 local GIGAFACTORY_MODULE_RECIPE = "x-gigafactory-module"
 local PREMIUM_EV_RECIPE = "x-premium-ev"
+local PREMIUM_EV_ECONOMICS_RECIPE = "factoryx-smoke-premium-ev-economics"
 local MASS_MARKET_EV_RECIPE = "x-mass-market-ev"
 local SOLAR_ARRAY = "x-high-density-solar-array"
 local MEGAPACK = "x-megapack"
@@ -147,6 +169,7 @@ script.on_init(function()
   local controller = create_named(surface, CONTROLLER, {24, -24}, force)
   local gigafactory = create_named(surface, GIGAFACTORY, {24, 24}, force)
   local gigafactory_v2 = create_named(surface, GIGAFACTORY_V2, {40, 24}, force)
+  local gigafactory_economics_test = create_named(surface, GIGAFACTORY, {80, 80}, force)
   local solar_array = create_named(surface, SOLAR_ARRAY, {60, 24}, force)
   local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
   local power_source = create_named(surface, POWER_SOURCE, {-4, -2}, force)
@@ -166,7 +189,7 @@ script.on_init(function()
     datacenter_power.power_usage = 0
     datacenter_power.output_flow_limit = 100000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
   end
@@ -215,6 +238,13 @@ script.on_init(function()
   pcall(function() controller.set_recipe(AGI_RECIPE) end)
   pcall(function() gigafactory.set_recipe(PREMIUM_EV_RECIPE) end)
   pcall(function() gigafactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
+  pcall(function() gigafactory_economics_test.set_recipe(PREMIUM_EV_ECONOMICS_RECIPE) end)
+  local economics_input = gigafactory_economics_test.get_inventory(input_inventory_id())
+  storage.gigafactory_economics_cars_inserted = economics_input.insert{name = "car", count = 1}
+  economics_input.insert{name = "x-battery-pack", count = 16}
+  economics_input.insert{name = "x-electric-drivetrain", count = 4}
+  economics_input.insert{name = "advanced-circuit", count = 20}
+  storage.gigafactory_economics_test = gigafactory_economics_test
   for level = 1, 5 do
     local efficiency_technology = force.technologies["x-terrestrial-ai-efficiency-" .. level]
     efficiency_technology.enabled = true
@@ -333,6 +363,23 @@ script.on_event(defines.events.on_tick, function()
   local office = storage.robotaxi_office
   if office and office.valid then
     office.energy = 100000000
+  end
+  local economics_test = storage.gigafactory_economics_test
+  if economics_test and economics_test.valid then
+    economics_test.energy = 1000000000
+    local economics_output = economics_test.get_inventory(output_inventory_id())
+    local completed = economics_output.get_item_count("x-premium-ev")
+    if completed > 0 then
+      storage.gigafactory_economics_outputs =
+        (storage.gigafactory_economics_outputs or 0) + completed
+      economics_output.clear()
+    end
+    if (storage.gigafactory_economics_cars_inserted or 0) < 2 then
+      local economics_input = economics_test.get_inventory(input_inventory_id())
+      storage.gigafactory_economics_cars_inserted =
+        (storage.gigafactory_economics_cars_inserted or 0)
+        + economics_input.insert{name = "car", count = 1}
+    end
   end
 end)
 
@@ -517,8 +564,8 @@ script.on_nth_tick(1, function()
   }
 end)
 
-script.on_nth_tick(3720, function()
-  if game.tick < 3720 then
+script.on_nth_tick(3780, function()
+  if game.tick < 3780 then
     return
   end
   local surface = game.get_surface(storage.surface_index or 1)
@@ -542,6 +589,7 @@ script.on_nth_tick(3720, function()
   local station_v4 = find_unit(surface, STATION_V4, storage.station_v4_unit_number)
   local gigafactory = find_unit(surface, GIGAFACTORY, storage.gigafactory_unit_number)
   local gigafactory_v2 = find_unit(surface, GIGAFACTORY_V2, storage.gigafactory_v2_unit_number)
+  local gigafactory_economics_test = storage.gigafactory_economics_test
   local solar_array = find_unit(surface, SOLAR_ARRAY, storage.solar_array_unit_number)
   local roadster = find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
   local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
@@ -618,6 +666,8 @@ script.on_nth_tick(3720, function()
   end
   local roadster_fuel = roadster and roadster.burner
     and roadster.burner.inventory.get_item_count("x-electric-drive-charge") or 0
+  local economics_output = gigafactory_economics_test and gigafactory_economics_test.valid
+    and gigafactory_economics_test.get_inventory(output_inventory_id())
   if commanded_biter and storage.commanded_biter_initial_position then
     local dx = commanded_biter.position.x - storage.commanded_biter_initial_position.x
     local dy = commanded_biter.position.y - storage.commanded_biter_initial_position.y
@@ -649,6 +699,9 @@ script.on_nth_tick(3720, function()
     sell_megapack_recipe_enabled = sell_megapack_recipe and sell_megapack_recipe.enabled,
     gigafactory_selected_recipe = selected_gigafactory_recipe and selected_gigafactory_recipe.name,
     gigafactory_v2_selected_recipe = selected_gigafactory_v2_recipe and selected_gigafactory_v2_recipe.name,
+    gigafactory_v1_two_input_output = economics_output
+      and (storage.gigafactory_economics_outputs or 0)
+        + economics_output.get_item_count("x-premium-ev") or -1,
     gigafactory_modules_inserted = storage.gigafactory_modules_inserted,
     gigafactory_v2_modules_inserted = storage.gigafactory_v2_modules_inserted,
     final_productivity_modules_inserted = storage.final_productivity_modules_inserted,
@@ -1102,11 +1155,16 @@ if prototype["energy_usage"] != "30MW":
     raise SystemExit(f"Gigafactory V2 engine power draw mismatch: {prototype['energy_usage']}")
 if categories != {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-vertical-integration"}:
     raise SystemExit(f"Gigafactory V2 engine categories mismatch: {sorted(categories)}")
-if prototype["crafting_speed"] != 2:
+if prototype["crafting_speed"] != 8:
     raise SystemExit(f"Gigafactory V2 engine crafting speed mismatch: {prototype['crafting_speed']}")
 if productivity != 1.5:
     raise SystemExit(f"Gigafactory V2 engine productivity mismatch: {productivity}")
 v1_prototype = data["assembling-machine"]["x-gigafactory-building"]
+v1_productivity = v1_prototype["effect_receiver"]["base_effect"]["productivity"]
+if v1_prototype["crafting_speed"] != 4:
+    raise SystemExit(f"Gigafactory V1 engine crafting speed mismatch: {v1_prototype['crafting_speed']}")
+if v1_productivity != 0.5:
+    raise SystemExit(f"Gigafactory V1 engine productivity mismatch: {v1_productivity}")
 if v1_prototype.get("fast_replaceable_group") != "x-gigafactory" or prototype.get("fast_replaceable_group") != "x-gigafactory":
     raise SystemExit("Gigafactory tiers do not share a fast-replace group")
 if v1_prototype.get("next_upgrade") != "x-gigafactory-v2":
@@ -1132,7 +1190,7 @@ for recipe_name in vertical_intermediates:
 for recipe_name in ("x-premium-ev", "x-mass-market-ev", "x-high-density-solar-array", "x-megapack", "x-robotaxi-fleet"):
     if data["recipe"][recipe_name].get("allow_productivity") is not False:
         raise SystemExit(f"{recipe_name} incorrectly allows productivity modules")
-print("Gigafactory V2 engine prototype OK.")
+print("Gigafactory economic ladder engine prototypes OK.")
 
 chargers = {
     "V2": (
@@ -1300,6 +1358,8 @@ if checked.get("premium_ev_recipe_enabled"):
     raise SystemExit(f"Premium EV recipe bypassed its 50-Roadster sales gate: {checked}")
 if checked.get("gigafactory_selected_recipe") != "x-premium-ev":
     raise SystemExit(f"Gigafactory could not select the Premium EV recipe: {checked}")
+if checked.get("gigafactory_v1_two_input_output") != 3:
+    raise SystemExit(f"Gigafactory V1 did not turn two Premium EV input sets into three outputs: {checked}")
 if not checked.get("gigacast_recipe_enabled"):
     raise SystemExit(f"Mass-market EV Production did not unlock Gigacast: {checked}")
 if not checked.get("gigafactory_v2_created") or not checked.get("gigafactory_v2_recipe_enabled"):

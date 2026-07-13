@@ -1012,10 +1012,15 @@ Gigafactory design:
 - Active power draw is 20 MW, with a native unpowered/low-power
   state. This is the first meaningful factory power step before chargers and
   datacenters create much larger demand.
+- V1 runs at crafting speed 4 with 50% built-in productivity. Every two
+  Premium EV input sets therefore produce three vehicles before quality or
+  speed specialization. This material advantage is the primary payback for
+  its 100-Dollar, 50-assembler, 50-lab construction bill.
 - Both Gigafactory tiers accept up to eight modules. Speed, efficiency,
   pollution, and quality effects work on their recipes. Productivity modules
   follow the base-game rule and work only on intermediate-product recipes;
-  V2's built-in 100% productivity remains part of the machine itself.
+  V1's 50% and V2's 150% built-in productivity remain part of the machines
+  themselves.
 - A curated `Gigafactory vertical integration` category makes the factory a
   super-assembler without exposing every ordinary assembler recipe. It includes
   Copper Cable, Electronic Circuits, Advanced Circuits, Low Density Structures,
@@ -1108,9 +1113,10 @@ Current code:
   `Sell mass-market EV`.
 - Gigafactory V1 can build Premium EVs. Mass-market EVs use a dedicated recipe
   category available only in Gigafactory V2.
-- Gigafactory V2 runs at 2x crafting speed with 150% built-in productivity and
-  draws 30 MW. It has much higher output and lower energy use per vehicle than
-  V1 while retaining a substantial absolute grid load.
+- Gigafactory V2 runs at crafting speed 8, exactly twice V1's raw throughput,
+  with 150% built-in productivity and a 30 MW draw. It uses 25% less energy per
+  unit of crafting speed than V1 while retaining a substantial absolute grid
+  load.
 - Gigafactory V2 is crafted in an Assembling Machine or either Gigafactory tier
   from one Gigafactory item, one Gigacast, and 100 Dollars. V1 and V2 share a
   fast-replace group, so a V2 item can be placed directly over a V1 building.

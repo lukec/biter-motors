@@ -63,7 +63,8 @@ local GIGAFACTORY_CONFIGS = {
   ["x-gigafactory-building"] = {
     display_name = "Gigafactory",
     power = "20 MW",
-    default_product = "Premium EV"
+    default_product = "Premium EV",
+    productivity = "4x crafting speed; 50% built-in productivity"
   },
   ["x-gigafactory-v2"] = {
     display_name = "Gigafactory V2",
@@ -4766,7 +4767,7 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Premium EV production appears after 50 Prototype Roadster sales. Then supply Cars, Battery Packs, and Electric Drivetrains.",
+  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Supply Cars, Battery Packs, and Electric Drivetrains.",
   ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Array online: 300 kW peak output. Scale generation before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",

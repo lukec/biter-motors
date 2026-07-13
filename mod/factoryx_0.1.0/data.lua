@@ -863,7 +863,7 @@ local gigafactory = copied_assembler(
   "x-gigafactory-building",
   {"advanced-crafting", "x-vehicle-assembly", "x-energy-products", "x-vertical-integration"},
   "20MW",
-  1
+  4
 )
 gigafactory.max_health = 5000
 gigafactory.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
@@ -872,6 +872,7 @@ gigafactory.drawing_box_vertical_extension = 1.0
 gigafactory.energy_source.emissions_per_minute = {pollution = 12}
 gigafactory.module_slots = 8
 gigafactory.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
+gigafactory.effect_receiver = {base_effect = {productivity = 0.5}}
 gigafactory.graphics_set = gigafactory_animation()
 gigafactory.fast_replaceable_group = "x-gigafactory"
 gigafactory.next_upgrade = "x-gigafactory-v2"
@@ -883,7 +884,7 @@ local gigafactory_v2 = copied_assembler(
   "x-gigafactory-v2",
   {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-vertical-integration"},
   "30MW",
-  2
+  8
 )
 gigafactory_v2.max_health = 7500
 gigafactory_v2.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
