@@ -1525,7 +1525,10 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Sales Office-converted customer settlements", control)
         self.assertIn('label = "Stalls"', control)
         self.assertIn('label = "Power"', control)
-        self.assertIn("Next: craft Prototype Roadsters", control)
+        self.assertIn("This site serves customer EVs and prints EV Reservations for Sales Offices", control)
+        station_guidance = control[control.index("local function station_next_step"):
+                                   control.index("local function show_station_info_panel")]
+        self.assertNotIn("craft Prototype Roadsters", station_guidance)
         self.assertIn("Dollar output is full", control)
         self.assertIn("EV Reservation consumption are paused", control)
         self.assertIn("[FactoryX] %s online", control)

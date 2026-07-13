@@ -530,6 +530,10 @@ Current implementation:
   Factorio's native radius visualization. The field uses a muted leaf-green
   tint at low opacity so it remains readable without washing out terrain or
   looking like an aggressive warning overlay.
+- V1 charger placement messages remain progression-neutral after reporting
+  active stalls and covered settlements: the site serves customer EVs and
+  prints EV Reservations for Sales Offices. Only the one-time first-site
+  milestone announces that Prototype Roadsters have unlocked.
 - The Sales Office technology enables the Sales Office, EV Charging Station,
   and `Sell hopes and dreams`.
 - The first covered biter customer charging site enables the Prototype Roadster

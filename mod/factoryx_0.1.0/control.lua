@@ -4024,11 +4024,7 @@ local function station_next_step(station, covered_settlements, hostile_settlemen
   elseif station.name == "x-ev-charging-station-v2" then
     return "Next: Mass-market EV Production unlocks V3 Superchargers and Gigafactory V2."
   end
-  local roadster_recipe = station.force and station.force.recipes and station.force.recipes[PROTOTYPE_ROADSTER_NAME]
-  if roadster_recipe and roadster_recipe.enabled then
-    return "Next: craft Prototype Roadsters and sell hopes and dreams through a Sales Office."
-  end
-  return "Next: this customer charging site unlocks Prototype Roadsters for the first Sales Office recipe."
+  return "This site serves customer EVs and prints EV Reservations for Sales Offices."
 end
 
 local function show_station_info_panel(player, station)
