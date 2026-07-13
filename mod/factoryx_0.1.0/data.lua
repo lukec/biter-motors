@@ -449,7 +449,9 @@ local function hidden_grid_connection_pole()
   prototype.collision_box = {{0, 0}, {0, 0}}
   prototype.selection_box = {{0, 0}, {0, 0}}
   prototype.collision_mask = {layers = {}}
-  prototype.maximum_wire_distance = 18
+  prototype.maximum_wire_distance = 0
+  prototype.auto_connect_up_to_n_wires = 0
+  prototype.rewire_neighbours_when_destroying = false
   prototype.supply_area_distance = 1
   prototype.connection_points = {
     {

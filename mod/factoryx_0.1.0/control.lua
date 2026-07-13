@@ -1628,16 +1628,21 @@ local function nearby_real_power_pole(station)
     {position.x + radius, position.y + radius}
   }
 
+  local nearest = nil
+  local nearest_distance_squared = nil
   for _, pole in pairs(station.surface.find_entities_filtered{type = "electric-pole", force = station.force, area = area}) do
     if pole.valid and pole.name ~= STATION_GRID_CONNECTION_NAME then
       local dx = pole.position.x - position.x
       local dy = pole.position.y - position.y
-      if dx * dx + dy * dy <= radius * radius then
-        return pole
+      local distance_squared = dx * dx + dy * dy
+      if distance_squared <= radius * radius
+        and (not nearest_distance_squared or distance_squared < nearest_distance_squared) then
+        nearest = pole
+        nearest_distance_squared = distance_squared
       end
     end
   end
-  return nil
+  return nearest
 end
 
 local function station_has_grid_access(station)
@@ -1648,22 +1653,29 @@ local function ensure_station_grid_connection(station)
   if not station or not station.valid or not station.unit_number then
     return nil
   end
-  if not station_has_grid_access(station) then
+  local real_pole = nearby_real_power_pole(station)
+  if not real_pole then
     return nil
   end
 
   local connections = station_grid_connections()
-  local existing = connections[station.unit_number]
-  if existing and existing.valid then
-    return existing
+  local connector = connections[station.unit_number]
+  if not connector or not connector.valid then
+    connector = station.surface.create_entity{
+      name = STATION_GRID_CONNECTION_NAME,
+      position = station.position,
+      force = station.force
+    }
+    connections[station.unit_number] = connector
   end
 
-  local connector = station.surface.create_entity{
-    name = STATION_GRID_CONNECTION_NAME,
-    position = station.position,
-    force = station.force
-  }
-  connections[station.unit_number] = connector
+  local charger_wire = connector.get_wire_connector(defines.wire_connector_id.pole_copper, true)
+  local grid_wire = real_pole.get_wire_connector(defines.wire_connector_id.pole_copper, true)
+  if charger_wire and grid_wire
+    and (charger_wire.real_connection_count ~= 1 or not charger_wire.is_connected_to(grid_wire)) then
+    charger_wire.disconnect_all()
+    charger_wire.connect_to(grid_wire, false)
+  end
   return connector
 end
 
