@@ -1023,22 +1023,22 @@ local electric_vehicles = {
   copied_electric_vehicle(
     "x-premium-ev", generated_icon("premium-ev"),
     {r = 0.015, g = 0.015, b = 0.015, a = 1}, {r = 0.12, g = 0.12, b = 0.12, a = 1},
-    {consumption = "320kW", weight = 750, max_health = 550, rotation_multiplier = 1.1,
-      braking_multiplier = 1.4, friction_force = 1.8e-3, energy_per_hit_point = 0.9, inventory_size = 40,
+    {consumption = "540kW", weight = 750, max_health = 550, rotation_multiplier = 1.1,
+      braking_multiplier = 6.4, friction_force = 1.8e-3, energy_per_hit_point = 0.9, inventory_size = 40,
       artwork = "premium-ev"}
   ),
   copied_electric_vehicle(
     "x-mass-market-ev", generated_icon("mass-market-ev"),
     {r = 0.82, g = 0.82, b = 0.82, a = 1}, {r = 1.00, g = 1.00, b = 1.00, a = 1},
     {consumption = "240kW", weight = 800, max_health = 500, rotation_multiplier = 1.0,
-      braking_multiplier = 1.3, friction_force = 1.9e-3, energy_per_hit_point = 1.0, inventory_size = 50,
+      braking_multiplier = 5.5, friction_force = 1.9e-3, energy_per_hit_point = 1.0, inventory_size = 50,
       artwork = "mass-market-ev"}
   ),
   copied_electric_vehicle(
     "x-cybertruck", cybertruck_icon,
     {r = 0.58, g = 0.62, b = 0.66, a = 1}, {r = 0.90, g = 0.93, b = 0.96, a = 1},
     {consumption = "600kW", weight = 1800, max_health = 1400, rotation_multiplier = 0.72,
-      braking_multiplier = 1.7, friction_force = 1.5e-3, energy_per_hit_point = 0.35, inventory_size = 100,
+      braking_multiplier = 4.5, friction_force = 1.5e-3, energy_per_hit_point = 0.35, inventory_size = 100,
       artwork = "cybertruck", sprite_scale = 0.76,
       equipment_grid = "large-equipment-grid", resistances = {
         {type = "impact", decrease = 150, percent = 70},
@@ -1050,7 +1050,7 @@ local electric_vehicles = {
     "x-robotaxi-fleet", generated_icon("robotaxi-fleet"),
     {r = 0.85, g = 0.52, b = 0.03, a = 1}, {r = 1.00, g = 0.82, b = 0.18, a = 1},
     {consumption = "270kW", weight = 850, max_health = 650, rotation_multiplier = 1.15,
-      braking_multiplier = 1.7, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30,
+      braking_multiplier = 6.0, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30,
       artwork = "robotaxi-fleet", sprite_scale = 0.68}
   )
 }

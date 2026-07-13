@@ -205,16 +205,22 @@ AI_EFFICIENCY_THRESHOLDS = {1000, 10000, 100000, 1000000, 10000000, 100000000}
 AI_EFFICIENCY_TRACKS = {
   terrestrial = {
     entity = "x-terrestrial-datacenter",
+    technology = "x-terrestrial-ai",
     recipe = "x-terrestrial-ai-token",
     technology_prefix = "x-terrestrial-ai-efficiency-",
     tokens_per_cycle = 20
   },
   orbital = {
     entity = "x-orbital-compute-array",
+    technology = "x-orbital-compute",
     recipe = "x-orbital-ai-token",
     technology_prefix = "x-orbital-ai-efficiency-",
     tokens_per_cycle = 40
   }
+}
+local AI_EFFICIENCY_MACHINE_NAMES = {
+  ["x-terrestrial-datacenter"] = true,
+  ["x-orbital-compute-array"] = true
 }
 FACTORYX_START_TECHNOLOGIES = {
   "steam-power",
@@ -884,20 +890,20 @@ function track_ai_efficiency_progress()
     if force.name ~= "enemy" and force.name ~= "neutral" and force.name ~= CUSTOMER_FORCE_NAME then
       all_progress[force.index] = all_progress[force.index] or {}
       for track_name, config in pairs(AI_EFFICIENCY_TRACKS) do
-        local track = all_progress[force.index][track_name] or {
-          generated = 0,
-          machines = {},
-          bonus_progress = {},
-          pending_bonus = {}
-        }
-        all_progress[force.index][track_name] = track
-        track.bonus_progress = track.bonus_progress or {}
-        track.pending_bonus = track.pending_bonus or {}
-        local seen = {}
-        local level = researched_ai_efficiency_level(force, config)
-        for _, surface in pairs(game.surfaces) do
-          for _, machine in pairs(surface.find_entities_filtered{name = config.entity, force = force}) do
-            if machine.valid and machine.unit_number then
+        if researched(force, config.technology) then
+          local track = all_progress[force.index][track_name] or {
+            generated = 0,
+            machines = {},
+            bonus_progress = {},
+            pending_bonus = {}
+          }
+          all_progress[force.index][track_name] = track
+          track.bonus_progress = track.bonus_progress or {}
+          track.pending_bonus = track.pending_bonus or {}
+          local seen = {}
+          local level = researched_ai_efficiency_level(force, config)
+          for _, machine in pairs(registered_factoryx_entities("ai_machines", force)) do
+            if machine.name == config.entity and machine.valid and machine.unit_number then
               seen[machine.unit_number] = true
               local output_inventory = machine.get_inventory(
                 defines.inventory.crafter_output or defines.inventory.assembling_machine_output
@@ -934,15 +940,15 @@ function track_ai_efficiency_progress()
               track.machines[machine.unit_number] = finished
             end
           end
-        end
-        for unit_number in pairs(track.machines) do
-          if not seen[unit_number] then
-            track.machines[unit_number] = nil
-            track.bonus_progress[unit_number] = nil
-            track.pending_bonus[unit_number] = nil
+          for unit_number in pairs(track.machines) do
+            if not seen[unit_number] then
+              track.machines[unit_number] = nil
+              track.bonus_progress[unit_number] = nil
+              track.pending_bonus[unit_number] = nil
+            end
           end
+          update_ai_efficiency_unlocks(force, track_name, track)
         end
-        update_ai_efficiency_unlocks(force, track_name, track)
       end
       sync_agi_training_unlock(force, true)
     end
@@ -1355,6 +1361,8 @@ function track_factoryx_entity(entity)
     PerformanceState.track(PerformanceState.ensure(storage), "sales_offices", entity)
   elseif entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
     PerformanceState.track(PerformanceState.ensure(storage), "robotaxi_centers", entity)
+  elseif AI_EFFICIENCY_MACHINE_NAMES[entity.name] then
+    PerformanceState.track(PerformanceState.ensure(storage), "ai_machines", entity)
   end
 end
 
@@ -1368,8 +1376,18 @@ function registered_factoryx_entities(kind, force, surface)
 end
 
 function rebuild_factoryx_entity_registries()
-  PerformanceState.ensure(storage).registries = {stations = {}, sales_offices = {}, robotaxi_centers = {}}
-  local names = {SALES_OFFICE_NAME, ROBOTAXI_SERVICE_CENTER_NAME}
+  PerformanceState.ensure(storage).registries = {
+    stations = {},
+    sales_offices = {},
+    robotaxi_centers = {},
+    ai_machines = {}
+  }
+  local names = {
+    SALES_OFFICE_NAME,
+    ROBOTAXI_SERVICE_CENTER_NAME,
+    "x-terrestrial-datacenter",
+    "x-orbital-compute-array"
+  }
   for _, name in pairs(STATION_NAMES) do names[#names + 1] = name end
   for _, surface in pairs(game.surfaces) do
     for _, entity in pairs(surface.find_entities_filtered{name = names}) do
@@ -1387,7 +1405,8 @@ function reconcile_factoryx_entity_registry_step()
   local kinds = {
     {kind = "stations", names = STATION_NAMES},
     {kind = "sales_offices", names = {SALES_OFFICE_NAME}},
-    {kind = "robotaxi_centers", names = {ROBOTAXI_SERVICE_CENTER_NAME}}
+    {kind = "robotaxi_centers", names = {ROBOTAXI_SERVICE_CENTER_NAME}},
+    {kind = "ai_machines", names = {"x-terrestrial-datacenter", "x-orbital-compute-array"}}
   }
   local cursor = state.reconciliation
   if cursor.surface > #surfaces then cursor.surface = 1 end
@@ -1623,6 +1642,13 @@ local function is_hostile_worm_entity(entity)
 end
 
 local function nearby_real_power_pole(station)
+  storage.factoryx_station_power_pole_cache = storage.factoryx_station_power_pole_cache or {}
+  local cache = storage.factoryx_station_power_pole_cache
+  local unit_number = station.unit_number
+  local cached = unit_number and cache[unit_number]
+  if cached and cached.tick == game.tick then
+    return cached.pole and cached.pole.valid and cached.pole or nil
+  end
   local position = station.position
   local radius = STATION_GRID_CONNECTION_DISTANCE
   local area = {
@@ -1643,6 +1669,9 @@ local function nearby_real_power_pole(station)
         nearest_distance_squared = distance_squared
       end
     end
+  end
+  if unit_number then
+    cache[unit_number] = {tick = game.tick, pole = nearest}
   end
   return nearest
 end
@@ -4243,13 +4272,13 @@ local function reservation_print_progress()
   return storage.factoryx_reservation_print_progress
 end
 
-local function generate_station_reservations(force)
+local function generate_station_reservations(force, allocations, service)
   if not researched(force, "x-ev-charging-network") and not first_prototype_sale_unlocked(force) then
     return
   end
 
-  local allocations = calculate_station_utilization(force)
-  local service = customer_service_for_force(force)
+  allocations = allocations or calculate_station_utilization(force)
+  service = service or customer_service_for_force(force)
   local progress = reservation_print_progress()
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
@@ -4471,10 +4500,15 @@ function robotaxi_service_snapshot(center, allocated_customers)
 end
 
 function process_robotaxi_service_centers()
+  local centers = registered_factoryx_entities("robotaxi_centers")
+  if #centers == 0 and next(robotaxi_service_states()) == nil
+    and next(robotaxi_service_power_entities()) == nil then
+    return
+  end
   local seen = {}
   local active_power_units = {}
   local allocations_by_force = {}
-  for _, center in pairs(registered_factoryx_entities("robotaxi_centers")) do
+  for _, center in pairs(centers) do
       if center.valid and center.unit_number then
         allocations_by_force[center.force.index] = allocations_by_force[center.force.index]
           or robotaxi_customer_allocations(center.force)
@@ -5763,12 +5797,42 @@ local function refresh_progress_panel(player)
   if not panel then
     return
   end
+  storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+
+  local snapshot = progress_snapshot(player.force)
+  local signature_parts = {}
+  local ignored = {
+    customer_commutes_en_route = true,
+    customer_commutes_charging = true,
+    customer_commutes_completed = true
+  }
+  local function append_signature(prefix, value)
+    if type(value) ~= "table" then
+      signature_parts[#signature_parts + 1] = prefix .. "=" .. tostring(value)
+      return
+    end
+    local keys = {}
+    for key in pairs(value) do keys[#keys + 1] = key end
+    table.sort(keys, function(left, right) return tostring(left) < tostring(right) end)
+    for _, key in ipairs(keys) do
+      append_signature(prefix .. "." .. tostring(key), value[key])
+    end
+  end
+  for key, value in pairs(snapshot) do
+    if not ignored[key] then append_signature(tostring(key), value) end
+  end
+  table.sort(signature_parts)
+  local signature = table.concat(signature_parts, "|")
+  if storage.factoryx_progress_panel_signatures[player.index] == signature then
+    return
+  end
+  storage.factoryx_progress_panel_signatures[player.index] = signature
+
   local old_content = panel[PROGRESS_CONTENT_NAME]
   if old_content then
     old_content.destroy()
   end
 
-  local snapshot = progress_snapshot(player.force)
   local stage, objective, detail = current_progress_objective(snapshot)
   local content = panel.add{
     type = "scroll-pane",
@@ -6103,6 +6167,8 @@ local function open_progress_panel(player)
   local existing = player.gui.screen[PROGRESS_PANEL_NAME]
   if existing then
     existing.destroy()
+    storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+    storage.factoryx_progress_panel_signatures[player.index] = nil
     return
   end
   local panel = player.gui.screen.add{
@@ -6110,6 +6176,8 @@ local function open_progress_panel(player)
     name = PROGRESS_PANEL_NAME,
     direction = "vertical"
   }
+  storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+  storage.factoryx_progress_panel_signatures[player.index] = nil
   panel.style.width = 540
   panel.auto_center = true
   local titlebar = panel.add{type = "flow", direction = "horizontal"}
@@ -6127,6 +6195,8 @@ local function open_progress_panel(player)
     tooltip = "Close"
   }
   refresh_progress_panel(player)
+  storage.factoryx_progress_refresh_ticks = storage.factoryx_progress_refresh_ticks or {}
+  storage.factoryx_progress_refresh_ticks[player.index] = game.tick
 end
 
 local function close_entity_info_panel(player)
@@ -6687,6 +6757,13 @@ script.on_init(function()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
+    if player.gui.screen[PROGRESS_PANEL_NAME] then
+      storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+      storage.factoryx_progress_panel_signatures[player.index] = nil
+      refresh_progress_panel(player)
+      storage.factoryx_progress_refresh_ticks = storage.factoryx_progress_refresh_ticks or {}
+      storage.factoryx_progress_refresh_ticks[player.index] = game.tick
+    end
   end
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
@@ -6710,6 +6787,13 @@ script.on_configuration_changed(function()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
+    if player.gui.screen[PROGRESS_PANEL_NAME] then
+      storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+      storage.factoryx_progress_panel_signatures[player.index] = nil
+      refresh_progress_panel(player)
+      storage.factoryx_progress_refresh_ticks = storage.factoryx_progress_refresh_ticks or {}
+      storage.factoryx_progress_refresh_ticks[player.index] = game.tick
+    end
   end
   track_ai_efficiency_progress()
   queue_customer_vehicle_variant_migration()
@@ -6845,6 +6929,10 @@ script.on_event(defines.events.on_player_removed, function(event)
   sales_office_coverage_enabled()[event.player_index] = nil
   storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
   storage.factoryx_charger_overlay_warnings[event.player_index] = nil
+  storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
+  storage.factoryx_progress_panel_signatures[event.player_index] = nil
+  storage.factoryx_progress_refresh_ticks = storage.factoryx_progress_refresh_ticks or {}
+  storage.factoryx_progress_refresh_ticks[event.player_index] = nil
 end)
 
 script.on_event(defines.events.on_player_changed_force, function(event)
@@ -7025,7 +7113,6 @@ script.on_nth_tick(30, function()
   refresh_ev_driver_overlays()
   update_ev_reverse_warnings()
   feed_tracked_electric_vehicles()
-  sync_sales_office_buyers()
   accelerate_consumer_ev_sales()
   check_first_prototype_sales()
   for _, force in pairs(game.forces) do
@@ -7044,30 +7131,39 @@ script.on_nth_tick(60, function()
     process_customer_growth(force)
     sync_gigafactory_production_gate(force, true)
   end
+  sync_sales_office_buyers()
   local allocations_by_force = {}
+  local services_by_force = {}
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface)) do
       local force_index = station.force.index
       if not allocations_by_force[force_index] then
         allocations_by_force[force_index] = calculate_station_utilization(station.force)
+        services_by_force[force_index] = customer_service_for_force(station.force)
       end
-      local powered = refresh_station_power_state(station, allocations_by_force[force_index])
-      set_factoryx_runtime_visual_enabled(station, powered and active_station_stalls(station) > 0)
+      refresh_station_power_state(station, allocations_by_force[force_index])
       sample_station_power_service(station)
       charge_station_vehicles(station)
       update_station_alerts(station)
-      if station.valid and count_biter_settlements_near_station(station) > 0 then
+      if not first_prototype_sale_unlocked(station.force)
+        and station.valid and count_biter_settlements_near_station(station) > 0 then
         unlock_roadster_sales(station.force)
       end
     end
   end
-  for _, force in pairs(game.forces) do
-    generate_station_reservations(force)
+  for force_index, allocations in pairs(allocations_by_force) do
+    local force = game.forces[force_index]
+    generate_station_reservations(
+      force,
+      allocations,
+      services_by_force[force_index]
+    )
   end
   process_customer_charging_commutes()
 end)
 
 script.on_nth_tick(UiRefresh.interval_ticks, function()
+  storage.factoryx_progress_refresh_ticks = storage.factoryx_progress_refresh_ticks or {}
   for _, player in pairs(game.connected_players) do
     local opened = opened_factoryx_entities()[player.index]
     if is_station(opened) then
@@ -7083,7 +7179,14 @@ script.on_nth_tick(UiRefresh.interval_ticks, function()
       close_station_info_panel(player)
       close_entity_info_panel(player)
     end
-    refresh_progress_panel(player)
+    if player.gui.screen[PROGRESS_PANEL_NAME]
+      and UiRefresh.should_refresh_progress(
+        storage.factoryx_progress_refresh_ticks[player.index],
+        game.tick
+      ) then
+      refresh_progress_panel(player)
+      storage.factoryx_progress_refresh_ticks[player.index] = game.tick
+    end
   end
 end)
 

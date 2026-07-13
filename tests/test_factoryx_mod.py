@@ -366,7 +366,7 @@ class FactoryXModTest(unittest.TestCase):
                 self.assertEqual(image.mode, "RGBA")
         for fragment in [
             '{consumption = "600kW", weight = 450, max_health = 240',
-            '{consumption = "320kW", weight = 750, max_health = 550',
+            '{consumption = "540kW", weight = 750, max_health = 550',
             '{consumption = "240kW", weight = 800, max_health = 500',
             '{consumption = "600kW", weight = 1800, max_health = 1400',
             '{consumption = "270kW", weight = 850, max_health = 650',
@@ -374,6 +374,9 @@ class FactoryXModTest(unittest.TestCase):
             '{type = "impact", decrease = 150, percent = 70}',
         ]:
             self.assertIn(fragment, data)
+        for braking in ["8.0", "6.4", "5.5", "4.5", "6.0"]:
+            self.assertIn(f"braking_multiplier = {braking}", data)
+        self.assertEqual(540 / 1.8, 0.8 * (600 / 1.6))
         vehicle_table = data.index("local electric_vehicles")
         roadster = data[data.index('"x-prototype-roadster", generated_icon("prototype-roadster")', vehicle_table):
                         data.index('"x-premium-ev", generated_icon("premium-ev")', vehicle_table)]
@@ -1995,6 +1998,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("if not market_force_name then return end", control)
         self.assertIn('registered_factoryx_entities("sales_offices")', control)
         self.assertIn('registered_factoryx_entities("stations", force, surface)', control)
+        self.assertIn('registered_factoryx_entities("ai_machines", force)', control)
         self.assertIn("performance_status = function", control)
         self.assertIn('require("runtime.timing_wheel")', control)
         self.assertIn('require("runtime.performance_state")', control)
@@ -2006,6 +2010,19 @@ class FactoryXModTest(unittest.TestCase):
         commute_start = control.index("function process_customer_charging_commutes")
         commute_end = control.index("function handle_customer_commute_command_completed", commute_start)
         self.assertNotIn("pairs(customer_vehicle_owners())", control[commute_start:commute_end])
+        ai_start = control.index("function track_ai_efficiency_progress")
+        ai_end = control.index("function factoryx_accelerated_start_enabled", ai_start)
+        self.assertNotIn("find_entities_filtered", control[ai_start:ai_end])
+        once_per_second = control[
+            control.index("script.on_nth_tick(60, function()"):
+            control.index("script.on_nth_tick(UiRefresh.interval_ticks")
+        ]
+        self.assertEqual(once_per_second.count("calculate_station_utilization(station.force)"), 1)
+        self.assertIn("sync_sales_office_buyers()", once_per_second)
+        self.assertNotIn("active_station_stalls(station)", once_per_second)
+        self.assertIn("allocations_by_force[force_index]", once_per_second)
+        self.assertIn("services_by_force[force_index]", once_per_second)
+        self.assertIn("cached.tick == game.tick", control)
 
     def test_charger_changes_refresh_market_capacity_immediately(self):
         control = (MOD / "control.lua").read_text()
@@ -2047,9 +2064,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("function RobotaxiService.metrics", robotaxi_service)
         self.assertIn("function PowerQueue.next", power_queue)
         self.assertIn("interval_ticks = 300", ui_refresh)
+        self.assertIn("progress_interval_ticks = 1800", ui_refresh)
+        self.assertIn("function UiRefresh.should_refresh_progress", ui_refresh)
         self.assertIn('require("runtime.robotaxi_service")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.power_queue")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.ui_refresh")', (MOD / "control.lua").read_text())
+        self.assertIn("factoryx_progress_panel_signatures", (MOD / "control.lua").read_text())
         self.assertIn("FACTORYX_BENCHMARK_UNITS:-20000", benchmark)
         self.assertIn("FACTORYX_BENCHMARK_CAPS", benchmark)
         self.assertIn("0 128 256 512", benchmark)
