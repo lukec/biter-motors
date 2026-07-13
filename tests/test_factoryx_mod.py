@@ -365,7 +365,7 @@ class FactoryXModTest(unittest.TestCase):
                 self.assertEqual(image.size, (1536, 1536))
                 self.assertEqual(image.mode, "RGBA")
         for fragment in [
-            '{consumption = "600kW", weight = 450, max_health = 120',
+            '{consumption = "600kW", weight = 450, max_health = 240',
             '{consumption = "320kW", weight = 750, max_health = 550',
             '{consumption = "240kW", weight = 800, max_health = 500',
             '{consumption = "600kW", weight = 1800, max_health = 1400',
