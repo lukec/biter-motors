@@ -181,6 +181,7 @@ local CUSTOMER_GROWTH_STALL_MINUTES = 5
 local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
 local CUSTOMER_VISIBLE_GLOBAL_LIMIT = 2000
 local CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT = 128
+local CUSTOMER_MARKET_CACHE_TICKS = 120
 CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
@@ -2390,8 +2391,11 @@ end
 customer_service_for_force = function(force, advance_mood)
   local generation = factoryx_market_generation()[force.index] or 0
   local cached = factoryx_market_cache()[force.index]
-  if not advance_mood and cached and cached.tick == game.tick
+  if not advance_mood and cached and game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS
     and cached.generation == generation then
+    storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+    storage.factoryx_perf_counters.market_snapshot_cache_hits =
+      (storage.factoryx_perf_counters.market_snapshot_cache_hits or 0) + 1
     return cached.service
   end
   local service = {
