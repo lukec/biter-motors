@@ -1292,7 +1292,14 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('action = "lua"', shortcut)
         self.assertIn('toggleable = true', shortcut)
         self.assertIn('technology_to_unlock = "x-sales-office"', shortcut)
+        self.assertIn('__factoryx__/graphics/icons/sales-office-coverage.png', shortcut)
+        self.assertNotIn('__base__/graphics/icons/radar.png', shortcut)
         self.assertIn("x-toggle-sales-office-coverage=Sales Office Coverage", locale)
+        coverage_icon = MOD / "graphics/icons/sales-office-coverage.png"
+        self.assertTrue(coverage_icon.exists())
+        with Image.open(coverage_icon) as image:
+            self.assertEqual(image.size, (256, 256))
+            self.assertEqual(image.mode, "RGBA")
         self.assertIn("refresh_sales_office_coverage", control)
         self.assertIn("rendering.draw_circle", control)
         self.assertIn('render_mode = "chart"', control)

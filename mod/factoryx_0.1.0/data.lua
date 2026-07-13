@@ -667,10 +667,10 @@ data:extend({
     action = "lua",
     toggleable = true,
     technology_to_unlock = "x-sales-office",
-    icon = "__base__/graphics/icons/radar.png",
-    icon_size = 64,
-    small_icon = "__base__/graphics/icons/radar.png",
-    small_icon_size = 64
+    icon = "__factoryx__/graphics/icons/sales-office-coverage.png",
+    icon_size = 256,
+    small_icon = "__factoryx__/graphics/icons/sales-office-coverage.png",
+    small_icon_size = 256
   },
   {
     type = "item-subgroup",
