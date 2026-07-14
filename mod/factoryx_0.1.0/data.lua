@@ -413,22 +413,22 @@ data:extend({
   }
 })
 
-local function shifted_two_thirds_scale_sprite_layer(source, x, y)
+local function shifted_half_scale_sprite_layer(source, x, y)
   local layer = table.deepcopy(source)
   local shift = layer.shift or {0, 0}
   local shift_x = shift.x or shift[1] or 0
   local shift_y = shift.y or shift[2] or 0
-  layer.scale = (layer.scale or 1) * (2 / 3)
-  layer.shift = {x + shift_x * (2 / 3), y + shift_y * (2 / 3)}
+  layer.scale = (layer.scale or 1) * 0.5
+  layer.shift = {x + shift_x * 0.5, y + shift_y * 0.5}
   return layer
 end
 
 local function tiled_high_density_solar_sprite(source)
   local tiled = {layers = {}}
-  for _, y in pairs({-1, 1}) do
-    for _, x in pairs({-1, 1}) do
+  for _, y in pairs({-0.75, 0.75}) do
+    for _, x in pairs({-0.75, 0.75}) do
       for _, source_layer in pairs(source.layers or {}) do
-        tiled.layers[#tiled.layers + 1] = shifted_two_thirds_scale_sprite_layer(source_layer, x, y)
+        tiled.layers[#tiled.layers + 1] = shifted_half_scale_sprite_layer(source_layer, x, y)
       end
     end
   end
@@ -712,6 +712,10 @@ data:extend({
   },
   {
     type = "recipe-category",
+    name = "x-energy-products-batch"
+  },
+  {
+    type = "recipe-category",
     name = "x-vertical-integration"
   },
   {
@@ -865,7 +869,7 @@ local gigafactory = copied_assembler(
   "x-gigafactory-building",
   gigafactory_icon,
   "x-gigafactory-building",
-  {"advanced-crafting", "x-vehicle-assembly", "x-energy-products", "x-vertical-integration"},
+  {"advanced-crafting", "x-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"},
   "20MW",
   4
 )
@@ -886,7 +890,7 @@ local gigafactory_v2 = copied_assembler(
   "x-gigafactory-v2",
   gigafactory_v2_icon,
   "x-gigafactory-v2",
-  {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-vertical-integration"},
+  {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"},
   "30MW",
   8
 )
@@ -910,11 +914,13 @@ local high_density_solar_array = copied_energy_entity(
 )
 high_density_solar_array.max_health = 500
 high_density_solar_array.production = "300kW"
-high_density_solar_array.fast_replaceable_group = nil
-high_density_solar_array.collision_box = {{-1.9, -1.9}, {1.9, 1.9}}
-high_density_solar_array.selection_box = {{-2, -2}, {2, 2}}
+high_density_solar_array.fast_replaceable_group = "solar-panel"
+high_density_solar_array.collision_box = {{-1.35, -1.35}, {1.35, 1.35}}
+high_density_solar_array.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
 high_density_solar_array.picture = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].picture)
 high_density_solar_array.overlay = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].overlay)
+data.raw["solar-panel"]["solar-panel"].fast_replaceable_group = "solar-panel"
+data.raw["solar-panel"]["solar-panel"].next_upgrade = "x-high-density-solar-array"
 
 local megapack = copied_energy_entity(
   "accumulator",
@@ -1212,14 +1218,27 @@ data:extend({
     },
     {{type = "item", name = "x-cybertruck", amount = 1}}, 15
   ),
-  recipe("x-high-density-solar-array", {"x-energy-products"}, "energy", "x-a[high-density-solar-array]",
+  recipe("x-high-density-solar-array", {"advanced-crafting"}, "energy", "x-a[high-density-solar-array]",
     {
-      {type = "item", name = "solar-panel", amount = 4},
-      {type = "item", name = "processing-unit", amount = 10},
-      {type = "item", name = "low-density-structure", amount = 10},
-      {type = "item", name = "x-dollar", amount = 5}
+      {type = "item", name = "solar-panel", amount = 1},
+      {type = "item", name = "processing-unit", amount = 2},
+      {type = "item", name = "low-density-structure", amount = 2},
+      {type = "item", name = "x-dollar", amount = 1}
     },
     {{type = "item", name = "x-high-density-solar-array", amount = 1}}, 12
+  ),
+  recipe("x-high-density-solar-array-batch", {"x-energy-products-batch"}, "energy", "x-a2[high-density-solar-array-batch]",
+    {
+      {type = "item", name = "solar-panel", amount = 4},
+      {type = "item", name = "processing-unit", amount = 6},
+      {type = "item", name = "low-density-structure", amount = 6},
+      {type = "item", name = "x-dollar", amount = 3}
+    },
+    {{type = "item", name = "x-high-density-solar-array", amount = 4}}, 30,
+    {
+      allow_productivity = false,
+      localised_name = {"recipe-name.x-high-density-solar-array-batch"}
+    }
   ),
   recipe("x-megapack", {"x-energy-products"}, "energy", "x-b[megapack]",
     {
@@ -1782,7 +1801,10 @@ data:extend({
     "x-high-density-solar-productivity",
     "__base__/graphics/technology/solar-energy.png",
     {"x-energy-products"},
-    {{type = "change-recipe-productivity", recipe = "x-high-density-solar-array", change = 0.1}},
+    {
+      {type = "change-recipe-productivity", recipe = "x-high-density-solar-array", change = 0.1},
+      {type = "change-recipe-productivity", recipe = "x-high-density-solar-array-batch", change = 0.1}
+    },
     "750*1.5^(L-1)",
     {
       {"automation-science-pack", 1},
@@ -1909,6 +1931,7 @@ for _, recipe_name in pairs({
   "x-mass-market-ev",
   "x-cybertruck",
   "x-high-density-solar-array",
+  "x-high-density-solar-array-batch",
   "x-megapack",
   "x-robotaxi-fleet"
 }) do

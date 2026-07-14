@@ -192,7 +192,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - The surrounding wreckage contains starter plates, stone, coal, belts,
   inserters, and electric poles. The former steam-power kit is omitted so the
   recovered solar grid is the natural opening path.
-- The Captain's Chest contains 54 legendary High-density Solar Arrays (40.5 MW
+- The Captain's Chest contains 54 legendary High-density Solar Panels (40.5 MW
   peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
   Roboports, one stack each of legendary Construction and Logistic Robots, one
   stack each of legendary red Passive Provider Chests and yellow Storage Chests,
@@ -374,7 +374,7 @@ Current simplified terrestrial recipes:
 - Premium EV: `Car + Battery Packs + Electric Drivetrains + Advanced Circuits`.
 - Mass-Market EV: `Car + Battery Packs + Electric Drivetrain`.
 - Megatruck: `2 Mass-Market EVs + 20 Steel Plates + 4 Battery Packs`.
-- High-density Solar Array: `Solar Panels + Processing Units + Low Density Structures + Dollars`.
+- High-density Solar Panel: `1 Solar Panel + 2 Processing Units + 2 Low Density Structures + 1 Dollar`.
 - Megapack: `Battery Packs + Accumulators + Substation`.
 - Autonomy Computer: `Processing Units + Speed Modules`.
 - Robotaxi Fleet: `Mass-Market EVs + Autonomy Computers + Dollars`.
@@ -534,7 +534,7 @@ Current implementation:
 - V3 costs `1 V2 Charger + 4 Substations + 40 Processing Units + 75 Dollars`.
 - Selling the first Robotaxi Fleet unlocks the 6x6 V4 Supercharger: 20 stalls,
   a 160-tile customer radius, and 500 kW per occupied stall for 10 MW maximum.
-- V4 costs `1 V3 Supercharger + 4 High-density Solar Arrays + 4 Megapacks +
+- V4 costs `1 V3 Supercharger + 4 High-density Solar Panels + 4 Megapacks +
   200 Dollars`. Its dedicated 6x6 art includes a broad solar canopy; 15 stalls
   are visible and the final row is represented beneath the canopy.
 - Selecting a station opens a small FactoryX panel that shows grid
@@ -1049,7 +1049,7 @@ Gigafactory design:
   Gigafactory Modules, Gigacasts, Battery Packs, Electric Drivetrains, Autonomy
   Computers, Datacenter Racks, Reusable Boosters, Satellite Buses, and Ground
   Station Networks.
-- Premium EVs, Mass-market EVs, Robotaxi Fleets, High-density Solar Arrays, and
+- Premium EVs, Mass-market EVs, Robotaxi Fleets, High-density Solar Panels, and
   Megapacks are final products and explicitly reject productivity modules.
 - The Gigafactory uses a centered, axis-aligned 9x9 static sprite whose visible
   base fills the collision footprint. A later animation pass should preserve
@@ -1212,12 +1212,22 @@ Current code:
 - `x-energy-products` branches directly from EV Production Line, solar energy,
   and electric energy accumulators; it does not require production science or
   Mass-market EV Production. The physical recipes remain the scaling gate.
-- It unlocks the placeable 300 kW High-density Solar Array, the placeable 100 MJ
+- It unlocks the placeable 300 kW High-density Solar Panel, the placeable 100 MJ
   Megapack, and `Sell Megapack`.
 - Megapack charges and discharges at up to 5 MW.
-- Both Gigafactory tiers can manufacture energy products.
-- High-density Solar Array costs 4 Solar Panels, 10 Processing Units, 10 Low
-  Density Structures, and 5 Dollars.
+- The High-density Solar Panel is a 3x3, five-times-output direct upgrade from a
+  conventional Solar Panel. A filtered upgrade planner lets construction robots
+  modernize an existing field in place while returning the old panels to
+  logistics for reuse.
+- Ordinary assemblers upgrade one Solar Panel with 2 Processing Units, 2 Low
+  Density Structures, and 1 Dollar. The item stacks to 10 rather than the
+  conventional panel's 50.
+- After the Gigafactory production gate, either Gigafactory tier unlocks a
+  mass-production recipe: 4 Solar Panels, 6 Processing Units, 6 Low Density
+  Structures, and 3 Dollars produce 4 High-density Solar Panels. This is an
+  explicit 25% advanced-component and capital discount without allowing
+  productivity modules on a finished product.
+- Both Gigafactory tiers can manufacture Megapacks and mass-produce panels.
 - Megapack costs 12 Battery Packs, 4 Accumulators, and 1 Substation.
 
 Target additions:
@@ -1652,7 +1662,7 @@ FactoryX products live beside the vanilla systems they extend:
 
 - Prototype, Premium, and Mass-market EVs plus Robotaxi Fleets use the vanilla
   Logistics `transport` row.
-- High-density Solar Arrays and Megapacks use the vanilla Production `energy`
+- High-density Solar Panels and Megapacks use the vanilla Production `energy`
   row.
 - Launch services, boosters, satellites, and ground stations use the vanilla
   Production `space-related` row.
@@ -1712,7 +1722,7 @@ beyond the MVP tech-and-recipe loop.
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-mass-market-ev` | Mass-market EV | No | White liftback model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-cybertruck` | Megatruck | No | Silver faceted pickup model, derived icon, and packed 64-direction driving sheet are wired. |
-| `x-high-density-solar-array` | High-density Solar Array | Partial | Native 4x4 solar-panel entity tiles four 2x2-scaled vanilla panels edge-to-edge across its full footprint. It retains vanilla solar placement/grid behavior and the native 300 kW day/night curve without rotation or hidden support entities. Final premium artwork remains optional. |
+| `x-high-density-solar-array` | High-density Solar Panel | Partial | Native 3x3 upgrade-compatible solar entity tiles four miniaturized vanilla panels edge-to-edge across the same footprint as one conventional panel. It retains the native 300 kW day/night curve without rotation or hidden support entities. Final premium artwork remains optional. |
 | `x-megapack` | Megapack | No | Dedicated aligned 2x2 four-cabinet utility battery sprite and matching icon are wired. |
 | `x-autonomy-computer` | Autonomy computer | Maybe | Current processor/module concept is readable. |
 | `x-robotaxi-fleet` | Robotaxi fleet | No | Gold Robotaxi model, derived icon, and packed 64-direction driving sheet are wired. |

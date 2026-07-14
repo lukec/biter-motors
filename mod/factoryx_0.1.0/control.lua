@@ -76,6 +76,7 @@ local GIGAFACTORY_CONFIGS = {
   }
 }
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "x-high-density-solar-array"
+local HIGH_DENSITY_SOLAR_BATCH_RECIPE = "x-high-density-solar-array-batch"
 local MEGAPACK_NAME = "x-megapack"
 local TERRESTRIAL_DATACENTER_NAME = "x-terrestrial-datacenter"
 ROBOTAXI_SERVICE_CENTER_NAME = "x-robotaxi-service-center"
@@ -2299,7 +2300,7 @@ function sync_gigafactory_production_gate(force, announce)
   local unlocked = researched(force, "x-premium-ev-program")
     and researched(force, "x-energy-products")
     and produced >= GIGAFACTORY_PRODUCTION_GATE
-  for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
+  for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}) do
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
   end
@@ -2312,7 +2313,7 @@ function sync_gigafactory_production_gate(force, announce)
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction and Logistic System research are now available.",
+        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction, High-density Solar Panel mass production, and Logistic System research are now available.",
         GIGAFACTORY_PRODUCTION_GATE
       ))
     end
@@ -4828,7 +4829,7 @@ local function announce_first_mass_market_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] Mass-market EV sales are online. Build High-density Solar Arrays and Megapacks through Energy Products, then research Terrestrial AI.")
+  force.print("[FactoryX] Mass-market EV sales are online. Build High-density Solar Panels and Megapacks through Energy Products, then research Terrestrial AI.")
 end
 
 announce_first_robotaxi_service = function(force)
@@ -4855,7 +4856,7 @@ end
 
 local RESEARCH_COMPLETION_MESSAGES = {
   ["x-sales-office"] = "[FactoryX] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
-  ["x-energy-products"] = "[FactoryX] Energy Products researched. High-density Solar Arrays and Megapacks are now available for the power demands of mass-market scale.",
+  ["x-energy-products"] = "[FactoryX] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
   ["x-small-orbital-launch"] = "[FactoryX] Small Orbital Launch researched. Manufacture a Small Launch Service, then sell the physical service through a Sales Office to fund reusable launch development.",
   ["x-reusable-launch"] = "[FactoryX] Reusable Launch researched. Build Reusable Boosters, combine them into Reusable Launch Services, and sell those services through a Sales Office.",
   ["x-satellite-constellation"] = "[FactoryX] Satellite Constellation researched. Manufacture Satellite Buses and Ground Station Networks; both become physical inputs to orbital compute and the planetary grid.",
@@ -4878,7 +4879,7 @@ end
 local ENTITY_PLACEMENT_MESSAGES = {
   ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Supply Cars, Battery Packs, and Electric Drivetrains.",
   ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
-  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Array online: 300 kW peak output. Scale generation before chargers, Gigafactories, and datacenters compete for power.",
+  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
   [TERRESTRIAL_DATACENTER_NAME] = "[FactoryX] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
   [ROBOTAXI_SERVICE_CENTER_NAME] = "[FactoryX] Robotaxi Service Center online. Load up to 200 Robotaxis; its built-in V4 fleet charging draws 10 MW while Operate Robotaxis converts nearby customer service into recurring profit."
@@ -4957,7 +4958,7 @@ local function progression_integrity_status(force)
   if researched(force, "x-premium-ev-program")
     and researched(force, "x-energy-products")
     and count_item_produced(force, PREMIUM_EV_NAME) >= GIGAFACTORY_PRODUCTION_GATE then
-    for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
+    for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}) do
       local recipe = force.recipes and force.recipes[recipe_name]
       if recipe and not recipe.enabled then table.insert(disabled, recipe_name) end
     end
@@ -5653,7 +5654,7 @@ local function current_progress_objective(snapshot)
       snapshot.gigafactory_production_gate
     )
   elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Arrays and Megapacks before adding the 20 MW Gigafactory."
+    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Panels and Megapacks before adding the 20 MW Gigafactory."
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
@@ -5677,7 +5678,7 @@ local function current_progress_objective(snapshot)
   elseif snapshot.chargers_v3 == 0 then
     return "Supercharging", "Craft and place a V3 Supercharger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.megapacks == 0 then
-    return "Energy products", "Build a High-density Solar Array and a Megapack.", "Manufacture both in either Gigafactory tier and place them on the grid."
+    return "Energy products", "Build a High-density Solar Panel and a Megapack.", "Upgrade a conventional panel in an assembler; Gigafactories can mass-produce panels more cheaply. Build Megapacks in either Gigafactory tier."
   elseif not snapshot.terrestrial_ai_researched then
     return "Terrestrial AI", "Research Terrestrial AI.", "Unlock Datacenter Racks, Autonomy Computers, and an 8 MW Terrestrial Datacenter that converts electricity into AI Tokens."
   elseif snapshot.datacenters == 0 then
@@ -5691,7 +5692,7 @@ local function current_progress_objective(snapshot)
   elseif snapshot.robotaxi_fleets_produced == 0 then
     return "Autonomy", "Build the first Robotaxi Fleet in Gigafactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
   elseif snapshot.chargers_v4 == 0 then
-    return "Supercharging", "Craft and place a solar-canopy V4 Supercharger.", "Craft it from 1 V3 Supercharger, 4 High-density Solar Arrays, 4 Megapacks, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
+    return "Supercharging", "Craft and place a solar-canopy V4 Supercharger.", "Craft it from 1 V3 Supercharger, 4 High-density Solar Panels, 4 Megapacks, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
   elseif snapshot.robotaxi_service_centers == 0 then
     return "Autonomy", "Build a Robotaxi Service Center.", "Combine a V4 Supercharger, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Robotaxis and draws 10 MW."
   elseif not snapshot.robotaxi_sale_complete then

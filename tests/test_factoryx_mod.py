@@ -130,7 +130,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("x-ev-charging-station-v4=V4 Supercharger", locale)
         self.assertIn("x-energy-products=Energy Products", locale)
         self.assertIn("x-megapack=Megapack", locale)
-        self.assertIn("x-high-density-solar-array=High-density Solar Array", locale)
+        self.assertIn("x-high-density-solar-array=High-density Solar Panel", locale)
         self.assertIn("Roughly US$10,000", locale)
         settings = (MOD / "settings.lua").read_text()
         self.assertIn('name = "x-accelerated-start"', settings)
@@ -171,7 +171,9 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(f'recipe = "{recipe}", change = 0.1', block)
             self.assertIn(f'"{count_formula}"', block)
             self.assertIn('{"x-dollar", 1}', block)
-        self.assertIn("High-density Solar Array recipe productivity: +10% per level", locale)
+        solar_productivity = data[data.index('    "x-high-density-solar-productivity"'):data.index('    "x-megapack-productivity"')]
+        self.assertIn('recipe = "x-high-density-solar-array-batch", change = 0.1', solar_productivity)
+        self.assertIn("High-density Solar Panel recipe productivity: +10% per level", locale)
         self.assertIn("Megapack recipe productivity: +10% per level", locale)
         self.assertNotIn("x-solar-cell-productivity", data)
         self.assertIn("function station_stall_power_watts", control)
@@ -740,7 +742,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('{{type = "item", name = "x-dollar", amount = 1}}, 30', premium_sale_recipe)
         self.assertIn('"x-sell-premium-ev"', control)
         self.assertIn("EV Production Line researched. Premium EV tooling is ready, but production requires 50 completed Prototype Roadster sales", control)
-        self.assertIn("Energy Products researched. High-density Solar Arrays and Megapacks are now available", control)
+        self.assertIn("Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels", control)
         self.assertIn("GIGAFACTORY_PRODUCTION_GATE = 100", control)
         self.assertIn("function sync_gigafactory_production_gate", control)
         gate = control[
@@ -749,7 +751,7 @@ class FactoryXModTest(unittest.TestCase):
         ]
         self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
         self.assertIn('and researched(force, "x-energy-products")', gate)
-        self.assertIn('{"x-gigafactory-module", "x-gigafactory-building"}', control)
+        self.assertIn('{"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}', control)
         self.assertIn("Industrial scale unlocked: %d Premium EVs produced and Energy Products researched", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
@@ -1013,7 +1015,7 @@ class FactoryXModTest(unittest.TestCase):
         mass_ev = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-high-density-solar-array"')]
 
         self.assertIn('"x-gigafactory-building"', entity)
-        self.assertIn('{"advanced-crafting", "x-vehicle-assembly", "x-energy-products", "x-vertical-integration"}', entity)
+        self.assertIn('{"advanced-crafting", "x-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"}', entity)
         self.assertIn('"20MW"', entity)
         self.assertIn('\n  4\n)', entity)
         self.assertIn('gigafactory.effect_receiver = {base_effect = {productivity = 0.5}}', entity)
@@ -1029,7 +1031,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("unlock_gigafactory_logistics", control)
         self.assertNotIn("Gigafactory logistics online", control)
         self.assertIn("logistic_system.enabled = unlocked", control)
-        self.assertIn("Gigafactory construction and Logistic System research are now available", control)
+        self.assertIn("Gigafactory construction, High-density Solar Panel mass production, and Logistic System research are now available", control)
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
@@ -1065,7 +1067,7 @@ class FactoryXModTest(unittest.TestCase):
         v2_recipe = data[data.index('recipe("x-gigafactory-v2"'):data.index('recipe("x-battery-pack"')]
         capital_tech = data[data.index('tech("x-capital-scaling"'):data.index('tech("x-ev-charging-network"')]
 
-        self.assertIn('{"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-vertical-integration"}', entity)
+        self.assertIn('{"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"}', entity)
         self.assertIn('"30MW"', entity)
         self.assertIn('\n  8\n)', entity)
         self.assertIn('base_effect = {productivity = 1.5}', entity)
@@ -1135,17 +1137,20 @@ class FactoryXModTest(unittest.TestCase):
     def test_energy_products_are_parallel_placeable_and_gigafactory_built(self):
         data = (MOD / "data.lua").read_text()
         locale = (MOD / "locale/en/factoryx.cfg").read_text()
-        solar_recipe = data[data.index('recipe("x-high-density-solar-array"'):data.index('recipe("x-megapack"')]
+        solar_recipe = data[data.index('recipe("x-high-density-solar-array"'):data.index('recipe("x-high-density-solar-array-batch"')]
+        solar_batch_recipe = data[data.index('recipe("x-high-density-solar-array-batch"'):data.index('recipe("x-megapack"')]
         megapack_recipe = data[data.index('recipe("x-megapack"'):data.index('recipe("x-autonomy-computer"')]
         energy_tech = data[data.index('tech("x-energy-products"'):data.index('tech("x-small-orbital-launch"')]
 
         self.assertIn('copied_energy_entity(\n  "solar-panel"', data)
         self.assertIn('high_density_solar_array.production = "300kW"', data)
-        self.assertIn('high_density_solar_array.collision_box = {{-1.9, -1.9}, {1.9, 1.9}}', data)
-        self.assertIn('high_density_solar_array.selection_box = {{-2, -2}, {2, 2}}', data)
+        self.assertIn('high_density_solar_array.collision_box = {{-1.35, -1.35}, {1.35, 1.35}}', data)
+        self.assertIn('high_density_solar_array.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}', data)
+        self.assertIn('high_density_solar_array.fast_replaceable_group = "solar-panel"', data)
+        self.assertIn('data.raw["solar-panel"]["solar-panel"].next_upgrade = "x-high-density-solar-array"', data)
         self.assertIn("tiled_high_density_solar_sprite", data)
-        self.assertIn("pairs({-1, 1})", data)
-        self.assertIn("layer.scale = (layer.scale or 1) * (2 / 3)", data)
+        self.assertIn("pairs({-0.75, 0.75})", data)
+        self.assertIn("layer.scale = (layer.scale or 1) * 0.5", data)
         control = (MOD / "control.lua").read_text()
         self.assertNotIn("x-high-density-solar-array-horizontal", data)
         self.assertNotIn("x-high-density-solar-array-power-source", data)
@@ -1158,11 +1163,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('generated_entity_picture("megapack", nil, 0.14)', data)
         self.assertTrue((MOD / "graphics/icons/megapack.png").exists())
         self.assertTrue((MOD / "graphics/entity/megapack/megapack.png").exists())
-        self.assertIn('{"x-energy-products"}', solar_recipe)
-        self.assertIn('name = "solar-panel", amount = 4', solar_recipe)
-        self.assertIn('name = "processing-unit", amount = 10', solar_recipe)
-        self.assertIn('name = "low-density-structure", amount = 10', solar_recipe)
-        self.assertIn('name = "x-dollar", amount = 5', solar_recipe)
+        self.assertIn('{"advanced-crafting"}', solar_recipe)
+        self.assertIn('name = "solar-panel", amount = 1', solar_recipe)
+        self.assertIn('name = "processing-unit", amount = 2', solar_recipe)
+        self.assertIn('name = "low-density-structure", amount = 2', solar_recipe)
+        self.assertIn('name = "x-dollar", amount = 1', solar_recipe)
+        self.assertIn('{"x-energy-products-batch"}', solar_batch_recipe)
+        self.assertIn('name = "solar-panel", amount = 4', solar_batch_recipe)
+        self.assertIn('name = "processing-unit", amount = 6', solar_batch_recipe)
+        self.assertIn('name = "low-density-structure", amount = 6', solar_batch_recipe)
+        self.assertIn('name = "x-dollar", amount = 3', solar_batch_recipe)
+        self.assertIn('name = "x-high-density-solar-array", amount = 4', solar_batch_recipe)
+        self.assertIn('item("x-high-density-solar-array", high_density_solar_array_icon, "energy", "x-a[high-density-solar-array]", 10', data)
         self.assertIn('{"x-energy-products"}', megapack_recipe)
         self.assertIn('name = "x-battery-pack", amount = 12', megapack_recipe)
         self.assertIn('name = "accumulator", amount = 4', megapack_recipe)

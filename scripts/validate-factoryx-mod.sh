@@ -1149,6 +1149,7 @@ runtime_milestone_recipes = {
     "x-ev-charging-station-v4",
     "x-gigafactory-module",
     "x-gigafactory-building",
+    "x-high-density-solar-array-batch",
     "x-agi-training-run",
 }
 missing_unlocks = factoryx_recipes - technology_unlocks - runtime_milestone_recipes
@@ -1173,7 +1174,7 @@ categories = set(prototype["crafting_categories"])
 productivity = prototype["effect_receiver"]["base_effect"]["productivity"]
 if prototype["energy_usage"] != "30MW":
     raise SystemExit(f"Gigafactory V2 engine power draw mismatch: {prototype['energy_usage']}")
-if categories != {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-vertical-integration"}:
+if categories != {"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"}:
     raise SystemExit(f"Gigafactory V2 engine categories mismatch: {sorted(categories)}")
 if prototype["crafting_speed"] != 8:
     raise SystemExit(f"Gigafactory V2 engine crafting speed mismatch: {prototype['crafting_speed']}")
@@ -1218,7 +1219,7 @@ for recipe_name in vertical_intermediates:
     recipe = data["recipe"][recipe_name]
     if "x-vertical-integration" not in recipe["categories"] or recipe.get("allow_productivity") is not True:
         raise SystemExit(f"{recipe_name} is not a productive vertically integrated intermediate")
-for recipe_name in ("x-premium-ev", "x-mass-market-ev", "x-high-density-solar-array", "x-megapack", "x-robotaxi-fleet"):
+for recipe_name in ("x-premium-ev", "x-mass-market-ev", "x-high-density-solar-array", "x-high-density-solar-array-batch", "x-megapack", "x-robotaxi-fleet"):
     if data["recipe"][recipe_name].get("allow_productivity") is not False:
         raise SystemExit(f"{recipe_name} incorrectly allows productivity modules")
 print("Gigafactory economic ladder engine prototypes OK.")
@@ -1263,22 +1264,35 @@ print("Sales Office Coverage shortcut prototype OK.")
 if progress_shortcut["action"] != "lua" or progress_shortcut.get("toggleable"):
     raise SystemExit(f"FactoryX Progress shortcut mismatch: {progress_shortcut}")
 print("FactoryX Progress shortcut prototype OK.")
-if solar_array["collision_box"] != [[-1.9, -1.9], [1.9, 1.9]] or solar_array["selection_box"] != [[-2, -2], [2, 2]]:
-    raise SystemExit(f"High-density Solar Array 4x4 footprint mismatch: {solar_array}")
+if solar_array["collision_box"] != [[-1.35, -1.35], [1.35, 1.35]] or solar_array["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
+    raise SystemExit(f"High-density Solar Panel 3x3 footprint mismatch: {solar_array}")
+normal_solar = data["solar-panel"]["solar-panel"]
+if normal_solar.get("next_upgrade") != "x-high-density-solar-array" or solar_array.get("fast_replaceable_group") != "solar-panel":
+    raise SystemExit(f"High-density Solar Panel upgrade path mismatch: normal={normal_solar} hd={solar_array}")
 solar_layers = solar_array["picture"]["layers"]
 solar_overlays = solar_array["overlay"]["layers"]
 if len(solar_layers) != 8 or len(solar_overlays) != 4:
-    raise SystemExit(f"High-density Solar Array should tile four panel sprites: picture={len(solar_layers)} overlay={len(solar_overlays)}")
-expected_panel_scale = 1 / 3
+    raise SystemExit(f"High-density Solar Panel should tile four panel sprites: picture={len(solar_layers)} overlay={len(solar_overlays)}")
+expected_panel_scale = 1 / 4
 if any(not math.isclose(layer.get("scale", 0), expected_panel_scale) for layer in solar_layers + solar_overlays):
-    raise SystemExit(f"High-density Solar Array panel tiles are not scaled to 2x2: {solar_layers} {solar_overlays}")
+    raise SystemExit(f"High-density Solar Panel tiles do not fit its 3x3 footprint: {solar_layers} {solar_overlays}")
 panel_layers = [layer for layer in solar_layers if not layer.get("draw_as_shadow")]
 panel_x = sorted({layer["shift"][0] for layer in panel_layers})
 panel_y = sorted({layer["shift"][1] for layer in panel_layers})
-if len(panel_x) != 2 or len(panel_y) != 2 or not math.isclose(panel_x[1] - panel_x[0], 2) or not math.isclose(panel_y[1] - panel_y[0], 2):
-    raise SystemExit(f"High-density Solar Array panel centers do not tile edge-to-edge: {panel_layers}")
+if len(panel_x) != 2 or len(panel_y) != 2 or not math.isclose(panel_x[1] - panel_x[0], 1.5) or not math.isclose(panel_y[1] - panel_y[0], 1.5):
+    raise SystemExit(f"High-density Solar Panel centers do not tile edge-to-edge: {panel_layers}")
 if solar_array["production"] != "300kW":
-    raise SystemExit(f"High-density Solar Array native production mismatch: {solar_array['production']}")
+    raise SystemExit(f"High-density Solar Panel native production mismatch: {solar_array['production']}")
+if data["item"]["x-high-density-solar-array"]["stack_size"] != 10:
+    raise SystemExit("High-density Solar Panel stack size must remain below the normal panel stack size")
+solar_recipe = data["recipe"]["x-high-density-solar-array"]
+solar_ingredients = {row["name"]: row["amount"] for row in solar_recipe["ingredients"]}
+if solar_recipe["categories"] != ["advanced-crafting"] or solar_ingredients != {"solar-panel": 1, "processing-unit": 2, "low-density-structure": 2, "x-dollar": 1}:
+    raise SystemExit(f"High-density Solar Panel standard recipe mismatch: {solar_recipe}")
+solar_batch = data["recipe"]["x-high-density-solar-array-batch"]
+batch_ingredients = {row["name"]: row["amount"] for row in solar_batch["ingredients"]}
+if solar_batch["categories"] != ["x-energy-products-batch"] or batch_ingredients != {"solar-panel": 4, "processing-unit": 6, "low-density-structure": 6, "x-dollar": 3}:
+    raise SystemExit(f"High-density Solar Panel batch recipe mismatch: {solar_batch}")
 energy = megapack["energy_source"]
 if energy["buffer_capacity"] != "100MJ" or energy["input_flow_limit"] != "5MW" or energy["output_flow_limit"] != "5MW":
     raise SystemExit(f"Megapack energy source mismatch: {energy}")
