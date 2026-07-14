@@ -410,7 +410,8 @@ if not integrity.get("ok") or integrity.get("disabled_recipes"):
 diagnostics_total = checked.get("dollar_diagnostics", {}).get("total")
 if checked.get("progress_dollars") != diagnostics_total:
     raise SystemExit(f"FactoryX progress snapshot Dollar count mismatch: {checked}")
-if checked.get("progress_dollars_caption") != str(diagnostics_total):
+represented_profit = f"${diagnostics_total * 10000:,}"
+if checked.get("progress_dollars_caption") != represented_profit:
     raise SystemExit(f"FactoryX progress panel Dollar caption mismatch: {checked}")
 if checked.get("solar_productivity_caption") not in (None, "Level 0"):
     raise SystemExit(f"FactoryX progress panel solar productivity caption mismatch: {checked}")

@@ -198,6 +198,19 @@ tesla_tech.unit = science(500, {
   "military-science-pack"
 }, 45)
 
+-- Requester logistics is a terrestrial industrial-scale investment in
+-- FactoryX. Runtime enables it after the 100-Premium-EV pilot milestone.
+local logistic_system_tech = data.raw.technology["logistic-system"]
+mark_factoryx_technology(logistic_system_tech, "__base__/graphics/technology/logistic-system.png")
+logistic_system_tech.prerequisites = {"logistic-robotics", "x-energy-products"}
+logistic_system_tech.unit = science(500, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "x-dollar"
+}, 30)
+logistic_system_tech.enabled = false
+
 -- Sparse calcite makes terrestrial casting finite initially; asteroid
 -- processing remains the renewable space source later.
 resource_autoplace.initialize_patch_set("calcite", false)

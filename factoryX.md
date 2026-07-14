@@ -1000,10 +1000,12 @@ Gigafactory design:
 - Internal prototype target: `x-gigafactory-building`.
 - A dedicated 9x9 production building, approximately the footprint of a rocket
   silo.
-- Placing the first Gigafactory automatically researches Factorio's Logistic
-  System technology, granting requester, buffer, and active-provider chests.
-  This is the concrete factory-logistics milestone and bypasses Space Age's
-  space-science gate at the moment the large terrestrial factory needs it.
+- Producing 100 Premium EVs and researching Energy Products reveals Factorio's
+  Logistic System technology alongside Gigafactory construction. It costs 500
+  cycles of red, green, blue, and Dollars, granting requester, buffer, and
+  active-provider chests without Space Age's space-science gate. The player
+  chooses when to fund logistics automation; placing a Gigafactory no longer
+  silently completes the research.
 - FactoryX `Autonomous Logistics` remains the later AI/Robotaxi technology; it
   is not the requester-chest unlock.
 - A Gigafactory Module is one repeatable production cell: capital, machines,

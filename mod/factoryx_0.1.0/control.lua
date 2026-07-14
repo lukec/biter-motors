@@ -55,10 +55,6 @@ local SALES_OFFICE_COVERAGE_SHORTCUT = "x-toggle-sales-office-coverage"
 local FACTORYX_PROGRESS_SHORTCUT = "x-open-factoryx-progress"
 local SALES_OFFICE_NAME = "x-sales-office"
 local LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"
-local GIGAFACTORY_ENTITY_NAMES = {
-  ["x-gigafactory-building"] = true,
-  ["x-gigafactory-v2"] = true
-}
 local GIGAFACTORY_CONFIGS = {
   ["x-gigafactory-building"] = {
     display_name = "Gigafactory",
@@ -2299,12 +2295,16 @@ function sync_gigafactory_production_gate(force, announce)
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
   end
+  local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
+  if logistic_system and not logistic_system.researched then
+    logistic_system.enabled = unlocked
+  end
   local announcements = gigafactory_gate_announcements()
   if unlocked and not announcements[force.name] then
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory Modules and Gigafactory construction are now available.",
+        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction and Logistic System research are now available.",
         GIGAFACTORY_PRODUCTION_GATE
       ))
     end
@@ -4880,27 +4880,6 @@ local function announce_first_entity_placement(entity)
   entity.force.print(message)
 end
 
-local function force_has_gigafactory(force)
-  for _, surface in pairs(game.surfaces) do
-    if #surface.find_entities_filtered{name = {"x-gigafactory-building", "x-gigafactory-v2"}, force = force, limit = 1} > 0 then
-      return true
-    end
-  end
-  return false
-end
-
-local function unlock_gigafactory_logistics(force, announce)
-  local technology = force and force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
-  if not technology or technology.researched then
-    return false
-  end
-  technology.researched = true
-  if announce then
-    force.print("[FactoryX] Gigafactory logistics online: Logistic System researched. Requester, buffer, and active-provider chests are now available.")
-  end
-  return true
-end
-
 local function is_factoryx_name(name)
   return type(name) == "string" and string.sub(name, 1, 2) == "x-"
 end
@@ -4970,9 +4949,6 @@ local function sync_force_unlocks(force)
   repair_researched_factoryx_unlocks(force)
   sync_gigafactory_production_gate(force, false)
   sync_agi_training_unlock(force, false)
-  if force_has_gigafactory(force) then
-    unlock_gigafactory_logistics(force, false)
-  end
   local launch_technology = force.technologies and force.technologies[SMALL_ORBITAL_LAUNCH_TECH]
   if launch_technology and (launch_technology.researched or first_robotaxi_sales()[force.name]) then
     launch_technology.enabled = true
@@ -5533,6 +5509,8 @@ local function progress_snapshot(force)
   local commutes = customer_commute_summary(force)
   local sales_gates = sync_ev_sales_recipe_gates(force, false)
   local sold = sold_customer_evs(force)
+  local premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME)
+  local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
   return {
     industrial_supply_chain_researched = researched(force, "x-industrial-supply-chain"),
     big_mining_drill_researched = researched(force, "big-mining-drill"),
@@ -5544,6 +5522,8 @@ local function progress_snapshot(force)
     charging_network_researched = researched(force, "x-ev-charging-network"),
     mass_market_researched = researched(force, "x-capital-scaling"),
     energy_products_researched = researched(force, "x-energy-products"),
+    logistic_system_available = logistic_system and logistic_system.enabled or false,
+    logistic_system_researched = logistic_system and logistic_system.researched or false,
     terrestrial_ai_researched = researched(force, "x-terrestrial-ai"),
     autonomous_logistics_researched = researched(force, "x-autonomous-logistics"),
     small_launch_researched = researched(force, "x-small-orbital-launch"),
@@ -5610,7 +5590,7 @@ local function progress_snapshot(force)
     terrestrial_ai_next_threshold = terrestrial_ai.next_threshold,
     dollars_produced = count_item_produced(force, DOLLAR_NAME),
     prototype_evs_produced = count_item_produced(force, PROTOTYPE_ROADSTER_NAME),
-    premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME),
+    premium_evs_produced = premium_evs_produced,
     gigafactory_production_gate = GIGAFACTORY_PRODUCTION_GATE,
     mass_market_evs_produced = count_item_produced(force, "x-mass-market-ev"),
     robotaxi_fleets_produced = count_item_produced(force, "x-robotaxi-fleet"),
@@ -5844,6 +5824,12 @@ function add_progress_section(parent, caption, rows)
   add_progress_metrics(parent, rows)
 end
 
+local function format_represented_usd(dollars)
+  local amount = math.floor(math.max(0, dollars or 0) * 10000 + 0.5)
+  local grouped = tostring(amount):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+  return "$" .. grouped
+end
+
 local function refresh_progress_panel(player)
   if not player or not player.valid then
     return
@@ -5980,19 +5966,13 @@ local function refresh_progress_panel(player)
       sprite = "item/foundry", label = "Foundries", value = string.format("%d built", snapshot.foundries),
       color = snapshot.foundries > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
     }
-    industry_rows[#industry_rows + 1] = {
-      sprite = "item/calcite", label = "Calcite mined", value = tostring(snapshot.calcite_mined)
-    }
   end
-  if snapshot.recycling_revealed or snapshot.recycling_researched or snapshot.wrecked_evs_produced > 0 then
+  if snapshot.logistic_system_available or snapshot.logistic_system_researched then
     industry_rows[#industry_rows + 1] = {
-      sprite = "item/x-wrecked-ev", label = "Wrecked EVs", value = tostring(snapshot.wrecked_evs_produced)
-    }
-    industry_rows[#industry_rows + 1] = {
-      sprite = "item/recycler", label = "Vehicle recycling",
-      value = snapshot.recycling_researched and string.format("%d Recyclers", snapshot.recyclers)
-        or "Research available",
-      color = snapshot.recycling_researched and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      sprite = "item/requester-chest", label = "Logistic System",
+      value = snapshot.logistic_system_researched and "Researched" or "Research available",
+      color = snapshot.logistic_system_researched and FACTORYX_STATE_COLORS.good
+        or FACTORYX_STATE_COLORS.warning
     }
   end
   add_progress_section(content, "Terrestrial industry", industry_rows)
@@ -6048,7 +6028,8 @@ local function refresh_progress_panel(player)
   local market_rows = {}
   if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
     market_rows[#market_rows + 1] = {
-      sprite = "item/x-dollar", label = "Profit generated", value = tostring(snapshot.dollars_produced),
+      sprite = "item/x-dollar", label = "Profit generated",
+      value = format_represented_usd(snapshot.dollars_produced),
       name = "factoryx_dollars_produced_value",
       color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral
     }
@@ -7153,9 +7134,6 @@ for _, event_name in pairs({
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity, true)
 	      attach_factoryx_runtime_visual(entity)
-	      if entity and entity.valid and GIGAFACTORY_ENTITY_NAMES[entity.name] then
-	        unlock_gigafactory_logistics(entity.force, true)
-	      end
 	      announce_first_entity_placement(entity)
 	      if entity and entity.valid and entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
 	        robotaxi_service_inventories(entity)
