@@ -40,6 +40,7 @@
     "reusable-launch-service.png",
     "robotaxi-fleet.png",
     "robotaxi-service-center.png",
+    "sales-office-coverage.png",
     "sales-office.png",
     "satellite-bus.png",
     "small-launch-service.png",
@@ -53,7 +54,9 @@
     "Charger stall full",
     "Charger stall overload",
     "Charger stall charging",
-    "Gigafactory presses",
+    "Gigafactory V1 production line",
+    "Gigafactory V2 gigacasting line",
+    "Gigafactory loading bays",
     "Datacenter cooling fans",
     "Robotaxi dispatch lights",
     "Grid charge stages"

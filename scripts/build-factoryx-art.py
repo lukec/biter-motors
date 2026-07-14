@@ -193,14 +193,111 @@ def paint_charger_stall_light(frame: Image.Image, index: int, count: int, state:
         draw.line((16, 3, 10, 15, 17, 13, 12, 29), fill=(255, 255, 255, 255), width=4)
 
 
-def paint_press(frame: Image.Image, index: int, count: int) -> None:
+def paint_factory_fan(
+    draw: ImageDraw.ImageDraw,
+    center: tuple[int, int],
+    angle: float,
+    accent: tuple[int, int, int],
+) -> None:
+    cx, cy = center
+    draw.ellipse((cx - 23, cy - 23, cx + 23, cy + 23), fill=(18, 24, 28, 210), outline=(105, 124, 132, 220), width=5)
+    for blade in range(4):
+        theta = angle + blade * math.pi / 2
+        perpendicular = theta + math.pi / 2
+        root = (cx + math.cos(theta) * 5, cy + math.sin(theta) * 5)
+        tip = (cx + math.cos(theta) * 18, cy + math.sin(theta) * 18)
+        width = 6
+        polygon = [
+            (root[0] + math.cos(perpendicular) * width, root[1] + math.sin(perpendicular) * width),
+            (tip[0] + math.cos(perpendicular) * 2, tip[1] + math.sin(perpendicular) * 2),
+            (tip[0] - math.cos(perpendicular) * 2, tip[1] - math.sin(perpendicular) * 2),
+            (root[0] - math.cos(perpendicular) * width, root[1] - math.sin(perpendicular) * width),
+        ]
+        draw.polygon(polygon, fill=(142, 158, 166, 235))
+    glow(draw, center, 4, accent, 230)
+
+
+def paint_gigafactory_v1_activity(frame: Image.Image, index: int, count: int) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
-    travel = round(13 * (1 - math.cos(index / count * math.tau)) / 2)
-    for x in (34, 94):
-        draw.rounded_rectangle((x - 11, 8 + travel, x + 11, 44 + travel), 4, fill=(68, 74, 78, 235), outline=(190, 198, 202, 235), width=2)
-        draw.rectangle((x - 16, 42 + travel, x + 16, 49 + travel), fill=(36, 40, 43, 245))
-    for x in (16, 112):
-        glow(draw, (x, 78), 3, (255, 151, 31), 230 if (index + x) % 2 else 90)
+    phase = index / count * math.tau
+    paint_factory_fan(draw, (62, 22), phase, (52, 192, 224))
+    paint_factory_fan(draw, (319, 22), phase + math.pi / 4, (52, 192, 224))
+
+    # The two exposed service lanes between the production halls each carry a
+    # reciprocating gantry and a glowing body shell through the line.
+    travel = round((1 - math.cos(phase)) * 42)
+    for lane, offset in ((97, 0), (323, 2)):
+        lane_phase = (index + offset) % count
+        shell_y = 92 + lane_phase * 42
+        draw.rounded_rectangle((lane - 24, 62, lane + 24, 470), 8, outline=(87, 103, 110, 190), width=6)
+        draw.rounded_rectangle(
+            (lane - 30, 78 + travel, lane + 30, 126 + travel),
+            8,
+            fill=(49, 57, 62, 245),
+            outline=(202, 211, 214, 235),
+            width=5,
+        )
+        draw.rectangle((lane - 39, 118 + travel, lane + 39, 130 + travel), fill=(24, 29, 32, 250))
+        draw.rounded_rectangle(
+            (lane - 27, shell_y, lane + 27, shell_y + 22),
+            8,
+            fill=(221, 112, 24, 225),
+            outline=(255, 192, 64, 245),
+            width=4,
+        )
+        glow(draw, (lane, shell_y + 11), 7, (255, 151, 34), 165)
+
+    for light_index, y in enumerate(range(72, 465, 49)):
+        active = (light_index - index) % 8
+        alpha = 250 if active == 0 else 105 if active in (1, 7) else 35
+        for x in (45, 149, 271, 375):
+            glow(draw, (x, y), 4, (45, 202, 234), alpha)
+
+
+def paint_gigafactory_v2_activity(frame: Image.Image, index: int, count: int) -> None:
+    draw = ImageDraw.Draw(frame, "RGBA")
+    phase = index / count * math.tau
+    for fan_index, center in enumerate(((203, 21), (309, 21))):
+        paint_factory_fan(draw, center, phase * 1.7 + fan_index * math.pi / 4, (82, 224, 255))
+
+    # Twin gigacasting cells pulse independently while shuttle tables move
+    # completed castings toward the lower transfer line.
+    for cell_index, cx in enumerate((142, 400)):
+        cell_phase = phase + cell_index * math.pi
+        pulse = (math.sin(cell_phase) + 1) / 2
+        core_radius = round(15 + pulse * 5)
+        glow(draw, (cx, 221), 6, (86, 224, 255), round(115 + pulse * 105))
+        draw.ellipse(
+            (cx - core_radius, 221 - core_radius, cx + core_radius, 221 + core_radius),
+            outline=(119, 235, 255, round(135 + pulse * 100)),
+            width=6,
+        )
+        draw.arc((cx - 58, 145, cx + 58, 261), 205, 335, fill=(174, 226, 237, 220), width=9)
+        arm_y = 274 + round((1 - math.cos(cell_phase)) * 32)
+        draw.rounded_rectangle((cx - 44, arm_y, cx + 44, arm_y + 24), 7, fill=(61, 70, 75, 245), outline=(218, 228, 231, 235), width=5)
+        draw.rounded_rectangle((cx - 29, arm_y + 25, cx + 29, arm_y + 47), 7, fill=(190, 122, 28, 235), outline=(255, 199, 74, 245), width=4)
+        glow(draw, (cx, arm_y + 36), 8, (255, 167, 42), 175)
+
+    shuttle_x = 72 + round(index / (count - 1) * 368)
+    draw.rounded_rectangle((shuttle_x - 34, 441, shuttle_x + 34, 471), 8, fill=(56, 65, 70, 245), outline=(160, 221, 234, 240), width=5)
+    glow(draw, (shuttle_x, 456), 9, (71, 216, 250), 190)
+    for light_index in range(12):
+        x = 47 + light_index * 38
+        distance = (light_index - index * 2) % 12
+        glow(draw, (x, 493), 4, (79, 224, 255), 245 if distance == 0 else 80 if distance in (1, 11) else 28)
+
+
+def paint_gigafactory_loading_lights(frame: Image.Image, index: int, count: int) -> None:
+    draw = ImageDraw.Draw(frame, "RGBA")
+    for bay_start in (0, 211, 434):
+        for light_index in range(6):
+            x = bay_start + 12 + light_index * 14
+            distance = (light_index - index) % 6
+            alpha = 250 if distance == 0 else 105 if distance in (1, 5) else 28
+            glow(draw, (x, 61), 5, (68, 214, 249), alpha)
+        door_phase = (index + bay_start // 100) % count
+        scan_y = 83 + round(door_phase / (count - 1) * 29)
+        draw.line((bay_start + 9, scan_y, bay_start + 80, scan_y), fill=(255, 176, 45, 205), width=5)
 
 
 def paint_fans(frame: Image.Image, index: int, count: int) -> None:
@@ -245,7 +342,9 @@ def build_animations() -> None:
             f"charger-stall-{state}", 32, 32,
             lambda frame, index, count, state=state: paint_charger_stall_light(frame, index, count, state),
         )
-    animation_sheet("gigafactory-press", 128, 96, paint_press)
+    animation_sheet("gigafactory-v1-activity", 512, 512, paint_gigafactory_v1_activity)
+    animation_sheet("gigafactory-v2-activity", 512, 512, paint_gigafactory_v2_activity)
+    animation_sheet("gigafactory-loading-lights", 512, 128, paint_gigafactory_loading_lights)
     animation_sheet("datacenter-cooling-fans", 128, 64, paint_fans)
     animation_sheet("robotaxi-dispatch-lights", 128, 64, paint_dispatch_lights)
     animation_sheet("grid-charge-stages", 128, 128, paint_grid_charge)

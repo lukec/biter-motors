@@ -598,7 +598,9 @@ class FactoryXModTest(unittest.TestCase):
             "charger-stall-full.png": (256, 32),
             "charger-stall-overload.png": (256, 32),
             "charger-stall-charging.png": (256, 32),
-            "gigafactory-press.png": (1024, 96),
+            "gigafactory-v1-activity.png": (4096, 512),
+            "gigafactory-v2-activity.png": (4096, 512),
+            "gigafactory-loading-lights.png": (4096, 128),
             "datacenter-cooling-fans.png": (1024, 64),
             "robotaxi-dispatch-lights.png": (1024, 64),
             "grid-charge-stages.png": (1024, 128),
@@ -646,7 +648,9 @@ class FactoryXModTest(unittest.TestCase):
         ]:
             self.assertIn(f'"__factoryx__/graphics/icons/{clean_subject}.png"', data)
 
-        self.assertIn('working_animation("gigafactory-press"', data)
+        self.assertIn('working_animation(activity_slug, 512, 512, 0.325', data)
+        self.assertIn('working_animation("gigafactory-loading-lights", 512, 128, 0.325', data)
+        self.assertIn('tier == 2 and "gigafactory-v2-activity" or "gigafactory-v1-activity"', data)
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)

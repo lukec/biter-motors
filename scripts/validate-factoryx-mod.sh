@@ -1197,6 +1197,17 @@ for gigafactory_name in ("x-gigafactory-building", "x-gigafactory-v2"):
         raise SystemExit(f"{gigafactory_name} does not allow productivity modules")
     if "advanced-crafting" not in gigafactory_prototype["crafting_categories"]:
         raise SystemExit(f"{gigafactory_name} cannot manufacture Gigafactory recipes")
+    working_visualisations = gigafactory_prototype["graphics_set"].get("working_visualisations", [])
+    animation_files = {
+        visualisation["animation"]["filename"] for visualisation in working_visualisations
+    }
+    activity_slug = "gigafactory-v2-activity" if gigafactory_name == "x-gigafactory-v2" else "gigafactory-v1-activity"
+    expected_animation_files = {
+        f"__factoryx__/graphics/animation/{activity_slug}.png",
+        "__factoryx__/graphics/animation/gigafactory-loading-lights.png",
+    }
+    if animation_files != expected_animation_files:
+        raise SystemExit(f"{gigafactory_name} working animations mismatch: {sorted(animation_files)}")
 vertical_intermediates = {
     "copper-cable", "electronic-circuit", "advanced-circuit", "low-density-structure",
     "x-gigafactory-module", "x-gigacast", "x-battery-pack", "x-electric-drivetrain",

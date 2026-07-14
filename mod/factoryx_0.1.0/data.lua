@@ -139,7 +139,10 @@ local function tint_animation_masks(value, primary, secondary)
   end
 end
 
-local function gigafactory_animation(filename)
+local function gigafactory_animation(filename, tier)
+  local activity_slug = tier == 2 and "gigafactory-v2-activity" or "gigafactory-v1-activity"
+  local activity_speed = tier == 2 and 0.38 or 0.22
+  local loading_speed = tier == 2 and 0.48 or 0.3
   return {
     animation = {
       layers = {
@@ -156,7 +159,8 @@ local function gigafactory_animation(filename)
       }
     },
     working_visualisations = {
-      working_animation("gigafactory-press", 128, 96, 0.7, {0, 0.4}, 0.18, false)
+      working_animation(activity_slug, 512, 512, 0.325, {0, 0}, activity_speed, false),
+      working_animation("gigafactory-loading-lights", 512, 128, 0.325, {0, 3.9}, loading_speed, true)
     }
   }
 end
@@ -894,7 +898,7 @@ gigafactory_v2.energy_source.emissions_per_minute = {pollution = 18}
 gigafactory_v2.module_slots = 8
 gigafactory_v2.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
 gigafactory_v2.effect_receiver = {base_effect = {productivity = 1.5}}
-gigafactory_v2.graphics_set = gigafactory_animation("__factoryx__/graphics/entity/gigafactory/gigafactory-v2.png")
+gigafactory_v2.graphics_set = gigafactory_animation("__factoryx__/graphics/entity/gigafactory/gigafactory-v2.png", 2)
 gigafactory_v2.fast_replaceable_group = "x-gigafactory"
 
 local high_density_solar_array = copied_energy_entity(
