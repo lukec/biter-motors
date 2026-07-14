@@ -2293,6 +2293,7 @@ function sync_gigafactory_production_gate(force, announce)
   if not force or not force.valid then return false end
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
   local unlocked = researched(force, "x-premium-ev-program")
+    and researched(force, "x-energy-products")
     and produced >= GIGAFACTORY_PRODUCTION_GATE
   for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
     local recipe = force.recipes and force.recipes[recipe_name]
@@ -2303,7 +2304,7 @@ function sync_gigafactory_production_gate(force, announce)
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Premium pilot run complete: %d Premium EVs produced. Gigafactory Modules and Gigafactory construction are now available.",
+        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory Modules and Gigafactory construction are now available.",
         GIGAFACTORY_PRODUCTION_GATE
       ))
     end
@@ -4177,12 +4178,13 @@ local function biter_customer_market_summary(force)
   local covered_settlements = 0
   local demand_units = powered_stations
   local active_customer_stalls = powered_stations
+  local service = nil
 
   if customer_mode then
     covered_settlements = count_covered_biter_settlements(force)
     active_customer_stalls = count_active_customer_stalls(force)
     demand_units = 0
-    local service = customer_service_for_force(force)
+    service = customer_service_for_force(force)
     local allocations = calculate_station_utilization(force)
     for _, surface in pairs(game.surfaces) do
       for _, station in pairs(find_stations(surface, force)) do
@@ -4195,6 +4197,22 @@ local function biter_customer_market_summary(force)
     end
   end
 
+  local requested_customer_stalls = 0
+  local powered_customer_stalls = 0
+  local charging_power_demand_kw = 0
+  local charging_power_served_kw = 0
+  if service then
+    for _, assignment in pairs(service.assignments or {}) do
+      local power_per_stall_kw = station_stall_power_watts(assignment.station) / 1000
+      local requested = assignment.requested_stalls or 0
+      local powered = assignment.powered_stalls or 0
+      requested_customer_stalls = requested_customer_stalls + requested
+      powered_customer_stalls = powered_customer_stalls + powered
+      charging_power_demand_kw = charging_power_demand_kw + requested * power_per_stall_kw
+      charging_power_served_kw = charging_power_served_kw + powered * power_per_stall_kw
+    end
+  end
+
   local _, growth = customer_growth_summary(force)
   return {
     biter_customer_mode = customer_mode,
@@ -4202,6 +4220,10 @@ local function biter_customer_market_summary(force)
     covered_biter_settlements = covered_settlements,
     active_customer_stalls = active_customer_stalls,
     charging_stall_capacity = charging_stall_capacity,
+    requested_customer_stalls = requested_customer_stalls,
+    powered_customer_stalls = powered_customer_stalls,
+    charging_power_demand_kw = charging_power_demand_kw,
+    charging_power_served_kw = charging_power_served_kw,
     accessible_stall_capacity = growth.accessible_stall_capacity,
     supported_ev_capacity = growth.supported_ev_capacity,
     evs_per_stall = growth.evs_per_stall,
@@ -4905,6 +4927,7 @@ local function progression_integrity_status(force)
     end
   end
   if researched(force, "x-premium-ev-program")
+    and researched(force, "x-energy-products")
     and count_item_produced(force, PREMIUM_EV_NAME) >= GIGAFACTORY_PRODUCTION_GATE then
     for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
       local recipe = force.recipes and force.recipes[recipe_name]
@@ -5514,6 +5537,10 @@ local function progress_snapshot(force)
     powered_stations = market.powered_stations,
     charging_capacity = market.charging_stall_capacity,
     active_stalls = market.active_customer_stalls,
+    requested_customer_stalls = market.requested_customer_stalls,
+    powered_customer_stalls = market.powered_customer_stalls,
+    charging_power_demand_kw = market.charging_power_demand_kw,
+    charging_power_served_kw = market.charging_power_served_kw,
     customer_ev_fleet = market.customer_ev_fleet,
     customer_ev_sales_lifetime = lifetime_customer_ev_sales_size(force),
     roadsters_sold = sold["x-prototype-roadster"] or 0,
@@ -5592,18 +5619,18 @@ local function current_progress_objective(snapshot)
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
     return "Premium pilot production", string.format("Build %d Premium EVs in assemblers.", snapshot.gigafactory_production_gate), string.format(
-      "Pilot vehicles produced: %d / %d. Completing the pilot run unlocks Gigafactory Modules and Gigafactory construction.",
+      "Pilot vehicles produced: %d / %d. Complete the pilot and Energy Products to unlock Gigafactory construction.",
       snapshot.premium_evs_produced,
       snapshot.gigafactory_production_gate
     )
+  elseif not snapshot.energy_products_researched then
+    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Arrays and Megapacks before adding the 20 MW Gigafactory."
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
     return "Premium production", "Produce and sell a Premium EV.", "Select Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
   elseif not snapshot.mass_market_ev_gate.market_ready then
     return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
-  elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products.", "Invest 250 cycles through chemical science plus Dollars to unlock High-density Solar Arrays and Megapacks before factory-scale power demand arrives."
   elseif not snapshot.charging_network_researched then
     return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
   elseif snapshot.chargers_v2 == 0 then
@@ -5721,7 +5748,7 @@ function progress_health(snapshot)
     ), FACTORYX_STATE_COLORS.bad
   elseif snapshot.stranded_evs > 0 then
     return "Capacity alert", string.format(
-      "%d customer EVs are underserved.", snapshot.stranded_evs
+      "%d customer EVs lack powered charging capacity.", snapshot.stranded_evs
     ), FACTORYX_STATE_COLORS.bad
   elseif snapshot.powered_stations > 0 and snapshot.first_sale_complete then
     return "Operating", "Customer market and charging are online.", FACTORYX_STATE_COLORS.good
@@ -5930,6 +5957,54 @@ local function refresh_progress_panel(player)
   end
   add_progress_section(content, "Terrestrial industry", industry_rows)
 
+  local grid_rows = {}
+  if snapshot.charging_capacity > 0 or snapshot.requested_customer_stalls > 0 then
+    local demand_kw = snapshot.charging_power_demand_kw or 0
+    local served_kw = snapshot.charging_power_served_kw or 0
+    local power_color = demand_kw <= 0 and FACTORYX_STATE_COLORS.neutral
+      or (served_kw >= demand_kw * 0.95 and FACTORYX_STATE_COLORS.good
+        or (served_kw > 0 and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.bad))
+    grid_rows[#grid_rows + 1] = {
+      sprite = "item/accumulator", label = "EV grid load",
+      value = string.format("%.1f / %.1f MW delivered", served_kw / 1000, demand_kw / 1000),
+      color = power_color
+    }
+    grid_rows[#grid_rows + 1] = {
+      sprite = "item/x-ev-charging-station", label = "Powered charging",
+      value = string.format(
+        "%d / %d active stalls",
+        snapshot.powered_customer_stalls,
+        snapshot.requested_customer_stalls
+      ),
+      color = snapshot.powered_customer_stalls >= snapshot.requested_customer_stalls
+        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+    }
+  end
+  if snapshot.first_sale_complete then
+    grid_rows[#grid_rows + 1] = {
+      sprite = "item/x-premium-ev", label = "Customer impact",
+      value = snapshot.stranded_evs > 0
+        and string.format(
+          "%d EVs stranded; %d settlements unhappy",
+          snapshot.stranded_evs,
+          snapshot.angry_settlements
+        )
+        or "All customer EVs supported",
+      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
+    }
+  end
+  if snapshot.ev_production_researched then
+    grid_rows[#grid_rows + 1] = {
+      sprite = "item/x-high-density-solar-array", label = "Energy Products",
+      value = snapshot.energy_products_researched
+        and string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks)
+        or "Research before Gigafactory scale",
+      color = snapshot.energy_products_researched and FACTORYX_STATE_COLORS.good
+        or FACTORYX_STATE_COLORS.warning
+    }
+  end
+  add_progress_section(content, "Grid power", grid_rows)
+
   local market_rows = {}
   if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
     market_rows[#market_rows + 1] = {
@@ -6060,9 +6135,12 @@ local function refresh_progress_panel(player)
     or snapshot.gigafactories > 0 or snapshot.gigafactories_v2 > 0 then
     infrastructure_rows[#infrastructure_rows + 1] = {
       sprite = "item/x-gigafactory-building", label = "Gigafactories",
-      value = string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2),
+      value = not snapshot.energy_products_researched and "Locked: Energy Products required"
+        or string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2),
       color = snapshot.gigafactories + snapshot.gigafactories_v2 > 0
-        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+        and FACTORYX_STATE_COLORS.good
+        or (snapshot.energy_products_researched and FACTORYX_STATE_COLORS.warning
+          or FACTORYX_STATE_COLORS.bad)
     }
   end
   if snapshot.energy_products_researched then

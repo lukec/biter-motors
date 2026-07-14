@@ -738,14 +738,39 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Energy Products researched. High-density Solar Arrays and Megapacks are now available", control)
         self.assertIn("GIGAFACTORY_PRODUCTION_GATE = 100", control)
         self.assertIn("function sync_gigafactory_production_gate", control)
-        self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', control)
+        gate = control[
+            control.index("function sync_gigafactory_production_gate"):
+            control.index("function customer_ev_fleet_size")
+        ]
+        self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
+        self.assertIn('and researched(force, "x-energy-products")', gate)
         self.assertIn('{"x-gigafactory-module", "x-gigafactory-building"}', control)
-        self.assertIn("Premium pilot run complete: %d Premium EVs produced", control)
+        self.assertIn("Industrial scale unlocked: %d Premium EVs produced and Energy Products researched", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
         self.assertIn("snapshot.gigafactory_production_gate", control)
         self.assertIn("Premium EV sales are working. Next: build EV Charging Network, then research Mass-market EV Production", control)
         self.assertIn("factoryx_first_premium_ev_sales", control)
+
+    def test_progress_panel_makes_charging_power_and_customer_impact_prominent(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("requested_customer_stalls", control)
+        self.assertIn("powered_customer_stalls", control)
+        self.assertIn("charging_power_demand_kw", control)
+        self.assertIn("charging_power_served_kw", control)
+        self.assertIn('add_progress_section(content, "Grid power", grid_rows)', control)
+        self.assertIn('label = "EV grid load"', control)
+        self.assertIn('label = "Powered charging"', control)
+        self.assertIn('label = "Customer impact"', control)
+        self.assertIn('"Locked: Energy Products required"', control)
+        objective = control[
+            control.index("local function current_progress_objective"):
+            control.index("function progress_objective_icon")
+        ]
+        self.assertLess(
+            objective.index('elseif not snapshot.energy_products_researched then'),
+            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
+        )
 
     def test_sales_recipes_show_the_product_with_a_coin_badge(self):
         data = (MOD / "data.lua").read_text()

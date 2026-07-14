@@ -25,8 +25,8 @@ The MVP loop is intentionally physical:
    belt Dollars out.
 7. Spend first Dollars on EV Production Line research.
 8. Build 100 pilot Premium EVs in ordinary advanced assemblers.
-9. The completed pilot run unlocks Gigafactory Modules and Gigafactory
-   construction together.
+9. Complete the pilot run and research Energy Products to unlock Gigafactory
+   Modules and Gigafactory construction together.
 10. Convert Dollars plus factory hardware into ten modules, then combine them
     with two Substations to build a 9x9 Gigafactory.
     Placing the first Gigafactory automatically researches Logistic System, so
@@ -199,8 +199,8 @@ EV Reservation takes 60 seconds to return 2 Dollars of profit. The first complet
 research EV Production Line. That technology costs Dollars plus red, green, and
 blue science for 250 cycles, then unlocks battery packs, electric drivetrains,
 Premium EVs, and `Sell premium product`. The first 100 Premium EVs are built in
-ordinary advanced assemblers; completing that pilot run unlocks Gigafactory
-Modules and Gigafactory construction together. Each production module consumes
+ordinary advanced assemblers; completing that pilot run and researching Energy
+Products unlocks Gigafactory Modules and construction together. Each production module consumes
 10 Dollars, 5 Assembling Machine 2s, 5 Labs, and 50 Refined Concrete. Ten
 modules plus two Substations build the Gigafactory. Premium EV
 sales consume one EV Reservation, take 30 seconds, and return 1 Dollar. Mass-market EV Production unlocks the Gigacast and

@@ -117,8 +117,9 @@ The MVP already has these major loops:
    for Premium and Mass-market sales.
 8. Research EV Production Line, then build the first 100 Premium EVs in
    ordinary advanced assemblers as a pilot run.
-9. Producing 100 Premium EVs unlocks Gigafactory Modules and Gigafactory
-   construction together.
+9. Producing 100 Premium EVs completes the manufacturing pilot. Finishing
+   Energy Products as well unlocks Gigafactory Modules and Gigafactory
+   construction, ensuring scalable power arrives before mass production.
 10. Combine ten modules with two Substations, then move Premium EV production
     into the Gigafactory. Mass-market EVs remain Gigafactory-only.
 11. Build silver Megatrucks after Mass-market EV Production, then sell each
@@ -979,10 +980,11 @@ Implemented design:
 - EV Production Line unlocks `Battery Pack`, `Electric Drivetrain`, `Premium
   EV`, and `Sell premium product` after the existing 50-Roadster market gate.
 - Premium EVs can initially be built in ordinary advanced assemblers. Producing
-  100 completes the pilot run and unlocks both `Gigafactory Module` and the
-  Gigafactory construction recipe.
+  100 completes the pilot run; the pilot plus Energy Products unlock both
+  `Gigafactory Module` and the Gigafactory construction recipe.
 - Energy Products remains a parallel power branch for High-density Solar
-  Arrays and Megapacks, and is required before mass-market scaling.
+  Arrays and Megapacks, and is required before Gigafactory construction or
+  mass-market scaling.
 - Every Sales Office recipe uses the sold product as its dominant icon with a
   small gold coin badge. EV, Megapack, launch-service, and Robotaxi sales are
   visually distinct in the recipe chooser.
@@ -1766,9 +1768,9 @@ icons, and bounded working animations. Remaining work is narrower:
 - Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
   consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
   and fast-replaces V1. Implemented.
-- Unlock Gigafactory Modules with the 100-Premium-EV pilot milestone, using the
-  production-cell recipe `Dollars + Assembling Machine 2s + Labs + Refined
-  Concrete`. Implemented.
+- Unlock Gigafactory Modules after both the 100-Premium-EV pilot milestone and
+  Energy Products, using the production-cell recipe `Dollars + Assembling
+  Machine 2s + Labs + Refined Concrete`. Implemented.
 - Change mass-market sales from a five-car batch to the literal contract
   `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`. Implemented.
 - Ensure every Sales Office recipe has a sensible sale time:
