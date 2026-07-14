@@ -242,7 +242,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - Physical assets use native Factorio quality improvements. Machines gain the
   normal speed and durability benefits; solar and storage use native quality
   scaling; EVs gain vehicle durability.
-- Each quality level adds one embedded battery to a placed FactoryX EV.
+- Every two quality levels add one embedded battery to a placed FactoryX EV.
 - Each quality level adds 10% EV capacity per stall to a charger. Stall count,
   footprint, and coverage radius stay fixed so placement remains readable.
 - Abstract outputs do not roll quality. Dollar sales, AI Token production, and
@@ -2362,14 +2362,14 @@ items.
 
 | Vehicle | Driving role | Batteries | Health | Cargo | Character |
 | --- | --- | ---: | ---: | ---: | --- |
-| Prototype Roadster | Sprint car | 3 | 120 | Fastest response and sharpest steering; shortest EV range and severe impact vulnerability |
-| Premium EV | Grand tourer | 4 | 550 | 40 | Fast, composed, strong braking, and good range |
-| Mass-market EV | All-rounder | 3 | 500 | 50 | Predictable handling and the most practical general-purpose balance |
-| Megatruck | Electric tank | 8 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
-| Robotaxi | Long-duty fleet car | 5 | 650 | 30 | Efficient, stable, excellent braking, and tuned for sustained duty |
+| Prototype Roadster | Sprint car | 1 | 240 | 20 | Fastest response and sharpest steering; shortest EV range and severe impact vulnerability |
+| Premium EV | Grand tourer | 2 | 550 | 40 | Fast, composed, strong braking, and moderate range |
+| Mass-market EV | All-rounder | 1 | 500 | 50 | Predictable handling with limited but practical range |
+| Megatruck | Electric tank | 4 | 1,400 | 100 | Very fast once moving, longest range, heavy steering, and extreme impact resistance |
+| Robotaxi | Long-duty fleet car | 2 | 650 | 30 | Efficient, stable, excellent braking, and tuned for sustained duty |
 
-Quality adds one battery per quality level. The Megatruck uses a large
-equipment grid so its eight-battery base capacity and quality bonuses are not
+Quality adds one battery every two quality levels. The Megatruck uses a large
+equipment grid so its four-battery base capacity and quality bonuses are not
 silently truncated. Long-range Battery research still improves the energy used
 per drive-charge unit across every model.
 
@@ -2422,7 +2422,7 @@ Current validation state, 2026-07-10:
   EV Reservation, verifies 1 Dollar in the Sales Office output, and verifies
   that the sale enables Small Orbital Launch.
 - The engine smoke test places a drivable Prototype Roadster beside a powered
-  V2 charger, verifies three embedded battery equipment items, measures stored
+  V2 charger, verifies one embedded battery equipment item, measures stored
   energy during the test window, and verifies battery energy is transformed
   into the hidden electric-drive fuel used by the car prototype.
 - Unpowered charger alerts use `LuaPlayer.add_custom_alert`; Factorio 2.1 has no

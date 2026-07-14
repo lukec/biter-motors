@@ -331,6 +331,7 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(f'place_result = "{name}"', data[item_start:item_start + 300])
             self.assertIn(f'"{name}"', control[control.index("ELECTRIC_VEHICLE_BATTERIES ="):control.index("ELECTRIC_DRIVE_FUEL_NAME =")])
         self.assertIn("install_vehicle_batteries", control)
+        self.assertIn("entity.grid.take{equipment = existing[index]}", control)
         self.assertIn("install_vehicle_batteries(entity, charge_new_batteries)", control)
         self.assertIn("equipment.energy = equipment.max_energy", control)
         self.assertIn("track_electric_vehicle(entity, true)", control)
@@ -382,11 +383,11 @@ class FactoryXModTest(unittest.TestCase):
                         data.index('"x-premium-ev", generated_icon("premium-ev")', vehicle_table)]
         self.assertIn('{type = "impact", percent = -50}', roadster)
         for name, batteries in {
-            "x-prototype-roadster": 3,
-            "x-premium-ev": 4,
-            "x-mass-market-ev": 3,
-            "x-cybertruck": 8,
-            "x-robotaxi-fleet": 5,
+            "x-prototype-roadster": 1,
+            "x-premium-ev": 2,
+            "x-mass-market-ev": 1,
+            "x-cybertruck": 4,
+            "x-robotaxi-fleet": 2,
         }.items():
             self.assertIn(f'["{name}"] = {batteries}', control)
 
@@ -473,7 +474,7 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         self.assertIn("station.quality and station.quality.level", control)
         self.assertIn("1 + quality_level * 0.1", control)
-        self.assertIn("ELECTRIC_VEHICLE_BATTERIES[entity.name] + quality_level", control)
+        self.assertIn("ELECTRIC_VEHICLE_BATTERIES[entity.name] + math.floor(quality_level / 2)", control)
         for recipe_name in [
             "x-sell-prototype-roadster",
             "x-sell-cybertruck",

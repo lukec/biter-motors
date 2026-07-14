@@ -331,11 +331,11 @@ CUSTOMER_VEHICLE_CLASS_BY_ITEM = {
   ["x-robotaxi-fleet"] = "robotaxi"
 }
 ELECTRIC_VEHICLE_BATTERIES = {
-  ["x-prototype-roadster"] = 3,
-  ["x-premium-ev"] = 4,
-  ["x-mass-market-ev"] = 3,
-  ["x-cybertruck"] = 8,
-  ["x-robotaxi-fleet"] = 5
+  ["x-prototype-roadster"] = 1,
+  ["x-premium-ev"] = 2,
+  ["x-mass-market-ev"] = 1,
+  ["x-cybertruck"] = 4,
+  ["x-robotaxi-fleet"] = 2
 }
 ELECTRIC_DRIVE_FUEL_NAME = "x-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000
@@ -1104,20 +1104,25 @@ end
 
 function electric_vehicle_battery_target(entity)
   local quality_level = entity.quality and entity.quality.level or 0
-  return ELECTRIC_VEHICLE_BATTERIES[entity.name] + quality_level
+  return ELECTRIC_VEHICLE_BATTERIES[entity.name] + math.floor(quality_level / 2)
 end
 
 function install_vehicle_batteries(entity, charge_new_batteries)
   if not is_electric_vehicle(entity) or not entity.grid then
     return
   end
-  local existing = 0
+  local existing = {}
   for _, equipment in pairs(entity.grid.equipment) do
     if equipment.name == "battery-equipment" then
-      existing = existing + 1
+      existing[#existing + 1] = equipment
     end
   end
-  local needed = electric_vehicle_battery_target(entity) - existing
+  local target = electric_vehicle_battery_target(entity)
+  table.sort(existing, function(left, right) return left.energy > right.energy end)
+  for index = #existing, target + 1, -1 do
+    entity.grid.take{equipment = existing[index]}
+  end
+  local needed = target - math.min(#existing, target)
   for y = 0, entity.grid.height - 2, 2 do
     for x = 0, entity.grid.width - 2, 2 do
       if needed <= 0 then
