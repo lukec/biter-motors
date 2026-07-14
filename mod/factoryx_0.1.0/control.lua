@@ -396,7 +396,10 @@ local sync_customer_settlements
 local customer_service_for_force
 
 local function station_config(station)
-  local base = station and STATION_CONFIGS[station.name]
+  if not station or not station.valid then
+    return nil
+  end
+  local base = STATION_CONFIGS[station.name]
   if not base then
     return nil
   end
@@ -550,7 +553,7 @@ function charger_stall_visual_state(service, station, assignment, stall_index, c
   local load = assignment and assignment.stall_loads and assignment.stall_loads[stall_index] or 0
   if load <= 0 then return "idle", charging_available end
   local settlement = assignment and assignment.settlements[stall_index]
-  local key = settlement and (
+  local key = settlement and settlement.valid and (
     settlement.surface.index .. ":" .. (settlement.unit_number or string.format(
       "%s:%.1f:%.1f",
       settlement.name,
@@ -3609,12 +3612,14 @@ function convert_station_area_customers(market_force, service)
             local nearest
             local nearest_distance
             for _, settlement in pairs(assignment.settlements) do
-              local dx = settlement.position.x - entity.position.x
-              local dy = settlement.position.y - entity.position.y
-              local distance = dx * dx + dy * dy
-              if not nearest_distance or distance < nearest_distance then
-                nearest = settlement
-                nearest_distance = distance
+              if settlement.valid then
+                local dx = settlement.position.x - entity.position.x
+                local dy = settlement.position.y - entity.position.y
+                local distance = dx * dx + dy * dy
+                if not nearest_distance or distance < nearest_distance then
+                  nearest = settlement
+                  nearest_distance = distance
+                end
               end
             end
             if nearest and register_customer_unit(entity, nearest, market_force) then
@@ -3956,11 +3961,20 @@ function active_customer_station_stalls(station, service)
 end
 
 function waiting_market_buyers_at_station(station, service)
+  if not is_station(station) then return 0 end
   service = service or customer_service_for_force(station.force)
   local assignment = service.assignments[station.unit_number]
   local assigned_keys = {}
+  local stale_assignment = false
   for _, settlement in pairs(assignment and assignment.settlements or {}) do
-    assigned_keys[settlement_key(settlement.surface, settlement)] = true
+    if settlement and settlement.valid then
+      assigned_keys[settlement_key(settlement.surface, settlement)] = true
+    else
+      stale_assignment = true
+    end
+  end
+  if stale_assignment then
+    mark_factoryx_market_dirty(station.force, "invalid-assigned-settlement")
   end
   local count = 0
   for key, population in pairs(customer_settlement_populations()) do
@@ -4133,14 +4147,16 @@ local function show_station_info_panel(player, station)
   local seen_settlements = {}
   local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
   for _, settlement in pairs(assignment and assignment.settlements or {}) do
-    local key = settlement_key(settlement.surface, settlement)
-    if not seen_settlements[key] then
-      underserved_here = underserved_here + math.max(
-        0,
-        (vehicle_summary.by_settlement[key] or 0)
-          - (service.powered_capacity_by_settlement_key[key] or 0)
-      )
-      seen_settlements[key] = true
+    if settlement and settlement.valid then
+      local key = settlement_key(settlement.surface, settlement)
+      if not seen_settlements[key] then
+        underserved_here = underserved_here + math.max(
+          0,
+          (vehicle_summary.by_settlement[key] or 0)
+            - (service.powered_capacity_by_settlement_key[key] or 0)
+        )
+        seen_settlements[key] = true
+      end
     end
   end
   local panel = player.gui.screen.add{

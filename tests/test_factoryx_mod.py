@@ -2185,6 +2185,18 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("[FactoryX] Customer charging access restored.", control)
         self.assertNotIn("[FactoryX] Customer settlement expanded", control)
 
+    def test_cached_charger_assignments_tolerate_destroyed_settlements(self):
+        control = (MOD / "control.lua").read_text()
+        waiting = control[
+            control.index("function waiting_market_buyers_at_station"):
+            control.index("function station_reservation_demand")
+        ]
+        self.assertIn("if not is_station(station) then return 0 end", waiting)
+        self.assertIn("if settlement and settlement.valid then", waiting)
+        self.assertIn('mark_factoryx_market_dirty(station.force, "invalid-assigned-settlement")', waiting)
+        self.assertIn("local key = settlement and settlement.valid and", control)
+        self.assertIn("if not station or not station.valid then", control)
+
     def test_factoryx_stack_sizes_match_physical_scale(self):
         data = (MOD / "data.lua").read_text()
         for name in [
