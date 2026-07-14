@@ -1294,6 +1294,31 @@ Proposed reliability progression:
   event if it can inspect the physical launch vehicle's quality without also
   forcing the player through a duplicate vanilla rocket-production path.
 
+Planned launch-water mechanic:
+
+- The Rocket Factory manufactures the vehicle, but a separate Launch Pad must
+  receive a large, sustained water supply for flame suppression, acoustic
+  suppression, and pad cooling. Water is physical infrastructure, not another
+  launch token or packaged intermediate.
+- Initial tuning target: drain `4,800 water/second` during a 60-second launch
+  sequence, equivalent to four normal offshore pumps running at their full
+  `1,200 water/second` output and `288,000 water` per attempt. Failed early
+  launches consume the full deluge just like successful launches.
+- Give the pad only a modest working buffer so one pump cannot slowly fill an
+  enormous internal tank and bypass the intended flow challenge. Sustained
+  under-delivery should pause and slowly rewind launch preparation without
+  destroying the vehicle; the inspector and map warning should say
+  `Insufficient launch-water flow`.
+- Show current water flow, required flow, buffered water, and launch readiness
+  in the Launch Pad inspector. Avoid chat messages for ordinary shortages.
+- This should create a meaningful siting decision: build near a large body of
+  water, construct several long pipelines, or deliver water to a dedicated
+  launch complex. Storage tanks can smooth brief interruptions but should not
+  replace the multi-pump supply system.
+- Treat `4,800 water/second` as the first playtest target. Benchmark the fluid
+  network and tune the requirement before adding larger launch generations;
+  reusable or heavy launch vehicles may demand still more flow.
+
 Next concrete unlock:
 
 - Reusable Launch.
@@ -2200,6 +2225,10 @@ AI-datacenter opposition dynamic:
 ### Phase 3: SpaceX-Style Launch Flywheel
 
 - Add a clearer small launch -> reusable booster -> reusable launch progression.
+- Make every physical launch depend on a sustained, multi-pump water-deluge
+  system. Start playtesting at four offshore pumps of flow for 60 seconds per
+  attempt, consume water on failures, and expose flow/readiness in the Launch
+  Pad UI.
 - Make launch-vehicle quality represent reliability. The early expendable
   vehicle requires rare quality to succeed; normal and uncommon attempts launch
   and fail. Later generations progressively reduce failure risk, while mature
