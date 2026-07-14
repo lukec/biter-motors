@@ -152,7 +152,7 @@ script.on_init(function()
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
   local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
   local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {90, 0}, force)
-  local pole = create_named(surface, POWER_POLE, {-4, 0}, force)
+  local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
   local station = create_named(surface, STATION, {-2, 0}, force)
   local biter_spawner = create_named(surface, BITER_SPAWNER, {-2, 16}, game.forces.enemy)
@@ -172,7 +172,7 @@ script.on_init(function()
   local gigafactory_economics_test = create_named(surface, GIGAFACTORY, {80, 80}, force)
   local solar_array = create_named(surface, SOLAR_ARRAY, {60, 24}, force)
   local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
-  local power_source = create_named(surface, POWER_SOURCE, {-4, -2}, force)
+  local power_source = create_named(surface, POWER_SOURCE, {1, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)
   local datacenter = create_named(surface, TERRESTRIAL_DATACENTER, {0, -40}, force)
   local datacenter_pole = create_named(surface, POWER_POLE, {0, -35}, force)
@@ -1446,8 +1446,8 @@ if terrestrial_ai.get("researched_level") != 5 or terrestrial_ai.get("tokens_per
     raise SystemExit(f"Terrestrial AI efficiency status mismatch: {checked}")
 if terrestrial_ai.get("generated", 0) < 20:
     raise SystemExit(f"Terrestrial AI production tracker did not observe completed cycles: {checked}")
-if not checked.get("grid_connection_created"):
-    raise SystemExit(f"EV Charging Station grid connection was not created: {checked}")
+if checked.get("grid_connections") != 0 or checked.get("grid_connection_created"):
+    raise SystemExit(f"EV Charging Stations must not create wire-routing electric poles: {checked}")
 if not checked.get("v1_power_sinks_capped"):
     raise SystemExit(f"V1 charger should receive no utilization after the single produced EV is allocated to the earlier V2 charger: {checked}")
 if not checked.get("v2_power_sinks_created"):

@@ -1084,11 +1084,6 @@ local function count_entities(force, entity_name)
   return count
 end
 
-local function station_grid_connections()
-  storage.factoryx_station_grid_connections = storage.factoryx_station_grid_connections or {}
-  return storage.factoryx_station_grid_connections
-end
-
 local function station_power_sinks()
   storage.factoryx_station_power_sinks = storage.factoryx_station_power_sinks or {}
   return storage.factoryx_station_power_sinks
@@ -1667,8 +1662,10 @@ local function nearby_real_power_pole(station)
     if pole.valid and pole.name ~= STATION_GRID_CONNECTION_NAME then
       local dx = pole.position.x - position.x
       local dy = pole.position.y - position.y
+      local supply_distance = pole.prototype.get_supply_area_distance(pole.quality)
       local distance_squared = dx * dx + dy * dy
-      if distance_squared <= radius * radius
+      if math.abs(dx) <= supply_distance + 0.001
+        and math.abs(dy) <= supply_distance + 0.001
         and (not nearest_distance_squared or distance_squared < nearest_distance_squared) then
         nearest = pole
         nearest_distance_squared = distance_squared
@@ -1683,36 +1680,6 @@ end
 
 local function station_has_grid_access(station)
   return station and station.valid and nearby_real_power_pole(station) ~= nil
-end
-
-local function ensure_station_grid_connection(station)
-  if not station or not station.valid or not station.unit_number then
-    return nil
-  end
-  local real_pole = nearby_real_power_pole(station)
-  if not real_pole then
-    return nil
-  end
-
-  local connections = station_grid_connections()
-  local connector = connections[station.unit_number]
-  if not connector or not connector.valid then
-    connector = station.surface.create_entity{
-      name = STATION_GRID_CONNECTION_NAME,
-      position = station.position,
-      force = station.force
-    }
-    connections[station.unit_number] = connector
-  end
-
-  local charger_wire = connector.get_wire_connector(defines.wire_connector_id.pole_copper, true)
-  local grid_wire = real_pole.get_wire_connector(defines.wire_connector_id.pole_copper, true)
-  if charger_wire and grid_wire
-    and (charger_wire.real_connection_count ~= 1 or not charger_wire.is_connected_to(grid_wire)) then
-    charger_wire.disconnect_all()
-    charger_wire.connect_to(grid_wire, false)
-  end
-  return connector
 end
 
 local function destroy_power_sink(sink)
@@ -1847,12 +1814,29 @@ local function remove_station_grid_connection(station)
     return
   end
 
-  local connections = station_grid_connections()
+  local connections = storage.factoryx_station_grid_connections or {}
   local connector = connections[station.unit_number]
   if connector and connector.valid then
     connector.destroy()
   end
   connections[station.unit_number] = nil
+end
+
+local function cleanup_legacy_station_grid_connections()
+  for _, surface in pairs(game.surfaces) do
+    for _, connector in pairs(surface.find_entities_filtered{name = STATION_GRID_CONNECTION_NAME}) do
+      if connector.valid then connector.destroy() end
+    end
+  end
+  storage.factoryx_station_grid_connections = {}
+  storage.factoryx_station_power_pole_cache = {}
+  storage.factoryx_station_power_model = "native-supply-area-v1"
+end
+
+local function ensure_native_station_power_model()
+  if storage.factoryx_station_power_model ~= "native-supply-area-v1" then
+    cleanup_legacy_station_grid_connections()
+  end
 end
 
 local function remove_station_power_sink(station)
@@ -1886,7 +1870,6 @@ local function count_powered_stations(force)
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
       if station.valid and station_has_grid_access(station) then
-        ensure_station_grid_connection(station)
         count = count + 1
         capacity = capacity + station_config(station).stalls
       else
@@ -2146,7 +2129,6 @@ local function count_covered_biter_settlements(force)
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
       if station.valid and station_has_grid_access(station) then
-        ensure_station_grid_connection(station)
         local radius = station_config(station).customer_radius
         local area = area_around(station.position, radius)
         for_each_biter_customer_settlement(surface, customers, area, function(settlement)
@@ -4105,7 +4087,6 @@ local function count_active_customer_stalls(force)
       if station.valid and station_has_grid_access(station) then
         local stalls = active_customer_station_stalls(station, service)
         count = count + stalls
-        ensure_station_grid_connection(station)
         ensure_station_power_sinks(station, allocations[station.unit_number] or 0)
       else
         remove_station_grid_connection(station)
@@ -6776,7 +6757,6 @@ local function refresh_station_power_state(station, allocations)
     return false
   end
   if station_has_grid_access(station) then
-    ensure_station_grid_connection(station)
     ensure_station_power_sinks(station, allocations and allocations[station.unit_number] or 0)
     return true
   end
@@ -6921,6 +6901,7 @@ end
 
 script.on_init(function()
   configure_factoryx_new_game()
+  cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
@@ -6951,6 +6932,7 @@ script.on_init(function()
 end)
 
 script.on_configuration_changed(function()
+  cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
   rebuild_grid_controllers()
@@ -7296,6 +7278,7 @@ script.on_nth_tick(30, function()
 end)
 
 script.on_nth_tick(60, function()
+  ensure_native_station_power_model()
   track_ai_efficiency_progress()
   process_robotaxi_service_centers()
   process_customer_vehicle_variant_migration(50)

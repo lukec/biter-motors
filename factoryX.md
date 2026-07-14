@@ -478,6 +478,10 @@ an automatic customer penalty.
   versus stranded EV owners, and the nearest additional sale count that will
   activate another stall. Forecasts turn yellow inside the final quarter of a
   stall's customer capacity; existing power or capacity failures are red.
+- Charging stations use ordinary electric-pole supply coverage like assemblers.
+  Their hidden per-stall consumers draw the rated load but are not electric
+  poles, cannot attract copper wires, and never become routing nodes between
+  substations or other grid infrastructure.
 - The panel is progressively disclosed. It shows the immediate objective and
   current milestone first, then only business products, infrastructure,
   improvements, and journey stages the force has actually reached. Robotaxi,
