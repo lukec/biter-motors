@@ -6029,23 +6029,17 @@ local function refresh_progress_panel(player)
       color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
     }
   end
-  if snapshot.ev_production_researched then
-    grid_rows[#grid_rows + 1] = {
-      sprite = "item/x-high-density-solar-array", label = "Energy Products",
-      value = snapshot.energy_products_researched
-        and string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks)
-        or "Research before Gigafactory scale",
-      color = snapshot.energy_products_researched and FACTORYX_STATE_COLORS.good
-        or FACTORYX_STATE_COLORS.warning
-    }
-  end
   add_progress_section(content, "Grid power", grid_rows)
 
   local market_rows = {}
   if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
     market_rows[#market_rows + 1] = {
       sprite = "item/x-dollar", label = "Profit generated",
-      value = format_represented_usd(snapshot.dollars_produced),
+      value = string.format(
+        "%s (%d $)",
+        format_represented_usd(snapshot.dollars_produced),
+        snapshot.dollars_produced
+      ),
       name = "factoryx_dollars_produced_value",
       color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral
     }
@@ -6141,122 +6135,6 @@ local function refresh_progress_panel(player)
     }
   end
   add_progress_section(content, "Business", market_rows)
-
-  local infrastructure_rows = {}
-  if snapshot.sales_office_researched or snapshot.sales_offices > 0 then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-sales-office", label = "Sales Offices", value = tostring(snapshot.sales_offices),
-      color = snapshot.sales_offices > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
-    }
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-ev-charging-station", label = "V1 chargers", value = tostring(snapshot.chargers_v1),
-      color = snapshot.chargers_v1 > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
-    }
-  end
-  if snapshot.charging_network_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-ev-charging-station-v2", label = "V2 chargers", value = tostring(snapshot.chargers_v2)
-    }
-  end
-  if snapshot.mass_market_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-ev-charging-station-v3", label = "V3 Superchargers", value = tostring(snapshot.chargers_v3)
-    }
-  end
-  if snapshot.autonomous_logistics_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-ev-charging-station-v4", label = "V4 Superchargers", value = tostring(snapshot.chargers_v4)
-    }
-  end
-  if snapshot.premium_evs_produced >= snapshot.gigafactory_production_gate
-    or snapshot.gigafactories > 0 or snapshot.gigafactories_v2 > 0 then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-gigafactory-building", label = "Gigafactories",
-      value = not snapshot.energy_products_researched and "Locked: Energy Products required"
-        or string.format("%d V1, %d V2", snapshot.gigafactories, snapshot.gigafactories_v2),
-      color = snapshot.gigafactories + snapshot.gigafactories_v2 > 0
-        and FACTORYX_STATE_COLORS.good
-        or (snapshot.energy_products_researched and FACTORYX_STATE_COLORS.warning
-          or FACTORYX_STATE_COLORS.bad)
-    }
-  end
-  if snapshot.energy_products_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-high-density-solar-array", label = "Energy products",
-      value = string.format("%d solar, %d Megapacks", snapshot.solar_arrays, snapshot.megapacks)
-    }
-  end
-  if snapshot.terrestrial_ai_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-terrestrial-datacenter", label = "Terrestrial Datacenters", value = tostring(snapshot.datacenters)
-    }
-  end
-  if snapshot.autonomous_logistics_researched then
-    infrastructure_rows[#infrastructure_rows + 1] = {
-      sprite = "item/x-robotaxi-service-center", label = "Robotaxi Service Centers",
-      value = tostring(snapshot.robotaxi_service_centers)
-    }
-  end
-  add_progress_section(content, "Infrastructure", infrastructure_rows)
-
-  local improvements_visible = snapshot.charging_network_researched
-    or snapshot.ev_production_researched
-    or snapshot.mass_market_researched
-    or snapshot.energy_products_researched
-    or snapshot.terrestrial_ai_researched
-  if improvements_visible then
-    local improvement_rows = {}
-    if snapshot.charging_network_researched then
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-ev-charging-station-v2", label = "Supercharging electronics",
-        value = "Level " .. snapshot.supercharging_level,
-        color = snapshot.supercharging_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
-      }
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "entity/biter-spawner", label = "Customer referrals", value = "Level " .. snapshot.referral_level,
-        color = snapshot.referral_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
-      }
-    end
-    if snapshot.mass_market_researched then
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-battery-pack", label = "Long-range battery", value = "Level " .. snapshot.battery_level,
-        color = snapshot.battery_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
-      }
-    end
-    if snapshot.ev_production_researched then
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-premium-ev", label = "Premium audio", value = "Level " .. snapshot.audio_level,
-        color = snapshot.audio_level > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
-      }
-    end
-    if snapshot.energy_products_researched then
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-high-density-solar-array", label = "Solar productivity",
-        value = "Level " .. snapshot.solar_productivity_level,
-        name = "factoryx_solar_productivity_level_value",
-        color = snapshot.solar_productivity_level > 0 and FACTORYX_STATE_COLORS.good
-          or FACTORYX_STATE_COLORS.warning
-      }
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-megapack", label = "Megapack productivity",
-        value = "Level " .. snapshot.megapack_productivity_level,
-        name = "factoryx_megapack_productivity_level_value",
-        color = snapshot.megapack_productivity_level > 0 and FACTORYX_STATE_COLORS.good
-          or FACTORYX_STATE_COLORS.warning
-      }
-    end
-    if snapshot.terrestrial_ai_researched then
-      improvement_rows[#improvement_rows + 1] = {
-        sprite = "item/x-ai-token", label = "Terrestrial AI efficiency",
-        value = snapshot.terrestrial_ai_next_threshold
-          and string.format("Level %d; next at %d", snapshot.terrestrial_ai_efficiency_level, snapshot.terrestrial_ai_next_threshold)
-          or string.format("Level %d; terrestrial ceiling", snapshot.terrestrial_ai_efficiency_level),
-        color = snapshot.terrestrial_ai_efficiency_level > 0 and FACTORYX_STATE_COLORS.good
-          or FACTORYX_STATE_COLORS.warning
-      }
-    end
-    add_progress_section(content, "Continuous improvement", improvement_rows)
-  end
 
   content.add{type = "line"}
   add_section_heading(content, "Journey")
