@@ -3491,10 +3491,17 @@ function update_customer_settlement_alerts(force, service)
     if settlement.valid then
       local key = settlement_key(settlement.surface, settlement)
       local mood = moods[key]
-      if (vehicle_summary.by_settlement[key] or 0) > 0
+      local vehicle_count = vehicle_summary.by_settlement[key] or 0
+      local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
+      local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
+      if vehicle_count > 0
         and not service.operational_keys[key]
         and mood and mood.was_customer then
-        disrupted[key] = settlement
+        disrupted[key] = {
+          settlement = settlement,
+          kind = assigned_capacity < vehicle_count and "capacity" or "power",
+          missing = math.max(1, vehicle_count - powered_capacity)
+        }
       end
     end
   end
@@ -3511,16 +3518,37 @@ function update_customer_settlement_alerts(force, service)
         player_states[key] = nil
       end
     end
-    for key, settlement in pairs(disrupted) do
-      if not player_states[key] then
+    for key, disruption in pairs(disrupted) do
+      local settlement = disruption.settlement
+      -- Custom alerts expire. Refresh persistent disruptions each service sync.
+      if player_states[key] then
+        player.remove_alert{entity = settlement, type = defines.alert_type.custom}
+      end
+      if disruption.kind == "capacity" then
         player.add_custom_alert(
           settlement,
           {type = "item", name = "x-ev-charging-station"},
-          {"", "Customer settlement lacks powered charging stall capacity."},
+          {
+            "",
+            "Customer settlement needs charging capacity for ",
+            disruption.missing,
+            " more EVs. Place or upgrade an EV charger near this settlement."
+          },
           true
         )
-        player_states[key] = settlement
+      else
+        player.add_custom_alert(
+          settlement,
+          {type = "item", name = "accumulator"},
+          {
+            "",
+            disruption.missing,
+            " EVs lack powered charging service. Restore grid power."
+          },
+          true
+        )
       end
+      player_states[key] = settlement
     end
   end
 end
@@ -6707,18 +6735,36 @@ local function update_station_alerts(station)
   if not is_station(station) then
     return
   end
-  local powered = station_has_grid_access(station)
+  local grid_connected = station_has_grid_access(station)
+  local power_state = station.unit_number and station_power_service()[station.unit_number] or nil
+  local requested_stalls = power_state and power_state.requested_stalls or 0
+  local powered_stalls = power_state and power_state.powered_stalls or 0
   for _, player in pairs(game.connected_players) do
     if player.valid and player.surface == station.surface and player.force == station.force then
       player.remove_alert{
         entity = station,
         type = defines.alert_type.custom
       }
-      if not powered then
+      if not grid_connected then
         player.add_custom_alert(
           station,
           {type = "item", name = station.name},
           {"", station.prototype.localised_name, " is not connected to power."},
+          true
+        )
+      elseif requested_stalls > powered_stalls then
+        player.add_custom_alert(
+          station,
+          {type = "item", name = "accumulator"},
+          {
+            "",
+            station.prototype.localised_name,
+            " has power for ",
+            powered_stalls,
+            " / ",
+            requested_stalls,
+            " active stalls. Increase grid generation or storage."
+          },
           true
         )
       end
