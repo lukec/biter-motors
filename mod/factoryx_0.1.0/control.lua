@@ -5852,6 +5852,12 @@ local function refresh_progress_panel(player)
   if not panel then
     return
   end
+  local display_scale = math.max(0.5, player.display_scale or 1)
+  local gui_width = math.floor(player.display_resolution.width / display_scale)
+  local gui_height = math.floor(player.display_resolution.height / display_scale)
+  local panel_width = math.max(540, math.min(600, gui_width - 80))
+  local content_height = math.max(480, math.min(1100, gui_height - 160))
+  panel.style.width = panel_width
   storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
 
   local snapshot = progress_snapshot(player.force)
@@ -5876,6 +5882,12 @@ local function refresh_progress_panel(player)
   for key, value in pairs(snapshot) do
     if not ignored[key] then append_signature(tostring(key), value) end
   end
+  signature_parts[#signature_parts + 1] = string.format(
+    "display=%dx%d@%.2f",
+    player.display_resolution.width,
+    player.display_resolution.height,
+    display_scale
+  )
   table.sort(signature_parts)
   local signature = table.concat(signature_parts, "|")
   if storage.factoryx_progress_panel_signatures[player.index] == signature then
@@ -5894,7 +5906,7 @@ local function refresh_progress_panel(player)
     name = PROGRESS_CONTENT_NAME,
     direction = "vertical"
   }
-  content.style.maximal_height = 760
+  content.style.maximal_height = content_height
   content.style.horizontally_stretchable = true
 
   local objective_row = content.add{type = "flow", direction = "horizontal"}
@@ -6284,7 +6296,6 @@ local function open_progress_panel(player)
   }
   storage.factoryx_progress_panel_signatures = storage.factoryx_progress_panel_signatures or {}
   storage.factoryx_progress_panel_signatures[player.index] = nil
-  panel.style.width = 540
   panel.auto_center = true
   local titlebar = panel.add{type = "flow", direction = "horizontal"}
   titlebar.drag_target = panel
