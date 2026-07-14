@@ -5603,7 +5603,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.mass_market_ev_gate.market_ready then
     return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
   elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products.", "Invest 500 cycles through production science plus Dollars to unlock High-density Solar Arrays and Megapacks for mass-market scale."
+    return "Energy products", "Research Energy Products.", "Invest 250 cycles through chemical science plus Dollars to unlock High-density Solar Arrays and Megapacks before factory-scale power demand arrives."
   elseif not snapshot.charging_network_researched then
     return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
   elseif snapshot.chargers_v2 == 0 then

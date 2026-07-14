@@ -1551,21 +1551,20 @@ data:extend({
   ),
   tech("x-energy-products",
     "__factoryx__/graphics/icons/megapack.png",
-    {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy", "production-science-pack"},
+    {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy"},
     {
       unlock("x-high-density-solar-array"),
       unlock("x-megapack"),
       unlock("x-sell-megapack")
     },
-    500,
+    250,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
       {"chemical-science-pack", 1},
-      {"production-science-pack", 1},
       {"x-dollar", 1}
     },
-    45
+    30
   ),
   tech("x-small-orbital-launch",
     "__factoryx__/graphics/icons/small-launch-service.png",

@@ -320,7 +320,7 @@ Research levels and their effects are visible in the FactoryX Progress panel.
 | Sales Office | 75 | Red, green | 20s |
 | EV Production Line | 250 | Red, green, blue, Dollar | 30s |
 | EV Charging Network | 300 | Red, green, blue, Dollar | 30s |
-| Energy Products | 500 | Red, green, blue, purple, Dollar | 45s |
+| Energy Products | 250 | Red, green, blue, Dollar | 30s |
 | Mass-market EV Production | 1,000 | Red through yellow, Dollar | 60s |
 | Terrestrial AI | 1,000 | Red through yellow, Dollar | 60s |
 | Autonomous Logistics | 1,000 | Red through yellow, AI Token, Dollar | 60s |
@@ -1199,7 +1199,8 @@ Tesla-like meaning:
 Current code:
 
 - `x-energy-products` branches directly from EV Production Line, solar energy,
-  and electric energy accumulators; it does not require Mass-market EV Production.
+  and electric energy accumulators; it does not require production science or
+  Mass-market EV Production. The physical recipes remain the scaling gate.
 - It unlocks the placeable 300 kW High-density Solar Array, the placeable 100 MJ
   Megapack, and `Sell Megapack`.
 - Megapack charges and discharges at up to 5 MW.
