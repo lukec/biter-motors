@@ -767,8 +767,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("charging_power_served_kw", control)
         self.assertIn('add_progress_section(content, "Grid power", grid_rows)', control)
         self.assertIn('label = "EV grid load"', control)
-        self.assertIn('label = "Powered charging"', control)
-        self.assertIn('label = "Customer impact"', control)
+        self.assertIn('label = "Charging stalls"', control)
+        self.assertIn('label = "Powered capacity"', control)
+        self.assertIn('"%d EVs; %d spare"', control)
+        self.assertIn('label = "EV owners"', control)
+        self.assertIn('label = "Next load step"', control)
+        self.assertIn('"%d EV sale%s -> +%.0f kW"', control)
+        self.assertIn("next_customer_charging_step", control)
+        self.assertIn("next_charging_step = next_charging_step", control)
+        self.assertIn('label = "Next grid load"', control)
+        self.assertIn('"No spare stalls; add charger"', control)
         self.assertIn('"Research Energy Products before factory scale."', control)
         objective = control[
             control.index("local function current_progress_objective"):

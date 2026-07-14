@@ -454,10 +454,12 @@ restrained outline, so they remain readable without washing out Remote View.
 Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
 uses a compact native icon/label/value table for state, settlements, available
 buyers, EV owners, powered charging capacity, underserved owners, and reserved
-buyers. It deliberately omits recipe, cycle, input, and output details already
-visible in Factorio's machine GUI. Fixed short labels and a right-aligned value
-column prevent truncation; one colored status strip gives the current action or
-blocker.
+buyers. It also forecasts the nearest local customer threshold as `N EV sales
+-> +X kW`, using only settlements inside that office's market. This is the next
+possible charging-load step, not a globally pooled sales promise. It deliberately
+omits recipe, cycle, input, and output details already visible in Factorio's
+machine GUI. Fixed short labels and a right-aligned value column prevent
+truncation; one colored status strip gives the current action or blocker.
 
 A full Dollar output inventory stops the selected sale recipe. No EV or EV
 Reservation is consumed while blocked; inputs back up at the Sales Office,
@@ -471,6 +473,11 @@ an automatic customer penalty.
   available throughout the game.
 - It opens a movable screen panel that derives the current stage and next
   physical action from live force state rather than a static checklist.
+- Once EV sales begin, its compact Grid power section shows FactoryX charging
+  demand versus delivered power, powered versus requested stalls, supported
+  versus stranded EV owners, and the nearest additional sale count that will
+  activate another stall. Forecasts turn yellow inside the final quarter of a
+  stall's customer capacity; existing power or capacity failures are red.
 - The panel is progressively disclosed. It shows the immediate objective and
   current milestone first, then only business products, infrastructure,
   improvements, and journey stages the force has actually reached. Robotaxi,

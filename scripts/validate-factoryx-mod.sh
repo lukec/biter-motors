@@ -1506,11 +1506,18 @@ if checked.get("market", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"expected three living Robotaxi owners in the active customer fleet: {checked}")
 if checked.get("market", {}).get("active_customer_stalls") != 2:
     raise SystemExit(f"charging utilization must be capped by sold EVs and the two served settlements: {checked}")
+next_charging_step = checked.get("market", {}).get("next_charging_step", {})
+if not next_charging_step.get("available") or next_charging_step.get("ev_owners_until", 0) < 1:
+    raise SystemExit(f"customer market did not expose a positive next charging load step: {checked}")
+if next_charging_step.get("power_kw", 0) <= 0 or next_charging_step.get("ev_capacity_added", 0) <= 0:
+    raise SystemExit(f"next charging load step omitted its power or EV capacity impact: {checked}")
 progress = checked.get("progress", {})
 if progress.get("stage") != "Prototype market validation" or progress.get("objective") != "Sell 50 Prototype Roadsters.":
     raise SystemExit(f"FactoryX progress status did not identify the next concrete objective: {checked}")
 if progress.get("snapshot", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"FactoryX progress snapshot did not expose live EV market state: {checked}")
+if progress.get("snapshot", {}).get("next_charging_step", {}).get("ev_owners_until") != next_charging_step.get("ev_owners_until"):
+    raise SystemExit(f"FactoryX progress forecast diverged from the shared customer market snapshot: {checked}")
 integrity = checked.get("progression_integrity", {})
 if not integrity.get("ok") or integrity.get("disabled_recipes"):
     raise SystemExit(f"FactoryX progression integrity check failed: {checked}")

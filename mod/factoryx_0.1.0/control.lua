@@ -2607,6 +2607,83 @@ customer_service_for_force = function(force, advance_mood)
   return service
 end
 
+local function next_customer_charging_step(service, office)
+  local assignments = {}
+  for _, assignment in pairs(service.assignments or {}) do
+    if assignment.station and assignment.station.valid then
+      assignments[#assignments + 1] = assignment
+    end
+  end
+  table.sort(assignments, function(left, right)
+    if left.station.surface.index ~= right.station.surface.index then
+      return left.station.surface.index < right.station.surface.index
+    end
+    return (left.station.unit_number or 0) < (right.station.unit_number or 0)
+  end)
+
+  local eligible_keys = {}
+  local eligible_settlements = 0
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    if settlement.valid then
+      local key = settlement_key(settlement.surface, settlement)
+      local population = customer_settlement_populations()[key]
+      local in_market = not office or (
+        population
+        and population.surface_index == office.surface.index
+        and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)
+      )
+      if in_market and (service.capacity_by_settlement_key[key] or 0) > 0 then
+        eligible_keys[key] = true
+        eligible_settlements = eligible_settlements + 1
+      end
+    end
+  end
+
+  local best = nil
+  local recorded_keys = {}
+  for _, assignment in ipairs(assignments) do
+    local station = assignment.station
+    local config = station_config(station)
+    if config then
+      for _, settlement in ipairs(assignment.settlements or {}) do
+        local key = settlement_key(settlement.surface, settlement)
+        if eligible_keys[key]
+          and not recorded_keys[key]
+          and not assignment.requested_settlement_keys[key] then
+          recorded_keys[key] = true
+          local vehicle_count = settlement_vehicle_count(service.vehicle_summary, settlement)
+          local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
+          local candidate = {
+            available = true,
+            ev_owners_until = math.max(1, requested_capacity - vehicle_count + 1),
+            ev_capacity_added = config.evs_per_stall,
+            evs_per_stall = config.evs_per_stall,
+            power_kw = station_stall_power_watts(station) / 1000,
+            station_name = config.display_name,
+            settlement_key = key
+          }
+          if not best
+            or candidate.ev_owners_until < best.ev_owners_until
+            or (candidate.ev_owners_until == best.ev_owners_until
+              and (station.unit_number or 0) < (best.station_unit_number or math.huge)) then
+            candidate.station_unit_number = station.unit_number
+            best = candidate
+          end
+        end
+      end
+    end
+  end
+
+  if best then
+    return best
+  end
+  return {
+    available = false,
+    eligible_settlements = eligible_settlements,
+    needs_charger = eligible_settlements > 0
+  }
+end
+
 local function calculate_station_utilization(force)
   local service = customer_service_for_force(force)
   local stations = {}
@@ -4263,6 +4340,8 @@ local function biter_customer_market_summary(force)
     end
   end
 
+  local next_charging_step = service and next_customer_charging_step(service) or nil
+
   local _, growth = customer_growth_summary(force)
   return {
     biter_customer_mode = customer_mode,
@@ -4274,6 +4353,7 @@ local function biter_customer_market_summary(force)
     powered_customer_stalls = powered_customer_stalls,
     charging_power_demand_kw = charging_power_demand_kw,
     charging_power_served_kw = charging_power_served_kw,
+    next_charging_step = next_charging_step,
     accessible_stall_capacity = growth.accessible_stall_capacity,
     supported_ev_capacity = growth.supported_ev_capacity,
     evs_per_stall = growth.evs_per_stall,
@@ -5571,6 +5651,8 @@ local function progress_snapshot(force)
     powered_customer_stalls = market.powered_customer_stalls,
     charging_power_demand_kw = market.charging_power_demand_kw,
     charging_power_served_kw = market.charging_power_served_kw,
+    next_charging_step = market.next_charging_step,
+    supported_ev_capacity = market.supported_ev_capacity,
     customer_ev_fleet = market.customer_ev_fleet,
     customer_ev_sales_lifetime = lifetime_customer_ev_sales_size(force),
     roadsters_sold = sold["x-prototype-roadster"] or 0,
@@ -6005,35 +6087,77 @@ local function refresh_progress_panel(player)
     local served_kw = snapshot.charging_power_served_kw or 0
     local power_color = demand_kw <= 0 and FACTORYX_STATE_COLORS.neutral
       or (served_kw >= demand_kw * 0.95 and FACTORYX_STATE_COLORS.good
-        or (served_kw > 0 and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.bad))
+        or FACTORYX_STATE_COLORS.bad)
     grid_rows[#grid_rows + 1] = {
       sprite = "item/accumulator", label = "EV grid load",
       value = string.format("%.1f / %.1f MW delivered", served_kw / 1000, demand_kw / 1000),
       color = power_color
     }
     grid_rows[#grid_rows + 1] = {
-      sprite = "item/x-ev-charging-station", label = "Powered charging",
+      sprite = "item/x-ev-charging-station", label = "Charging stalls",
       value = string.format(
-        "%d / %d active stalls",
+        "%d / %d powered",
         snapshot.powered_customer_stalls,
         snapshot.requested_customer_stalls
       ),
       color = snapshot.powered_customer_stalls >= snapshot.requested_customer_stalls
         and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
     }
+    grid_rows[#grid_rows + 1] = {
+      sprite = "item/x-mass-market-ev", label = "Powered capacity",
+      value = string.format(
+        "%d EVs; %d spare",
+        snapshot.supported_ev_capacity,
+        math.max(0, snapshot.supported_ev_capacity - snapshot.customer_ev_fleet)
+      ),
+      color = snapshot.supported_ev_capacity >= snapshot.customer_ev_fleet
+        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+    }
   end
   if snapshot.first_sale_complete then
+    local supported_owners = math.max(0, snapshot.customer_ev_fleet - snapshot.stranded_evs)
     grid_rows[#grid_rows + 1] = {
-      sprite = "item/x-premium-ev", label = "Customer impact",
+      sprite = "item/x-premium-ev", label = "EV owners",
       value = snapshot.stranded_evs > 0
         and string.format(
-          "%d EVs stranded; %d settlements unhappy",
-          snapshot.stranded_evs,
-          snapshot.angry_settlements
+          "%d / %d supported; %d stranded",
+          supported_owners,
+          snapshot.customer_ev_fleet,
+          snapshot.stranded_evs
         )
-        or "All customer EVs supported",
+        or string.format("%d / %d supported", supported_owners, snapshot.customer_ev_fleet),
       color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
     }
+    local step = snapshot.next_charging_step
+    if step and step.available then
+      local warning_distance = math.max(1, math.ceil((step.evs_per_stall or 1) * 0.25))
+      grid_rows[#grid_rows + 1] = {
+        sprite = "item/x-ev-charging-station", label = "Next load step",
+        value = string.format(
+          "%d EV sale%s -> +%.0f kW",
+          step.ev_owners_until,
+          step.ev_owners_until == 1 and "" or "s",
+          step.power_kw
+        ),
+        color = step.ev_owners_until <= warning_distance
+          and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good,
+        tooltip = string.format(
+          "The closest customer settlement activates another %s stall after %d additional EV owner%s. That stall supports %d EVs and adds %.0f kW of charging demand.",
+          step.station_name,
+          step.ev_owners_until,
+          step.ev_owners_until == 1 and "" or "s",
+          step.ev_capacity_added,
+          step.power_kw
+        )
+      }
+    elseif step and step.needs_charger then
+      grid_rows[#grid_rows + 1] = {
+        sprite = "item/x-ev-charging-station", label = "Next load step",
+        value = "No spare stalls; add a charger",
+        color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad
+          or FACTORYX_STATE_COLORS.warning
+      }
+    end
   end
   add_progress_section(content, "Grid power", grid_rows)
 
@@ -6371,14 +6495,52 @@ local function show_manufacturer_info_panel(player, entity)
     local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
-    add_factoryx_metric_table(panel, {
+    local metric_rows = {
       {sprite = "entity/biter-spawner", label = "Settlements", value = tostring(count_customer_settlements_near_office(entity))},
       {sprite = "entity/small-biter", label = "Buyers", value = string.format("%d available", buyer_status.available)},
       {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
-      {sprite = "item/x-ev-charging-station", label = "Charging", value = string.format("%d capacity", buyer_status.powered_capacity)},
+      {
+        sprite = "item/x-ev-charging-station",
+        label = "Charging",
+        value = string.format(
+          "%d EVs; %d spare",
+          buyer_status.powered_capacity,
+          math.max(0, buyer_status.powered_capacity - buyer_status.owned)
+        )
+      },
       {sprite = "item/x-ev-charging-station", label = "Underserved", value = tostring(buyer_status.underserved), color = buyer_status.underserved > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good},
       {sprite = "item/x-ev-reservation", label = "Reserved", value = sale and string.format("%d / %d", reserved, sale.vehicles) or "-"}
-    })
+    }
+    local next_step = next_customer_charging_step(customer_service_for_force(entity.force), entity)
+    if next_step.available then
+      local warning_distance = math.max(1, math.ceil((next_step.evs_per_stall or 1) * 0.25))
+      metric_rows[#metric_rows + 1] = {
+        sprite = "item/accumulator",
+        label = "Next grid load",
+        value = string.format(
+          "%d EV sale%s -> +%.0f kW",
+          next_step.ev_owners_until,
+          next_step.ev_owners_until == 1 and "" or "s",
+          next_step.power_kw
+        ),
+        color = next_step.ev_owners_until <= warning_distance
+          and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good,
+        tooltip = string.format(
+          "Nearest threshold in this Sales Office market. The next %s stall supports %d EVs.",
+          next_step.station_name,
+          next_step.ev_capacity_added
+        )
+      }
+    elseif next_step.needs_charger then
+      metric_rows[#metric_rows + 1] = {
+        sprite = "item/accumulator",
+        label = "Next grid load",
+        value = "No spare stalls; add charger",
+        color = buyer_status.underserved > 0 and FACTORYX_STATE_COLORS.bad
+          or FACTORYX_STATE_COLORS.warning
+      }
+    end
+    add_factoryx_metric_table(panel, metric_rows)
 
     local summary
     local summary_color
