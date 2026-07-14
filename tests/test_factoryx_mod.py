@@ -2139,6 +2139,7 @@ class FactoryXModTest(unittest.TestCase):
             "x-mass-market-ev",
             "x-cybertruck",
             "x-gigafactory-module",
+            "x-wrecked-ev",
         ]:
             item_line = next(line for line in data.splitlines() if f'item("{name}"' in line)
             self.assertIn(", 1", item_line, name)
