@@ -773,6 +773,26 @@ class FactoryXModTest(unittest.TestCase):
             objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
         )
 
+    def test_tier_two_modules_are_terrestrial_capital_research(self):
+        updates = (MOD / "data-updates.lua").read_text()
+        module_rewrite = updates[
+            updates.index("-- Tier 2 modules are terrestrial FactoryX capital investments"):
+            updates.index("-- Sparse calcite")
+        ]
+
+        for technology_name in [
+            "speed-module-2",
+            "productivity-module-2",
+            "efficiency-module-2",
+            "quality-module-2",
+        ]:
+            self.assertIn(f'"{technology_name}"', module_rewrite)
+        self.assertIn('prerequisite ~= "space-science-pack"', module_rewrite)
+        self.assertIn('prerequisites[#prerequisites + 1] = "x-sales-office"', module_rewrite)
+        self.assertIn('ingredient_name == "space-science-pack"', module_rewrite)
+        self.assertIn('{"x-dollar", ingredient.amount or ingredient[2] or 1}', module_rewrite)
+        self.assertIn("mark_factoryx_technology(technology, technology.icon)", module_rewrite)
+
     def test_sales_recipes_show_the_product_with_a_coin_badge(self):
         data = (MOD / "data.lua").read_text()
         self.assertIn("local function sale_icon(product_icons)", data)
@@ -1009,7 +1029,7 @@ class FactoryXModTest(unittest.TestCase):
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
-            updates.index("-- Sparse calcite")
+            updates.index("-- Tier 2 modules are terrestrial FactoryX capital investments")
         ]
         self.assertIn('prerequisites = {"logistic-robotics", "x-energy-products"}', logistic_rewrite)
         self.assertIn('"automation-science-pack"', logistic_rewrite)

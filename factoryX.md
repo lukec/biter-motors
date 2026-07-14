@@ -247,6 +247,9 @@ by default. It is deliberately a light start rather than a prebuilt base:
   footprint, and coverage radius stay fixed so placement remains readable.
 - Abstract outputs do not roll quality. Dollar sales, AI Token production, and
   the final AGI Model use `allow_quality = false`.
+- Tier 2 Speed, Productivity, Efficiency, and Quality module research is a
+  terrestrial capital step: red, green, blue, and Dollars after the Sales
+  Office. Tier 3 modules retain their later planetary progression gates.
 - Launch vehicles are the deliberate exception: their native item quality
   represents manufacturing reliability. Their recipes allow quality modules
   but not productivity modules, and the launch system preserves the produced

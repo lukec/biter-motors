@@ -211,6 +211,40 @@ logistic_system_tech.unit = science(500, {
 }, 30)
 logistic_system_tech.enabled = false
 
+-- Tier 2 modules are terrestrial FactoryX capital investments. Space Age
+-- normally gates them on the first orbital science pack even though their
+-- recipes use only Nauvis materials.
+for _, technology_name in ipairs({
+  "speed-module-2",
+  "productivity-module-2",
+  "efficiency-module-2",
+  "quality-module-2"
+}) do
+  local technology = data.raw.technology[technology_name]
+  if technology then
+    local prerequisites = {}
+    for _, prerequisite in ipairs(technology.prerequisites or {}) do
+      if prerequisite ~= "space-science-pack" then
+        prerequisites[#prerequisites + 1] = prerequisite
+      end
+    end
+    prerequisites[#prerequisites + 1] = "x-sales-office"
+    technology.prerequisites = prerequisites
+
+    local research_ingredients = {}
+    for _, ingredient in ipairs(technology.unit.ingredients or {}) do
+      local ingredient_name = ingredient.name or ingredient[1]
+      if ingredient_name == "space-science-pack" then
+        research_ingredients[#research_ingredients + 1] = {"x-dollar", ingredient.amount or ingredient[2] or 1}
+      else
+        research_ingredients[#research_ingredients + 1] = ingredient
+      end
+    end
+    technology.unit.ingredients = research_ingredients
+    mark_factoryx_technology(technology, technology.icon)
+  end
+end
+
 -- Sparse calcite makes terrestrial casting finite initially; asteroid
 -- processing remains the renewable space source later.
 resource_autoplace.initialize_patch_set("calcite", false)

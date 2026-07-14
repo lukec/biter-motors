@@ -877,7 +877,10 @@ factoryx_badge = "__factoryx__/graphics/technology/factoryx-tech-badge.png"
 factoryx_technologies = {
     name for name in data["technology"]
     if name.startswith("x-")
-} | {"big-mining-drill", "foundry", "recycling", "tesla-weapons"}
+} | {
+    "big-mining-drill", "foundry", "recycling", "tesla-weapons",
+    "speed-module-2", "productivity-module-2", "efficiency-module-2", "quality-module-2",
+}
 for technology_name in factoryx_technologies:
     icon_paths = {layer.get("icon") for layer in data["technology"][technology_name].get("icons", [])}
     if factoryx_badge not in icon_paths:
@@ -915,6 +918,21 @@ for technology_name, (count, time, ingredients) in expected_research.items():
             f"{technology_name} research mismatch: count={unit['count']} time={unit['time']} "
             f"ingredients={sorted(actual_ingredients)}"
         )
+
+module_two_counts = {
+    "speed-module-2": 200,
+    "productivity-module-2": 200,
+    "efficiency-module-2": 200,
+    "quality-module-2": 500,
+}
+for technology_name, expected_count in module_two_counts.items():
+    technology = data["technology"][technology_name]
+    ingredients = {ingredient[0] for ingredient in technology["unit"]["ingredients"]}
+    if ingredients != rgb | {"x-dollar"} or technology["unit"]["count"] != expected_count:
+        raise SystemExit(f"{technology_name} is not terrestrial capital research: {sorted(ingredients)}")
+    prerequisites = set(technology.get("prerequisites", []))
+    if "x-sales-office" not in prerequisites or "space-science-pack" in prerequisites:
+        raise SystemExit(f"{technology_name} prerequisite mismatch: {sorted(prerequisites)}")
 
 expected_terrestrial_recipes = {
     "electric-furnace": {"steel-plate": 10, "electronic-circuit": 10, "stone-brick": 10},
