@@ -14,10 +14,19 @@ analysis.
 
 ## One-Line Pitch
 
-Factory X is a Space Age industrial ambition mod where the player bootstraps
-from premium electric vehicles and small launch services into mass-market EVs,
-reusable rockets, satellite infrastructure, orbital AI compute, and finally a
-planetary-scale training run that achieves artificial general intelligence.
+Factory X is a Biter Motors industrial-ambition mod where the player bootstraps
+from prototype EV sales into battery minerals, mass-market manufacturing,
+charging infrastructure, energy storage, Robotaxis, terrestrial AI compute,
+and a circular autonomous economy.
+
+### Biter Motors Terrestrial Refocus
+
+The current product direction is Biter Motors rather than a combined Tesla and
+SpaceX simulation. Future implementation should deepen battery minerals,
+vehicle manufacturing, charging, energy storage, Robotaxis, recycling,
+terrestrial compute, and humanoid automation. The existing SpaceX-style launch,
+satellite, and orbital-compute sections below are historical design material
+until a dedicated removal slice deletes their prototypes and runtime paths.
 
 ## Design Principles
 
@@ -32,18 +41,16 @@ planetary-scale training run that achieves artificial general intelligence.
 - Avoid "EV Engineering Data" and "Factory Capex" as items. They were too
   abstract. Replace them with visible infrastructure, concrete products, and
   named hardware packages.
-- Make the bootstrapping arc mirror a simplified Tesla and SpaceX flywheel:
-  expensive early products fund scale, scale funds cheaper products, cheaper
-  products fund infrastructure, infrastructure funds space and AI.
-- Make space matter late. Terrestrial datacenters can create some AI tokens,
-  but the final game should require large orbital compute infrastructure.
-- The target victory is Achieving AGI. Orbital compute returns AI Token data;
-  one billion cumulative Tokens unlock the final training run. The Planetary
-  Energy Grid is required infrastructure that combines physical Tokens,
-  capital, and a huge sustained local power draw into AGI.
-- Remove the old civilization-scale terminology and progression entirely.
-  Planetary energy is a concrete prerequisite for AGI, not a separate ranking
-  goal.
+- Make the bootstrapping arc mirror a simplified Tesla-like flywheel: expensive
+  early products fund scale, scale funds cheaper products, cheaper products
+  fund charging, energy storage, autonomy, recycling, and AI.
+- Keep the progression terrestrial. Datacenters and hyperscalers should create
+  enough power, capital, land-use, and customer conflict to carry the late game.
+- Revisit the AGI victory after the SpaceX removal slice. The current orbital
+  requirements are superseded and must not constrain the terrestrial design.
+- Keep late terrestrial energy goals concrete: named infrastructure, sustained
+  grid draw, physical inputs, and visible output rather than civilization-scale
+  rankings.
 
 ## Playtest Lessons To Carry Forward
 
@@ -363,6 +370,26 @@ steel. Processing Units already contain advanced circuits. This keeps recipes
 readable without making them cheap: difficulty should come from quantities,
 craft time, power, prerequisites, and throughput rather than redundant input
 slots.
+
+### Proposed Battery Chemistry Branch
+
+The proposed branch replaces the generic Battery Pack with high-nickel and
+LFP chemistry families. Premium EVs use high-energy nickel packs; Mass-Market
+EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs; Megatrucks add
+high-energy packs to their mass-market donor vehicles. Nickel Ore and Lithium
+Brine are the only new natural resources. Coal supplies graphite, stone supplies
+phosphate, and early nickel refining produces a small cobalt byproduct.
+
+Battery recycling is 90% efficient for active cell material only: ten damaged
+packs return 72 of their original 80 cells, enough to rebuild nine packs after
+supplying fresh Accumulators and electronics. Chemistry cannot be transmuted,
+customer kills do not drop recoverable packs, and battery refining, cell, pack,
+and recycling recipes reject productivity to prevent Gigafactory V2's built-in
+productivity from creating an overly rich closed loop.
+
+The complete proposed recipes, balance audit, progression gates, and
+implementation slices are in
+[`feature_specs/factoryx_battery_chemistry_branch.md`](feature_specs/factoryx_battery_chemistry_branch.md).
 
 Current simplified terrestrial recipes:
 
