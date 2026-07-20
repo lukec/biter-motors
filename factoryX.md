@@ -32,6 +32,8 @@ until a dedicated removal slice deletes their prototypes and runtime paths.
 
 #### Robotaxi Fleet Safety Learning
 
+Status: implemented.
+
 - Track force-wide cumulative completed Robotaxi passenger rides using aggregate
   Robotaxi Service Center operation, not individual trip or customer objects.
 - Robotaxis become continuously safer as cumulative rides increase. Apply
@@ -46,6 +48,8 @@ until a dedicated removal slice deletes their prototypes and runtime paths.
   business and technology levers.
 
 #### Electric Semi Locomotive
+
+Status: implemented as `Battery-electric Semi` plus `Semi charging stop`.
 
 - Add a very fast battery-electric rail freight locomotive styled as a Biter
   Motors Semi. It uses normal rails, train schedules, wagons, and stations so it
@@ -418,9 +422,9 @@ readable without making them cheap: difficulty should come from quantities,
 craft time, power, prerequisites, and throughput rather than redundant input
 slots.
 
-### Proposed Battery Chemistry Branch
+### Battery Chemistry Branch
 
-The proposed branch replaces the generic Battery Pack with high-nickel and
+The implemented branch replaces the generic Battery Pack with high-nickel and
 LFP chemistry families. Premium EVs use high-energy nickel packs; Mass-Market
 EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs; Megatrucks add
 high-energy packs to their mass-market donor vehicles. Nickel Ore and Lithium
@@ -434,22 +438,23 @@ customer kills do not drop recoverable packs, and battery refining, cell, pack,
 and recycling recipes reject productivity to prevent Gigafactory V2's built-in
 productivity from creating an overly rich closed loop.
 
-The complete proposed recipes, balance audit, progression gates, and
-implementation slices are in
+The complete recipes, balance audit, progression gates, and implementation
+notes are in
 [`feature_specs/factoryx_battery_chemistry_branch.md`](feature_specs/factoryx_battery_chemistry_branch.md).
 
 Current simplified terrestrial recipes:
 
 - Sales Office: `Assembling Machine 2 + Radar + Concrete`.
 - V1 EV Charging Station: `Substation + Accumulators + Concrete`.
-- Battery Pack: `Accumulator + Electronic Circuits + Copper Cable`.
+- High-energy Battery Pack: `Accumulator + 8 High-Nickel Cells + 4 Advanced Circuits`.
+- LFP Battery Pack: `Accumulator + 8 LFP Cells + 4 Electronic Circuits`.
 - Electric Drivetrain: `Electric Engine Unit + Advanced Circuits + Copper Cable`.
 - Prototype Roadster: `Car + Batteries + Advanced Circuits`.
-- Premium EV: `Car + Battery Packs + Electric Drivetrains + Advanced Circuits`.
-- Mass-Market EV: `Car + Battery Packs + Electric Drivetrain`.
-- Megatruck: `2 Mass-Market EVs + 20 Steel Plates + 4 Battery Packs`.
+- Premium EV: `Car + 8 High-energy Battery Packs + Electric Drivetrains + Advanced Circuits`.
+- Mass-Market EV: `Car + 4 LFP Battery Packs + Electric Drivetrain`.
+- Megatruck: `2 Mass-Market EVs + 20 Steel Plates + 4 High-energy Battery Packs`.
 - High-density Solar Panel: `1 Solar Panel + 2 Processing Units + 2 Low Density Structures + 1 Dollar`.
-- Megapack: `Battery Packs + Accumulators + Substation`.
+- Megapack: `12 LFP Battery Packs + 4 Accumulators + Substation`.
 - Autonomy Computer: `Processing Units + Speed Modules`.
 - Robotaxi Fleet: `Mass-Market EVs + Autonomy Computers + Dollars`.
 - Gigafactory Module: `10 Dollars + 5 Assembling Machine 2s + 5 Labs + 50 Refined Concrete`.
@@ -1069,8 +1074,9 @@ Implemented design:
   the truly large science jump for mass-market scale.
 - The first completed `Sell hopes and dreams` sale prints a next-step message
   telling the player to research EV Production Line.
-- EV Production Line unlocks `Battery Pack`, `Electric Drivetrain`, `Premium
-  EV`, and `Sell premium product` after the existing 50-Roadster market gate.
+- EV Production Line unlocks dirty nickel/lithium refining, High-Nickel Cells,
+  High-energy Battery Packs, `Electric Drivetrain`, `Premium EV`, and `Sell
+  premium product` after the existing 50-Roadster market gate.
 - Premium EVs can initially be built in ordinary advanced assemblers. Producing
   100 completes the pilot run; the pilot plus Energy Products unlock both
   `Gigafactory Module` and the Gigafactory construction recipe.
@@ -1801,7 +1807,12 @@ beyond the MVP tech-and-recipe loop.
 | `x-ai-token` | AI token | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
 | `x-planetary-grid-segment` | Planetary grid segment | No | Dedicated physical high-voltage grid-module icon is wired. |
 | `x-agi-model` | AGI Model | Yes | Concrete output of the final training run and the victory trigger. |
-| `x-battery-pack` | Battery pack | Maybe | Vanilla battery/accumulator layering is acceptable but could be custom. |
+| `x-high-energy-battery-pack` | High-energy Battery Pack | Yes | High-nickel long-range pack; temporary layered native icon is wired. |
+| `x-lfp-battery-pack` | LFP Battery Pack | Yes | Long-life mass-market and stationary-storage pack; temporary layered native icon is wired. |
+| `x-damaged-high-energy-battery-pack` | Damaged High-energy Battery Pack | Yes | Chemistry-specific recycling input. |
+| `x-damaged-lfp-battery-pack` | Damaged LFP Battery Pack | Yes | Chemistry-specific recycling input. |
+| `x-electric-semi` | Battery-electric Semi | Yes | Temporary tinted vanilla locomotive art is wired; needs a dedicated aligned rail sprite. |
+| `x-semi-charging-stop` | Semi charging stop | Yes | Temporary train-stop/battery icon and vanilla stop art are wired. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |

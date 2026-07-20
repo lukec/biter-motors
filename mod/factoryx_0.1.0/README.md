@@ -197,7 +197,7 @@ first Prototype, Premium, and Mass-market sales print concise next actions.
 `Sell hopes and dreams` is intentionally slow: one Prototype Roadster plus one
 EV Reservation takes 60 seconds to return 2 Dollars of profit. The first completed sale prints the next step:
 research EV Production Line. That technology costs Dollars plus red, green, and
-blue science for 250 cycles, then unlocks battery packs, electric drivetrains,
+blue science for 250 cycles, then unlocks high-nickel refining, High-energy Battery Packs, electric drivetrains,
 Premium EVs, and `Sell premium product`. The first 100 Premium EVs are built in
 ordinary advanced assemblers; completing that pilot run and researching Energy
 Products unlocks Gigafactory Modules and construction together. Each production module consumes
@@ -227,7 +227,7 @@ Dollar icons.
 Energy Products follows EV Production Line and unlocks High-density Solar
 Arrays, Megapacks, and Megapack sales. Both Gigafactory tiers
 can build the energy products. The solar recipe consumes four Solar Panels, Processing Units, Low
-Density Structures, and Dollars. Megapacks consume Battery Packs, Accumulators,
+Density Structures, and Dollars. Megapacks consume LFP Battery Packs, Accumulators,
 and a Substation; they can be placed on the grid or sold through `Sell Megapack`.
 The first placed Gigafactory automatically researches base-game Logistic System.
 This deliberately bypasses Space Age's later space-science gate because the

@@ -87,8 +87,22 @@ ROBOTAXI_SERVICE_RADIUS = 256
 ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5
 ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100
 ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60
+ROBOTAXI_SAFETY_RIDES_SCALE = 1000
+ROBOTAXI_ROUTINE_WEAR_FLOOR = 0.20
 local RESERVATION_NAME = "x-ev-reservation"
 WRECKED_EV_NAME = "x-wrecked-ev"
+DAMAGED_HIGH_ENERGY_PACK_NAME = "x-damaged-high-energy-battery-pack"
+DAMAGED_LFP_PACK_NAME = "x-damaged-lfp-battery-pack"
+BATTERY_RECOVERY_TECH_NAME = "x-battery-material-recovery"
+ELECTRIC_SEMI_NAME = "x-electric-semi"
+ELECTRIC_SEMI_FUEL_NAME = "x-electric-semi-drive-charge"
+SEMI_CHARGING_STOP_NAME = "x-semi-charging-stop"
+SEMI_CHARGING_POWER_NAME = "x-semi-charging-power"
+SEMI_BATTERY_CAPACITY = 1000000000
+SEMI_CHARGING_POWER = 50000000
+SEMI_KINETIC_ENERGY_SCALE = 10000
+SEMI_REGEN_EFFICIENCY = 0.65
+SEMI_PROCESS_BUDGET = 32
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
@@ -103,6 +117,13 @@ FACTORYX_COMPUTE_RECIPES = {
 local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
+PLAYER_VEHICLE_BATTERY_SCRAP = {
+  [PREMIUM_EV_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
+  ["x-mass-market-ev"] = {[DAMAGED_LFP_PACK_NAME] = 4},
+  ["x-cybertruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 4, [DAMAGED_LFP_PACK_NAME] = 8},
+  [ROBOTAXI_ITEM_NAME] = {[DAMAGED_LFP_PACK_NAME] = 16},
+  [ELECTRIC_SEMI_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}
+}
 GIGAFACTORY_PRODUCTION_GATE = 100
 local FIRST_PROTOTYPE_SALE_RECIPE = "x-sell-prototype-roadster"
 local PREMIUM_EV_SALE_RECIPE = "x-sell-premium-ev"
@@ -1375,6 +1396,196 @@ function registered_factoryx_entities(kind, force, surface)
   return PerformanceState.entities(PerformanceState.ensure(storage), kind, force, surface)
 end
 
+function electric_semi_runtime()
+  storage.factoryx_electric_semi_runtime = storage.factoryx_electric_semi_runtime or {
+    semis = {}, semi_order = {}, semi_cursor = 1,
+    stops = {}, stop_order = {}, stop_cursor = 1,
+    batteries = {}, stop_power = {}, stop_ticks = {}
+  }
+  return storage.factoryx_electric_semi_runtime
+end
+
+function track_electric_semi_runtime(entity, factory_new)
+  if not entity or not entity.valid or not entity.unit_number then return end
+  local runtime = electric_semi_runtime()
+  if entity.name == ELECTRIC_SEMI_NAME then
+    if not runtime.semis[entity.unit_number] then
+      runtime.semis[entity.unit_number] = entity
+      runtime.semi_order[#runtime.semi_order + 1] = entity.unit_number
+    end
+    local battery = runtime.batteries[entity.unit_number]
+    if not battery then
+      runtime.batteries[entity.unit_number] = {
+        energy = factory_new == false and 0 or SEMI_BATTERY_CAPACITY,
+        last_speed = math.abs(entity.speed or 0),
+        last_tick = game.tick,
+        traction_used = 0,
+        regenerated = 0
+      }
+    end
+  elseif entity.name == SEMI_CHARGING_STOP_NAME and not runtime.stops[entity.unit_number] then
+    runtime.stops[entity.unit_number] = entity
+    runtime.stop_order[#runtime.stop_order + 1] = entity.unit_number
+  end
+end
+
+function clear_semi_drive_permission(entity)
+  if not entity or not entity.valid or not entity.burner then return end
+  entity.burner.inventory.clear()
+  entity.burner.currently_burning = nil
+end
+
+function set_semi_drive_permission(entity, enabled)
+  if not entity or not entity.valid or not entity.burner then return end
+  if not enabled then
+    clear_semi_drive_permission(entity)
+    return
+  end
+  if not entity.burner.currently_burning
+    and entity.burner.inventory.get_item_count(ELECTRIC_SEMI_FUEL_NAME) == 0 then
+    entity.burner.inventory.insert{name = ELECTRIC_SEMI_FUEL_NAME, count = 1}
+  end
+end
+
+function electric_semis_in_train(train)
+  local result = {}
+  if not train or not train.valid then return result end
+  for _, group in pairs(train.locomotives or {}) do
+    for _, locomotive in pairs(group) do
+      if locomotive.valid and locomotive.name == ELECTRIC_SEMI_NAME then
+        result[#result + 1] = locomotive
+      end
+    end
+  end
+  return result
+end
+
+function process_electric_semi(entity, battery)
+  local tick_delta = math.max(1, game.tick - (battery.last_tick or game.tick))
+  local seconds = tick_delta / 60
+  local speed = math.abs(entity.speed or 0)
+  local train = entity.train
+  local semis = electric_semis_in_train(train)
+  local mass_share = train and train.valid and train.weight / math.max(1, #semis) or entity.prototype.weight
+  local previous_kinetic = mass_share * (battery.last_speed or speed) ^ 2 * SEMI_KINETIC_ENERGY_SCALE
+  local current_kinetic = mass_share * speed ^ 2 * SEMI_KINETIC_ENERGY_SCALE
+  local kinetic_delta = current_kinetic - previous_kinetic
+  if kinetic_delta > 0 then
+    local draw = kinetic_delta / 0.9
+    battery.energy = battery.energy - draw
+    battery.traction_used = (battery.traction_used or 0) + draw
+  elseif kinetic_delta < 0 then
+    local recovered = math.min(-kinetic_delta * SEMI_REGEN_EFFICIENCY, SEMI_BATTERY_CAPACITY - battery.energy)
+    battery.energy = battery.energy + recovered
+    battery.regenerated = (battery.regenerated or 0) + recovered
+  end
+  if speed > 0.001 then
+    local speed_ratio = math.min(1, speed / 1.8)
+    local rolling_draw = (200000 + 800000 * speed_ratio * speed_ratio) * seconds
+    battery.energy = battery.energy - rolling_draw
+    battery.traction_used = (battery.traction_used or 0) + rolling_draw
+  end
+  battery.energy = math.max(0, math.min(SEMI_BATTERY_CAPACITY, battery.energy))
+  battery.last_speed = speed
+  battery.last_tick = game.tick
+  set_semi_drive_permission(entity, battery.energy > 0)
+end
+
+function ensure_semi_charging_power(stop)
+  local runtime = electric_semi_runtime()
+  local power = runtime.stop_power[stop.unit_number]
+  if power and power.valid then return power end
+  for _, candidate in pairs(stop.surface.find_entities_filtered{
+    name = SEMI_CHARGING_POWER_NAME, position = stop.position, radius = 0.25, force = stop.force
+  }) do
+    if candidate.valid and not power then power = candidate
+    elseif candidate.valid then candidate.destroy() end
+  end
+  if not power then
+    power = stop.surface.create_entity{
+      name = SEMI_CHARGING_POWER_NAME,
+      position = stop.position,
+      force = stop.force,
+      quality = stop.quality,
+      create_build_effect_smoke = false
+    }
+  end
+  runtime.stop_power[stop.unit_number] = power
+  return power
+end
+
+function process_semi_charging_stop(stop)
+  local runtime = electric_semi_runtime()
+  local power = ensure_semi_charging_power(stop)
+  if not power or not power.valid then return end
+  local train = stop.get_stopped_train()
+  local semis = electric_semis_in_train(train)
+  local charging = {}
+  for _, semi in pairs(semis) do
+    local battery = runtime.batteries[semi.unit_number]
+    if battery and battery.energy < SEMI_BATTERY_CAPACITY then charging[#charging + 1] = battery end
+  end
+  local tick_delta = math.max(1, game.tick - (runtime.stop_ticks[stop.unit_number] or game.tick))
+  runtime.stop_ticks[stop.unit_number] = game.tick
+  if #charging == 0 then
+    power.power_usage = 0
+    return
+  end
+  power.power_usage = SEMI_CHARGING_POWER
+  local power_factor = 1
+  if power.status == defines.entity_status.no_power then power_factor = 0
+  elseif power.status == defines.entity_status.low_power then power_factor = 0.5
+  elseif not power.is_connected_to_electric_network() then power_factor = 0 end
+  local available = SEMI_CHARGING_POWER * tick_delta / 60 * power_factor
+  for _, battery in pairs(charging) do
+    local delivered = math.min(available / #charging, SEMI_BATTERY_CAPACITY - battery.energy)
+    battery.energy = battery.energy + delivered
+  end
+end
+
+function process_bounded_semi_queue(order, members, cursor_name, callback)
+  local runtime = electric_semi_runtime()
+  local attempts = 0
+  local budget = math.min(#order, SEMI_PROCESS_BUDGET)
+  while #order > 0 and attempts < budget do
+    if runtime[cursor_name] > #order then runtime[cursor_name] = 1 end
+    local index = runtime[cursor_name]
+    local unit_number = order[index]
+    local entity = members[unit_number]
+    attempts = attempts + 1
+    if not entity or not entity.valid then
+      members[unit_number] = nil
+      table.remove(order, index)
+    else
+      callback(entity)
+      runtime[cursor_name] = index + 1
+    end
+  end
+end
+
+function process_electric_semi_runtime()
+  local runtime = electric_semi_runtime()
+  process_bounded_semi_queue(runtime.semi_order, runtime.semis, "semi_cursor", function(entity)
+    local battery = runtime.batteries[entity.unit_number]
+    if battery then process_electric_semi(entity, battery) end
+  end)
+  process_bounded_semi_queue(runtime.stop_order, runtime.stops, "stop_cursor", process_semi_charging_stop)
+end
+
+function rebuild_electric_semi_runtime()
+  local old = storage.factoryx_electric_semi_runtime
+  storage.factoryx_electric_semi_runtime = {
+    semis = {}, semi_order = {}, semi_cursor = 1,
+    stops = {}, stop_order = {}, stop_cursor = 1,
+    batteries = old and old.batteries or {}, stop_power = {}, stop_ticks = {}
+  }
+  for _, surface in pairs(game.surfaces) do
+    for _, entity in pairs(surface.find_entities_filtered{name = {ELECTRIC_SEMI_NAME, SEMI_CHARGING_STOP_NAME}}) do
+      track_electric_semi_runtime(entity, true)
+    end
+  end
+end
+
 function rebuild_factoryx_entity_registries()
   PerformanceState.ensure(storage).registries = {
     stations = {},
@@ -2282,7 +2493,10 @@ function sync_gigafactory_production_gate(force, announce)
   local unlocked = researched(force, "x-premium-ev-program")
     and researched(force, "x-energy-products")
     and produced >= GIGAFACTORY_PRODUCTION_GATE
-  for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}) do
+  for _, recipe_name in pairs({
+    "x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,
+    "x-cell-scale-high-nickel"
+  }) do
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
   end
@@ -2762,9 +2976,18 @@ function destroy_ev_battery_popup(player_index)
 end
 
 function show_ev_battery_popup(player, vehicle)
-  if not player or not player.valid or not is_electric_vehicle(vehicle) then return end
+  if not player or not player.valid or not vehicle or not vehicle.valid
+    or (not is_electric_vehicle(vehicle) and vehicle.name ~= ELECTRIC_SEMI_NAME) then return end
   destroy_ev_battery_popup(player.index)
-  local energy, capacity = vehicle_total_charge_energy(vehicle)
+  local energy
+  local capacity
+  if vehicle.name == ELECTRIC_SEMI_NAME then
+    local battery = electric_semi_runtime().batteries[vehicle.unit_number]
+    energy = battery and battery.energy or 0
+    capacity = SEMI_BATTERY_CAPACITY
+  else
+    energy, capacity = vehicle_total_charge_energy(vehicle)
+  end
   local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
   local color
   if percent <= 20 then
@@ -4383,6 +4606,32 @@ unlock_vehicle_recycling = function(force)
   return true
 end
 
+function unlock_battery_material_recovery(force)
+  unlock_vehicle_recycling(force)
+  local technology = force.technologies and force.technologies[BATTERY_RECOVERY_TECH_NAME]
+  if not technology or technology.enabled or technology.researched then return false end
+  technology.enabled = true
+  return true
+end
+
+function insert_battery_retirement_scrap(inventory, force, wrecks)
+  if not inventory or wrecks <= 0 then return 0 end
+  local sales = sold_customer_evs(force)
+  local high_weight = (sales[PREMIUM_EV_NAME] or 0) * 8 + (sales["x-cybertruck"] or 0) * 4
+  local lfp_weight = (sales["x-mass-market-ev"] or 0) * 4 + (sales["x-cybertruck"] or 0) * 8
+  local total_weight = high_weight + lfp_weight
+  if total_weight <= 0 then return 0 end
+  local inserted = 0
+  for _ = 1, wrecks do
+    local high_energy = math.random() * total_weight < high_weight
+    local item_name = high_energy and DAMAGED_HIGH_ENERGY_PACK_NAME or DAMAGED_LFP_PACK_NAME
+    local count = high_energy and 8 or 4
+    inserted = inserted + inventory.insert{name = item_name, count = count}
+  end
+  if inserted > 0 then unlock_battery_material_recovery(force) end
+  return inserted
+end
+
 generate_station_wrecks = function(station, completed_charges)
   local inventory = station_reservation_inventory(station)
   if not inventory or completed_charges <= 0 then return 0 end
@@ -4396,6 +4645,7 @@ generate_station_wrecks = function(station, completed_charges)
     local statistics = station.force.get_item_production_statistics(station.surface)
     statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + inserted)
     unlock_vehicle_recycling(station.force)
+    insert_battery_retirement_scrap(inventory, station.force, inserted)
   end
   return inserted
 end
@@ -4523,11 +4773,34 @@ function robotaxi_service_inventories(center)
     return nil, nil
   end
   local inventory = center.get_inventory(defines.inventory.chest)
-  if inventory and inventory.valid and #inventory >= 41 then
+  if inventory and inventory.valid and #inventory >= 43 then
     for slot = 1, 40 do pcall(function() inventory.set_filter(slot, ROBOTAXI_ITEM_NAME) end) end
     pcall(function() inventory.set_filter(41, DOLLAR_NAME) end)
+    pcall(function() inventory.set_filter(42, WRECKED_EV_NAME) end)
+    pcall(function() inventory.set_filter(43, DAMAGED_LFP_PACK_NAME) end)
   end
   return inventory, inventory
+end
+
+function robotaxi_safety_states()
+  storage.factoryx_robotaxi_safety = storage.factoryx_robotaxi_safety or {}
+  return storage.factoryx_robotaxi_safety
+end
+
+function robotaxi_safety_snapshot(force)
+  local state = robotaxi_safety_states()[force.index] or {completed_rides = 0}
+  robotaxi_safety_states()[force.index] = state
+  local learning = math.log(1 + state.completed_rides / ROBOTAXI_SAFETY_RIDES_SCALE) / math.log(10)
+  local collision_multiplier = 1 / (1 + learning)
+  local retirement_multiplier = ROBOTAXI_ROUTINE_WEAR_FLOOR
+    + (1 - ROBOTAXI_ROUTINE_WEAR_FLOOR) * collision_multiplier
+  return {
+    completed_rides = state.completed_rides,
+    collision_multiplier = collision_multiplier,
+    retirement_multiplier = retirement_multiplier,
+    risk_reduction = 1 - retirement_multiplier,
+    expected_vehicle_hours = ROBOTAXI_ATTRITION_VEHICLE_HOURS / retirement_multiplier
+  }
 end
 
 function robotaxi_customer_allocations(force)
@@ -4616,6 +4889,7 @@ function robotaxi_service_snapshot(center, allocated_customers)
     revenue_multiplier = 1 + audio_level * 0.05
   }
   local state = robotaxi_service_states()[center.unit_number] or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
+  local safety = robotaxi_safety_snapshot(center.force)
   return {
     stored = metrics.fleet,
     allocated = metrics.allocated,
@@ -4628,7 +4902,10 @@ function robotaxi_service_snapshot(center, allocated_customers)
     revenue_progress = state.revenue or 0,
     attrition_progress = state.attrition or 0,
     lifetime_dollars = state.dollars or 0,
-    vehicles_retired = state.vehicles_retired or 0
+    vehicles_retired = state.vehicles_retired or 0,
+    completed_rides = safety.completed_rides,
+    safety_risk_reduction = safety.risk_reduction,
+    expected_vehicle_hours = safety.expected_vehicle_hours
   }
 end
 
@@ -4641,11 +4918,15 @@ function process_robotaxi_service_centers()
   local seen = {}
   local active_power_units = {}
   local allocations_by_force = {}
+  local safety_by_force = {}
+  local completed_rides_by_force = {}
   for _, center in pairs(centers) do
       if center.valid and center.unit_number then
         allocations_by_force[center.force.index] = allocations_by_force[center.force.index]
           or robotaxi_customer_allocations(center.force)
         local customer_allocations = allocations_by_force[center.force.index]
+        safety_by_force[center.force.index] = safety_by_force[center.force.index]
+          or robotaxi_safety_snapshot(center.force)
         seen[center.unit_number] = true
         local power = ensure_robotaxi_service_power(center)
         if power and power.valid and power.unit_number then
@@ -4658,9 +4939,13 @@ function process_robotaxi_service_centers()
           or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
         robotaxi_service_states()[center.unit_number] = state
         if snapshot.allocated > 0 and snapshot.power_factor > 0 and not snapshot.output_blocked then
+          completed_rides_by_force[center.force.index] = (completed_rides_by_force[center.force.index] or 0)
+            + snapshot.allocated * snapshot.power_factor / 60
           state.revenue = state.revenue + snapshot.revenue_per_minute / 60
           state.attrition = state.attrition
-            + snapshot.allocated * snapshot.power_factor / (ROBOTAXI_ATTRITION_VEHICLE_HOURS * 3600)
+            + snapshot.allocated * snapshot.power_factor
+              * safety_by_force[center.force.index].retirement_multiplier
+              / (ROBOTAXI_ATTRITION_VEHICLE_HOURS * 3600)
           local dollars = math.floor(state.revenue)
           if dollars > 0 and output then
             local inserted = output.insert{name = DOLLAR_NAME, count = dollars}
@@ -4674,7 +4959,10 @@ function process_robotaxi_service_centers()
           end
           local retirements = math.floor(state.attrition)
           if retirements > 0 and input and output then
-            local wreck_capacity = output.get_insertable_count(WRECKED_EV_NAME)
+            local wreck_capacity = math.min(
+              output.get_insertable_count(WRECKED_EV_NAME),
+              math.floor(output.get_insertable_count(DAMAGED_LFP_PACK_NAME) / 16)
+            )
             local removed = input.remove{
               name = ROBOTAXI_ITEM_NAME,
               count = math.min(retirements, wreck_capacity)
@@ -4683,15 +4971,22 @@ function process_robotaxi_service_centers()
             state.vehicles_retired = state.vehicles_retired + removed
             if removed > 0 then
               local wrecks = output.insert{name = WRECKED_EV_NAME, count = removed}
+              local damaged_packs = output.insert{name = DAMAGED_LFP_PACK_NAME, count = removed * 16}
               if wrecks > 0 then
                 local statistics = center.force.get_item_production_statistics(center.surface)
                 statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + wrecks)
                 unlock_vehicle_recycling(center.force)
               end
+              if damaged_packs > 0 then unlock_battery_material_recovery(center.force) end
             end
           end
         end
       end
+  end
+  for force_index, rides in pairs(completed_rides_by_force) do
+    local state = robotaxi_safety_states()[force_index] or {completed_rides = 0}
+    state.completed_rides = state.completed_rides + rides
+    robotaxi_safety_states()[force_index] = state
   end
   for unit_number in pairs(robotaxi_service_states()) do
     if not seen[unit_number] then
@@ -4938,7 +5233,7 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Supply Cars, Battery Packs, and Electric Drivetrains.",
+  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Supply Cars, High-energy Battery Packs, and Electric Drivetrains.",
   ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
@@ -5019,7 +5314,10 @@ local function progression_integrity_status(force)
   if researched(force, "x-premium-ev-program")
     and researched(force, "x-energy-products")
     and count_item_produced(force, PREMIUM_EV_NAME) >= GIGAFACTORY_PRODUCTION_GATE then
-    for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}) do
+    for _, recipe_name in pairs({
+      "x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,
+      "x-cell-scale-high-nickel"
+    }) do
       local recipe = force.recipes and force.recipes[recipe_name]
       if recipe and not recipe.enabled then table.insert(disabled, recipe_name) end
     end
@@ -6455,6 +6753,15 @@ local function show_manufacturer_info_panel(player, entity)
       snapshot.attrition_progress * 100,
       snapshot.vehicles_retired
     ))
+    add_station_info_label(panel, string.format(
+      "Safety learning: %.0f completed rides; %.1f%% lower retirement risk",
+      snapshot.completed_rides,
+      snapshot.safety_risk_reduction * 100
+    ), snapshot.safety_risk_reduction > 0.25 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning)
+    add_station_info_label(panel, string.format(
+      "Expected retirement: one per %.0f operating Robotaxi-hours",
+      snapshot.expected_vehicle_hours
+    ))
     add_station_info_label(panel, "One Robotaxi serves five customers. Premium Audio increases trip revenue.")
     if snapshot.stored == 0 then
       add_station_info_label(panel, "Next: deliver Robotaxis to the 40-slot fleet inventory.")
@@ -6904,6 +7211,7 @@ script.on_init(function()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
+  rebuild_electric_semi_runtime()
   rebuild_grid_controllers()
   rebuild_factoryx_compute_machines()
   rebuild_sales_offices()
@@ -6935,6 +7243,7 @@ script.on_configuration_changed(function()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
+  rebuild_electric_semi_runtime()
   rebuild_grid_controllers()
   rebuild_factoryx_compute_machines()
   rebuild_sales_offices()
@@ -7015,7 +7324,11 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
   local prior_state = player and ev_driver_overlay_states()[player.index]
   local prior_vehicle = prior_state and prior_state.vehicle
   local vehicle = player and player.vehicle
-  show_ev_battery_popup(player, is_electric_vehicle(vehicle) and vehicle or prior_vehicle)
+  show_ev_battery_popup(
+    player,
+    vehicle and vehicle.valid and (is_electric_vehicle(vehicle) or vehicle.name == ELECTRIC_SEMI_NAME)
+      and vehicle or prior_vehicle
+  )
   refresh_ev_driver_overlays()
 end)
 
@@ -7177,6 +7490,7 @@ for _, event_name in pairs({
 	      track_factoryx_compute_machine(entity)
 	      track_sales_office(entity)
 	      track_electric_vehicle(entity, true)
+	      track_electric_semi_runtime(entity, true)
 	      attach_factoryx_runtime_visual(entity)
 	      announce_first_entity_placement(entity)
 	      if entity and entity.valid and entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
@@ -7195,6 +7509,22 @@ for _, event_name in pairs({
 	  end
 	end
 
+function spill_player_vehicle_battery_scrap(entity)
+  local scrap = entity and entity.valid and PLAYER_VEHICLE_BATTERY_SCRAP[entity.name]
+  if not scrap then return end
+  local produced = false
+  for item_name, count in pairs(scrap) do
+    entity.surface.spill_item_stack{
+      position = entity.position,
+      stack = {name = item_name, count = count},
+      enable_looted = true,
+      force = entity.force
+    }
+    produced = true
+  end
+  if produced then unlock_battery_material_recovery(entity.force) end
+end
+
 for _, event_name in pairs({
   defines.events.on_player_mined_entity,
   defines.events.on_robot_mined_entity,
@@ -7202,8 +7532,9 @@ for _, event_name in pairs({
   defines.events.script_raised_destroy
 }) do
   if event_name then
-    script.on_event(event_name, function(event)
-      local entity = event.entity
+	    script.on_event(event_name, function(event)
+	      local entity = event.entity
+	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
         or entity.name == ROBOTAXI_SERVICE_CENTER_NAME)
@@ -7214,6 +7545,10 @@ for _, event_name in pairs({
           local hidden_charge_count = event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)
           if hidden_charge_count > 0 then
             event.buffer.remove{name = ELECTRIC_DRIVE_FUEL_NAME, count = hidden_charge_count}
+          end
+          local semi_charge_count = event.buffer.get_item_count(ELECTRIC_SEMI_FUEL_NAME)
+          if semi_charge_count > 0 then
+            event.buffer.remove{name = ELECTRIC_SEMI_FUEL_NAME, count = semi_charge_count}
           end
         end
       end
@@ -7228,6 +7563,14 @@ for _, event_name in pairs({
         end
       end
       if entity and entity.unit_number then
+	        local semi_runtime = electric_semi_runtime()
+	        semi_runtime.semis[entity.unit_number] = nil
+	        semi_runtime.batteries[entity.unit_number] = nil
+	        semi_runtime.stops[entity.unit_number] = nil
+	        semi_runtime.stop_ticks[entity.unit_number] = nil
+	        local semi_power = semi_runtime.stop_power[entity.unit_number]
+	        if semi_power and semi_power.valid then semi_power.destroy() end
+	        semi_runtime.stop_power[entity.unit_number] = nil
         untrack_factoryx_entity(entity)
         destroy_factoryx_runtime_visual(entity.unit_number)
         destroy_charger_stall_visuals(entity.unit_number)
@@ -7262,6 +7605,7 @@ end
 script.on_nth_tick(1, reset_underpowered_compute_progress)
 
 script.on_nth_tick(6, update_ev_battery_popups)
+script.on_nth_tick(6, process_electric_semi_runtime)
 
 script.on_nth_tick(30, function()
   update_factoryx_runtime_visuals()
@@ -7393,6 +7737,28 @@ remote.add_interface("factoryx", {
         centers[#centers + 1] = snapshot
     end
     return centers
+  end,
+  electric_semi_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local runtime = electric_semi_runtime()
+    local result = {}
+    for unit_number, semi in pairs(runtime.semis) do
+      if semi and semi.valid and semi.force == force then
+        local battery = runtime.batteries[unit_number] or {}
+        result[#result + 1] = {
+          unit_number = unit_number,
+          surface = semi.surface.name,
+          position = semi.position,
+          battery_joules = battery.energy or 0,
+          battery_percent = math.floor((battery.energy or 0) * 1000 / SEMI_BATTERY_CAPACITY + 0.5) / 10,
+          traction_used_joules = battery.traction_used or 0,
+          regenerated_joules = battery.regenerated or 0,
+          speed = semi.speed
+        }
+      end
+    end
+    return result
   end,
   continuous_improvements = function(force_name)
     local force = game.forces[force_name or "player"]

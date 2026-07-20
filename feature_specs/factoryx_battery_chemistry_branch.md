@@ -2,6 +2,10 @@
 
 ## Status And Direction
 
+Implemented in FactoryX 0.1.0. The values below are now the initial playtest
+balance rather than a proposal; future changes should preserve the audited
+material-loop constraints.
+
 This is the proposed terrestrial battery branch for the Biter Motors refocus.
 It replaces the generic `Battery Pack` supply chain with two real chemistry
 families. Removing the old SpaceX products, technologies, and runtime paths is

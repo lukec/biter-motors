@@ -167,7 +167,7 @@ recycling_tech.effects[#recycling_tech.effects + 1] = unlock("x-wrecked-ev-recyc
 rewrite_recipe("teslagun", {
   categories = {"advanced-crafting"},
   ingredients = ingredients(
-    {"x-battery-pack", 4},
+    {"x-high-energy-battery-pack", 4},
     {"processing-unit", 10},
     {"steel-plate", 20}
   )
@@ -176,7 +176,7 @@ rewrite_recipe("tesla-turret", {
   categories = {"advanced-crafting"},
   ingredients = ingredients(
     {"teslagun", 1},
-    {"x-battery-pack", 10},
+    {"x-high-energy-battery-pack", 10},
     {"processing-unit", 20},
     {"accumulator", 4}
   )
@@ -184,7 +184,7 @@ rewrite_recipe("tesla-turret", {
 rewrite_recipe("tesla-ammo", {
   categories = {"advanced-crafting"},
   ingredients = ingredients(
-    {"x-battery-pack", 1},
+    {"x-high-energy-battery-pack", 1},
     {"advanced-circuit", 2},
     {"copper-cable", 10}
   ),
@@ -261,6 +261,34 @@ data.raw.resource.calcite.autoplace = resource_autoplace.resource_autoplace_sett
 local nauvis = data.raw.planet.nauvis
 nauvis.map_gen_settings.autoplace_controls.calcite = {frequency = 0.5, size = 0.7, richness = 0.8}
 nauvis.map_gen_settings.autoplace_settings.entity.settings.calcite = {}
+
+resource_autoplace.initialize_patch_set("x-nickel-ore", false)
+data.raw.resource["x-nickel-ore"].autoplace = resource_autoplace.resource_autoplace_settings({
+  name = "x-nickel-ore",
+  order = "d",
+  base_density = 3.5,
+  base_spots_per_km2 = 0.7,
+  has_starting_area_placement = false,
+  regular_rq_factor_multiplier = 1.0,
+  candidate_spot_count = 12
+})
+resource_autoplace.initialize_patch_set("x-lithium-brine", false)
+data.raw.resource["x-lithium-brine"].autoplace = resource_autoplace.resource_autoplace_settings({
+  name = "x-lithium-brine",
+  order = "e",
+  base_density = 5.0,
+  base_spots_per_km2 = 0.9,
+  random_probability = 1 / 48,
+  random_spot_size_minimum = 1,
+  random_spot_size_maximum = 1,
+  additional_richness = 160000,
+  has_starting_area_placement = false,
+  regular_rq_factor_multiplier = 1.0
+})
+nauvis.map_gen_settings.autoplace_controls["x-nickel-ore"] = {frequency = 0.8, size = 0.9, richness = 1.0}
+nauvis.map_gen_settings.autoplace_controls["x-lithium-brine"] = {frequency = 0.8, size = 0.8, richness = 1.0}
+nauvis.map_gen_settings.autoplace_settings.entity.settings["x-nickel-ore"] = {}
+nauvis.map_gen_settings.autoplace_settings.entity.settings["x-lithium-brine"] = {}
 
 -- Mech Armor stays locked to Fulgora until the future Optimus product exists.
 -- Do not adapt its recipe early or introduce a temporary holmium-free shortcut.

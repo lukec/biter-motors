@@ -300,7 +300,7 @@ class FactoryXModTest(unittest.TestCase):
         cybertruck = data[data.index('recipe("x-cybertruck"'):data.index('recipe("x-high-density-solar-array"')]
         self.assertIn('name = "x-mass-market-ev", amount = 2', cybertruck)
         self.assertIn('name = "steel-plate", amount = 20', cybertruck)
-        self.assertIn('name = "x-battery-pack", amount = 4', cybertruck)
+        self.assertIn('name = "x-high-energy-battery-pack", amount = 4', cybertruck)
         self.assertNotIn("low-density-structure", cybertruck)
         self.assertNotIn("processing-unit", cybertruck)
         cybertruck_sale = data[data.index('recipe("x-sell-cybertruck"'):data.index('recipe("x-sell-megapack"')]
@@ -467,7 +467,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('text = string.format("BATTERY %d%%", percent)', control)
         self.assertIn("players = {player}", control)
         self.assertIn("local prior_vehicle = prior_state and prior_state.vehicle", control)
-        self.assertIn("is_electric_vehicle(vehicle) and vehicle or prior_vehicle", control)
+        self.assertIn("is_electric_vehicle(vehicle) or vehicle.name == ELECTRIC_SEMI_NAME", control)
         self.assertIn("local alpha = math.min(1, remaining / EV_BATTERY_POPUP_FADE_TICKS)", control)
         self.assertIn("script.on_nth_tick(6, update_ev_battery_popups)", control)
 
@@ -716,15 +716,15 @@ class FactoryXModTest(unittest.TestCase):
     def test_premium_ev_loop_is_concrete_and_guided(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        battery_recipe = data[data.index('recipe("x-battery-pack"'):data.index('recipe("x-electric-drivetrain"')]
+        battery_recipe = data[data.index('recipe("x-high-energy-battery-pack"'):data.index('recipe("x-clean-nickel-refining"')]
         drivetrain_recipe = data[data.index('recipe("x-electric-drivetrain"'):data.index('recipe("x-prototype-roadster"')]
         premium_ev_recipe = data[data.index('recipe("x-premium-ev"'):data.index('recipe("x-mass-market-ev"')]
         premium_sale_recipe = data[data.index('recipe("x-sell-premium-ev"'):data.index('recipe("x-sell-mass-market-ev"')]
 
-        self.assertIn('{"advanced-crafting"}', battery_recipe)
+        self.assertIn('{"advanced-crafting", "x-vertical-integration"}', battery_recipe)
         self.assertIn('"accumulator"', battery_recipe)
-        self.assertIn('"copper-cable"', battery_recipe)
-        self.assertIn('"electronic-circuit"', battery_recipe)
+        self.assertIn('"x-high-nickel-cell"', battery_recipe)
+        self.assertIn('"advanced-circuit"', battery_recipe)
         self.assertNotIn('"steel-plate"', battery_recipe)
         self.assertIn('{"advanced-crafting"}', drivetrain_recipe)
         self.assertIn('"electric-engine-unit"', drivetrain_recipe)
@@ -734,7 +734,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('"steel-plate"', drivetrain_recipe)
         self.assertIn('name = "x-ev-reservation", amount = 1', premium_sale_recipe)
         self.assertIn('"car"', premium_ev_recipe)
-        self.assertIn('"x-battery-pack"', premium_ev_recipe)
+        self.assertIn('"x-high-energy-battery-pack"', premium_ev_recipe)
         self.assertIn('"x-electric-drivetrain"', premium_ev_recipe)
         self.assertNotIn('"plastic-bar"', premium_ev_recipe)
         self.assertNotIn('"steel-plate"', premium_ev_recipe)
@@ -751,7 +751,8 @@ class FactoryXModTest(unittest.TestCase):
         ]
         self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
         self.assertIn('and researched(force, "x-energy-products")', gate)
-        self.assertIn('{"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE}', control)
+        self.assertIn('"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,', control)
+        self.assertIn('"x-cell-scale-high-nickel"', gate)
         self.assertIn("Industrial scale unlocked: %d Premium EVs produced and Energy Products researched", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
@@ -949,7 +950,7 @@ class FactoryXModTest(unittest.TestCase):
             ("x-reusable-booster", "space-related"),
             ("x-ai-token", "science-pack"),
             ("x-sales-office", "x-factoryx-infrastructure"),
-            ("x-battery-pack", "x-factoryx-components"),
+            ("x-high-energy-battery-pack", "x-factoryx-components"),
             ("x-dollar", "x-factoryx-capital"),
             ("x-ev-reservation", "raw-material"),
         ]:
@@ -963,7 +964,7 @@ class FactoryXModTest(unittest.TestCase):
             ("x-reusable-booster", "space-related"),
             ("x-terrestrial-ai-token", "science-pack"),
             ("x-sales-office", "x-factoryx-infrastructure"),
-            ("x-battery-pack", "x-factoryx-components"),
+            ("x-high-energy-battery-pack", "x-factoryx-components"),
             ("x-sell-prototype-roadster", "x-factoryx-capital"),
         ]:
             recipe_start = data.index(f'recipe("{name}"')
@@ -1019,7 +1020,7 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         entity = data[data.index('local gigafactory = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
-        recipe = data[data.index('recipe("x-gigafactory-building"'):data.index('recipe("x-battery-pack"')]
+        recipe = data[data.index('recipe("x-gigafactory-building"'):data.index('recipe("x-dirty-nickel-refining"')]
         mass_ev = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-high-density-solar-array"')]
 
         self.assertIn('"x-gigafactory-building"', entity)
@@ -1072,7 +1073,7 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         entity = data[data.index('local gigafactory_v2 = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
         gigacast_recipe = data[data.index('recipe("x-gigacast"'):data.index('recipe("x-gigafactory-v2"')]
-        v2_recipe = data[data.index('recipe("x-gigafactory-v2"'):data.index('recipe("x-battery-pack"')]
+        v2_recipe = data[data.index('recipe("x-gigafactory-v2"'):data.index('recipe("x-dirty-nickel-refining"')]
         capital_tech = data[data.index('tech("x-capital-scaling"'):data.index('tech("x-ev-charging-network"')]
 
         self.assertIn('{"advanced-crafting", "x-vehicle-assembly", "x-mass-vehicle-assembly", "x-energy-products", "x-energy-products-batch", "x-vertical-integration"}', entity)
@@ -1119,7 +1120,6 @@ class FactoryXModTest(unittest.TestCase):
             "low-density-structure",
             "x-gigafactory-module",
             "x-gigacast",
-            "x-battery-pack",
             "x-electric-drivetrain",
             "x-autonomy-computer",
             "x-datacenter-rack",
@@ -1184,7 +1184,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-high-density-solar-array", amount = 4', solar_batch_recipe)
         self.assertIn('item("x-high-density-solar-array", high_density_solar_array_icon, "energy", "x-a[high-density-solar-array]", 10', data)
         self.assertIn('{"x-energy-products"}', megapack_recipe)
-        self.assertIn('name = "x-battery-pack", amount = 12', megapack_recipe)
+        self.assertIn('name = "x-lfp-battery-pack", amount = 12', megapack_recipe)
         self.assertIn('name = "accumulator", amount = 4', megapack_recipe)
         self.assertIn('name = "substation", amount = 1', megapack_recipe)
         self.assertIn('{"x-premium-ev-program", "electric-energy-accumulators", "solar-energy"}', energy_tech)
@@ -1765,7 +1765,7 @@ class FactoryXModTest(unittest.TestCase):
         robotaxi_item = next(line for line in data.splitlines() if 'item("x-robotaxi-fleet"' in line)
         self.assertIn('"transport", "x-e[robotaxi-fleet]", 5,', robotaxi_item)
         self.assertIn('name = "x-robotaxi-service-center"', data)
-        self.assertIn("robotaxi_service_center.inventory_size = 41", data)
+        self.assertIn("robotaxi_service_center.inventory_size = 43", data)
         self.assertIn('"x-robotaxi-service-power"', data)
         self.assertIn('"10MW"', data[data.index("local robotaxi_service_power ="):data.index("local orbital_compute_array =")])
         self.assertIn('recipe("x-operate-robotaxis", {"x-robotaxi-service"}', data)
@@ -1793,6 +1793,66 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Premium Audio increases trip revenue", control)
         self.assertIn("legacy_robotaxi_sale.enabled = false", control)
         self.assertIn("x-robotaxi-service-center=Robotaxi Service Center", locale)
+
+    def test_battery_chemistry_branch_is_physical_and_not_productive(self):
+        data = (MOD / "data.lua").read_text()
+        updates = (MOD / "data-updates.lua").read_text()
+        self.assertNotIn('item("x-battery-pack"', data)
+        for name in [
+            "x-nickel-ore", "x-lithium-brine", "x-acidic-tailings",
+            "x-high-nickel-cell", "x-lfp-cell", "x-high-energy-battery-pack",
+            "x-lfp-battery-pack", "x-damaged-high-energy-battery-pack",
+            "x-damaged-lfp-battery-pack",
+        ]:
+            self.assertIn(name, data)
+        self.assertIn('initialize_patch_set("x-nickel-ore", false)', updates)
+        self.assertIn('initialize_patch_set("x-lithium-brine", false)', updates)
+        premium = data[data.index('recipe("x-premium-ev"'):data.index('recipe("x-mass-market-ev"')]
+        mass = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-cybertruck"')]
+        megapack = data[data.index('recipe("x-megapack"'):data.index('recipe("x-autonomy-computer"')]
+        self.assertIn('name = "x-high-energy-battery-pack", amount = 8', premium)
+        self.assertIn('name = "x-lfp-battery-pack", amount = 4', mass)
+        self.assertIn('name = "x-lfp-battery-pack", amount = 12', megapack)
+        high_recovery = data[data.index('recipe("x-high-energy-battery-recovery"'):data.index('recipe("x-lfp-battery-recovery"')]
+        lfp_recovery = data[data.index('recipe("x-lfp-battery-recovery"'):data.index('recipe("x-electric-semi"')]
+        self.assertIn('amount = 10', high_recovery)
+        self.assertIn('name = "x-high-nickel-cell", amount = 72', high_recovery)
+        self.assertIn('amount = 10', lfp_recovery)
+        self.assertIn('name = "x-lfp-cell", amount = 72', lfp_recovery)
+        self.assertIn('allow_productivity = false', high_recovery)
+        self.assertIn('allow_productivity = false', lfp_recovery)
+
+    def test_robotaxi_safety_improves_automatically_with_completed_rides(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("ROBOTAXI_SAFETY_RIDES_SCALE = 1000", control)
+        self.assertIn("ROBOTAXI_ROUTINE_WEAR_FLOOR = 0.20", control)
+        self.assertIn("function robotaxi_safety_snapshot", control)
+        self.assertIn("math.log(1 + state.completed_rides", control)
+        self.assertIn("completed_rides_by_force", control)
+        self.assertIn("snapshot.allocated * snapshot.power_factor / 60", control)
+        self.assertIn("retirement_multiplier", control)
+        self.assertIn("Safety learning:", control)
+        self.assertIn("Expected retirement:", control)
+
+    def test_electric_semi_has_bounded_mass_sensitive_regen_and_station_charging(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        self.assertIn('electric_semi.max_speed = 1.8', data)
+        self.assertIn('electric_semi.max_power = "1.8MW"', data)
+        self.assertIn('fuel_categories = {"x-electric-semi-drive"}', data)
+        self.assertIn('semi_charging_power.energy_source.input_flow_limit = "50MW"', data)
+        self.assertIn('recipe("x-electric-semi"', data)
+        self.assertIn('recipe("x-semi-charging-stop"', data)
+        self.assertIn('tech(\n    "x-electric-semi-logistics"', data)
+        self.assertIn("SEMI_PROCESS_BUDGET = 32", control)
+        self.assertIn("local budget = math.min(#order, SEMI_PROCESS_BUDGET)", control)
+        self.assertIn("train.weight / math.max(1, #semis)", control)
+        self.assertIn("SEMI_REGEN_EFFICIENCY", control)
+        self.assertIn("stop.get_stopped_train()", control)
+        self.assertIn("power.power_usage = SEMI_CHARGING_POWER", control)
+        self.assertIn("script.on_nth_tick(6, process_electric_semi_runtime)", control)
+        self.assertIn("electric_semi_status = function", control)
+        self.assertIn("vehicle.name == ELECTRIC_SEMI_NAME", control)
 
     def test_customer_population_virtualizes_beyond_visible_limits(self):
         control = (MOD / "control.lua").read_text()

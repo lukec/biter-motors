@@ -53,7 +53,7 @@ data:extend({
     allow_productivity = false,
     ingredients = {
       {type = "item", name = "car", amount = 1},
-      {type = "item", name = "x-battery-pack", amount = 8},
+      {type = "item", name = "x-high-energy-battery-pack", amount = 8},
       {type = "item", name = "x-electric-drivetrain", amount = 2},
       {type = "item", name = "advanced-circuit", amount = 10}
     },
@@ -102,6 +102,8 @@ local WORM = "small-worm-turret"
 local CUSTOMER_FORCE = "factoryx-customers"
 local TERRESTRIAL_DATACENTER = "x-terrestrial-datacenter"
 local TERRESTRIAL_AI_RECIPE = "x-terrestrial-ai-token"
+local ELECTRIC_SEMI = "x-electric-semi"
+local SEMI_CHARGING_STOP = "x-semi-charging-stop"
 
 local function output_inventory_id()
   return defines.inventory.crafter_output or defines.inventory.assembling_machine_output
@@ -140,6 +142,7 @@ script.on_init(function()
     "x-energy-products",
     "x-terrestrial-ai",
     "x-autonomous-logistics",
+    "x-electric-semi-logistics",
     "x-planetary-energy-grid"
   }) do
     if force.technologies[technology_name] then
@@ -151,7 +154,9 @@ script.on_init(function()
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
   local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
-  local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {90, 0}, force)
+  local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {200, -100}, force)
+  local robotaxi_substation = create_named(surface, "substation", {200, -92}, force)
+  local robotaxi_power = create_named(surface, POWER_SOURCE, {200, -88}, force)
   local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
   local station = create_named(surface, STATION, {-2, 0}, force)
@@ -177,6 +182,26 @@ script.on_init(function()
   local datacenter = create_named(surface, TERRESTRIAL_DATACENTER, {0, -40}, force)
   local datacenter_pole = create_named(surface, POWER_POLE, {0, -35}, force)
   local datacenter_power = create_named(surface, POWER_SOURCE, {2, -35}, force)
+  local rail_tiles = {}
+  for x = 216, 224 do
+    for y = -20, 20 do rail_tiles[#rail_tiles + 1] = {name = "landfill", position = {x, y}} end
+  end
+  surface.set_tiles(rail_tiles)
+  local semi_rail
+  for y = -20, 20, 2 do
+    semi_rail = surface.create_entity{
+      name = "straight-rail", position = {220, y}, direction = defines.direction.north, force = force
+    } or semi_rail
+  end
+  local semi_position = surface.find_non_colliding_position(ELECTRIC_SEMI, {220, 0}, 20, 0.5)
+  local electric_semi = semi_position and surface.create_entity{
+    name = ELECTRIC_SEMI, position = semi_position, direction = defines.direction.north, force = force
+  }
+  local semi_stop = surface.create_entity{
+    name = SEMI_CHARGING_STOP, position = {222, 0}, direction = defines.direction.west, force = force
+  }
+  storage.electric_semi_created = electric_semi ~= nil
+  storage.semi_stop_created = semi_stop ~= nil
   if power_source then
     power_source.electric_interface_mode = defines.electric_interface_mode.primary_output
     power_source.power_production = 10000000
@@ -189,7 +214,13 @@ script.on_init(function()
     datacenter_power.power_usage = 0
     datacenter_power.output_flow_limit = 100000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
+  if robotaxi_power then
+    robotaxi_power.electric_interface_mode = defines.electric_interface_mode.primary_output
+    robotaxi_power.power_production = 20000000
+    robotaxi_power.power_usage = 0
+    robotaxi_power.output_flow_limit = 20000000
+  end
+  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
   end
@@ -200,6 +231,8 @@ script.on_init(function()
   }) do
     script.raise_script_built{entity = entity}
   end
+  if electric_semi then script.raise_script_built{entity = electric_semi} end
+  if semi_stop then script.raise_script_built{entity = semi_stop} end
 
   commanded_biter.commandable.set_command{
     type = defines.command.attack,
@@ -241,7 +274,7 @@ script.on_init(function()
   pcall(function() gigafactory_economics_test.set_recipe(PREMIUM_EV_ECONOMICS_RECIPE) end)
   local economics_input = gigafactory_economics_test.get_inventory(input_inventory_id())
   storage.gigafactory_economics_cars_inserted = economics_input.insert{name = "car", count = 1}
-  economics_input.insert{name = "x-battery-pack", count = 16}
+  economics_input.insert{name = "x-high-energy-battery-pack", count = 16}
   economics_input.insert{name = "x-electric-drivetrain", count = 4}
   economics_input.insert{name = "advanced-circuit", count = 20}
   storage.gigafactory_economics_test = gigafactory_economics_test
@@ -266,7 +299,7 @@ script.on_init(function()
       name = "productivity-module",
       count = 8
     }
-    pcall(function() gigafactory_v2.set_recipe("x-battery-pack") end)
+    pcall(function() gigafactory_v2.set_recipe("x-electric-drivetrain") end)
     storage.intermediate_productivity_modules_inserted = gigafactory_v2_modules.insert{
       name = "productivity-module",
       count = 8
@@ -635,6 +668,8 @@ script.on_nth_tick(3780, function()
   local datacenter_output = datacenter and datacenter.get_inventory(output_inventory_id())
   local reservations = station_output and station_output.get_item_count(RESERVATION) or -1
   local agi_training = remote.call("factoryx", "agi_training_status", "player")
+  local electric_semis = remote.call("factoryx", "electric_semi_status", "player")
+  local robotaxi_services = remote.call("factoryx", "robotaxi_service_status", "player")
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
   local logistic_roboports = #surface.find_entities_filtered{type = "roboport", force = game.forces.player}
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
@@ -676,6 +711,10 @@ script.on_nth_tick(3780, function()
   write_report{
     tick = game.tick,
     status = "checked",
+    electric_semi_created = storage.electric_semi_created,
+    semi_stop_created = storage.semi_stop_created,
+    electric_semi_status = electric_semis,
+    robotaxi_service_status = robotaxi_services,
     prospect_units = prospect_units,
     ev_charging_station_enabled = station_recipe and station_recipe.enabled,
     ev_charging_station_v2_created = find_unit(surface, STATION_V2, storage.station_v2_unit_number) ~= nil,
@@ -939,9 +978,9 @@ expected_terrestrial_recipes = {
     "big-mining-drill": {"electric-mining-drill": 4, "engine-unit": 20, "electronic-circuit": 20},
     "foundry": {"electric-furnace": 25, "electronic-circuit": 50, "refined-concrete": 200},
     "recycler": {"steel-plate": 20, "iron-gear-wheel": 40, "electronic-circuit": 20, "concrete": 20},
-    "teslagun": {"x-battery-pack": 4, "processing-unit": 10, "steel-plate": 20},
-    "tesla-turret": {"teslagun": 1, "x-battery-pack": 10, "processing-unit": 20, "accumulator": 4},
-    "tesla-ammo": {"x-battery-pack": 1, "advanced-circuit": 2, "copper-cable": 10},
+    "teslagun": {"x-high-energy-battery-pack": 4, "processing-unit": 10, "steel-plate": 20},
+    "tesla-turret": {"teslagun": 1, "x-high-energy-battery-pack": 10, "processing-unit": 20, "accumulator": 4},
+    "tesla-ammo": {"x-high-energy-battery-pack": 1, "advanced-circuit": 2, "copper-cable": 10},
 }
 for recipe_name, expected in expected_terrestrial_recipes.items():
     recipe = data["recipe"][recipe_name]
@@ -1107,7 +1146,7 @@ expected_item_subgroups = {
     "x-reusable-booster": "space-related",
     "x-ai-token": "science-pack",
     "x-sales-office": "x-factoryx-infrastructure",
-    "x-battery-pack": "x-factoryx-components",
+    "x-high-energy-battery-pack": "x-factoryx-components",
     "x-dollar": "x-factoryx-capital",
     "x-ev-reservation": "raw-material",
 }
@@ -1124,7 +1163,7 @@ expected_recipe_subgroups = {
     "x-reusable-booster": "space-related",
     "x-terrestrial-ai-token": "science-pack",
     "x-sales-office": "x-factoryx-infrastructure",
-    "x-battery-pack": "x-factoryx-components",
+    "x-high-energy-battery-pack": "x-factoryx-components",
     "x-sell-prototype-roadster": "x-factoryx-capital",
 }
 for recipe_name, expected_subgroup in expected_recipe_subgroups.items():
@@ -1135,7 +1174,7 @@ print("FactoryX vanilla crafting-tab integration OK.")
 
 factoryx_recipes = {
     name for name in data["recipe"]
-    if name.startswith("x-") and not name.endswith("-recycling")
+    if name.startswith("x-") and not name.endswith("-recycling") and not name.endswith("-barrel")
 }
 technology_unlocks = set()
 for technology_name, technology in data["technology"].items():
@@ -1150,6 +1189,7 @@ runtime_milestone_recipes = {
     "x-gigafactory-module",
     "x-gigafactory-building",
     "x-high-density-solar-array-batch",
+    "x-cell-scale-high-nickel",
     "x-agi-training-run",
 }
 missing_unlocks = factoryx_recipes - technology_unlocks - runtime_milestone_recipes
@@ -1157,9 +1197,10 @@ if missing_unlocks:
     raise SystemExit(f"FactoryX recipes without a progression owner: {sorted(missing_unlocks)}")
 
 category_crafters = {}
-for machine_name, machine in data["assembling-machine"].items():
-    for category in machine.get("crafting_categories", []):
-        category_crafters.setdefault(category, set()).add(machine_name)
+for prototype_type in ("assembling-machine", "furnace"):
+    for machine_name, machine in data[prototype_type].items():
+        for category in machine.get("crafting_categories", []):
+            category_crafters.setdefault(category, set()).add(machine_name)
 uncraftable = {}
 for recipe_name in sorted(factoryx_recipes):
     categories = data["recipe"][recipe_name].get("categories", ["crafting"])
@@ -1211,7 +1252,7 @@ for gigafactory_name in ("x-gigafactory-building", "x-gigafactory-v2"):
         raise SystemExit(f"{gigafactory_name} working animations mismatch: {sorted(animation_files)}")
 vertical_intermediates = {
     "copper-cable", "electronic-circuit", "advanced-circuit", "low-density-structure",
-    "x-gigafactory-module", "x-gigacast", "x-battery-pack", "x-electric-drivetrain",
+    "x-gigafactory-module", "x-gigacast", "x-electric-drivetrain",
     "x-autonomy-computer", "x-datacenter-rack", "x-reusable-booster",
     "x-satellite-bus", "x-ground-station-network",
 }
@@ -1379,6 +1420,16 @@ if checked.get("vehicle_ownership", {}).get("registered_buyers", 0) <= 5:
     raise SystemExit(f"naturally spawned customer units were not registered: {checked}")
 if checked.get("prospect_units", 0) <= 0:
     raise SystemExit(f"friendly unowned customers did not migrate to prospect prototypes: {checked}")
+if not checked.get("electric_semi_created") or not checked.get("semi_stop_created"):
+    raise SystemExit(f"electric Semi smoke entities were not created on rail: {checked}")
+semi_status = checked.get("electric_semi_status") or []
+if len(semi_status) != 1 or semi_status[0].get("battery_percent") != 100:
+    raise SystemExit(f"electric Semi was not registered with a full factory battery: {checked}")
+robotaxi_status = checked.get("robotaxi_service_status") or []
+if len(robotaxi_status) != 1 or robotaxi_status[0].get("completed_rides", 0) <= 0:
+    raise SystemExit(f"Robotaxi service did not accumulate automatic safety-learning rides: {checked}")
+if robotaxi_status[0].get("safety_risk_reduction", 0) <= 0:
+    raise SystemExit(f"Robotaxi cumulative rides did not reduce retirement risk: {checked}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):
@@ -1422,7 +1473,7 @@ if checked.get("gigafactory_v2_modules_inserted") != 8:
 if checked.get("final_productivity_modules_inserted") != 0:
     raise SystemExit(f"Mass-market EV incorrectly accepted productivity modules: {checked}")
 if checked.get("intermediate_productivity_modules_inserted") != 8:
-    raise SystemExit(f"Battery Pack did not accept eight productivity modules: {checked}")
+    raise SystemExit(f"Electric Drivetrain did not accept eight productivity modules: {checked}")
 if checked.get("robotaxi_dollars_produced", 0) < 1:
     raise SystemExit(f"Robotaxi Fleet sale did not complete without an EV Reservation: {checked}")
 if not checked.get("small_launch_enabled_by_robotaxi_sale"):
