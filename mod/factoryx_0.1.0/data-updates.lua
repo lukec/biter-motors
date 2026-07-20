@@ -263,30 +263,42 @@ nauvis.map_gen_settings.autoplace_controls.calcite = {frequency = 0.5, size = 0.
 nauvis.map_gen_settings.autoplace_settings.entity.settings.calcite = {}
 
 resource_autoplace.initialize_patch_set("x-nickel-ore", false)
-data.raw.resource["x-nickel-ore"].autoplace = resource_autoplace.resource_autoplace_settings({
+-- Uranium's regular-resource fade-in distance is 300 tiles. Battery minerals
+-- use ordinary patches but a 240-tile fade, allowing them to begin at exactly
+-- 80% of uranium's exclusion distance without putting a guaranteed patch in
+-- the starting area. Actual nearest deposits remain seed-dependent.
+local battery_mineral_fade = "clamp((distance - 240) / 60, 0, 1)"
+local function battery_mineral_autoplace(parameters)
+  local autoplace = resource_autoplace.resource_autoplace_settings(parameters)
+  autoplace.probability_expression = "(" .. autoplace.probability_expression .. ") * " .. battery_mineral_fade
+  autoplace.richness_expression = "(" .. autoplace.richness_expression .. ") * " .. battery_mineral_fade
+  return autoplace
+end
+
+data.raw.resource["x-nickel-ore"].autoplace = battery_mineral_autoplace({
   name = "x-nickel-ore",
   order = "d",
-  base_density = 3.5,
-  base_spots_per_km2 = 0.7,
-  has_starting_area_placement = false,
+  base_density = 2.0,
+  base_spots_per_km2 = 1.25,
+  random_spot_size_minimum = 2,
+  random_spot_size_maximum = 4,
   regular_rq_factor_multiplier = 1.0,
-  candidate_spot_count = 12
+  candidate_spot_count = 21
 })
 resource_autoplace.initialize_patch_set("x-lithium-brine", false)
-data.raw.resource["x-lithium-brine"].autoplace = resource_autoplace.resource_autoplace_settings({
+data.raw.resource["x-lithium-brine"].autoplace = battery_mineral_autoplace({
   name = "x-lithium-brine",
   order = "e",
   base_density = 5.0,
-  base_spots_per_km2 = 0.9,
+  base_spots_per_km2 = 1.25,
   random_probability = 1 / 48,
   random_spot_size_minimum = 1,
   random_spot_size_maximum = 1,
   additional_richness = 160000,
-  has_starting_area_placement = false,
   regular_rq_factor_multiplier = 1.0
 })
-nauvis.map_gen_settings.autoplace_controls["x-nickel-ore"] = {frequency = 0.8, size = 0.9, richness = 1.0}
-nauvis.map_gen_settings.autoplace_controls["x-lithium-brine"] = {frequency = 0.8, size = 0.8, richness = 1.0}
+nauvis.map_gen_settings.autoplace_controls["x-nickel-ore"] = {frequency = 1.0, size = 1.0, richness = 1.0}
+nauvis.map_gen_settings.autoplace_controls["x-lithium-brine"] = {frequency = 1.0, size = 1.0, richness = 1.0}
 nauvis.map_gen_settings.autoplace_settings.entity.settings["x-nickel-ore"] = {}
 nauvis.map_gen_settings.autoplace_settings.entity.settings["x-lithium-brine"] = {}
 

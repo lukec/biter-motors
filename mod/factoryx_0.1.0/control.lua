@@ -762,6 +762,15 @@ function count_item_produced(force, item_name)
   return count
 end
 
+function count_fluid_produced(force, fluid_name)
+  local count = 0
+  for _, surface in pairs(game.surfaces) do
+    local statistics = force.get_fluid_production_statistics(surface)
+    count = count + (statistics.output_counts[fluid_name] or 0)
+  end
+  return count
+end
+
 function agi_training_unlocks()
   storage.factoryx_agi_training_unlocks = storage.factoryx_agi_training_unlocks or {}
   return storage.factoryx_agi_training_unlocks
@@ -1480,7 +1489,7 @@ function process_electric_semi(entity, battery)
     battery.regenerated = (battery.regenerated or 0) + recovered
   end
   if speed > 0.001 then
-    local speed_ratio = math.min(1, speed / 1.8)
+    local speed_ratio = math.min(1, speed / 3.0)
     local rolling_draw = (200000 + 800000 * speed_ratio * speed_ratio) * seconds
     battery.energy = battery.energy - rolling_draw
     battery.traction_used = (battery.traction_used or 0) + rolling_draw
@@ -2468,6 +2477,9 @@ function sync_ev_sales_recipe_gates(force, announce)
           gate.label,
           technology_ready and "" or " after its technology is researched"
         ))
+        if gate_name == "premium" and technology_ready then
+          force.print("[FactoryX] Battery supply is next: locate Nickel Ore and Lithium Brine, refine both chemistries, then assemble High-energy Battery Packs for the Premium EV pilot.")
+        end
       end
     end
     result[gate_name] = {
@@ -4870,6 +4882,15 @@ function robotaxi_service_power_factor(center)
   return power.energy and power.energy > 0 and 1 or 0
 end
 
+function robotaxi_dollar_output_blocked(inventory)
+  local slot = inventory and inventory[41]
+  if not slot then return true end
+  if not slot.valid_for_read then return false end
+  return slot.name ~= DOLLAR_NAME
+    or (slot.quality and slot.quality.name ~= "normal")
+    or slot.count >= slot.prototype.stack_size
+end
+
 function robotaxi_service_snapshot(center, allocated_customers)
   local input, output = robotaxi_service_inventories(center)
   local stored = input and input.get_item_count(ROBOTAXI_ITEM_NAME) or 0
@@ -4898,7 +4919,7 @@ function robotaxi_service_snapshot(center, allocated_customers)
     power_factor = power_factor,
     revenue_per_minute = metrics.revenue_per_minute,
     output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
-    output_blocked = not (output and output.can_insert{name = DOLLAR_NAME, count = 1}),
+    output_blocked = robotaxi_dollar_output_blocked(output),
     revenue_progress = state.revenue or 0,
     attrition_progress = state.attrition or 0,
     lifetime_dollars = state.dollars or 0,
@@ -5921,6 +5942,15 @@ local function progress_snapshot(force)
     foundries = count_entities(force, "foundry"),
     recyclers = count_entities(force, "recycler"),
     calcite_mined = count_item_produced(force, "calcite"),
+    nickel_ore_mined = count_item_produced(force, "x-nickel-ore"),
+    lithium_brine_pumped = count_fluid_produced(force, "x-lithium-brine"),
+    acidic_tailings_produced = count_fluid_produced(force, "x-acidic-tailings"),
+    nickel_sulfate_produced = count_item_produced(force, "x-nickel-sulfate"),
+    lithium_carbonate_produced = count_item_produced(force, "x-lithium-carbonate"),
+    high_nickel_cells_produced = count_item_produced(force, "x-high-nickel-cell"),
+    high_energy_battery_packs_produced = count_item_produced(force, "x-high-energy-battery-pack"),
+    lfp_cells_produced = count_item_produced(force, "x-lfp-cell"),
+    lfp_battery_packs_produced = count_item_produced(force, "x-lfp-battery-pack"),
     wrecked_evs_produced = count_item_produced(force, WRECKED_EV_NAME),
     customer_settlements = count_sales_office_customer_settlements(force),
     powered_stations = market.powered_stations,
@@ -6008,6 +6038,21 @@ local function current_progress_objective(snapshot)
     return "Premium production", "Research EV Production Line.", "Invest 250 cycles of red, green, blue science, and Dollars to unlock Premium EV pilot production."
   elseif not snapshot.premium_ev_gate.market_ready then
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
+  elseif snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
+    local missing = {}
+    if snapshot.nickel_ore_mined == 0 then missing[#missing + 1] = "Nickel Ore" end
+    if snapshot.lithium_brine_pumped == 0 then missing[#missing + 1] = "Lithium Brine" end
+    return "Battery minerals", "Find and extract " .. table.concat(missing, " and ") .. ".",
+      "Both deposits begin outside the starting area, at roughly 80% of uranium's typical distance. Nickel requires sulfuric-acid mining; Lithium Brine uses Pumpjacks."
+  elseif snapshot.nickel_sulfate_produced == 0 or snapshot.lithium_carbonate_produced == 0 then
+    return "Battery refining", "Refine Nickel Sulfate and Lithium Carbonate.",
+      "Use Chemical Plants. Route Acidic Tailings into tanks, then neutralize it with Calcite instead of allowing byproduct backpressure to stop refining."
+  elseif snapshot.high_nickel_cells_produced == 0 then
+    return "Battery cells", "Manufacture the first High-nickel Cells.",
+      "Combine Nickel Sulfate, Lithium Carbonate, Battery Graphite, and the Cobalt Concentrate recovered by early dirty nickel refining."
+  elseif snapshot.high_energy_battery_packs_produced == 0 then
+    return "Battery packs", "Assemble the first High-energy Battery Pack.",
+      "Combine one Accumulator, eight High-nickel Cells, and four Advanced Circuits. Premium EV pilot vehicles consume eight packs each."
   elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
     return "Premium pilot production", string.format("Build %d Premium EVs in assemblers.", snapshot.gigafactory_production_gate), string.format(
       "Pilot vehicles produced: %d / %d. Complete the pilot and Energy Products to unlock Gigafactory construction.",
@@ -6101,6 +6146,10 @@ function progress_objective_icon(stage)
     ["Customer discovery"] = "item/x-sales-office",
     ["Prototype revenue"] = "item/x-prototype-roadster",
     ["Prototype market validation"] = "item/x-prototype-roadster",
+    ["Battery minerals"] = "item/x-nickel-ore",
+    ["Battery refining"] = "item/x-nickel-sulfate",
+    ["Battery cells"] = "item/x-high-nickel-cell",
+    ["Battery packs"] = "item/x-high-energy-battery-pack",
     ["Premium pilot production"] = "item/x-premium-ev",
     ["Premium production"] = "item/x-premium-ev",
     ["Premium market scale"] = "item/x-premium-ev",
@@ -6168,6 +6217,22 @@ function current_progress_measure(snapshot)
   end
   if snapshot.premium_sale_complete and not snapshot.mass_market_ev_gate.market_ready then
     return "Premium EV sales", snapshot.premium_evs_sold, 250
+  end
+  if snapshot.ev_production_researched and snapshot.premium_ev_gate.market_ready then
+    if snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
+      return "Battery minerals", (snapshot.nickel_ore_mined > 0 and 1 or 0)
+        + (snapshot.lithium_brine_pumped > 0 and 1 or 0), 2
+    end
+    if snapshot.nickel_sulfate_produced == 0 or snapshot.lithium_carbonate_produced == 0 then
+      return "Battery refining", (snapshot.nickel_sulfate_produced > 0 and 1 or 0)
+        + (snapshot.lithium_carbonate_produced > 0 and 1 or 0), 2
+    end
+    if snapshot.high_nickel_cells_produced == 0 then
+      return "High-nickel Cells", 0, 1
+    end
+    if snapshot.high_energy_battery_packs_produced == 0 then
+      return "High-energy Battery Packs", 0, 1
+    end
   end
   if snapshot.ev_production_researched
     and snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then

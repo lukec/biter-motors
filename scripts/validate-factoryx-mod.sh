@@ -155,8 +155,21 @@ script.on_init(function()
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
   local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
   local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {200, -100}, force)
-  local robotaxi_substation = create_named(surface, "substation", {200, -92}, force)
-  local robotaxi_power = create_named(surface, POWER_SOURCE, {200, -88}, force)
+  local robotaxi_power_tiles = {}
+  local robotaxi_x = robotaxi_center and robotaxi_center.position.x or 200
+  local robotaxi_y = robotaxi_center and robotaxi_center.position.y or -100
+  for x = robotaxi_x - 2, robotaxi_x + 2 do
+    for y = robotaxi_y + 6, robotaxi_y + 13 do
+      robotaxi_power_tiles[#robotaxi_power_tiles + 1] = {name = "landfill", position = {x, y}}
+    end
+  end
+  surface.set_tiles(robotaxi_power_tiles)
+  local robotaxi_substation = surface.create_entity{
+    name = "substation", position = {robotaxi_x, robotaxi_y + 8}, force = force
+  }
+  local robotaxi_power = surface.create_entity{
+    name = POWER_SOURCE, position = {robotaxi_x, robotaxi_y + 12}, force = force
+  }
   local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
   local station = create_named(surface, STATION, {-2, 0}, force)

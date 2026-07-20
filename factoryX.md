@@ -47,13 +47,17 @@ Status: implemented.
   increase customers per Robotaxi or trip revenue; those remain separate
   business and technology levers.
 
-#### Electric Semi Locomotive
+#### Cybertrain
 
-Status: implemented as `Battery-electric Semi` plus `Semi charging stop`.
+Status: implemented as `Cybertrain` plus `Cybertrain charging stop`. Internal
+prototype ids retain `x-electric-semi` to avoid needless code churn.
 
-- Add a very fast battery-electric rail freight locomotive styled as a Biter
-  Motors Semi. It uses normal rails, train schedules, wagons, and stations so it
+- Add an obscenely fast battery-electric rail freight locomotive styled as a
+  Biter Motors Cybertrain. It uses normal rails, train schedules, wagons, and stations so it
   extends Factorio logistics rather than creating a second road-routing system.
+- Current tuning is 3.0 base top speed, a 1.5x traction-charge speed multiplier,
+  and 6 MW power: roughly 970 km/h on sufficiently long track. It should keep
+  accelerating until the normal train scheduler reaches its braking point.
 - Give it a finite onboard battery. Acceleration drains energy according to
   train mass and speed change; regenerative braking returns a bounded portion
   of that energy to the onboard battery during deceleration.
@@ -1811,8 +1815,8 @@ beyond the MVP tech-and-recipe loop.
 | `x-lfp-battery-pack` | LFP Battery Pack | Yes | Long-life mass-market and stationary-storage pack; temporary layered native icon is wired. |
 | `x-damaged-high-energy-battery-pack` | Damaged High-energy Battery Pack | Yes | Chemistry-specific recycling input. |
 | `x-damaged-lfp-battery-pack` | Damaged LFP Battery Pack | Yes | Chemistry-specific recycling input. |
-| `x-electric-semi` | Battery-electric Semi | Yes | Temporary tinted vanilla locomotive art is wired; needs a dedicated aligned rail sprite. |
-| `x-semi-charging-stop` | Semi charging stop | Yes | Temporary train-stop/battery icon and vanilla stop art are wired. |
+| `x-electric-semi` | Cybertrain | Yes | Temporary tinted vanilla locomotive art is wired; needs a dedicated aligned rail sprite. |
+| `x-semi-charging-stop` | Cybertrain charging stop | Yes | Temporary train-stop/battery icon and vanilla stop art are wired. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |

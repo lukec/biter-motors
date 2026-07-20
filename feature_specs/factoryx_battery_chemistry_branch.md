@@ -38,6 +38,11 @@ References:
 | Capital Scaling / Gigafactory V2 | Unlocks clean refining and dry-electrode recipes with lower acid, waste, power and craft time. |
 | First chemistry-specific battery scrap + Recycling | Makes Battery Material Recovery researchable. It does not auto-complete the research. |
 
+After the 50-Roadster market gate, the Progress panel explicitly walks through
+extracting both minerals, refining both precursors, producing the first
+High-Nickel Cells, and assembling the first High-Energy Battery Pack before it
+asks for the 100-Premium-EV pilot.
+
 Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
 packs, giving them both a large total pack count and the long-range chemistry.
@@ -48,6 +53,11 @@ Only two new natural resources are added to Nauvis:
 
 - `Nickel Ore`: solid drill-mined patches.
 - `Lithium Brine`: pumpjack fields.
+
+Both use uranium's ordinary 1.25 patches/km2, but their regular-resource fade-in
+begins at 240 tiles instead of uranium's 300. This allows battery deposits to
+begin at exactly 80% of uranium's exclusion distance without guaranteeing a
+starting-area patch. The actual nearest deposit remains map-seed dependent.
 
 Existing resources supply the rest: coal becomes Battery Graphite, stone
 becomes Phosphate, and iron supplies LFP cathodes. Early nickel refining emits
@@ -61,7 +71,7 @@ Battery Packs, LFP Battery Packs, and one damaged-pack item per chemistry.
 Acidic Tailings is a fluid. Packs stack to 20; cells and refined powders stack
 to 100.
 
-## Proposed Recipes
+## Implemented Recipes
 
 Quantities are balance targets for the first implementation pass.
 

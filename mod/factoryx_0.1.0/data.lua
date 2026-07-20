@@ -829,8 +829,8 @@ data:extend({
     hidden = true,
     fuel_category = "x-electric-semi-drive",
     fuel_value = "1MJ",
-    fuel_acceleration_multiplier = 1.5,
-    fuel_top_speed_multiplier = 1.35
+    fuel_acceleration_multiplier = 2.0,
+    fuel_top_speed_multiplier = 1.5
   }),
 
   item("x-small-launch-service", generated_icon("small-launch-service"), "space-related", "x-a[small-launch-service]", 20),
@@ -1063,10 +1063,10 @@ electric_semi.minable = {mining_time = 0.5, result = "x-electric-semi"}
 electric_semi.color = {r = 0.25, g = 0.65, b = 0.78, a = 1}
 electric_semi.max_health = 1500
 electric_semi.weight = 2400
-electric_semi.max_speed = 1.8
-electric_semi.max_power = "1.8MW"
+electric_semi.max_speed = 3.0
+electric_semi.max_power = "6MW"
 electric_semi.reversing_power_modifier = 0.8
-electric_semi.braking_force = 30
+electric_semi.braking_force = 40
 electric_semi.friction_force = 0.35
 electric_semi.air_resistance = 0.0045
 electric_semi.energy_source = {

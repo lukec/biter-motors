@@ -83,7 +83,7 @@ for name in ("iron-plate", "copper-plate", "transport-belt", "medium-electric-po
 for name in ("boiler", "steam-engine", "offshore-pump"):
     if row["debris"].get(name, 0) != 0:
         raise SystemExit(f"burner-era power item should not be in debris: {name}: {row}")
-if "FACTORYX" not in str(row["intro"]) or "Recover the supplies" not in str(row["intro"]):
+if "FACTORYX" not in str(row["intro"]) or "Recover the scattered cargo" not in str(row["intro"]):
     raise SystemExit(f"intro mismatch: {row}")
 if row["sales_office_researched"] or row["prototype_roadster_enabled"]:
     raise SystemExit(f"FactoryX progression started unlocked: {row}")

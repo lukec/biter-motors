@@ -1783,7 +1783,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("available[center.unit_number] = stored > 0", control)
         self.assertIn("result[selected.unit_number] = result[selected.unit_number] + customers", control)
         self.assertIn("game.tick - cached.tick < 300", control)
-        self.assertIn("output_blocked = not (output and output.can_insert", control)
+        self.assertIn("function robotaxi_dollar_output_blocked", control)
+        self.assertIn("slot.count >= slot.prototype.stack_size", control)
+        self.assertIn("output_blocked = robotaxi_dollar_output_blocked(output)", control)
         self.assertIn("not snapshot.output_blocked", control)
         self.assertIn("trips and fleet attrition are paused", control)
         self.assertIn("radius = 0.25", control)
@@ -1807,6 +1809,10 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(name, data)
         self.assertIn('initialize_patch_set("x-nickel-ore", false)', updates)
         self.assertIn('initialize_patch_set("x-lithium-brine", false)', updates)
+        self.assertIn('local battery_mineral_fade = "clamp((distance - 240) / 60, 0, 1)"', updates)
+        self.assertIn("local function battery_mineral_autoplace", updates)
+        self.assertEqual(updates.count("base_spots_per_km2 = 1.25"), 2)
+        self.assertIn('frequency = 1.0, size = 1.0, richness = 1.0', updates)
         premium = data[data.index('recipe("x-premium-ev"'):data.index('recipe("x-mass-market-ev"')]
         mass = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-cybertruck"')]
         megapack = data[data.index('recipe("x-megapack"'):data.index('recipe("x-autonomy-computer"')]
@@ -1822,6 +1828,23 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('allow_productivity = false', high_recovery)
         self.assertIn('allow_productivity = false', lfp_recovery)
 
+    def test_battery_onboarding_precedes_premium_pilot(self):
+        control = (MOD / "control.lua").read_text()
+        objective = control[control.index("local function current_progress_objective"):control.index("local function progress_stages")]
+        for field in [
+            "nickel_ore_mined", "lithium_brine_pumped", "acidic_tailings_produced",
+            "nickel_sulfate_produced", "lithium_carbonate_produced",
+            "high_nickel_cells_produced", "high_energy_battery_packs_produced",
+            "lfp_cells_produced", "lfp_battery_packs_produced",
+        ]:
+            self.assertIn(field, control)
+        self.assertLess(objective.index('return "Battery minerals"'), objective.index('return "Premium pilot production"'))
+        self.assertLess(objective.index('return "Battery refining"'), objective.index('return "Premium pilot production"'))
+        self.assertLess(objective.index('return "Battery cells"'), objective.index('return "Premium pilot production"'))
+        self.assertLess(objective.index('return "Battery packs"'), objective.index('return "Premium pilot production"'))
+        self.assertIn("function count_fluid_produced", control)
+        self.assertIn("get_fluid_production_statistics", control)
+
     def test_robotaxi_safety_improves_automatically_with_completed_rides(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn("ROBOTAXI_SAFETY_RIDES_SCALE = 1000", control)
@@ -1834,11 +1857,15 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Safety learning:", control)
         self.assertIn("Expected retirement:", control)
 
-    def test_electric_semi_has_bounded_mass_sensitive_regen_and_station_charging(self):
+    def test_cybertrain_is_extremely_fast_with_bounded_mass_sensitive_regen_and_station_charging(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        self.assertIn('electric_semi.max_speed = 1.8', data)
-        self.assertIn('electric_semi.max_power = "1.8MW"', data)
+        locale = (MOD / "locale" / "en" / "factoryx.cfg").read_text()
+        self.assertIn('electric_semi.max_speed = 3.0', data)
+        self.assertIn('electric_semi.max_power = "6MW"', data)
+        self.assertIn('fuel_acceleration_multiplier = 2.0', data)
+        self.assertIn('fuel_top_speed_multiplier = 1.5', data)
+        self.assertIn('electric_semi.braking_force = 40', data)
         self.assertIn('fuel_categories = {"x-electric-semi-drive"}', data)
         self.assertIn('semi_charging_power.energy_source.input_flow_limit = "50MW"', data)
         self.assertIn('recipe("x-electric-semi"', data)
@@ -1853,6 +1880,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("script.on_nth_tick(6, process_electric_semi_runtime)", control)
         self.assertIn("electric_semi_status = function", control)
         self.assertIn("vehicle.name == ELECTRIC_SEMI_NAME", control)
+        self.assertIn("x-electric-semi=Cybertrain", locale)
+        self.assertIn("x-electric-semi-logistics=Cybertrain Freight", locale)
 
     def test_customer_population_virtualizes_beyond_visible_limits(self):
         control = (MOD / "control.lua").read_text()

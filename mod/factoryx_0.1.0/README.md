@@ -24,31 +24,35 @@ The MVP loop is intentionally physical:
 6. Feed one Roadster plus one EV Reservation into `Sell hopes and dreams`, then
    belt Dollars out.
 7. Spend first Dollars on EV Production Line research.
-8. Build 100 pilot Premium EVs in ordinary advanced assemblers.
-9. Complete the pilot run and research Energy Products to unlock Gigafactory
+8. Sell 50 Prototype Roadsters to prove the premium market.
+9. Locate Nickel Ore and Lithium Brine outside the starting area, refine Nickel
+   Sulfate and Lithium Carbonate, manage Acidic Tailings, and establish
+   High-energy Battery Pack production.
+10. Build 100 pilot Premium EVs in ordinary advanced assemblers.
+11. Complete the pilot run and research Energy Products to unlock Gigafactory
    Modules and Gigafactory construction together.
-10. Convert Dollars plus factory hardware into ten modules, then combine them
+12. Convert Dollars plus factory hardware into ten modules, then combine them
     with two Substations to build a 9x9 Gigafactory.
     Placing the first Gigafactory automatically researches Logistic System, so
     requester, buffer, and active-provider chests can feed the large factory.
-11. Move Premium EV production into the Gigafactory and use `Sell premium product`.
-12. Manufacture 300 kW High-density Solar Arrays and 100 MJ Megapacks in either
+13. Move Premium EV production into the Gigafactory and use `Sell premium product`.
+14. Manufacture 300 kW High-density Solar Arrays and 100 MJ Megapacks in either
     Gigafactory tier.
-13. Research EV Charging Network, craft V2 chargers using V1 chargers as recipe
+15. Research EV Charging Network, craft V2 chargers using V1 chargers as recipe
     ingredients, and place the new eight-stall sites. More active stalls increase
     physical EV Reservation output.
-14. Research Mass-market EV Production, build a Gigacast, and craft a 9x9,
+16. Research Mass-market EV Production, build a Gigacast, and craft a 9x9,
     30 MW Gigafactory V2 that can fast-replace V1.
-15. Use Gigafactory V2's 2x speed and built-in 150% productivity to scale
+17. Use Gigafactory V2's 2x speed and built-in 150% productivity to scale
     Premium or Mass-market EV output efficiently.
-16. Research Terrestrial AI and build an 8 MW Terrestrial Datacenter from
+18. Research Terrestrial AI and build an 8 MW Terrestrial Datacenter from
     Datacenter Racks and heavy grid infrastructure.
-17. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
-18. Spend 1,000 AI Tokens, 1,000 Dollars, and cumulative red-through-yellow science on Autonomous
+19. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
+20. Spend 1,000 AI Tokens, 1,000 Dollars, and cumulative red-through-yellow science on Autonomous
     Logistics.
-19. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
+21. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
     Reservations.
-20. Begin Small Orbital Launch, reusable launch, and satellite infrastructure.
+22. Begin Small Orbital Launch, reusable launch, and satellite infrastructure.
 
 Custom production art now includes footprint-aligned Sales Office and
 Terrestrial Datacenter masters, normalized 256 px icon sources, dedicated
@@ -56,7 +60,7 @@ technology illustrations, and restrained working visuals for sales, charging,
 Gigafactory presses, datacenter cooling, Robotaxi dispatch, and grid charging.
 Runtime charger and Service Center lights use one render object per building;
 no animation rendering is attached to individual customer units.
-21. Move production to space platforms with Orbital Compute Arrays and return
+23. Move production to space platforms with Orbital Compute Arrays and return
     AI Tokens to the planet.
 22. Build a Planetary Energy Grid Controller.
 23. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
