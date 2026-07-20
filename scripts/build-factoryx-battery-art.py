@@ -9,6 +9,7 @@ SOURCE = ROOT / "art/blender/battery-cybertrain/renders"
 GRAPHICS = ROOT / "mod/factoryx_0.1.0/graphics"
 ICON_OUTPUT = GRAPHICS / "icons"
 TRAIN_OUTPUT = GRAPHICS / "entity/cybertrain"
+STOP_OUTPUT = GRAPHICS / "entity/cybertrain-charging-stop"
 FRAME_SIZE = 256
 NORTH_SOURCE_FRAME = 23
 
@@ -44,6 +45,20 @@ def build_train_sheet(shadow: bool = False) -> None:
     sheet.save(TRAIN_OUTPUT / ("cybertrain-shadow.png" if shadow else "cybertrain.png"), optimize=True)
 
 
+def build_stop_sheet(shadow: bool = False) -> None:
+    sheet = Image.new("RGBA", (FRAME_SIZE * 4, FRAME_SIZE), (0, 0, 0, 0))
+    infix = "-shadow" if shadow else ""
+    for direction in range(4):
+        frame = Image.open(SOURCE / "stop-directions" / f"charging-stop{infix}-{direction}.png").convert("RGBA")
+        if shadow:
+            alpha = frame.getchannel("A").filter(ImageFilter.GaussianBlur(4)).point(lambda value: round(value * 0.44))
+            frame = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+            frame.putalpha(alpha)
+        sheet.alpha_composite(frame, (direction * FRAME_SIZE, 0))
+    STOP_OUTPUT.mkdir(parents=True, exist_ok=True)
+    sheet.save(STOP_OUTPUT / ("charging-stop-shadow.png" if shadow else "charging-stop.png"), optimize=True)
+
+
 def main() -> None:
     ICON_OUTPUT.mkdir(parents=True, exist_ok=True)
     for source in sorted((SOURCE / "icons").glob("*.png")):
@@ -52,7 +67,10 @@ def main() -> None:
     crop_icon(SOURCE / "cybertrain-master.png", ICON_OUTPUT / "electric-semi.png")
     build_train_sheet(False)
     build_train_sheet(True)
+    build_stop_sheet(False)
+    build_stop_sheet(True)
     print("Built Cybertrain directional sprites")
+    print("Built Cybertrain charging-stop directional sprites")
 
 
 if __name__ == "__main__":

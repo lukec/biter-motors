@@ -1895,6 +1895,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("local budget = math.min(#order, SEMI_PROCESS_BUDGET)", control)
         self.assertIn("train.weight / math.max(1, #semis)", control)
         self.assertIn("SEMI_REGEN_EFFICIENCY", control)
+        self.assertIn("SEMI_RESERVE_THRESHOLD = 10000000", control)
+        self.assertIn("SEMI_RESERVE_SPEED = 0.08", control)
+        self.assertIn("battery.energy <= SEMI_RESERVE_THRESHOLD", control)
+        self.assertIn("set_semi_drive_permission(entity, true)", control)
+        self.assertIn("reserve_mode = battery.reserve_mode == true", control)
+        self.assertIn('if not script.active_mods["factoryx_smoke"] then return false end', control)
+        self.assertIn('"test_electric_semi_reserve"', (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text())
         self.assertIn("stop.get_stopped_train()", control)
         self.assertIn("power.power_usage = SEMI_CHARGING_POWER", control)
         self.assertIn("script.on_nth_tick(6, process_electric_semi_runtime)", control)
@@ -1912,6 +1919,32 @@ class FactoryXModTest(unittest.TestCase):
             self.assertTrue(path.exists(), path)
             with Image.open(path) as image:
                 self.assertEqual(image.size, (2048, 2048))
+        self.assertIn("local function cybertrain_stop_direction(frame)", data)
+        self.assertIn('graphics/entity/cybertrain-charging-stop/charging-stop.png', data)
+        self.assertIn('graphics/entity/cybertrain-charging-stop/charging-stop-shadow.png', data)
+        self.assertIn("north = cybertrain_stop_direction(0)", data)
+        self.assertIn("west = cybertrain_stop_direction(3)", data)
+        for filename in ["charging-stop.png", "charging-stop-shadow.png"]:
+            path = MOD / "graphics" / "entity" / "cybertrain-charging-stop" / filename
+            self.assertTrue(path.exists(), path)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (1024, 256))
+        self.assertIn("emergency reserve speed of roughly 17 km/h", locale)
+
+    def test_minimal_orbital_ai_endgame_replaces_launch_business_roadmap(self):
+        roadmap = (ROOT / "factoryX.md").read_text()
+        section = roadmap[
+            roadmap.index("#### Minimal Orbital AI Endgame"):
+            roadmap.index("## Design Principles")
+        ]
+        normalized = " ".join(section.replace("`", "").split())
+        self.assertIn("Keep the vanilla Rocket Silo", normalized)
+        self.assertIn("Orbital Datacenter Core", normalized)
+        self.assertIn("Radiator Panel", normalized)
+        self.assertIn("High-density Space Solar Panel", normalized)
+        self.assertIn("at least 750 million came from orbital compute", normalized)
+        self.assertIn("roughly 1 TW for 60 connected gameplay minutes", normalized)
+        self.assertIn("Space does not beam power to the planet", normalized)
 
     def test_customer_population_virtualizes_beyond_visible_limits(self):
         control = (MOD / "control.lua").read_text()

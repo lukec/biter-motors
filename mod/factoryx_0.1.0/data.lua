@@ -1112,6 +1112,40 @@ semi_charging_stop.icon = nil
 semi_charging_stop.icons = semi_charging_stop_icon
 semi_charging_stop.minable = {mining_time = 0.5, result = "x-semi-charging-stop"}
 semi_charging_stop.color = {r = 0.25, g = 0.78, b = 0.92, a = 1}
+local function cybertrain_stop_direction(frame)
+  return {
+    layers = {
+      {
+        filename = "__factoryx__/graphics/entity/cybertrain-charging-stop/charging-stop.png",
+        priority = "high",
+        width = 256,
+        height = 256,
+        x = frame * 256,
+        scale = 0.5,
+        shift = {0, -0.15}
+      },
+      {
+        filename = "__factoryx__/graphics/entity/cybertrain-charging-stop/charging-stop-shadow.png",
+        priority = "high",
+        width = 256,
+        height = 256,
+        x = frame * 256,
+        scale = 0.5,
+        shift = {0, -0.15},
+        draw_as_shadow = true
+      }
+    }
+  }
+end
+semi_charging_stop.animations = {
+  north = cybertrain_stop_direction(0),
+  east = cybertrain_stop_direction(1),
+  south = cybertrain_stop_direction(2),
+  west = cybertrain_stop_direction(3)
+}
+semi_charging_stop.top_animations = nil
+semi_charging_stop.light1 = nil
+semi_charging_stop.light2 = nil
 
 local semi_charging_power = table.deepcopy(data.raw["electric-energy-interface"]["electric-energy-interface"])
 semi_charging_power.name = "x-semi-charging-power"

@@ -103,6 +103,8 @@ SEMI_CHARGING_POWER = 50000000
 SEMI_KINETIC_ENERGY_SCALE = 10000
 SEMI_REGEN_EFFICIENCY = 0.65
 SEMI_PROCESS_BUDGET = 32
+SEMI_RESERVE_THRESHOLD = 10000000
+SEMI_RESERVE_SPEED = 0.08
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
@@ -1473,6 +1475,14 @@ function process_electric_semi(entity, battery)
   local tick_delta = math.max(1, game.tick - (battery.last_tick or game.tick))
   local seconds = tick_delta / 60
   local speed = math.abs(entity.speed or 0)
+  if battery.energy <= SEMI_RESERVE_THRESHOLD and speed > SEMI_RESERVE_SPEED then
+    local train = entity.train
+    if train and train.valid then
+      train.speed = train.speed < 0 and -SEMI_RESERVE_SPEED or SEMI_RESERVE_SPEED
+    end
+    speed = SEMI_RESERVE_SPEED
+    battery.last_speed = math.min(battery.last_speed or speed, SEMI_RESERVE_SPEED)
+  end
   local train = entity.train
   local semis = electric_semis_in_train(train)
   local mass_share = train and train.valid and train.weight / math.max(1, #semis) or entity.prototype.weight
@@ -1495,9 +1505,17 @@ function process_electric_semi(entity, battery)
     battery.traction_used = (battery.traction_used or 0) + rolling_draw
   end
   battery.energy = math.max(0, math.min(SEMI_BATTERY_CAPACITY, battery.energy))
+  battery.reserve_mode = battery.energy <= SEMI_RESERVE_THRESHOLD
+  if battery.reserve_mode and speed > SEMI_RESERVE_SPEED then
+    local train = entity.train
+    if train and train.valid then
+      train.speed = train.speed < 0 and -SEMI_RESERVE_SPEED or SEMI_RESERVE_SPEED
+    end
+    speed = SEMI_RESERVE_SPEED
+  end
   battery.last_speed = speed
   battery.last_tick = game.tick
-  set_semi_drive_permission(entity, battery.energy > 0)
+  set_semi_drive_permission(entity, true)
 end
 
 function ensure_semi_charging_power(stop)
@@ -7819,11 +7837,36 @@ remote.add_interface("factoryx", {
           battery_percent = math.floor((battery.energy or 0) * 1000 / SEMI_BATTERY_CAPACITY + 0.5) / 10,
           traction_used_joules = battery.traction_used or 0,
           regenerated_joules = battery.regenerated or 0,
+          reserve_mode = battery.reserve_mode == true,
+          reserve_speed_limit = SEMI_RESERVE_SPEED,
           speed = semi.speed
         }
       end
     end
     return result
+  end,
+  test_electric_semi_reserve = function(unit_number, energy, speed)
+    if not script.active_mods["factoryx_smoke"] then return false end
+    local runtime = electric_semi_runtime()
+    local semi = runtime.semis[unit_number]
+    local battery = runtime.batteries[unit_number]
+    if not semi or not semi.valid or not battery then return false end
+    battery.energy = math.max(0, math.min(SEMI_BATTERY_CAPACITY, energy or 0))
+    battery.last_speed = math.abs(speed or 0)
+    battery.last_tick = game.tick - 6
+    local train = semi.train
+    if not train or not train.valid then return false end
+    train.speed = speed or 0
+    process_electric_semi(semi, battery)
+    return {
+      reserve_mode = battery.reserve_mode == true,
+      speed = math.abs(semi.speed or 0),
+      speed_limit = SEMI_RESERVE_SPEED,
+      has_drive_permission = semi.burner and (
+        semi.burner.currently_burning ~= nil
+          or semi.burner.inventory.get_item_count(ELECTRIC_SEMI_FUEL_NAME) > 0
+      ) or false
+    }
   end,
   continuous_improvements = function(force_name)
     local force = game.forces[force_name or "player"]

@@ -45,6 +45,7 @@ ANIMATIONS = [
 
 VEHICLES = [
     ("Cybertrain", "battery-cybertrain/renders/cybertrain-master.png", "electric-semi.png", "Dedicated 64-direction rail sprite"),
+    ("Cybertrain Charging Stop", "battery-cybertrain/renders/charging-stop-master.png", "semi-charging-stop.png", "Dedicated four-direction rail-aligned structure"),
 ]
 
 

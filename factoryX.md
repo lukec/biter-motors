@@ -19,14 +19,15 @@ from prototype EV sales into battery minerals, mass-market manufacturing,
 charging infrastructure, energy storage, Robotaxis, terrestrial AI compute,
 and a circular autonomous economy.
 
-### Biter Motors Terrestrial Refocus
+### Biter Motors Refocus
 
 The current product direction is Biter Motors rather than a combined Tesla and
-SpaceX simulation. Future implementation should deepen battery minerals,
-vehicle manufacturing, charging, energy storage, Robotaxis, recycling,
-terrestrial compute, and humanoid automation. The existing SpaceX-style launch,
-satellite, and orbital-compute sections below are historical design material
-until a dedicated removal slice deletes their prototypes and runtime paths.
+SpaceX business simulation. Future implementation should deepen battery
+minerals, vehicle manufacturing, charging, energy storage, Robotaxis,
+recycling, terrestrial compute, humanoid automation, and a narrow orbital AI
+endgame. Ordinary Factorio rockets and platforms remain useful logistics. The
+custom small-launch, reusable-booster, launch-service, satellite-business, and
+ground-station product ladders are historical material to remove.
 
 ### Terrestrial Roadmap Additions
 
@@ -75,13 +76,69 @@ prototype ids retain `x-electric-semi` to avoid needless code churn.
 
 #### Terrestrial Victory Redesign
 
-- The Biter Motors ending remains an explicit open design decision. Removing
-  SpaceX invalidates orbital requirements in the current AGI victory path.
+- Retain AGI as the recommended final artifact, but remove the commercial
+  SpaceX ladder around it. Space remains a compute location, not a second
+  company simulation.
 - The final condition should close the systems the player actually built:
-  customer electrification, sustainable generation and storage, circular
-  battery recovery, autonomous fleet safety, terrestrial manufacturing, and
-  possibly AGI. Do not select thresholds or preserve AGI as the final artifact
-  until this terrestrial victory is designed as one coherent physical finale.
+  customer electrification funds terrestrial manufacturing and grid expansion;
+  rockets lift compute infrastructure; orbital platforms return AI Tokens; and
+  the ground grid powers the final training run.
+
+#### Minimal Orbital AI Endgame
+
+Recommended direction:
+
+1. Keep the vanilla Rocket Silo, rocket parts, cargo launches, cargo pods, and
+   space-platform logistics. Do not add Small Launch Service, Reusable Launch
+   Service, launch-credit products, booster sales, or a satellite market.
+2. Unlock `Orbital AI Infrastructure` after terrestrial AI and late Biter
+   Motors manufacturing. Its physical products are an `Orbital Datacenter
+   Core`, `Radiator Panel`, and platform-compatible `High-density Space Solar
+   Panel`.
+3. Launch those products as cargo and build actual compute campuses on orbital
+   platforms. Orbital Datacenters draw enormous electricity, emit substantial
+   process heat, and reset an active training batch if power or cooling falls
+   below its operating threshold.
+4. Radiators are the visible cooling constraint. The preferred prototype
+   experiment is a real heat network: compute cores create heat and radiator
+   banks consume it. If Factorio's platform heat prototypes cannot provide a
+   reliable readable contract, use a closed coolant loop rather than a hidden
+   per-machine polling simulation.
+5. Space solar panels trade large platform footprint and expensive battery
+   materials for much greater orbital output. They receive continuous sunlight
+   but still compete with radiators, cargo bays, defenses, and compute for
+   platform area.
+6. Orbital Datacenters manufacture physical AI Tokens. Cargo pods return those
+   Tokens to Nauvis, where human industry decides how to use them. Space does
+   not beam power to the planet.
+7. Remove Planetary Grid Segments, Satellite Buses, Ground Station Networks,
+   and custom launch-service items from the final recipe. The terrestrial grid
+   remains necessary because the final AGI training system itself draws about
+   1 TW.
+
+Recommended victory contract:
+
+- Generate one billion cumulative AI Tokens, with an initial target that at
+  least 750 million came from orbital compute. This makes space practically and
+  explicitly necessary without simulating a launch business.
+- Deliver 100 million physical AI Tokens, 10 million Dollars through packaged
+  capital, Megapacks, and a late physical automation component to the final
+  terrestrial controller.
+- Sustain roughly 1 TW for 60 connected gameplay minutes. Low power resets the
+  run, matching the established Datacenter training behavior.
+- Completion produces one physical `AGI Model`, triggers victory, and allows
+  continued play.
+
+Alternative victory formulations retained for later comparison:
+
+- **Autonomous abundance:** AGI plus minimum customer electrification,
+  Robotaxi coverage, battery recovery, and renewable-grid thresholds.
+- **Steady-state compute civilization:** sustain a target AI-Token rate,
+  charging-service level, and terrestrial grid reserve for one hour rather
+  than accumulating one giant final inventory.
+- **Returned orbital model:** perform the final training operation in orbit and
+  return the AGI Model by cargo pod. This is visually strong but weakens the
+  ground-grid finale, so it is not the current recommendation.
 
 ## Design Principles
 
@@ -1819,7 +1876,7 @@ beyond the MVP tech-and-recipe loop.
 | `x-damaged-high-energy-battery-pack` | Damaged High-energy Battery Pack | No | Crushed and scorched chemistry-specific recycling icon is wired. |
 | `x-damaged-lfp-battery-pack` | Damaged LFP Battery Pack | No | Crushed and scorched chemistry-specific recycling icon is wired. |
 | `x-electric-semi` | Cybertrain | No | Dedicated silver-and-teal Blender model, icon, shadow, and packed 64-direction rail sprite are wired. |
-| `x-semi-charging-stop` | Cybertrain charging stop | Partial | Dedicated charging-gantry icon is wired while the placed entity intentionally retains native train-stop geometry for exact rail alignment. |
+| `x-semi-charging-stop` | Cybertrain charging stop | No | Dedicated four-direction charging gantry, transformer cabinets, overhead rail, icon, and shadow are wired while native train-stop rail overlays preserve placement alignment. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |

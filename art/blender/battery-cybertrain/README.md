@@ -2,7 +2,8 @@
 
 `render_battery_cybertrain.py` creates the teal high-nickel and orange LFP icon
 families, material and fluid icons, damaged battery packs, the Cybertrain
-charging-stop icon, and a deterministic 64-direction Cybertrain model.
+charging-stop icon and four-direction placed structure, and a deterministic
+64-direction Cybertrain model.
 
 Rebuild the source renders and packed game assets with:
 

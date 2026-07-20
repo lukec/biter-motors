@@ -682,6 +682,9 @@ script.on_nth_tick(3780, function()
   local reservations = station_output and station_output.get_item_count(RESERVATION) or -1
   local agi_training = remote.call("factoryx", "agi_training_status", "player")
   local electric_semis = remote.call("factoryx", "electric_semi_status", "player")
+  local electric_semi_reserve_test = electric_semis[1] and remote.call(
+    "factoryx", "test_electric_semi_reserve", electric_semis[1].unit_number, 0, 0.5
+  ) or false
   local robotaxi_services = remote.call("factoryx", "robotaxi_service_status", "player")
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
   local logistic_roboports = #surface.find_entities_filtered{type = "roboport", force = game.forces.player}
@@ -727,6 +730,7 @@ script.on_nth_tick(3780, function()
     electric_semi_created = storage.electric_semi_created,
     semi_stop_created = storage.semi_stop_created,
     electric_semi_status = electric_semis,
+    electric_semi_reserve_test = electric_semi_reserve_test,
     robotaxi_service_status = robotaxi_services,
     prospect_units = prospect_units,
     ev_charging_station_enabled = station_recipe and station_recipe.enabled,
@@ -1438,6 +1442,11 @@ if not checked.get("electric_semi_created") or not checked.get("semi_stop_create
 semi_status = checked.get("electric_semi_status") or []
 if len(semi_status) != 1 or semi_status[0].get("battery_percent") != 100:
     raise SystemExit(f"electric Semi was not registered with a full factory battery: {checked}")
+reserve_test = checked.get("electric_semi_reserve_test") or {}
+if not reserve_test.get("reserve_mode") or not reserve_test.get("has_drive_permission"):
+    raise SystemExit(f"depleted Cybertrain did not retain reserve propulsion: {checked}")
+if reserve_test.get("speed", 999) > reserve_test.get("speed_limit", 0):
+    raise SystemExit(f"depleted Cybertrain exceeded reserve speed: {checked}")
 robotaxi_status = checked.get("robotaxi_service_status") or []
 if len(robotaxi_status) != 1 or robotaxi_status[0].get("completed_rides", 0) <= 0:
     raise SystemExit(f"Robotaxi service did not accumulate automatic safety-learning rides: {checked}")

@@ -14,7 +14,8 @@
     "Planetary Grid Controller"
   ],
   "vehicles": [
-    "Cybertrain"
+    "Cybertrain",
+    "Cybertrain Charging Stop"
   ],
   "icons": [
     "acidic-tailings.png",

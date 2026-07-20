@@ -13,6 +13,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 RENDERS = os.path.join(ROOT, "renders")
 ICON_RENDERS = os.path.join(RENDERS, "icons")
 TRAIN_RENDERS = os.path.join(RENDERS, "directions")
+STOP_RENDERS = os.path.join(RENDERS, "stop-directions")
 
 
 TEAL = material("High nickel teal", (0.08, 0.42, 0.36, 1), 0.48, 0.36)
@@ -155,17 +156,34 @@ def pack(name, body, accent, damaged=False):
     return root
 
 
-def charging_stop_icon():
+def build_charging_stop(include_shadow=False):
+    root = bpy.data.objects.new("Cybertrain charging stop", None)
+    bpy.context.collection.objects.link(root)
     parts = [
-        cube("Stop base", (0, 0, 0.16), (1.42, 1.15, 0.14), DARK, 0.08),
-        cube("Charger cabinet", (-0.86, 0.55, 1.02), (0.4, 0.42, 0.9), SILVER, 0.08),
-        cube("Cabinet screen", (-0.86, 0.12, 1.14), (0.22, 0.035, 0.28), CYAN, 0.025),
-        cube("Gantry left", (-1.02, -0.55, 1.18), (0.11, 0.11, 1.0), SILVER, 0.035),
-        cube("Gantry right", (1.02, -0.55, 1.18), (0.11, 0.11, 1.0), SILVER, 0.035),
-        cube("Gantry beam", (0, -0.55, 2.12), (1.12, 0.12, 0.12), SILVER, 0.035),
-        cube("Charge rail", (0, -0.55, 1.91), (0.68, 0.08, 0.07), CYAN, 0.02),
+        cube("Stop foundation", (0, 0, 0.12), (1.45, 1.08, 0.12), DARK, 0.06),
+        cube("Track approach plate", (0, -1.18, 0.14), (1.34, 0.34, 0.08), SILVER, 0.035),
+        cube("Transformer cabinet", (-0.88, 0.55, 0.94), (0.42, 0.42, 0.82), SILVER, 0.08),
+        cube("Power cabinet", (0.04, 0.67, 0.72), (0.38, 0.3, 0.6), TEAL, 0.07),
+        cube("Transformer screen", (-0.88, 0.12, 1.08), (0.24, 0.035, 0.26), CYAN, 0.025),
+        cube("Power screen", (0.04, 0.36, 0.8), (0.21, 0.03, 0.16), CYAN, 0.02),
+        cube("Gantry left", (-1.12, -0.56, 1.25), (0.13, 0.13, 1.1), SILVER, 0.035),
+        cube("Gantry right", (1.12, -0.56, 1.25), (0.13, 0.13, 1.1), SILVER, 0.035),
+        cube("Gantry beam", (0, -0.56, 2.28), (1.25, 0.14, 0.14), SILVER, 0.035),
+        cube("Overhead charge rail", (0, -0.56, 2.04), (0.8, 0.09, 0.075), CYAN, 0.02),
+        cube("Left cable trunk", (-1.12, 0.08, 1.1), (0.055, 0.46, 0.055), COPPER, 0.015),
+        cube("Right cable trunk", (1.12, 0.08, 1.1), (0.055, 0.46, 0.055), COPPER, 0.015),
+        cube("Safety stripe", (0, -1.48, 0.23), (1.26, 0.035, 0.06), YELLOW, 0.01),
     ]
-    return parts
+    for x in (-0.72, 0, 0.72):
+        parts.append(cube("Charge indicator", (x, -0.72, 2.29), (0.19, 0.035, 0.045), CYAN, 0.012))
+    if include_shadow:
+        add_shadow(parts, SHADOW, (1.65, 1.55), 0.1)
+    parent_parts(root, parts)
+    return root
+
+
+def charging_stop_icon():
+    return [build_charging_stop(False)]
 
 
 def build_icon(slug):
@@ -260,5 +278,33 @@ def render_cybertrain():
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "battery-cybertrain.blend"))
 
 
+def render_charging_stop():
+    os.makedirs(STOP_RENDERS, exist_ok=True)
+    clear_scene()
+    scene = setup_camera(6.6)
+    stop = build_charging_stop(True)
+    shadow = bpy.data.objects.get("Ground contact shadow")
+    color_parts = [obj for obj in scene.objects if obj != shadow and obj != scene.camera and obj.type not in {"LIGHT", "EMPTY"}]
+    stop.rotation_euler.z = math.radians(18)
+    scene.render.resolution_x = 768
+    scene.render.resolution_y = 768
+    scene.render.filepath = os.path.join(RENDERS, "charging-stop-master.png")
+    bpy.ops.render.render(write_still=True)
+    scene.render.resolution_x = 256
+    scene.render.resolution_y = 256
+    for index in range(4):
+        stop.rotation_euler.z = math.tau * index / 4
+        shadow.hide_render = True
+        scene.render.filepath = os.path.join(STOP_RENDERS, f"charging-stop-{index}.png")
+        bpy.ops.render.render(write_still=True)
+        for part in color_parts: part.hide_render = True
+        shadow.hide_render = False
+        scene.render.filepath = os.path.join(STOP_RENDERS, f"charging-stop-shadow-{index}.png")
+        bpy.ops.render.render(write_still=True)
+        for part in color_parts: part.hide_render = False
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "battery-cybertrain.blend"))
+
+
 render_icons()
 render_cybertrain()
+render_charging_stop()
