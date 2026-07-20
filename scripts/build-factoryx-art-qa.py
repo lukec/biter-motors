@@ -43,6 +43,10 @@ ANIMATIONS = [
     ("Grid charge stages", "grid-charge-stages.png", 128, 128, "Charging only"),
 ]
 
+VEHICLES = [
+    ("Cybertrain", "battery-cybertrain/renders/cybertrain-master.png", "electric-semi.png", "Dedicated 64-direction rail sprite"),
+]
+
 
 def rel(path: Path) -> str:
     return "../../" + path.relative_to(ROOT).as_posix()
@@ -90,6 +94,20 @@ def icon_cards() -> str:
     return "".join(cards)
 
 
+def vehicle_cards() -> str:
+    cards = []
+    for index, (name, preview_path, icon_path, status) in enumerate(VEHICLES):
+        asset_id = f"vehicle-{index}"
+        cards.append(f"""
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="{asset_id}">
+      <header><img class="mini-icon" src="{rel(GRAPHICS / 'icons' / icon_path)}" alt=""><div><h2>{html.escape(name)}</h2><p>{html.escape(status)}</p></div></header>
+      <div class="vehicle-stage"><img src="{rel(ROOT / 'art/blender' / preview_path)}" alt="{html.escape(name)} north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale">{''.join(f'<img src="{rel(GRAPHICS / "icons" / icon_path)}" alt="">' for _ in range(5))}</div>
+      {review_controls(asset_id)}
+    </article>""")
+    return "".join(cards)
+
+
 def animation_cards() -> str:
     cards = []
     for index, (name, filename, width, height, trigger) in enumerate(ANIMATIONS):
@@ -122,12 +140,13 @@ def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {
         "entities": [entry[0] for entry in ENTITIES],
+        "vehicles": [entry[0] for entry in VEHICLES],
         "icons": [path.name for path in sorted((GRAPHICS / "icons").glob("*.png"))],
         "animations": [entry[0] for entry in ANIMATIONS],
         "technology": [path.name for path in sorted((GRAPHICS / "technology").glob("*.png"))],
         "paid_generation_count": 3,
         "blender": {
-            "installed": False,
+            "installed": True,
             "break_even": "Worthwhile for directional drivable sprites; not worthwhile for icons alone.",
             "image_generation_estimate": "10-15 attempts for five coherent directional sheets after retries.",
             "local_pipeline_estimate": "One scripted camera/material rig plus five low-poly models; all rotations and recolors then render locally.",
@@ -152,6 +171,7 @@ main{{padding:18px clamp(16px,4vw,48px) 60px}} .grid{{display:grid;grid-template
 .entity-stage{{height:390px;position:relative;overflow:hidden;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}}
 .entity-stage.terrain-concrete{{background-color:#77756c}} .entity-stage.terrain-dark{{background-color:#25292b}} .footprint-grid{{position:absolute;width:var(--footprint);height:var(--footprint);border:2px solid var(--cyan);background-image:linear-gradient(#45d5ec55 1px,transparent 1px),linear-gradient(90deg,#45d5ec55 1px,transparent 1px);background-size:32px 32px;opacity:.55}}
 .entity-sprite{{position:absolute;width:var(--sprite);height:var(--sprite);object-fit:contain;image-rendering:auto}} body.show-bounds .entity-sprite{{outline:1px dashed var(--orange);background:#f69a2b10}}
+.vehicle-stage{{height:260px;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}} .vehicle-stage img{{width:224px;height:224px;object-fit:contain}}
 .belt{{height:64px;background:#111416;display:flex;align-items:center;justify-content:space-evenly;border-top:1px solid #3b3f41;border-bottom:1px solid #3b3f41;overflow:hidden}} .belt img{{width:42px;height:42px;object-fit:contain}}
 .review{{padding:9px 10px;display:flex;gap:7px;justify-content:flex-end}} .review button{{font-size:12px;padding:5px 8px}}
 .icon-scales{{height:150px;display:flex;gap:26px;align-items:center;justify-content:center;background:#1b1d1e}} .icon-scales img{{object-fit:contain}} .i64{{width:64px;height:64px}} .i32{{width:32px;height:32px}} .i20{{width:20px;height:20px}}
@@ -164,12 +184,12 @@ main{{padding:18px clamp(16px,4vw,48px) 60px}} .grid{{display:grid;grid-template
 <body>
 <header class="page"><div><h1>FactoryX Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
 <nav class="toolbar" aria-label="Artwork filters">
-  <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
+  <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="vehicles">Vehicles</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
   <button id="terrain" title="Cycle entity preview terrain">Terrain</button><button id="bounds" title="Show transparent image bounds">Bounds</button><button id="copy" title="Copy review decisions">Copy review</button>
 </nav>
 <main>
-<section class="grid" id="assets">{entity_cards()}{icon_cards()}{animation_cards()}{technology_cards()}</section>
-<section class="math"><h2 class="section-title">Directional vehicle production math</h2><table><thead><tr><th>Path</th><th>Likely cost</th><th>Result</th></tr></thead><tbody><tr><td>Generate directional sheets</td><td>5 initial calls; realistically 10-15 with consistency retries</td><td>Fast, but wheelbase, lighting, and body shape drift between directions</td></tr><tr><td>Scripted Blender family</td><td>One camera/material rig plus five low-poly models; Blender is not installed</td><td>Deterministic rotations, shadows, recolors, icons, and later animation</td></tr></tbody></table><p>The Blender setup is worthwhile once custom drivable sprites are the target. It is not worthwhile merely to replace the current 64px product icons.</p><p>Generated masters: <a href="../factoryx-masters/final/sales-office.png">Sales Office</a>, <a href="../factoryx-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../factoryx-masters/final/agi-model.png">AGI Model</a>.</p></section>
+<section class="grid" id="assets">{entity_cards()}{vehicle_cards()}{icon_cards()}{animation_cards()}{technology_cards()}</section>
+<section class="math"><h2 class="section-title">Directional vehicle production math</h2><p>FactoryX vehicle and battery art now uses a deterministic Blender pipeline. Directional sprites, shadows, chemistry variants, damaged packs, and inventory icons can be reproduced locally without additional image-generation calls.</p><p>Generated masters: <a href="../factoryx-masters/final/sales-office.png">Sales Office</a>, <a href="../factoryx-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../factoryx-masters/final/agi-model.png">AGI Model</a>.</p></section>
 </main>
 <script>
 const key='factoryx-art-qa-v1';const state=JSON.parse(localStorage.getItem(key)||'{{}}');

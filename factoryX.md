@@ -1811,12 +1811,15 @@ beyond the MVP tech-and-recipe loop.
 | `x-ai-token` | AI token | Partial | Temporary transparent selected playtest icon is wired; needs final UI-scale icon pass. |
 | `x-planetary-grid-segment` | Planetary grid segment | No | Dedicated physical high-voltage grid-module icon is wired. |
 | `x-agi-model` | AGI Model | Yes | Concrete output of the final training run and the victory trigger. |
-| `x-high-energy-battery-pack` | High-energy Battery Pack | Yes | High-nickel long-range pack; temporary layered native icon is wired. |
-| `x-lfp-battery-pack` | LFP Battery Pack | Yes | Long-life mass-market and stationary-storage pack; temporary layered native icon is wired. |
-| `x-damaged-high-energy-battery-pack` | Damaged High-energy Battery Pack | Yes | Chemistry-specific recycling input. |
-| `x-damaged-lfp-battery-pack` | Damaged LFP Battery Pack | Yes | Chemistry-specific recycling input. |
-| `x-electric-semi` | Cybertrain | Yes | Temporary tinted vanilla locomotive art is wired; needs a dedicated aligned rail sprite. |
-| `x-semi-charging-stop` | Cybertrain charging stop | Yes | Temporary train-stop/battery icon and vanilla stop art are wired. |
+| `x-nickel-ore` and refined battery materials | Battery material family | No | Dedicated ore, powder, crystal, graphite, cobalt, phosphate, brine, and tailings icons are wired. |
+| `x-high-nickel-cell` | High-nickel Cell | No | Teal cylindrical-cell cluster establishes the long-range chemistry family. |
+| `x-lfp-cell` | LFP Cell | No | Iron-orange cylindrical-cell cluster establishes the durable stationary and mass-market family. |
+| `x-high-energy-battery-pack` | High-energy Battery Pack | No | Dedicated teal structural pack icon is wired. |
+| `x-lfp-battery-pack` | LFP Battery Pack | No | Dedicated iron-orange structural pack icon is wired. |
+| `x-damaged-high-energy-battery-pack` | Damaged High-energy Battery Pack | No | Crushed and scorched chemistry-specific recycling icon is wired. |
+| `x-damaged-lfp-battery-pack` | Damaged LFP Battery Pack | No | Crushed and scorched chemistry-specific recycling icon is wired. |
+| `x-electric-semi` | Cybertrain | No | Dedicated silver-and-teal Blender model, icon, shadow, and packed 64-direction rail sprite are wired. |
+| `x-semi-charging-stop` | Cybertrain charging stop | Partial | Dedicated charging-gantry icon is wired while the placed entity intentionally retains native train-stop geometry for exact rail alignment. |
 | `x-electric-drivetrain` | Electric drivetrain | Maybe | Vanilla electric engine layering is acceptable for MVP. |
 | `x-prototype-roadster` | Prototype roadster | No | Red Blender model, derived icon, and packed 64-direction driving sheet are wired. |
 | `x-premium-ev` | Premium EV | No | Black grand-tourer model, derived icon, and packed 64-direction driving sheet are wired. |

@@ -746,7 +746,8 @@ data:extend({
 
 local nickel_ore = table.deepcopy(data.raw.resource["uranium-ore"])
 nickel_ore.name = "x-nickel-ore"
-nickel_ore.icon = "__base__/graphics/icons/uranium-ore.png"
+nickel_ore.icon = "__factoryx__/graphics/icons/nickel-ore.png"
+nickel_ore.icon_size = 256
 nickel_ore.icons = nil
 nickel_ore.minable.result = "x-nickel-ore"
 nickel_ore.minable.mining_particle = nil
@@ -756,7 +757,8 @@ nickel_ore.mining_visualisation_tint = {r = 0.52, g = 0.82, b = 0.68, a = 1}
 
 local lithium_brine = table.deepcopy(data.raw.fluid["crude-oil"])
 lithium_brine.name = "x-lithium-brine"
-lithium_brine.icon = "__base__/graphics/icons/fluid/water.png"
+lithium_brine.icon = "__factoryx__/graphics/icons/lithium-brine.png"
+lithium_brine.icon_size = 256
 lithium_brine.icons = nil
 lithium_brine.base_color = {r = 0.58, g = 0.82, b = 0.86}
 lithium_brine.flow_color = {r = 0.78, g = 0.96, b = 1.0}
@@ -764,14 +766,16 @@ lithium_brine.default_temperature = 25
 
 local acidic_tailings = table.deepcopy(data.raw.fluid["sulfuric-acid"])
 acidic_tailings.name = "x-acidic-tailings"
-acidic_tailings.icon = "__base__/graphics/icons/fluid/sulfuric-acid.png"
+acidic_tailings.icon = "__factoryx__/graphics/icons/acidic-tailings.png"
+acidic_tailings.icon_size = 256
 acidic_tailings.icons = nil
 acidic_tailings.base_color = {r = 0.32, g = 0.42, b = 0.16}
 acidic_tailings.flow_color = {r = 0.55, g = 0.62, b = 0.22}
 
 local lithium_brine_resource = table.deepcopy(data.raw.resource["crude-oil"])
 lithium_brine_resource.name = "x-lithium-brine"
-lithium_brine_resource.icon = "__base__/graphics/icons/crude-oil-resource.png"
+lithium_brine_resource.icon = "__factoryx__/graphics/icons/lithium-brine.png"
+lithium_brine_resource.icon_size = 256
 lithium_brine_resource.icons = nil
 lithium_brine_resource.minable.results[1].name = "x-lithium-brine"
 lithium_brine_resource.autoplace = nil
@@ -798,18 +802,18 @@ data:extend({
   item("x-planetary-grid-segment", planetary_grid_segment_icon, "x-factoryx-components", "g[planetary-grid-segment]", 2000),
   item("x-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1),
 
-  item("x-nickel-ore", icon64("__base__/graphics/icons/uranium-ore.png", {r = 0.58, g = 0.86, b = 0.72, a = 1}), "raw-resource", "z-a[nickel-ore]", 50),
-  item("x-nickel-sulfate", layered_icon64("__base__/graphics/icons/sulfur.png", "__base__/graphics/icons/uranium-ore.png", {r = 0.55, g = 0.86, b = 0.72, a = 1}), "x-factoryx-components", "a-a[nickel-sulfate]", 100),
-  item("x-lithium-carbonate", layered_icon64("__base__/graphics/icons/stone.png", "__base__/graphics/icons/battery.png", {r = 0.88, g = 0.94, b = 0.96, a = 1}), "x-factoryx-components", "a-b[lithium-carbonate]", 100),
-  item("x-battery-graphite", icon64("__base__/graphics/icons/coal.png", {r = 0.45, g = 0.48, b = 0.52, a = 1}), "x-factoryx-components", "a-c[battery-graphite]", 100),
-  item("x-cobalt-concentrate", icon64("__base__/graphics/icons/uranium-235.png", {r = 0.25, g = 0.42, b = 0.88, a = 1}), "x-factoryx-components", "a-d[cobalt-concentrate]", 100),
-  item("x-phosphate", icon64("__base__/graphics/icons/stone.png", {r = 0.68, g = 0.58, b = 0.35, a = 1}), "x-factoryx-components", "a-e[phosphate]", 100),
-  item("x-high-nickel-cell", layered_icon64("__base__/graphics/icons/battery.png", "__base__/graphics/icons/uranium-ore.png", {r = 0.38, g = 0.72, b = 0.62, a = 1}), "x-factoryx-components", "b-a[high-nickel-cell]", 100),
-  item("x-lfp-cell", layered_icon64("__base__/graphics/icons/battery.png", "__base__/graphics/icons/iron-plate.png", {r = 0.78, g = 0.55, b = 0.25, a = 1}), "x-factoryx-components", "b-b[lfp-cell]", 100),
-  item("x-high-energy-battery-pack", layered_icon64("__base__/graphics/icons/accumulator.png", "__base__/graphics/icons/battery.png", {r = 0.36, g = 0.72, b = 0.64, a = 1}), "x-factoryx-components", "c-a[high-energy-pack]", 20),
-  item("x-lfp-battery-pack", layered_icon64("__base__/graphics/icons/accumulator.png", "__base__/graphics/icons/battery.png", {r = 0.86, g = 0.58, b = 0.22, a = 1}), "x-factoryx-components", "c-b[lfp-pack]", 20),
-  item("x-damaged-high-energy-battery-pack", layered_icon64("__base__/graphics/icons/accumulator.png", "__space-age__/graphics/icons/scrap.png", {r = 0.28, g = 0.5, b = 0.46, a = 1}), "x-factoryx-components", "d-a[damaged-high-energy-pack]", 20),
-  item("x-damaged-lfp-battery-pack", layered_icon64("__base__/graphics/icons/accumulator.png", "__space-age__/graphics/icons/scrap.png", {r = 0.58, g = 0.4, b = 0.18, a = 1}), "x-factoryx-components", "d-b[damaged-lfp-pack]", 20),
+  item("x-nickel-ore", generated_icon("nickel-ore"), "raw-resource", "z-a[nickel-ore]", 50),
+  item("x-nickel-sulfate", generated_icon("nickel-sulfate"), "x-factoryx-components", "a-a[nickel-sulfate]", 100),
+  item("x-lithium-carbonate", generated_icon("lithium-carbonate"), "x-factoryx-components", "a-b[lithium-carbonate]", 100),
+  item("x-battery-graphite", generated_icon("battery-graphite"), "x-factoryx-components", "a-c[battery-graphite]", 100),
+  item("x-cobalt-concentrate", generated_icon("cobalt-concentrate"), "x-factoryx-components", "a-d[cobalt-concentrate]", 100),
+  item("x-phosphate", generated_icon("phosphate"), "x-factoryx-components", "a-e[phosphate]", 100),
+  item("x-high-nickel-cell", generated_icon("high-nickel-cell"), "x-factoryx-components", "b-a[high-nickel-cell]", 100),
+  item("x-lfp-cell", generated_icon("lfp-cell"), "x-factoryx-components", "b-b[lfp-cell]", 100),
+  item("x-high-energy-battery-pack", generated_icon("high-energy-battery-pack"), "x-factoryx-components", "c-a[high-energy-pack]", 20),
+  item("x-lfp-battery-pack", generated_icon("lfp-battery-pack"), "x-factoryx-components", "c-b[lfp-pack]", 20),
+  item("x-damaged-high-energy-battery-pack", generated_icon("damaged-high-energy-battery-pack"), "x-factoryx-components", "d-a[damaged-high-energy-pack]", 20),
+  item("x-damaged-lfp-battery-pack", generated_icon("damaged-lfp-battery-pack"), "x-factoryx-components", "d-b[damaged-lfp-pack]", 20),
   item("x-electric-drivetrain", layered_icon64("__base__/graphics/icons/electric-engine-unit.png", "__base__/graphics/icons/advanced-circuit.png"), "x-factoryx-components", "b[electric-drivetrain]", 50),
   item("x-prototype-roadster", generated_icon("prototype-roadster"), "transport", "x-a[prototype-roadster]", 1, {place_result = "x-prototype-roadster"}),
   item("x-premium-ev", generated_icon("premium-ev"), "transport", "x-b[premium-ev]", 1, {place_result = "x-premium-ev"}),
@@ -825,7 +829,7 @@ data:extend({
     fuel_acceleration_multiplier = 1.15,
     fuel_top_speed_multiplier = 1.05
   }),
-  item("x-electric-semi-drive-charge", icon64("__base__/graphics/icons/battery.png", {r = 0.35, g = 0.85, b = 1, a = 1}), "other", "z[x-electric-semi-drive-charge]", 1000, {
+  item("x-electric-semi-drive-charge", generated_icon("electric-semi-drive-charge"), "other", "z[x-electric-semi-drive-charge]", 1000, {
     hidden = true,
     fuel_category = "x-electric-semi-drive",
     fuel_value = "1MJ",
@@ -851,8 +855,8 @@ data:extend({
   item("x-megapack", megapack_icon, "energy", "x-b[megapack]", 10, {place_result = "x-megapack"}),
   item("x-terrestrial-datacenter", datacenter_icon, "x-factoryx-infrastructure", "f[terrestrial-datacenter]", 1, {place_result = "x-terrestrial-datacenter"}),
   item("x-robotaxi-service-center", robotaxi_service_center_icon, "x-factoryx-infrastructure", "g[robotaxi-service-center]", 1, {place_result = "x-robotaxi-service-center"}),
-  item("x-electric-semi", layered_icon64("__base__/graphics/icons/locomotive.png", "__base__/graphics/icons/battery.png", {r = 0.72, g = 0.78, b = 0.82, a = 1}, {r = 0.3, g = 0.9, b = 1, a = 1}), "transport", "x-f[electric-semi]", 5, {place_result = "x-electric-semi"}),
-  item("x-semi-charging-stop", layered_icon64("__base__/graphics/icons/train-stop.png", "__base__/graphics/icons/battery.png", nil, {r = 0.3, g = 0.9, b = 1, a = 1}), "transport", "x-g[semi-charging-stop]", 10, {place_result = "x-semi-charging-stop"}),
+  item("x-electric-semi", generated_icon("electric-semi"), "transport", "x-f[electric-semi]", 5, {place_result = "x-electric-semi"}),
+  item("x-semi-charging-stop", generated_icon("semi-charging-stop"), "transport", "x-g[semi-charging-stop]", 10, {place_result = "x-semi-charging-stop"}),
   item("x-orbital-compute-array", orbital_compute_icon, "x-factoryx-infrastructure", "g[orbital-compute-array]", 1, {place_result = "x-orbital-compute-array"}),
   item("x-planetary-grid-controller", planetary_grid_controller_icon, "x-factoryx-infrastructure", "h[planetary-grid-controller]", 1, {place_result = "x-planetary-grid-controller"})
 })
@@ -1049,12 +1053,7 @@ robotaxi_service_power.collision_mask = {layers = {}}
 robotaxi_service_power.collision_box = {{0, 0}, {0, 0}}
 robotaxi_service_power.selection_box = {{0, 0}, {0, 0}}
 
-local electric_semi_icon = layered_icon64(
-  "__base__/graphics/icons/locomotive.png",
-  "__base__/graphics/icons/battery.png",
-  {r = 0.72, g = 0.78, b = 0.82, a = 1},
-  {r = 0.3, g = 0.9, b = 1, a = 1}
-)
+local electric_semi_icon = generated_icon("electric-semi")
 local electric_semi = table.deepcopy(data.raw.locomotive.locomotive)
 electric_semi.name = "x-electric-semi"
 electric_semi.icon = nil
@@ -1077,13 +1076,36 @@ electric_semi.energy_source = {
   emissions_per_minute = {}
 }
 electric_semi.burner = nil
+electric_semi.pictures = {
+  rotated = {
+    layers = {
+      {
+        filename = "__factoryx__/graphics/entity/cybertrain/cybertrain.png",
+        priority = "very-low",
+        width = 256,
+        height = 256,
+        direction_count = 64,
+        line_length = 8,
+        allow_low_quality_rotation = true,
+        usage = "train"
+      },
+      {
+        filename = "__factoryx__/graphics/entity/cybertrain/cybertrain-shadow.png",
+        priority = "very-low",
+        width = 256,
+        height = 256,
+        direction_count = 64,
+        line_length = 8,
+        allow_low_quality_rotation = true,
+        draw_as_shadow = true,
+        usage = "train"
+      }
+    }
+  }
+}
+electric_semi.front_light_pictures = nil
 
-local semi_charging_stop_icon = layered_icon64(
-  "__base__/graphics/icons/train-stop.png",
-  "__base__/graphics/icons/battery.png",
-  nil,
-  {r = 0.3, g = 0.9, b = 1, a = 1}
-)
+local semi_charging_stop_icon = generated_icon("semi-charging-stop")
 local semi_charging_stop = table.deepcopy(data.raw["train-stop"]["train-stop"])
 semi_charging_stop.name = "x-semi-charging-stop"
 semi_charging_stop.icon = nil
@@ -2054,7 +2076,7 @@ data:extend({
 
 local battery_material_recovery = tech(
   "x-battery-material-recovery",
-  "__base__/graphics/technology/battery.png",
+  "__factoryx__/graphics/icons/damaged-lfp-battery-pack.png",
   {"recycling", "x-energy-products"},
   {
     unlock("x-high-energy-battery-recovery"),
@@ -2075,7 +2097,7 @@ data:extend({
   battery_material_recovery,
   tech(
     "x-electric-semi-logistics",
-    "__base__/graphics/technology/railway.png",
+    "__factoryx__/graphics/icons/electric-semi.png",
     {"x-autonomous-logistics", "railway", "electric-energy-distribution-2"},
     {unlock("x-electric-semi"), unlock("x-semi-charging-stop")},
     750,

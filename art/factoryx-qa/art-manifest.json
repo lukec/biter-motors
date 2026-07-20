@@ -13,11 +13,21 @@
     "Orbital Compute Array",
     "Planetary Grid Controller"
   ],
+  "vehicles": [
+    "Cybertrain"
+  ],
   "icons": [
+    "acidic-tailings.png",
     "agi-model.png",
     "ai-token.png",
+    "battery-graphite.png",
+    "cobalt-concentrate.png",
     "cybertruck.png",
+    "damaged-high-energy-battery-pack.png",
+    "damaged-lfp-battery-pack.png",
     "datacenter-rack.png",
+    "electric-semi-drive-charge.png",
+    "electric-semi.png",
     "ev-charging-station-v2.png",
     "ev-charging-station-v3.png",
     "ev-charging-station-v4.png",
@@ -28,9 +38,18 @@
     "gigafactory-module.png",
     "gigafactory.png",
     "ground-station-network.png",
+    "high-energy-battery-pack.png",
+    "high-nickel-cell.png",
+    "lfp-battery-pack.png",
+    "lfp-cell.png",
+    "lithium-brine.png",
+    "lithium-carbonate.png",
     "mass-market-ev.png",
     "megapack.png",
+    "nickel-ore.png",
+    "nickel-sulfate.png",
     "orbital-compute-array.png",
+    "phosphate.png",
     "planetary-grid-charge.png",
     "planetary-grid-controller.png",
     "planetary-grid-segment.png",
@@ -43,6 +62,7 @@
     "sales-office-coverage.png",
     "sales-office.png",
     "satellite-bus.png",
+    "semi-charging-stop.png",
     "small-launch-service.png",
     "terrestrial-datacenter.png"
   ],
@@ -73,7 +93,7 @@
   ],
   "paid_generation_count": 3,
   "blender": {
-    "installed": false,
+    "installed": true,
     "break_even": "Worthwhile for directional drivable sprites; not worthwhile for icons alone.",
     "image_generation_estimate": "10-15 attempts for five coherent directional sheets after retries.",
     "local_pipeline_estimate": "One scripted camera/material rig plus five low-poly models; all rotations and recolors then render locally."

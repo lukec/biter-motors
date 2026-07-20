@@ -1827,6 +1827,26 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-lfp-cell", amount = 72', lfp_recovery)
         self.assertIn('allow_productivity = false', high_recovery)
         self.assertIn('allow_productivity = false', lfp_recovery)
+        item_art_slugs = [
+            "nickel-ore", "nickel-sulfate", "lithium-carbonate", "battery-graphite",
+            "cobalt-concentrate", "phosphate",
+            "high-nickel-cell", "lfp-cell", "high-energy-battery-pack", "lfp-battery-pack",
+            "damaged-high-energy-battery-pack", "damaged-lfp-battery-pack",
+        ]
+        for slug in item_art_slugs:
+            path = MOD / "graphics" / "icons" / f"{slug}.png"
+            self.assertTrue(path.exists(), path)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (256, 256))
+            self.assertIn(f'generated_icon("{slug}")', data)
+        for slug in ["lithium-brine", "acidic-tailings"]:
+            path = MOD / "graphics" / "icons" / f"{slug}.png"
+            self.assertTrue(path.exists(), path)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (256, 256))
+        self.assertIn('nickel_ore.icon = "__factoryx__/graphics/icons/nickel-ore.png"', data)
+        self.assertIn('lithium_brine.icon = "__factoryx__/graphics/icons/lithium-brine.png"', data)
+        self.assertIn('acidic_tailings.icon = "__factoryx__/graphics/icons/acidic-tailings.png"', data)
 
     def test_battery_onboarding_precedes_premium_pilot(self):
         control = (MOD / "control.lua").read_text()
@@ -1882,6 +1902,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("vehicle.name == ELECTRIC_SEMI_NAME", control)
         self.assertIn("x-electric-semi=Cybertrain", locale)
         self.assertIn("x-electric-semi-logistics=Cybertrain Freight", locale)
+        self.assertIn('generated_icon("electric-semi")', data)
+        self.assertIn('generated_icon("semi-charging-stop")', data)
+        self.assertIn('graphics/entity/cybertrain/cybertrain.png', data)
+        self.assertIn('graphics/entity/cybertrain/cybertrain-shadow.png', data)
+        self.assertIn('direction_count = 64', data)
+        for filename in ["cybertrain.png", "cybertrain-shadow.png"]:
+            path = MOD / "graphics" / "entity" / "cybertrain" / filename
+            self.assertTrue(path.exists(), path)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (2048, 2048))
 
     def test_customer_population_virtualizes_beyond_visible_limits(self):
         control = (MOD / "control.lua").read_text()
