@@ -28,6 +28,53 @@ terrestrial compute, and humanoid automation. The existing SpaceX-style launch,
 satellite, and orbital-compute sections below are historical design material
 until a dedicated removal slice deletes their prototypes and runtime paths.
 
+### Terrestrial Roadmap Additions
+
+#### Robotaxi Fleet Safety Learning
+
+- Track force-wide cumulative completed Robotaxi passenger rides using aggregate
+  Robotaxi Service Center operation, not individual trip or customer objects.
+- Robotaxis become continuously safer as cumulative rides increase. Apply
+  diminishing returns so every additional order of magnitude of fleet experience
+  reduces collision-loss risk, while routine wear leaves a small nonzero vehicle
+  retirement floor.
+- This improvement is automatic fleet learning, not another item, recipe, or
+  manually repeated technology. The Service Center inspector should show
+  cumulative rides, current safety improvement, and expected retirement rate.
+- Safety learning reduces wrecks and replacement demand. It does not directly
+  increase customers per Robotaxi or trip revenue; those remain separate
+  business and technology levers.
+
+#### Electric Semi Locomotive
+
+- Add a very fast battery-electric rail freight locomotive styled as a Biter
+  Motors Semi. It uses normal rails, train schedules, wagons, and stations so it
+  extends Factorio logistics rather than creating a second road-routing system.
+- Give it a finite onboard battery. Acceleration drains energy according to
+  train mass and speed change; regenerative braking returns a bounded portion
+  of that energy to the onboard battery during deceleration.
+- Add an electrified freight stop or charging interface that draws substantial
+  grid power while the locomotive is stopped. Grid export should happen only
+  through a connected station; a moving train has no physical connection to the
+  electrical network.
+- Make the locomotive materially faster and more responsive than a conventional
+  locomotive, balanced by battery capacity, charging time, grid demand, and a
+  late terrestrial recipe using Battery Packs, Electric Drivetrains, steel, and
+  capital.
+- Runtime work must be limited to a lifecycle registry of active electric
+  locomotives and a bounded scheduler. Do not scan every train or update every
+  locomotive every tick.
+
+#### Terrestrial Victory Redesign
+
+- The Biter Motors ending remains an explicit open design decision. Removing
+  SpaceX invalidates orbital requirements in the current AGI victory path.
+- The final condition should close the systems the player actually built:
+  customer electrification, sustainable generation and storage, circular
+  battery recovery, autonomous fleet safety, terrestrial manufacturing, and
+  possibly AGI. Do not select thresholds or preserve AGI as the final artifact
+  until this terrestrial victory is designed as one coherent physical finale.
+
 ## Design Principles
 
 - Keep the economy physical. Products move on belts. Money moves on belts.
