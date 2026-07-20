@@ -245,6 +245,134 @@ for _, technology_name in ipairs({
   end
 end
 
+-- FactoryX uses tier-3 modules heavily, so replace Space Age's off-world
+-- ingredients and science gates with an expensive terrestrial capital step.
+for _, module_family in ipairs({"speed", "productivity", "efficiency", "quality"}) do
+  local module_2 = module_family .. "-module-2"
+  local module_3 = module_family .. "-module-3"
+  rewrite_recipe(module_3, {
+    categories = {"advanced-crafting"},
+    ingredients = ingredients(
+      {module_2, 4},
+      {"advanced-circuit", 5},
+      {"processing-unit", 5},
+      {"x-dollar", 10}
+    )
+  })
+  local technology = data.raw.technology[module_3]
+  technology.prerequisites = {module_2, "x-capital-scaling"}
+  technology.unit = science(1500, {
+    "automation-science-pack",
+    "logistic-science-pack",
+    "chemical-science-pack",
+    "production-science-pack",
+    "utility-science-pack",
+    "x-dollar"
+  }, 60)
+  mark_factoryx_technology(technology, technology.icon)
+end
+
+local epic_quality = data.raw.technology["epic-quality"]
+epic_quality.prerequisites = {"quality-module-3", "x-terrestrial-ai"}
+epic_quality.unit = science(2500, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "production-science-pack",
+  "utility-science-pack",
+  "space-science-pack",
+  "x-ai-token",
+  "x-dollar"
+}, 60)
+
+local legendary_quality = data.raw.technology["legendary-quality"]
+legendary_quality.prerequisites = {"epic-quality", "x-orbital-compute"}
+legendary_quality.unit = science(5000, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "production-science-pack",
+  "utility-science-pack",
+  "space-science-pack",
+  "x-ai-token",
+  "x-dollar"
+}, 60)
+
+-- Preserve useful base-game Nauvis tools that Space Age normally moves behind
+-- planetary science. Their recipes revert to terrestrial materials.
+rewrite_recipe("personal-roboport-mk2-equipment", {
+  ingredients = ingredients(
+    {"personal-roboport-equipment", 5},
+    {"processing-unit", 100},
+    {"low-density-structure", 20}
+  )
+})
+local personal_roboport_mk2 = data.raw.technology["personal-roboport-mk2-equipment"]
+personal_roboport_mk2.prerequisites = {"personal-roboport-equipment", "utility-science-pack"}
+personal_roboport_mk2.unit = science(250, {
+  "automation-science-pack", "logistic-science-pack",
+  "chemical-science-pack", "utility-science-pack"
+}, 30)
+
+local energy_shield_mk2 = data.raw.technology["energy-shield-mk2-equipment"]
+energy_shield_mk2.prerequisites = {
+  "energy-shield-equipment", "military-3", "low-density-structure", "power-armor"
+}
+energy_shield_mk2.unit = science(200, {
+  "automation-science-pack", "logistic-science-pack",
+  "chemical-science-pack", "military-science-pack"
+}, 30)
+
+rewrite_recipe("cliff-explosives", {
+  ingredients = ingredients(
+    {"explosives", 10},
+    {"grenade", 1},
+    {"barrel", 1}
+  )
+})
+local cliff_explosives = data.raw.technology["cliff-explosives"]
+cliff_explosives.prerequisites = {"explosives", "military-2"}
+cliff_explosives.unit = science(200, {
+  "automation-science-pack", "logistic-science-pack", "military-science-pack"
+}, 30)
+
+local coal_liquefaction = data.raw.technology["coal-liquefaction"]
+coal_liquefaction.prerequisites = {"advanced-oil-processing", "production-science-pack"}
+coal_liquefaction.unit = science(500, {
+  "automation-science-pack", "logistic-science-pack",
+  "chemical-science-pack", "production-science-pack"
+}, 30)
+
+rewrite_recipe("artillery-wagon", {
+  ingredients = ingredients(
+    {"engine-unit", 64},
+    {"iron-gear-wheel", 10},
+    {"steel-plate", 40},
+    {"advanced-circuit", 20}
+  )
+})
+rewrite_recipe("artillery-turret", {
+  ingredients = ingredients(
+    {"steel-plate", 60},
+    {"concrete", 60},
+    {"iron-gear-wheel", 40},
+    {"advanced-circuit", 20}
+  )
+})
+rewrite_recipe("artillery-shell", {
+  ingredients = ingredients(
+    {"explosive-cannon-shell", 4},
+    {"radar", 1},
+    {"explosives", 8}
+  )
+})
+local artillery = data.raw.technology.artillery
+artillery.prerequisites = {"military-4", "tank", "concrete", "radar"}
+artillery.unit = science(2000, {
+  "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+  "military-science-pack", "utility-science-pack"
+}, 30)
+
 -- Sparse calcite makes terrestrial casting finite initially; asteroid
 -- processing remains the renewable space source later.
 resource_autoplace.initialize_patch_set("calcite", false)

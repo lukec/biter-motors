@@ -3,6 +3,8 @@
 FactoryX is a fictionalized industrial ambition content mod for Factorio 2.1 +
 Space Age. This is a clean-break namespace: the mod id is `factoryx`, custom
 prototype ids use the `x-` prefix, and no compatibility aliases are retained.
+FactoryX is a Nauvis-and-Nauvis-orbit game: the other Space Age planets and
+their research branches are deliberately hidden.
 
 With `FactoryX accelerated start` enabled, the first player also finds a red
 wreckage chest containing 54 legendary High-density Solar Arrays, 24 legendary
@@ -52,7 +54,8 @@ The MVP loop is intentionally physical:
     Logistics.
 21. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
     Reservations.
-22. Begin Small Orbital Launch, reusable launch, and satellite infrastructure.
+22. Launch vanilla cargo rockets and establish a stationary platform over
+    Nauvis. There are no other planetary destinations in FactoryX.
 
 Custom production art now includes footprint-aligned Sales Office and
 Terrestrial Datacenter masters, normalized 256 px icon sources, dedicated
@@ -60,16 +63,16 @@ technology illustrations, and restrained working visuals for sales, charging,
 Gigafactory presses, datacenter cooling, Robotaxi dispatch, and grid charging.
 Runtime charger and Service Center lights use one render object per building;
 no animation rendering is attached to individual customer units.
-23. Move production to space platforms with Orbital Compute Arrays and return
+23. Research Orbital Compute, build its infrastructure on space platforms, and return
     AI Tokens to the planet.
-22. Build a Planetary Energy Grid Controller.
-23. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
+24. Build a Planetary Energy Grid Controller.
+25. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
     Buses, and Ground Station Networks.
-24. Generate one billion cumulative AI Tokens to unlock AGI Training Run.
-25. Package 100 million AI Tokens into 10,000 Training Datasets and 10 million
+26. Generate one billion cumulative AI Tokens to unlock AGI Training Run.
+27. Package 100 million AI Tokens into 10,000 Training Datasets and 10 million
     Dollars into 1,000 Capital Allocations, then add 10,000 Grid Segments and
     1,000 Megapacks.
-26. Sustain the controller's 1 TW draw through a 60-minute training run. Its
+28. Sustain the controller's 1 TW draw through a 60-minute training run. Its
     AGI Model output triggers victory and remains in the machine.
 
 ## Current Scope

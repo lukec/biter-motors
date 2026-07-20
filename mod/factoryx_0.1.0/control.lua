@@ -179,7 +179,6 @@ EV_SALES_GATED_RECIPES = {}
 for _, gate in pairs(EV_SALES_GATES) do
   for _, recipe_name in pairs(gate.recipes) do EV_SALES_GATED_RECIPES[recipe_name] = true end
 end
-local SMALL_ORBITAL_LAUNCH_TECH = "x-small-orbital-launch"
 local RESERVATION_RECIPES = {
   ["x-sell-prototype-roadster"] = true,
   ["x-sell-premium-ev"] = true,
@@ -5242,19 +5241,12 @@ announce_first_robotaxi_service = function(force)
   end
   local legacy_robotaxi_sale = force.recipes and force.recipes[ROBOTAXI_SALE_RECIPE]
   if legacy_robotaxi_sale then legacy_robotaxi_sale.enabled = false end
-  local launch_technology = force.technologies and force.technologies[SMALL_ORBITAL_LAUNCH_TECH]
-  if launch_technology then
-    launch_technology.enabled = true
-  end
-  force.print("[FactoryX] Robotaxi service is producing recurring profit. Small Orbital Launch is now available.")
+  force.print("[FactoryX] Robotaxi service is producing recurring profit. Next: launch vanilla cargo rockets and establish orbital compute over Nauvis.")
 end
 
 local RESEARCH_COMPLETION_MESSAGES = {
   ["x-sales-office"] = "[FactoryX] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
   ["x-energy-products"] = "[FactoryX] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
-  ["x-small-orbital-launch"] = "[FactoryX] Small Orbital Launch researched. Manufacture a Small Launch Service, then sell the physical service through a Sales Office to fund reusable launch development.",
-  ["x-reusable-launch"] = "[FactoryX] Reusable Launch researched. Build Reusable Boosters, combine them into Reusable Launch Services, and sell those services through a Sales Office.",
-  ["x-satellite-constellation"] = "[FactoryX] Satellite Constellation researched. Manufacture Satellite Buses and Ground Station Networks; both become physical inputs to orbital compute and the planetary grid.",
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
   ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Robotaxi production requires 5,000 total consumer EV sales. Then build them in Gigafactory V2 and deploy them through a powered Robotaxi Service Center.",
   ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
@@ -5369,10 +5361,6 @@ local function sync_force_unlocks(force)
   repair_researched_factoryx_unlocks(force)
   sync_gigafactory_production_gate(force, false)
   sync_agi_training_unlock(force, false)
-  local launch_technology = force.technologies and force.technologies[SMALL_ORBITAL_LAUNCH_TECH]
-  if launch_technology and (launch_technology.researched or first_robotaxi_sales()[force.name]) then
-    launch_technology.enabled = true
-  end
   local v4_recipe = force.recipes and force.recipes["x-ev-charging-station-v4"]
   if v4_recipe then
     v4_recipe.enabled = researched(force, "x-autonomous-logistics")
@@ -6121,16 +6109,10 @@ local function current_progress_objective(snapshot)
     return "Autonomy", "Build a Robotaxi Service Center.", "Combine a V4 Supercharger, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Robotaxis and draws 10 MW."
   elseif not snapshot.robotaxi_sale_complete then
     return "Autonomy", "Operate the Robotaxi service.", "Load Robotaxis into the 40-slot fleet inventory. Each vehicle serves five nearby mobile customers; recurring profit unlocks launch services."
-  elseif not snapshot.small_launch_researched then
-    return "Launch services", "Research Small Orbital Launch.", "Invest 1,000 cycles through utility science plus Dollars; the terrestrial business is now ready for launch services."
-  elseif not snapshot.reusable_launch_researched then
-    return "Launch services", "Research Reusable Launch.", "Invest 1,500 cycles through space science plus Dollars, then build boosters and repeatable launch services."
-  elseif not snapshot.satellite_constellation_researched then
-    return "Orbital infrastructure", "Research Satellite Constellation.", "Invest 2,000 cycles through space science plus Dollars to build the satellite and ground network required by orbital compute."
   elseif not snapshot.orbital_compute_researched then
-    return "Orbital compute", "Research Orbital Compute.", "Invest 2,000 cycles through electromagnetic and space science plus AI Tokens and Dollars."
+    return "Orbital compute", "Establish Nauvis orbit and research Orbital Compute.", "Use the vanilla Rocket Silo and a stationary platform over Nauvis, then invest 2,000 cycles through space science plus AI Tokens and Dollars."
   elseif not snapshot.planetary_grid_researched then
-    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles of all pre-Promethium science plus AI Tokens and Dollars; prepare a 1 TW supply."
+    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles through space science plus AI Tokens and Dollars; prepare a 1 TW supply."
   elseif snapshot.grid_controllers == 0 then
     return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 1 TW training facility; brownouts slow or stop its work."
   elseif not snapshot.agi_training_unlocked then
@@ -6149,7 +6131,6 @@ local function progress_stages(snapshot)
       and snapshot.gigafactories + snapshot.gigafactories_v2 > 0},
     {name = "Mass-market EVs", sprite = "item/x-mass-market-ev", complete = snapshot.mass_market_sale_complete},
     {name = "AI and autonomy", sprite = "item/x-ai-token", complete = snapshot.robotaxi_sale_complete},
-    {name = "Launch services", sprite = "item/x-small-launch-service", complete = snapshot.reusable_launch_researched},
     {name = "Orbital compute", sprite = "item/x-orbital-compute-array", complete = snapshot.orbital_compute_researched},
     {name = "AGI", sprite = "item/x-agi-model", complete = snapshot.victory}
   }

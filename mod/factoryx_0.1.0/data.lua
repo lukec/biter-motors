@@ -2039,8 +2039,10 @@ data:extend({
   ),
   tech("x-orbital-compute",
     "__factoryx__/graphics/icons/orbital-compute-array.png",
-    {"x-satellite-constellation", "x-terrestrial-ai", "space-platform", "electromagnetic-science-pack"},
+    {"x-terrestrial-ai", "x-autonomous-logistics", "space-platform", "space-science-pack", "x-energy-products"},
     {
+      unlock("x-satellite-bus"),
+      unlock("x-ground-station-network"),
       unlock("x-orbital-compute-array"),
       unlock("x-orbital-ai-token")
     },
@@ -2052,7 +2054,6 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"space-science-pack", 1},
-      {"electromagnetic-science-pack", 1},
       {"x-ai-token", 1},
       {"x-dollar", 1}
     },
@@ -2082,7 +2083,7 @@ data:extend({
   ),
   tech("x-planetary-energy-grid",
     "__factoryx__/graphics/icons/planetary-grid-controller.png",
-    {"x-orbital-compute", "x-autonomous-logistics", "fusion-reactor"},
+    {"x-orbital-compute", "x-autonomous-logistics", "nuclear-power"},
     {
       unlock("x-planetary-grid-controller"),
       unlock("x-planetary-grid-segment"),
@@ -2097,10 +2098,6 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"space-science-pack", 1},
-      {"metallurgic-science-pack", 1},
-      {"electromagnetic-science-pack", 1},
-      {"agricultural-science-pack", 1},
-      {"cryogenic-science-pack", 1},
       {"x-ai-token", 1},
       {"x-dollar", 1}
     },
@@ -2257,7 +2254,6 @@ local terrestrial_efficiency_science = {
 }
 local orbital_efficiency_science = table.deepcopy(terrestrial_efficiency_science)
 table.insert(orbital_efficiency_science, 6, {"space-science-pack", 1})
-table.insert(orbital_efficiency_science, 7, {"electromagnetic-science-pack", 1})
 
 for level, threshold in pairs(ai_efficiency_thresholds) do
   for _, track in pairs({

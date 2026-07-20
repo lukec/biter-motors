@@ -899,9 +899,10 @@ class FactoryXModTest(unittest.TestCase):
 
         self.assertIn('ROBOTAXI_SALE_RECIPE = "x-sell-robotaxi-fleet"', control)
         self.assertIn("announce_first_robotaxi_service", control)
-        self.assertIn("launch_technology.enabled = true", control)
+        self.assertNotIn("launch_technology.enabled = true", control)
         self.assertIn("v4_recipe.enabled = true", control)
         self.assertIn("Robotaxi service is producing recurring profit", control)
+        self.assertIn("launch vanilla cargo rockets", control)
         self.assertIn("robotaxi_sale_complete", control)
         self.assertIn("Operate the Robotaxi service", control)
         self.assertIn("Cumulative AI Tokens", control)
@@ -2420,6 +2421,65 @@ class FactoryXModTest(unittest.TestCase):
         ]:
             item_line = next(line for line in data.splitlines() if f'item("{name}"' in line)
             self.assertIn(", 5, {", item_line, name)
+
+    def test_factoryx_is_nauvis_and_nauvis_orbit_only(self):
+        data = (MOD / "data.lua").read_text()
+        updates = (MOD / "data-updates.lua").read_text()
+        final_fixes = (MOD / "data-final-fixes.lua").read_text()
+
+        for location in [
+            "vulcanus", "fulgora", "gleba", "aquilo",
+            "solar-system-edge", "shattered-planet",
+        ]:
+            self.assertIn(f'"{location}"', final_fixes)
+        for technology in [
+            "space-platform-thruster",
+            "planet-discovery-vulcanus",
+            "planet-discovery-fulgora",
+            "planet-discovery-gleba",
+            "planet-discovery-aquilo",
+            "metallurgic-science-pack",
+            "electromagnetic-science-pack",
+            "agricultural-science-pack",
+            "cryogenic-science-pack",
+        ]:
+            self.assertIn(f'["{technology}"] = true', final_fixes)
+        self.assertIn("location.hidden = true", final_fixes)
+        self.assertIn("technology.hidden = true", final_fixes)
+        self.assertIn('{"space-age", "spoilables"}', final_fixes)
+
+        orbital = data[data.index('tech("x-orbital-compute"'):
+                       data.index('tech("x-autonomous-logistics"')]
+        self.assertIn('"space-platform"', orbital)
+        self.assertIn('"space-science-pack"', orbital)
+        self.assertNotIn('"electromagnetic-science-pack"', orbital)
+        self.assertNotIn('"x-satellite-constellation"', orbital)
+
+        planetary = data[data.index('tech("x-planetary-energy-grid"'):
+                         data.index('local battery_material_recovery')]
+        self.assertIn('"nuclear-power"', planetary)
+        for science_pack in [
+            "metallurgic-science-pack",
+            "electromagnetic-science-pack",
+            "agricultural-science-pack",
+            "cryogenic-science-pack",
+        ]:
+            self.assertNotIn(f'"{science_pack}"', planetary)
+
+        self.assertIn('local module_3 = module_family .. "-module-3"', updates)
+        self.assertIn('{"x-dollar", 10}', updates)
+        self.assertIn('epic_quality.prerequisites = {"quality-module-3", "x-terrestrial-ai"}', updates)
+        self.assertIn('legendary_quality.prerequisites = {"epic-quality", "x-orbital-compute"}', updates)
+        for retained in [
+            "personal-roboport-mk2-equipment",
+            "energy-shield-mk2-equipment",
+            "cliff-explosives",
+            "coal-liquefaction",
+            "artillery",
+        ]:
+            self.assertIn(f'["{retained}"] = true', final_fixes)
+        self.assertIn('rewrite_recipe("artillery-shell"', updates)
+        self.assertIn('artillery.prerequisites = {"military-4", "tank", "concrete", "radar"}', updates)
 
 
 if __name__ == "__main__":

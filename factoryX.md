@@ -29,6 +29,34 @@ endgame. Ordinary Factorio rockets and platforms remain useful logistics. The
 custom small-launch, reusable-booster, launch-service, satellite-business, and
 ground-station product ladders are historical material to remove.
 
+#### Nauvis-only World Model
+
+Status: implemented for new FactoryX worlds.
+
+- FactoryX is played on Nauvis and stationary platforms in Nauvis orbit. The
+  planet selector and space map hide Vulcanus, Fulgora, Gleba, Aquilo, the
+  solar-system edge, the shattered planet, and every route to them.
+- Keep Space Age enabled because FactoryX uses its cargo rockets, orbital
+  platforms, quality system, recycler, Foundry, Big Mining Drill, and other
+  deliberately relocated machinery. Hidden location prototypes remain
+  internally intact for engine and mod compatibility.
+- Hide planet discovery, planetary science, thruster travel, planet-only
+  descendants, briefings, and impossible achievements. Players should never
+  be invited to solve a destination that FactoryX does not support.
+- Tier-3 modules remain part of FactoryX. Their recipes use tier-2 modules,
+  circuits, processing units, and Dollars; their research is a costly Nauvis
+  capital-scaling step.
+- Preserve useful core-Nauvis tools that Space Age normally moves off-world:
+  Cliff Explosives, Coal Liquefaction, Artillery, Energy Shield MK2, and
+  Personal Roboport MK2 use their terrestrial progression and materials.
+  Planet-specific upgrades and products that FactoryX does not use stay hidden.
+- Epic Quality is a terrestrial-AI research. Legendary Quality requires
+  orbital compute, preserving a meaningful late-game quality goal without an
+  Aquilo trip.
+- Orbital Compute uses vanilla rockets and platforms over Nauvis and no longer
+  requires Electromagnetic Science. The final grid uses terrestrial packs,
+  Space Science, AI Tokens, and Dollars rather than the four planetary packs.
+
 ### Terrestrial Roadmap Additions
 
 #### Robotaxi Fleet Safety Learning

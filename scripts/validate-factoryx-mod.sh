@@ -936,12 +936,35 @@ factoryx_technologies = {
 } | {
     "big-mining-drill", "foundry", "recycling", "tesla-weapons",
     "speed-module-2", "productivity-module-2", "efficiency-module-2", "quality-module-2",
+    "speed-module-3", "productivity-module-3", "efficiency-module-3", "quality-module-3",
 }
 for technology_name in factoryx_technologies:
     icon_paths = {layer.get("icon") for layer in data["technology"][technology_name].get("icons", [])}
     if factoryx_badge not in icon_paths:
         raise SystemExit(f"{technology_name} is missing the FactoryX technology badge: {sorted(str(p) for p in icon_paths)}")
 print("FactoryX technology icon branding OK.")
+
+for location_name in ("vulcanus", "fulgora", "gleba", "aquilo"):
+    location = data["planet"][location_name]
+    if not location.get("hidden") or not location.get("hidden_in_factoriopedia"):
+        raise SystemExit(f"FactoryX non-Nauvis planet remains visible: {location_name}")
+for location_name in ("solar-system-edge", "shattered-planet"):
+    location = data["space-location"][location_name]
+    if not location.get("hidden") or not location.get("hidden_in_factoriopedia"):
+        raise SystemExit(f"FactoryX remote space location remains visible: {location_name}")
+for technology_name in (
+    "space-platform-thruster",
+    "planet-discovery-vulcanus", "planet-discovery-fulgora",
+    "planet-discovery-gleba", "planet-discovery-aquilo",
+    "metallurgic-science-pack", "electromagnetic-science-pack",
+    "agricultural-science-pack", "cryogenic-science-pack",
+):
+    technology = data["technology"][technology_name]
+    if not technology.get("hidden") or technology.get("enabled") is not False:
+        raise SystemExit(f"FactoryX planetary technology remains available: {technology_name}")
+if data["planet"]["nauvis"].get("hidden"):
+    raise SystemExit("FactoryX must keep Nauvis visible")
+print("FactoryX Nauvis-only world model OK.")
 
 rgb = {"automation-science-pack", "logistic-science-pack", "chemical-science-pack"}
 rgbpy = rgb | {"production-science-pack", "utility-science-pack"}
@@ -963,8 +986,8 @@ expected_research = {
     "x-small-orbital-launch": (1000, 60, rgbpy | {"x-dollar"}),
     "x-reusable-launch": (1500, 60, rgbpys | {"x-dollar"}),
     "x-satellite-constellation": (2000, 60, rgbpys | {"x-dollar"}),
-    "x-orbital-compute": (2000, 60, rgbpys | {"electromagnetic-science-pack", "x-ai-token", "x-dollar"}),
-    "x-planetary-energy-grid": (2500, 60, rgbpys | planet_four | {"x-ai-token", "x-dollar"}),
+    "x-orbital-compute": (2000, 60, rgbpys | {"x-ai-token", "x-dollar"}),
+    "x-planetary-energy-grid": (2500, 60, rgbpys | {"x-ai-token", "x-dollar"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -989,6 +1012,26 @@ for technology_name, expected_count in module_two_counts.items():
     prerequisites = set(technology.get("prerequisites", []))
     if "x-sales-office" not in prerequisites or "space-science-pack" in prerequisites:
         raise SystemExit(f"{technology_name} prerequisite mismatch: {sorted(prerequisites)}")
+
+for module_family in ("speed", "productivity", "efficiency", "quality"):
+    module_2 = f"{module_family}-module-2"
+    module_3 = f"{module_family}-module-3"
+    recipe_ingredients = {
+        row["name"]: row["amount"] for row in data["recipe"][module_3]["ingredients"]
+    }
+    expected_ingredients = {
+        module_2: 4, "advanced-circuit": 5, "processing-unit": 5, "x-dollar": 10,
+    }
+    if recipe_ingredients != expected_ingredients:
+        raise SystemExit(f"{module_3} Nauvis recipe mismatch: {recipe_ingredients}")
+    technology = data["technology"][module_3]
+    if technology.get("hidden") or set(technology.get("prerequisites", [])) != {module_2, "x-capital-scaling"}:
+        raise SystemExit(f"{module_3} Nauvis technology mismatch: {technology}")
+
+if set(data["technology"]["epic-quality"].get("prerequisites", [])) != {"quality-module-3", "x-terrestrial-ai"}:
+    raise SystemExit("Epic Quality must be re-homed to terrestrial AI")
+if set(data["technology"]["legendary-quality"].get("prerequisites", [])) != {"epic-quality", "x-orbital-compute"}:
+    raise SystemExit("Legendary Quality must be re-homed to Nauvis orbital compute")
 
 expected_terrestrial_recipes = {
     "electric-furnace": {"steel-plate": 10, "electronic-circuit": 10, "stone-brick": 10},
@@ -1098,14 +1141,17 @@ autonomy_prerequisites = set(autonomy_tech["prerequisites"])
 if "logistic-robotics" not in autonomy_prerequisites or "logistic-system" in autonomy_prerequisites:
     raise SystemExit(f"Autonomous Logistics must remain terrestrial: {sorted(autonomy_prerequisites)}")
 small_launch_tech = data["technology"]["x-small-orbital-launch"]
-if "x-autonomous-logistics" not in small_launch_tech["prerequisites"]:
-    raise SystemExit("Small Orbital Launch must follow the terrestrial Robotaxi branch")
-if small_launch_tech.get("enabled") is not False:
-    raise SystemExit("Small Orbital Launch must remain disabled until the first Robotaxi Fleet sale")
-if "x-satellite-constellation" not in data["technology"]["x-orbital-compute"]["prerequisites"]:
-    raise SystemExit("Orbital Compute must require Satellite Constellation")
-if "electromagnetic-science-pack" not in data["technology"]["x-orbital-compute"]["prerequisites"]:
-    raise SystemExit("Orbital Compute must require electromagnetic science")
+if not small_launch_tech.get("hidden") or small_launch_tech.get("enabled") is not False:
+    raise SystemExit("The obsolete Small Orbital Launch branch must remain hidden and disabled")
+orbital_prerequisites = set(data["technology"]["x-orbital-compute"]["prerequisites"])
+if orbital_prerequisites != {
+    "x-terrestrial-ai", "x-autonomous-logistics", "space-platform",
+    "space-science-pack", "x-energy-products",
+}:
+    raise SystemExit(f"Orbital Compute Nauvis-orbit prerequisites mismatch: {sorted(orbital_prerequisites)}")
+planetary_grid = data["technology"]["x-planetary-energy-grid"]
+if set(planetary_grid["prerequisites"]) != {"x-orbital-compute", "x-autonomous-logistics", "nuclear-power"}:
+    raise SystemExit(f"Planetary grid terrestrial prerequisites mismatch: {planetary_grid['prerequisites']}")
 if any(
     "x-planetary-grid-segment" in data["lab"][lab_name]["inputs"]
     for lab_name in ("lab", "biolab")
@@ -1498,8 +1544,8 @@ if checked.get("intermediate_productivity_modules_inserted") != 8:
     raise SystemExit(f"Electric Drivetrain did not accept eight productivity modules: {checked}")
 if checked.get("robotaxi_dollars_produced", 0) < 1:
     raise SystemExit(f"Robotaxi Fleet sale did not complete without an EV Reservation: {checked}")
-if not checked.get("small_launch_enabled_by_robotaxi_sale"):
-    raise SystemExit(f"first Robotaxi Fleet sale did not enable Small Orbital Launch: {checked}")
+if checked.get("small_launch_enabled_by_robotaxi_sale"):
+    raise SystemExit(f"Robotaxi service re-enabled obsolete Small Orbital Launch: {checked}")
 if not checked.get("solar_array_created") or not checked.get("solar_array_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock a placeable High-density Solar Array: {checked}")
 if not checked.get("megapack_created") or not checked.get("megapack_recipe_enabled"):
