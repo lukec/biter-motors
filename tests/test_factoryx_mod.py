@@ -11,6 +11,13 @@ MOD = ROOT / "mod" / "factoryx_0.1.0"
 
 
 class FactoryXModTest(unittest.TestCase):
+    def test_space_age_freeplay_is_branded_for_biter_motors(self):
+        locale = (MOD / "locale/en/freeplay.cfg").read_text()
+        self.assertIn("scenario-name-space-age=Freeplay (Biter Motors)", locale)
+        self.assertIn("turn biter settlements into customers", locale)
+        self.assertIn("train AGI", locale)
+        self.assertNotIn("discover other planets", locale)
+
     def test_electric_vehicles_use_ev_audio(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
