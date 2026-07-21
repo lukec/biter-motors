@@ -311,7 +311,7 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["substation"] = 40,
   ["roboport"] = 20,
   ["passive-provider-chest"] = 50,
-  ["storage-chest"] = 50,
+  ["storage-chest"] = 25,
   ["electric-mining-drill"] = 10,
   ["electric-furnace"] = 10,
   ["construction-robot"] = 50,
@@ -323,6 +323,10 @@ FACTORYX_ENERGY_JUMPSTART_ITEMS = {
   ["night-vision-equipment"] = 1
 }
 FACTORYX_ENERGY_JUMPSTART_QUALITY = "legendary"
+FACTORYX_ENERGY_JUMPSTART_NORMAL_QUALITY_ITEMS = {
+  ["passive-provider-chest"] = true,
+  ["storage-chest"] = true
+}
 local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
   ["x-sales-office"] = {
     status = true,
@@ -1046,7 +1050,10 @@ function grant_factoryx_energy_jumpstart(player)
     return nil
   end
   for item_name, count in pairs(FACTORYX_ENERGY_JUMPSTART_ITEMS) do
-    inventory.insert{name = item_name, count = count, quality = FACTORYX_ENERGY_JUMPSTART_QUALITY}
+    local quality = FACTORYX_ENERGY_JUMPSTART_NORMAL_QUALITY_ITEMS[item_name]
+      and "normal"
+      or FACTORYX_ENERGY_JUMPSTART_QUALITY
+    inventory.insert{name = item_name, count = count, quality = quality}
   end
   pcall(function() chest.backer_name = "Captain's Chest" end)
   storage.factoryx_energy_jumpstart_forces[player.force.name] = true

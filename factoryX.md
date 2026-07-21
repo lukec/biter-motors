@@ -344,9 +344,9 @@ by default. It is deliberately a light start rather than a prebuilt base:
   recovered solar grid is the natural opening path.
 - The Captain's Chest contains 54 legendary High-density Solar Panels (40.5 MW
   peak), 24 legendary Megapacks, 40 legendary Substations, 20 legendary
-  Roboports, one stack each of legendary Construction and Logistic Robots, one
-  stack each of legendary red Passive Provider Chests and yellow Storage Chests,
-  and one legendary personal kit: a Modular Armor, Personal Roboport, two
+  Roboports, one stack each of legendary Construction and Logistic Robots, 50
+  normal red Passive Provider Chests, 25 normal yellow Storage Chests, and one
+  legendary personal kit: a Modular Armor, Personal Roboport, two
   Battery equipment items, eight Portable Solar Panels, Night-vision equipment,
   10 Electric Furnaces, and 10 Electric Mining Drills.
   Their corresponding technologies start researched, so normal-quality
