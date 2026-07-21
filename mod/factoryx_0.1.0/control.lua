@@ -2529,16 +2529,12 @@ function sync_gigafactory_production_gate(force, announce)
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
   end
-  local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
-  if logistic_system and not logistic_system.researched then
-    logistic_system.enabled = unlocked
-  end
   local announcements = gigafactory_gate_announcements()
   if unlocked and not announcements[force.name] then
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction, High-density Solar Panel mass production, and Logistic System research are now available.",
+        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction and High-density Solar Panel mass production are now available.",
         GIGAFACTORY_PRODUCTION_GATE
       ))
     end
@@ -5359,6 +5355,10 @@ end
 
 local function sync_force_unlocks(force)
   repair_researched_factoryx_unlocks(force)
+  local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
+  if logistic_system and not logistic_system.researched then
+    logistic_system.enabled = true
+  end
   sync_gigafactory_production_gate(force, false)
   sync_agi_training_unlock(force, false)
   local v4_recipe = force.recipes and force.recipes["x-ev-charging-station-v4"]

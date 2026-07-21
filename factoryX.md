@@ -250,35 +250,38 @@ Rules for the rest of the design:
 
 The MVP already has these major loops:
 
-1. Research Automobilism and Chemical Science, then Sales Office. Sales Office
+1. Research Industrial Supply Chain and Logistic Robotics, then invest 500
+   red, green, and blue science cycles in Logistic System. Requester and buffer
+   chests are therefore available before the Biter Motors supply chain begins.
+2. Research Automobilism and Chemical Science, then Sales Office. Sales Office
    requires Automobilism, Electric Engine, and Chemical Science technology, and
    consumes red, green, and blue science. It unlocks the Sales Office, EV
    Charging Station, and the first Sales Office recipe: `Sell hopes and dreams`.
-2. Place a powered EV Charging Station near biter customer settlements.
-3. The first covered biter customer charging site unlocks Prototype Roadsters.
-4. Craft Prototype Roadsters.
-5. Active charger stalls print physical EV Reservation paperwork. Belt or bot
+3. Place a powered EV Charging Station near biter customer settlements.
+4. The first covered biter customer charging site unlocks Prototype Roadsters.
+5. Craft Prototype Roadsters.
+6. Active charger stalls print physical EV Reservation paperwork. Belt or bot
    one reservation to the Sales Office with each Prototype Roadster.
-6. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
-7. Scale charging stations and the completed EV fleet to print more reservations
+7. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
+8. Scale charging stations and the completed EV fleet to print more reservations
    for Premium and Mass-market sales.
-8. Research EV Production Line, then build the first 100 Premium EVs in
+9. Research EV Production Line, then build the first 100 Premium EVs in
    ordinary advanced assemblers as a pilot run.
-9. Producing 100 Premium EVs completes the manufacturing pilot. Finishing
+10. Producing 100 Premium EVs completes the manufacturing pilot. Finishing
    Energy Products as well unlocks Gigafactory Modules and Gigafactory
    construction, ensuring scalable power arrives before mass production.
-10. Combine ten modules with two Substations, then move Premium EV production
+11. Combine ten modules with two Substations, then move Premium EV production
     into the Gigafactory. Mass-market EVs remain Gigafactory-only.
-11. Build silver Megatrucks after Mass-market EV Production, then sell each
+12. Build silver Megatrucks after Mass-market EV Production, then sell each
     one with an EV Reservation for 2 Dollars of profit.
-12. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
-12. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
-13. Spend 1,000 AI Tokens and 1,000 Dollars on Autonomous Logistics.
-14. Build Robotaxi Fleets in Gigafactory V2 and sell them without reservations.
-15. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
-16. Move AI production to space platforms with Orbital Compute Arrays.
-17. Drop AI Tokens back to the planet.
-18. Build a Planetary Energy Grid Controller and the energy infrastructure
+13. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
+14. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
+15. Spend 1,000 AI Tokens and 1,000 Dollars on Autonomous Logistics.
+16. Build Robotaxi Fleets in Gigafactory V2 and sell them without reservations.
+17. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
+18. Move AI production to space platforms with Orbital Compute Arrays.
+19. Drop AI Tokens back to the planet.
+20. Build a Planetary Energy Grid Controller and the energy infrastructure
     needed for the final training run.
 19. Produce Planetary Grid Segments from AI Tokens, Megapacks, Satellite Buses,
     and Ground Station Networks.
@@ -483,9 +486,10 @@ Research levels and their effects are visible in the FactoryX Progress panel.
 | AGI Training Run | Automatic unlock | One billion cumulative AI Tokens | N/A |
 
 Mass-market EV Production explicitly requires Energy Products plus production
-and utility science. Autonomous Logistics uses Logistic Robotics rather than
-Space Age's space-gated Logistic System, preserving the terrestrial-first
-roadmap. Orbital Compute adds electromagnetic science for high-end compute
+and utility science. Logistic System requires Logistic Robotics plus Industrial
+Supply Chain and 500 red, green, and blue cycles, making requester logistics
+available before EV sales. Autonomous Logistics remains the later Robotaxi
+branch. Orbital Compute adds electromagnetic science for high-end compute
 hardware. Planetary Energy Grid consumes every official pre-Promethium science
 pack. The AGI unlock is a production milestone rather than another laboratory
 research count.
@@ -1183,12 +1187,10 @@ Gigafactory design:
 - Internal prototype target: `x-gigafactory-building`.
 - A dedicated 9x9 production building, approximately the footprint of a rocket
   silo.
-- Producing 100 Premium EVs and researching Energy Products reveals Factorio's
-  Logistic System technology alongside Gigafactory construction. It costs 500
-  cycles of red, green, blue, and Dollars, granting requester, buffer, and
-  active-provider chests without Space Age's space-science gate. The player
-  chooses when to fund logistics automation; placing a Gigafactory no longer
-  silently completes the research.
+- Factorio's Logistic System technology follows Logistic Robotics and Industrial
+  Supply Chain. It costs 500 cycles of red, green, and blue science, granting
+  requester, buffer, and active-provider chests before the player begins the
+  increasingly varied Biter Motors recipes.
 - FactoryX `Autonomous Logistics` remains the later AI/Robotaxi technology; it
   is not the requester-chest unlock.
 - A Gigafactory Module is one repeatable production cell: capital, machines,

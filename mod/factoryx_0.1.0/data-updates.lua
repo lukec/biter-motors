@@ -198,18 +198,17 @@ tesla_tech.unit = science(500, {
   "military-science-pack"
 }, 45)
 
--- Requester logistics is a terrestrial industrial-scale investment in
--- FactoryX. Runtime enables it after the 100-Premium-EV pilot milestone.
+-- Requester logistics supports the complex terrestrial supply chains that
+-- begin with Biter Motors. Keep it terrestrial and available before EV sales.
 local logistic_system_tech = data.raw.technology["logistic-system"]
 mark_factoryx_technology(logistic_system_tech, "__base__/graphics/technology/logistic-system.png")
-logistic_system_tech.prerequisites = {"logistic-robotics", "x-energy-products"}
+logistic_system_tech.prerequisites = {"logistic-robotics", "x-industrial-supply-chain"}
 logistic_system_tech.unit = science(500, {
   "automation-science-pack",
   "logistic-science-pack",
-  "chemical-science-pack",
-  "x-dollar"
+  "chemical-science-pack"
 }, 30)
-logistic_system_tech.enabled = false
+logistic_system_tech.enabled = true
 
 -- Tier 2 modules are terrestrial FactoryX capital investments. Space Age
 -- normally gates them on the first orbital science pack even though their

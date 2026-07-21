@@ -765,7 +765,7 @@ script.on_nth_tick(3780, function()
     reservation_office_selected_recipe = selected_reservation_office_recipe and selected_reservation_office_recipe.name,
     robotaxi_dollars_produced = robotaxi_output and robotaxi_output.get_item_count(DOLLAR) or 0,
     small_launch_enabled_by_robotaxi_sale = small_launch_technology and small_launch_technology.enabled,
-    logistic_system_available_after_pilot = logistic_system_technology and logistic_system_technology.enabled,
+    logistic_system_available_before_sales = logistic_system_technology and logistic_system_technology.enabled,
     logistic_system_requires_manual_research = logistic_system_technology
       and not logistic_system_technology.researched,
     grid_connections = grid_connections,
@@ -1514,8 +1514,8 @@ if not checked.get("gigafactory_created"):
     raise SystemExit(f"Gigafactory entity was not created: {checked}")
 if not checked.get("gigafactory_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock the Gigafactory recipe: {checked}")
-if not checked.get("logistic_system_available_after_pilot"):
-    raise SystemExit(f"Premium pilot did not reveal Logistic System research: {checked}")
+if not checked.get("logistic_system_available_before_sales"):
+    raise SystemExit(f"Terrestrial industry did not expose Logistic System research: {checked}")
 if not checked.get("logistic_system_requires_manual_research"):
     raise SystemExit(f"Gigafactory placement silently researched Logistic System: {checked}")
 if not checked.get("gigafactory_module_recipe_enabled"):
