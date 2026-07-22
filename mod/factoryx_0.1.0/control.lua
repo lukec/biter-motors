@@ -3192,7 +3192,7 @@ local function destroy_customer_marker(entity)
   destroy_customer_marker_key(settlement_key(entity.surface, entity))
 end
 
-local function draw_customer_marker(entity)
+function draw_settlement_marker(entity, marker_type)
   if not is_biter_customer_entity(entity) then
     return
   end
@@ -3205,7 +3205,6 @@ local function draw_customer_marker(entity)
     destroy_customer_marker_key(key)
     return
   end
-  local marker_type = "market"
   local existing_object = type(existing) == "table" and existing.render_object or existing
   if existing_object and existing_object.valid
     and type(existing) == "table" and existing.marker_type == marker_type then
@@ -3219,12 +3218,22 @@ local function draw_customer_marker(entity)
     surface = entity.surface,
     target = entity,
     text = "$",
-    color = {r = 0.75, g = 1, b = 0.25, a = 1},
+    color = marker_type == "blocked"
+      and {r = 1, g = 0.2, b = 0.12, a = 1}
+      or {r = 0.75, g = 1, b = 0.25, a = 1},
     scale = 1.1,
     alignment = "center",
     vertical_alignment = "middle"
   }
   markers[key] = {render_object = render_object, marker_type = marker_type}
+end
+
+function draw_customer_marker(entity)
+  draw_settlement_marker(entity, "market")
+end
+
+function draw_blocked_settlement_marker(entity)
+  draw_settlement_marker(entity, "blocked")
 end
 
 local function scan_biter_customer_entities(surface, force, area, callback)
@@ -3965,6 +3974,7 @@ function sync_customer_settlements()
   local customers = customer_force()
   local covered = {}
   local served_home_keys = {}
+  local blocked_settlements = {}
   local converted = 0
   local customer_settlements = 0
   for _, force in pairs(game.forces) do
@@ -3981,6 +3991,14 @@ function sync_customer_settlements()
           end
           draw_customer_marker(settlement)
           customer_settlements = customer_settlements + 1
+        end
+      end
+      for _, settlement in pairs(service.candidate_settlements or {}) do
+        if settlement.valid then
+          local key = settlement_key(settlement.surface, settlement)
+          if not service.served_keys[key] then
+            blocked_settlements[key] = settlement
+          end
         end
       end
       converted = converted + convert_station_area_customers(force, service)
@@ -4053,6 +4071,9 @@ function sync_customer_settlements()
       destroy_customer_marker_key(key)
     end
   end
+  for _, settlement in pairs(blocked_settlements) do
+    if settlement.valid then draw_blocked_settlement_marker(settlement) end
+  end
 
   return {
     customer_settlements = customer_settlements,
@@ -4082,7 +4103,7 @@ function sync_customer_service_states()
           if service.served_keys[key] then
             draw_customer_marker(settlement)
           else
-            destroy_customer_marker(settlement)
+            draw_blocked_settlement_marker(settlement)
           end
         end
       end

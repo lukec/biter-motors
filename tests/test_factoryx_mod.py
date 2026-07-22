@@ -1731,10 +1731,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("customer_markers", control)
         self.assertIn("destroy_customer_marker", control)
         self.assertIn('text = "$"', control)
-        customer_marker = control[control.index("local function draw_customer_marker"):control.index("local function scan_biter_customer_entities")]
+        customer_marker = control[control.index("function draw_settlement_marker"):control.index("local function scan_biter_customer_entities")]
         self.assertNotIn("rendering.draw_circle", customer_marker)
         self.assertIn("if not is_settlement then", customer_marker)
         self.assertNotIn("rendering.draw_sprite", customer_marker)
+        self.assertIn('draw_settlement_marker(entity, "market")', customer_marker)
+        self.assertIn('draw_settlement_marker(entity, "blocked")', customer_marker)
+        self.assertIn('marker_type == "blocked"', customer_marker)
         self.assertNotIn("blink_interval", control)
         self.assertIn("set_cease_fire", control)
         self.assertIn("force.set_cease_fire(enemy, false)", control)
@@ -2388,6 +2391,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("[FactoryX] Charging disruption:", control)
         self.assertNotIn("[FactoryX] Customer charging access restored.", control)
         self.assertNotIn("[FactoryX] Customer settlement expanded", control)
+
+    def test_blocked_market_spawners_get_red_dollar_markers(self):
+        control = (MOD / "control.lua").read_text()
+        sync = control[control.index("function sync_customer_settlements()"):
+                       control.index("local function customer_growth_states()")]
+        self.assertIn("local blocked_settlements = {}", sync)
+        self.assertIn("blocked_settlements[key] = settlement", sync)
+        self.assertIn("draw_blocked_settlement_marker(settlement)", sync)
+        self.assertIn("draw_blocked_settlement_marker(settlement)", control[control.index("function sync_customer_service_states()"):
+                                                                           control.index("local function customer_growth_states()")])
 
     def test_cached_charger_assignments_tolerate_destroyed_settlements(self):
         control = (MOD / "control.lua").read_text()

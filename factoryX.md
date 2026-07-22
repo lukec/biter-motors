@@ -849,8 +849,11 @@ Practical mechanics available to us:
     cease-fire is explicitly disabled.
   - Enemy and customer forces have cease-fire with each other so hostile biters
     do not erase customer settlements.
-  - Customer spawners, biters, and spitters get a solid `$` marker so
-    playtesting can distinguish them from hostile entities.
+  - Served customer spawners get a solid green `$`. Enemy spawners inside a
+    Sales Office market get a solid red `$` when no powered/free charger
+    settlement slot can serve them. Uncovered hostile colonies have no marker;
+    worms remain unmarked and hostile. Markers are limited to static spawners
+    rather than mobile units.
 - Demand detection:
   - Every bounded interval, convert Sales Office-covered enemy settlements into
     customer settlements.
