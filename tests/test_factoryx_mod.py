@@ -1307,6 +1307,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('force.print', recycling_unlock)
         self.assertIn('output.insert{name = WRECKED_EV_NAME, count = removed}', control)
         self.assertIn('x-industrial-supply-chain=Industrial Supply Chain', locale)
+        self.assertIn('foundry=Conserves ore through molten-metal casting', locale)
+        self.assertIn('each Foundry draws 2.5 MW before modules', locale)
 
     def test_factoryx_technology_icons_share_one_badge(self):
         data = (MOD / "data.lua").read_text()
