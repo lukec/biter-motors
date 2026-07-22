@@ -2369,6 +2369,56 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("attacker.force.name == CUSTOMER_FORCE_NAME", control)
         self.assertIn("give_customer_wander_command(attacker, true)", control)
 
+    def test_player_driven_ev_impacts_trigger_bounded_customer_road_rage(self):
+        control = (MOD / "control.lua").read_text()
+        roadmap = (ROOT / "factoryX.md").read_text()
+
+        self.assertIn('ROAD_RAGE_FORCE_NAME = "factoryx-road-rage"', control)
+        self.assertIn("event.damage_type.name ~= \"impact\"", control)
+        self.assertIn("player.vehicle == vehicle", control)
+        self.assertIn("ELECTRIC_VEHICLE_BATTERIES[vehicle.name]", control)
+        self.assertIn("duration_ticks = 45 * 60", control)
+        self.assertIn("nearby_duration_ticks = 30 * 60", control)
+        self.assertIn("response_radius = 12", control)
+        self.assertIn("nearby_limit = 2", control)
+        self.assertIn("megatruck_duration_ticks = 60 * 60", control)
+        self.assertIn("megatruck_response_radius = 15", control)
+        self.assertIn("megatruck_nearby_limit = 5", control)
+        self.assertIn("max_active = 256", control)
+        self.assertIn('local megatruck = vehicle.name == "x-cybertruck"', control)
+        self.assertIn("if first_anger then", control)
+        self.assertIn("math.min(limit, #candidates)", control)
+        self.assertIn('label = "Road rage"', control)
+        self.assertIn("Implemented for player-driven EV collisions", roadmap)
+
+    def test_customer_road_rage_pauses_commutes_and_expires_on_timing_wheel(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("function customer_road_rage_timing_wheel()", control)
+        self.assertIn("TimingWheel.schedule(customer_road_rage_timing_wheel()", control)
+        self.assertIn("TimingWheel.pop_due(\n    customer_road_rage_timing_wheel()", control)
+        self.assertIn('commute.phase = "road_rage"', control)
+        self.assertIn("TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)", control)
+        self.assertIn("entity.force = road_rage_force()", control)
+        self.assertIn("type = defines.command.attack", control)
+        self.assertIn("target = target", control)
+        self.assertIn("entity.force = customer_force()", control)
+        self.assertIn("clear_customer_road_rage_status(entity)", control)
+        self.assertIn("process_customer_road_rage()", control)
+        self.assertIn("TimingWheel.cancel(customer_road_rage_timing_wheel(), unit_number)", control)
+        self.assertIn("enqueue_customer_variant_migration(unit_number)", control)
+        self.assertIn("if customer_road_rage_states()[unit_number] then", control)
+        self.assertIn('test_customer_road_rage = function', control)
+        self.assertIn('script.active_mods["factoryx_smoke"]', control)
+
+    def test_road_rage_force_is_hostile_only_to_player_market_forces(self):
+        control = (MOD / "control.lua").read_text()
+        self.assertIn("force.name ~= ROAD_RAGE_FORCE_NAME", control)
+        self.assertIn("force.set_cease_fire(road_rage, false)", control)
+        self.assertIn("road_rage.set_cease_fire(force, false)", control)
+        self.assertIn("customers.set_cease_fire(road_rage, true)", control)
+        self.assertIn("road_rage.set_cease_fire(customers, true)", control)
+        self.assertIn("road_rage.set_cease_fire(enemy, true)", control)
+
     def test_registered_customers_follow_home_service_not_wander_position(self):
         control = (MOD / "control.lua").read_text()
         sync = control[control.index("function sync_customer_settlements()"):

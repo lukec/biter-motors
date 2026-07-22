@@ -2178,15 +2178,20 @@ Implemented V1:
 
 ### Phase 2.7: Customer Road Rage
 
-Roadmap idea for player-driven EV collisions:
+Implemented for player-driven EV collisions:
 
 - Hitting a friendly mobile biter or spitter with a player-driven FactoryX EV
-  immediately makes that individual customer angry at the driver.
-- A small number of customers within roughly 10-15 tiles may join the response,
-  but one accidental collision must never turn an entire settlement or the
-  global customer force hostile.
-- Anger lasts roughly 30-60 seconds and clears when the player escapes without
-  causing more damage. Restored customers have a deliberately short memory.
+  makes that individual customer angry at the driver for 45 seconds. Up to two
+  nearby customers within 12 tiles join for 30 seconds.
+- A Megatruck collision provokes a larger response: the struck customer stays
+  angry for 60 seconds and up to five customers within 15 tiles join.
+- Repeated impact events extend existing anger but do not recruit another group.
+  One collision never changes settlement-wide or global customer diplomacy.
+- Angry customers use a dedicated temporary force, display a red Road rage
+  status, and directly attack the driver's character. Their charging commute is
+  paused so it cannot overwrite the attack order.
+- Anger clears automatically. Surviving customers return to the friendly force,
+  resume wandering, and re-enter the charging scheduler with a short memory.
 - Killing a customer removes that customer's vehicle ownership and associated
   charging demand, consistent with the existing ownership lifecycle.
 - Vehicle character should affect consequences: the fragile Roadster takes
@@ -2194,8 +2199,9 @@ Roadmap idea for player-driven EV collisions:
   provokes a larger nearby response.
 - Abstract Robotaxi operations do not trigger road rage; only a vehicle under a
   player's direct control can cause it.
-- Implement with a bounded angry-customer registry and expiration scheduler,
-  not force-wide diplomacy changes or recurring scans of all mobile customers.
+- The implementation uses a bounded angry-customer registry and timing wheel.
+  At most 256 customers may be angry at once. Only the collision site receives
+  one bounded spatial query; there is no recurring scan of all mobile customers.
 
 Implemented performance architecture:
 

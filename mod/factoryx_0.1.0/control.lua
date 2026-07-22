@@ -106,6 +106,7 @@ SEMI_PROCESS_BUDGET = 32
 SEMI_RESERVE_THRESHOLD = 10000000
 SEMI_RESERVE_SPEED = 0.08
 local CUSTOMER_FORCE_NAME = "factoryx-customers"
+ROAD_RAGE_FORCE_NAME = "factoryx-road-rage"
 local GRID_CONTROLLER_NAME = "x-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "x-agi-training-run"
 AGI_MODEL_ITEM_NAME = "x-agi-model"
@@ -349,6 +350,17 @@ local SALES_OFFICE_CUSTOMER_RADIUS = 128
 local CUSTOMER_MOBILE_SERVICE_RADIUS = 48
 local CUSTOMER_WANDER_RADIUS = 8
 local ENEMY_RELEASE_WANDER_TICKS = 60
+ROAD_RAGE = {
+  duration_ticks = 45 * 60,
+  nearby_duration_ticks = 30 * 60,
+  response_radius = 12,
+  nearby_limit = 2,
+  megatruck_duration_ticks = 60 * 60,
+  megatruck_response_radius = 15,
+  megatruck_nearby_limit = 5,
+  max_active = 256,
+  process_limit = 64
+}
 CUSTOMER_UNIT_COLOR = {r = 0.25, g = 0.95, b = 0.35, a = 1}
 CUSTOMER_VEHICLE_CLASS_BY_ITEM = {
   ["x-prototype-roadster"] = "roadster",
@@ -1733,6 +1745,19 @@ function customer_commute_timing_wheel()
   return storage.factoryx_customer_commute_timing_wheel
 end
 
+function customer_road_rage_states()
+  storage.factoryx_customer_road_rage_states = storage.factoryx_customer_road_rage_states or {}
+  return storage.factoryx_customer_road_rage_states
+end
+
+function customer_road_rage_timing_wheel()
+  storage.factoryx_customer_road_rage_timing_wheel = TimingWheel.ensure(
+    storage.factoryx_customer_road_rage_timing_wheel,
+    600
+  )
+  return storage.factoryx_customer_road_rage_timing_wheel
+end
+
 function customer_active_commutes()
   storage.factoryx_customer_active_commutes = storage.factoryx_customer_active_commutes or {}
   return storage.factoryx_customer_active_commutes
@@ -1863,6 +1888,7 @@ local function player_market_force(force)
     and force.name ~= "enemy"
     and force.name ~= "neutral"
     and force.name ~= CUSTOMER_FORCE_NAME
+    and force.name ~= ROAD_RAGE_FORCE_NAME
 end
 
 local function customer_force_if_exists()
@@ -1874,6 +1900,12 @@ local function customer_force()
   if not force then
     force = game.create_force(CUSTOMER_FORCE_NAME)
   end
+  return force
+end
+
+function road_rage_force()
+  local force = game.forces[ROAD_RAGE_FORCE_NAME]
+  if not force then force = game.create_force(ROAD_RAGE_FORCE_NAME) end
   return force
 end
 
@@ -2275,6 +2307,8 @@ function unregister_customer_unit(entity)
   customer_charging_commutes()[unit_number] = nil
   customer_active_commutes()[unit_number] = nil
   TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
+  TimingWheel.cancel(customer_road_rage_timing_wheel(), unit_number)
+  customer_road_rage_states()[unit_number] = nil
   customer_unit_registry()[unit_number] = nil
   customer_home_settlements()[unit_number] = nil
   customer_population_members()[unit_number] = nil
@@ -3264,6 +3298,190 @@ local function give_customer_wander_command(entity, force_reset)
   return true
 end
 
+function player_driven_factoryx_ev_near(event, victim)
+  local vehicle = event.cause
+  if not vehicle or not vehicle.valid or not ELECTRIC_VEHICLE_BATTERIES[vehicle.name] then
+    vehicle = event.source
+  end
+  if vehicle and vehicle.valid and ELECTRIC_VEHICLE_BATTERIES[vehicle.name] then
+    for _, player in pairs(game.connected_players) do
+      if player.vehicle == vehicle and player.character and player.character.valid then
+        return vehicle, player.character, player
+      end
+    end
+  end
+
+  -- Impact events from some vehicle prototypes identify the driver rather than the car.
+  for _, player in pairs(game.connected_players) do
+    local candidate = player.vehicle
+    if candidate and candidate.valid and ELECTRIC_VEHICLE_BATTERIES[candidate.name]
+      and candidate.surface == victim.surface then
+      local dx = candidate.position.x - victim.position.x
+      local dy = candidate.position.y - victim.position.y
+      if dx * dx + dy * dy <= 16 and player.character and player.character.valid then
+        return candidate, player.character, player
+      end
+    end
+  end
+  return nil, nil, nil
+end
+
+function pause_customer_commute_for_road_rage(unit_number, expires_tick)
+  customer_active_commutes()[unit_number] = nil
+  TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
+  local commute = customer_charging_commutes()[unit_number]
+  if commute then
+    commute.phase = "road_rage"
+    commute.station = nil
+    commute.station_unit_number = nil
+    commute.destination = nil
+    commute.return_destination = nil
+    commute.charge_progress = 0
+    commute.retry_tick = nil
+    commute.next_charge_tick = expires_tick + 60
+  end
+end
+
+function set_customer_road_rage_status(entity)
+  pcall(function()
+    entity.custom_status = {
+      diode = defines.entity_status_diode.red,
+      label = "Road rage"
+    }
+  end)
+end
+
+function clear_customer_road_rage_status(entity)
+  pcall(function() entity.custom_status = nil end)
+end
+
+function enrage_customer(entity, target, player, duration_ticks)
+  if not entity or not entity.valid or not entity.unit_number or not entity.commandable
+    or not customer_unit_registry()[entity.unit_number] or not target or not target.valid then
+    return false, false
+  end
+  local unit_number = entity.unit_number
+  local states = customer_road_rage_states()
+  local state = states[unit_number]
+  local first_anger = state == nil
+  if first_anger then
+    local active = 0
+    for _ in pairs(states) do active = active + 1 end
+    if active >= ROAD_RAGE.max_active then return false, false end
+  end
+  local expires_tick = game.tick + duration_ticks
+  if state then expires_tick = math.max(expires_tick, state.expires_tick or 0) end
+  states[unit_number] = {
+    entity = entity,
+    expires_tick = expires_tick,
+    player_index = player and player.index or nil
+  }
+  entity.force = road_rage_force()
+  set_customer_road_rage_status(entity)
+  entity.commandable.set_command{
+    type = defines.command.attack,
+    target = target,
+    distraction = defines.distraction.none
+  }
+  pause_customer_commute_for_road_rage(unit_number, expires_tick)
+  TimingWheel.schedule(customer_road_rage_timing_wheel(), unit_number, expires_tick)
+  return true, first_anger
+end
+
+function recruit_nearby_road_rage_customers(victim, target, player, radius, limit)
+  local candidates = {}
+  for _, entity in pairs(victim.surface.find_entities_filtered{
+    type = "unit",
+    force = CUSTOMER_FORCE_NAME,
+    area = area_around(victim.position, radius)
+  }) do
+    if entity.valid and entity.unit_number ~= victim.unit_number
+      and customer_unit_registry()[entity.unit_number]
+      and not customer_road_rage_states()[entity.unit_number] then
+      local dx = entity.position.x - victim.position.x
+      local dy = entity.position.y - victim.position.y
+      local distance = dx * dx + dy * dy
+      if distance <= radius * radius then
+        candidates[#candidates + 1] = {entity = entity, distance = distance}
+      end
+    end
+  end
+  table.sort(candidates, function(left, right)
+    if left.distance == right.distance then
+      return left.entity.unit_number < right.entity.unit_number
+    end
+    return left.distance < right.distance
+  end)
+  local recruited = 0
+  for index = 1, math.min(limit, #candidates) do
+    if enrage_customer(candidates[index].entity, target, player, ROAD_RAGE.nearby_duration_ticks) then
+      recruited = recruited + 1
+    end
+  end
+  return recruited
+end
+
+function trigger_customer_road_rage(event)
+  local victim = event.entity
+  if not victim or not victim.valid or victim.type ~= "unit" or not victim.unit_number
+    or not customer_unit_registry()[victim.unit_number]
+    or not event.damage_type or event.damage_type.name ~= "impact" then
+    return false
+  end
+  local vehicle, target, player = player_driven_factoryx_ev_near(event, victim)
+  if not vehicle then return false end
+  local megatruck = vehicle.name == "x-cybertruck"
+  local duration = megatruck and ROAD_RAGE.megatruck_duration_ticks or ROAD_RAGE.duration_ticks
+  local enraged, first_anger = enrage_customer(victim, target, player, duration)
+  if not enraged then return false end
+  if first_anger then
+    recruit_nearby_road_rage_customers(
+      victim,
+      target,
+      player,
+      megatruck and ROAD_RAGE.megatruck_response_radius or ROAD_RAGE.response_radius,
+      megatruck and ROAD_RAGE.megatruck_nearby_limit or ROAD_RAGE.nearby_limit
+    )
+  end
+  return true
+end
+
+function restore_customer_after_road_rage(unit_number)
+  local states = customer_road_rage_states()
+  local state = states[unit_number]
+  if not state then return end
+  local entity = customer_unit_registry()[unit_number]
+  if state.expires_tick and state.expires_tick > game.tick then
+    TimingWheel.schedule(customer_road_rage_timing_wheel(), unit_number, state.expires_tick)
+    return
+  end
+  states[unit_number] = nil
+  if not entity or not entity.valid then return end
+  entity.force = customer_force()
+  clear_customer_road_rage_status(entity)
+  give_customer_wander_command(entity, true)
+  local ownership = customer_vehicle_owners()[unit_number]
+  if ownership then
+    local commute = customer_charging_commutes()[unit_number]
+    if commute then
+      commute.phase = "roaming"
+      commute.next_charge_tick = math.max(commute.next_charge_tick or 0, game.tick + 60)
+    end
+    enqueue_customer_commute(unit_number)
+  end
+  enqueue_customer_variant_migration(unit_number)
+end
+
+function process_customer_road_rage()
+  for _, unit_number in pairs(TimingWheel.pop_due(
+    customer_road_rage_timing_wheel(),
+    game.tick,
+    ROAD_RAGE.process_limit
+  )) do
+    restore_customer_after_road_rage(unit_number)
+  end
+end
+
 function customer_commute_interval_ticks(entity, ownership)
   local base = CUSTOMER_COMMUTE_INTERVALS[ownership.vehicle] or (5 * 60 * 60)
   local market_force = game.forces[ownership.market_force_name]
@@ -3712,7 +3930,9 @@ function process_customer_vehicle_variant_migration(limit)
     local entity = customer_unit_registry()[unit_number]
     local ownership = customer_vehicle_owners()[unit_number]
     if entity and entity.valid then
-      if ownership then
+      if customer_road_rage_states()[unit_number] then
+        -- Restoration requeues the migration; replacing now would orphan rage state.
+      elseif ownership then
         replace_customer_vehicle_entity(entity, ownership)
       else
         replace_customer_prospect_entity(entity)
@@ -7277,6 +7497,7 @@ local function sync_biter_customer_diplomacy()
 
   local enemy = game.forces.enemy
   local customers = customer_force()
+  local road_rage = road_rage_force()
 
   for _, force in pairs(game.forces) do
     if player_market_force(force) then
@@ -7288,13 +7509,25 @@ local function sync_biter_customer_diplomacy()
       customers.set_cease_fire(force, true)
       force.set_friend(customers, true)
       customers.set_friend(force, true)
+      force.set_cease_fire(road_rage, false)
+      road_rage.set_cease_fire(force, false)
+      force.set_friend(road_rage, false)
+      road_rage.set_friend(force, false)
     end
   end
+  customers.set_cease_fire(road_rage, true)
+  road_rage.set_cease_fire(customers, true)
+  customers.set_friend(road_rage, true)
+  road_rage.set_friend(customers, true)
   if enemy then
     customers.set_cease_fire(enemy, true)
     enemy.set_cease_fire(customers, true)
     customers.set_friend(enemy, false)
     enemy.set_friend(customers, false)
+    road_rage.set_cease_fire(enemy, true)
+    enemy.set_cease_fire(road_rage, true)
+    road_rage.set_friend(enemy, false)
+    enemy.set_friend(road_rage, false)
   end
 end
 
@@ -7447,6 +7680,7 @@ end
 script.on_event(defines.events.on_entity_damaged, function(event)
   local victim = event.entity
   local attacker = event.cause
+  if trigger_customer_road_rage(event) then return end
   if victim and victim.valid and attacker and attacker.valid
     and attacker.type == "unit" and attacker.force.name == CUSTOMER_FORCE_NAME
     and player_market_force(victim.force) then
@@ -7714,6 +7948,7 @@ script.on_nth_tick(30, function()
 end)
 
 script.on_nth_tick(60, function()
+  process_customer_road_rage()
   ensure_native_station_power_model()
   track_ai_efficiency_progress()
   process_robotaxi_service_centers()
@@ -7875,6 +8110,19 @@ remote.add_interface("factoryx", {
         semi.burner.currently_burning ~= nil
           or semi.burner.inventory.get_item_count(ELECTRIC_SEMI_FUEL_NAME) > 0
       ) or false
+    }
+  end,
+  test_customer_road_rage = function(unit_number, target, duration_ticks)
+    if not script.active_mods["factoryx_smoke"] then return false end
+    local entity = customer_unit_registry()[unit_number]
+    if not entity or not entity.valid or not target or not target.valid then return false end
+    local enraged = enrage_customer(entity, target, nil, duration_ticks or 120)
+    local command = entity.commandable and entity.commandable.command
+    return {
+      enraged = enraged == true,
+      force = entity.force.name,
+      attacking = command and command.type == defines.command.attack or false,
+      scheduled = customer_road_rage_states()[unit_number] ~= nil
     }
   end,
   continuous_improvements = function(force_name)

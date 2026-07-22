@@ -259,6 +259,9 @@ script.on_init(function()
   storage.customer_attack_command_cleared = customer_command
     and customer_command.type == defines.command.wander
     and customer_command.distraction == defines.distraction.none
+  storage.road_rage_test = remote.call(
+    "factoryx", "test_customer_road_rage", commanded_biter.unit_number, customer_turret, 120
+  )
   storage.commanded_biter_unit_number = commanded_biter.unit_number
   storage.commanded_biter_initial_position = {
     x = commanded_biter.position.x,
@@ -691,6 +694,9 @@ script.on_nth_tick(3780, function()
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
   local v2_power_sinks = #surface.find_entities_filtered{name = V2_POWER_SINK, force = game.forces.player}
   local customer_force = game.forces[CUSTOMER_FORCE]
+  local road_rage_units = game.forces["factoryx-road-rage"] and #surface.find_entities_filtered{
+    type = "unit", force = game.forces["factoryx-road-rage"]
+  } or 0
   local prospect_units = #surface.find_entities_filtered{
     name = {
       "x-small-biter-prospect", "x-medium-biter-prospect",
@@ -727,6 +733,8 @@ script.on_nth_tick(3780, function()
   write_report{
     tick = game.tick,
     status = "checked",
+    road_rage_test = storage.road_rage_test,
+    road_rage_units = road_rage_units,
     electric_semi_created = storage.electric_semi_created,
     semi_stop_created = storage.semi_stop_created,
     electric_semi_status = electric_semis,
@@ -1454,6 +1462,13 @@ records = [json.loads(line) for line in report.read_text().splitlines() if line.
 checked = next((record for record in records if record.get("status") == "checked"), None)
 if checked is None:
     raise SystemExit("smoke report missing checked record")
+road_rage_test = checked.get("road_rage_test") or {}
+if not road_rage_test.get("enraged") or road_rage_test.get("force") != "factoryx-road-rage":
+    raise SystemExit(f"customer road rage did not move the struck customer to its temporary force: {checked}")
+if not road_rage_test.get("attacking") or not road_rage_test.get("scheduled"):
+    raise SystemExit(f"customer road rage did not issue and schedule a bounded attack: {checked}")
+if checked.get("road_rage_units") != 0:
+    raise SystemExit(f"customer road rage did not restore temporary hostile customers: {checked}")
 victory = next((record for record in records if record.get("status") == "victory"), None)
 growth = next((record for record in records if record.get("status") == "customer_growth"), None)
 brownout = next((record for record in records if record.get("status") == "customer_brownout"), None)
