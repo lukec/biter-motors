@@ -6498,13 +6498,21 @@ function add_progress_metrics(parent, rows)
   metrics.style.vertical_spacing = 5
   metrics.style.horizontally_stretchable = true
   for _, row in ipairs(rows) do
-    local icon = metrics.add{type = "sprite", sprite = row.sprite, tooltip = row.tooltip}
+    local status = row.color == FACTORYX_STATE_COLORS.bad and "Red: action is required."
+      or row.color == FACTORYX_STATE_COLORS.warning and "Orange: prepare or keep progressing."
+      or row.color == FACTORYX_STATE_COLORS.good and "Green: healthy or complete."
+      or "Gray: informational."
+    local tooltip = (row.tooltip or (row.label .. " reports the current FactoryX state."))
+      .. "\n\n" .. status
+    local icon = metrics.add{type = "sprite", sprite = row.sprite, tooltip = tooltip}
     icon.style.width = 24
     icon.style.height = 24
     icon.style.stretch_image_to_widget_size = true
-    local label = metrics.add{type = "label", caption = row.label}
+    local label = metrics.add{type = "label", caption = row.label, tooltip = tooltip}
     label.style.width = 190
-    local value = metrics.add{type = "label", name = row.name, caption = row.value}
+    local value = metrics.add{
+      type = "label", name = row.name, caption = row.value, tooltip = tooltip
+    }
     value.style.width = 230
     value.style.horizontal_align = "right"
     if row.color then value.style.font_color = row.color end
@@ -6646,20 +6654,29 @@ local function refresh_progress_panel(player)
       sprite = "item/electric-mining-drill", label = "Industrial supply chain",
       value = snapshot.industrial_supply_chain_researched and "Researched" or "Available",
       color = snapshot.industrial_supply_chain_researched and FACTORYX_STATE_COLORS.good
-        or FACTORYX_STATE_COLORS.warning
+        or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.industrial_supply_chain_researched
+        and "The terrestrial industrial branch is unlocked. Its drills, furnaces, and Foundries accelerate the pre-EV factory."
+        or "Research Industrial Supply Chain next to unlock FactoryX's early terrestrial production tools."
     }
   end
   if snapshot.big_mining_drill_researched then
     industry_rows[#industry_rows + 1] = {
       sprite = "item/big-mining-drill", label = "Big Mining Drills",
       value = string.format("%d built", snapshot.big_mining_drills),
-      color = snapshot.big_mining_drills > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.big_mining_drills > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.big_mining_drills > 0
+        and "Big Mining Drills extract ore faster and consume resource patches more slowly."
+        or "Big Mining Drills are researched but none are built. Replace high-throughput Electric Mining Drills first."
     }
   end
   if snapshot.foundry_researched then
     industry_rows[#industry_rows + 1] = {
       sprite = "item/foundry", label = "Foundries", value = string.format("%d built", snapshot.foundries),
-      color = snapshot.foundries > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.foundries > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.foundries > 0
+        and "Foundries multiply terrestrial metal output. Ore-melting Foundries favor productivity modules; downstream casting Foundries favor efficiency modules."
+        or "Foundries are researched but none are built. Start with the plate supply that is constraining expansion."
     }
   end
   if snapshot.logistic_system_available or snapshot.logistic_system_researched then
@@ -6667,7 +6684,10 @@ local function refresh_progress_panel(player)
       sprite = "item/requester-chest", label = "Logistic System",
       value = snapshot.logistic_system_researched and "Researched" or "Research available",
       color = snapshot.logistic_system_researched and FACTORYX_STATE_COLORS.good
-        or FACTORYX_STATE_COLORS.warning
+        or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.logistic_system_researched
+        and "Requester chests and full logistics are available for multi-ingredient FactoryX production."
+        or "Logistic System is available to research. It simplifies supplying Sales Offices and Gigafactories."
     }
   end
   add_progress_section(content, "Terrestrial industry", industry_rows)
@@ -6682,7 +6702,13 @@ local function refresh_progress_panel(player)
     grid_rows[#grid_rows + 1] = {
       sprite = "item/accumulator", label = "EV grid load",
       value = string.format("%.1f / %.1f MW delivered", served_kw / 1000, demand_kw / 1000),
-      color = power_color
+      color = power_color,
+      tooltip = served_kw >= demand_kw * 0.95
+        and "Powered charging stalls are receiving their requested electricity. This load rises as more sold EVs activate stalls."
+        or string.format(
+          "Chargers are short %.1f MW. Add generation or storage, repair disconnected grids, or temporarily stop expanding EV sales.",
+          math.max(0, demand_kw - served_kw) / 1000
+        )
     }
     grid_rows[#grid_rows + 1] = {
       sprite = "item/x-ev-charging-station", label = "Charging stalls",
@@ -6692,7 +6718,10 @@ local function refresh_progress_panel(player)
         snapshot.requested_customer_stalls
       ),
       color = snapshot.powered_customer_stalls >= snapshot.requested_customer_stalls
-        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad,
+      tooltip = snapshot.powered_customer_stalls >= snapshot.requested_customer_stalls
+        and "Every stall currently requested by EV owners has enough grid power. Unused physical stalls draw no customer load."
+        or "Some owner-requested stalls are unpowered. Restore electricity at affected chargers before settlements lose patience."
     }
     grid_rows[#grid_rows + 1] = {
       sprite = "item/x-mass-market-ev", label = "Powered capacity",
@@ -6702,7 +6731,10 @@ local function refresh_progress_panel(player)
         math.max(0, snapshot.supported_ev_capacity - snapshot.customer_ev_fleet)
       ),
       color = snapshot.supported_ev_capacity >= snapshot.customer_ev_fleet
-        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+        and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad,
+      tooltip = snapshot.supported_ev_capacity >= snapshot.customer_ev_fleet
+        and "Powered stalls can support the current EV fleet. Spare capacity is how many additional sold EVs fit before another stall is needed."
+        or "The sold EV fleet exceeds powered charging capacity. Add or power chargers near the underserved settlements."
     }
   end
   if snapshot.first_sale_complete then
@@ -6717,7 +6749,10 @@ local function refresh_progress_panel(player)
           snapshot.stranded_evs
         )
         or string.format("%d / %d supported", supported_owners, snapshot.customer_ev_fleet),
-      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
+      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good,
+      tooltip = snapshot.stranded_evs > 0
+        and "These sold EVs currently lack powered charging capacity. Hover underserved settlement alerts to find where capacity is missing."
+        or "Every active EV owner currently has powered charging capacity near its home settlement."
     }
     local step = snapshot.next_charging_step
     if step and step.available then
@@ -6733,12 +6768,12 @@ local function refresh_progress_panel(player)
         color = step.ev_owners_until <= warning_distance
           and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good,
         tooltip = string.format(
-          "The closest customer settlement activates another %s stall after %d additional EV owner%s. That stall supports %d EVs and adds %.0f kW of charging demand.",
-          step.station_name,
+          "After %d more EV sale%s, the closest settlement will activate another %s stall. Prepare %.0f kW of spare generation now. The new stall then supports %d more EVs.",
           step.ev_owners_until,
           step.ev_owners_until == 1 and "" or "s",
-          step.ev_capacity_added,
-          step.power_kw
+          step.station_name,
+          step.power_kw,
+          step.ev_capacity_added
         )
       }
     elseif step and step.needs_charger then
@@ -6746,7 +6781,8 @@ local function refresh_progress_panel(player)
         sprite = "item/x-ev-charging-station", label = "Next load step",
         value = "No spare stalls; add a charger",
         color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad
-          or FACTORYX_STATE_COLORS.warning
+          or FACTORYX_STATE_COLORS.warning,
+        tooltip = "No existing charger near the next constrained settlement has a free physical stall. Place another powered charger there before selling more EVs."
       }
     end
   end
@@ -6762,12 +6798,16 @@ local function refresh_progress_panel(player)
         snapshot.dollars_produced
       ),
       name = "factoryx_dollars_produced_value",
-      color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral
+      color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral,
+      tooltip = "Lifetime profit generated by FactoryX businesses. One in-game Dollar represents approximately $10,000 USD of profit, not revenue."
     }
     market_rows[#market_rows + 1] = {
       sprite = "entity/biter-spawner", label = "Customer settlements",
       value = tostring(snapshot.customer_settlements),
-      color = snapshot.customer_settlements > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad
+      color = snapshot.customer_settlements > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.bad,
+      tooltip = snapshot.customer_settlements > 0
+        and "Settlements converted into customer markets by Sales Office coverage. Expand to new settlements when local buyer growth limits sales."
+        or "No customer settlement is covered. Build a Sales Office and powered charger near biter spawners."
     }
   end
   if snapshot.charging_capacity > 0 or snapshot.powered_stations > 0 then
@@ -6775,19 +6815,28 @@ local function refresh_progress_panel(player)
       sprite = "item/x-ev-charging-station", label = "Charging stalls",
       value = string.format("%d / %d active", snapshot.active_stalls, snapshot.charging_capacity),
       color = snapshot.powered_stations == 0 and FACTORYX_STATE_COLORS.bad
-        or (snapshot.active_stalls > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning)
+        or (snapshot.active_stalls > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning),
+      tooltip = snapshot.powered_stations == 0
+        and "No charger is operational. Connect chargers to a powered electric grid."
+        or "Active stalls are the portion of installed stalls currently serving sold EVs. Idle stalls consume no customer charging load."
     }
     market_rows[#market_rows + 1] = {
       sprite = "item/x-ev-reservation", label = "EV Reservations",
       value = string.format("%d stored, %d/min", snapshot.reservation_stock, snapshot.reservations_per_minute),
-      color = snapshot.reservations_per_minute > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.reservations_per_minute > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.reservations_per_minute > 0
+        and "Chargers print physical buyer paperwork from active stalls. Move reservations to Sales Offices with belts or logistic bots."
+        or "No reservations are being printed. Chargers need powered active stalls and reachable customer settlements."
     }
   end
   if snapshot.prototype_evs_produced > 0 or snapshot.first_sale_complete then
     market_rows[#market_rows + 1] = {
       sprite = "item/x-prototype-roadster", label = "Roadsters sold",
       value = string.format("%d / 50", snapshot.roadsters_sold),
-      color = snapshot.roadsters_sold >= 50 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.roadsters_sold >= 50 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.roadsters_sold >= 50
+        and "Prototype market validation is complete; Premium EV progression may proceed."
+        or string.format("Sell %d more Prototype Roadsters to unlock the Premium EV market gate.", math.max(0, 50 - snapshot.roadsters_sold))
     }
   end
   if snapshot.ev_production_researched then
@@ -6796,44 +6845,65 @@ local function refresh_progress_panel(player)
       value = snapshot.premium_evs_produced < snapshot.gigafactory_production_gate
         and string.format("%d / %d pilot built", snapshot.premium_evs_produced, snapshot.gigafactory_production_gate)
         or string.format("%d / 250 sold", snapshot.premium_evs_sold),
-      color = snapshot.premium_evs_sold >= 250 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.premium_evs_sold >= 250 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.premium_evs_produced < snapshot.gigafactory_production_gate
+        and string.format(
+          "Build %d more Premium EVs in the pilot line to prove production and unlock the Gigafactory.",
+          math.max(0, snapshot.gigafactory_production_gate - snapshot.premium_evs_produced)
+        )
+        or string.format(
+          "Sell %d more Premium EVs to unlock Mass-market EV production.",
+          math.max(0, 250 - snapshot.premium_evs_sold)
+        )
     }
   end
   if snapshot.mass_market_researched then
     market_rows[#market_rows + 1] = {
       sprite = "item/x-mass-market-ev", label = "Mass-market EVs",
       value = string.format("%d / 2,000 sold", snapshot.mass_market_evs_sold),
-      color = snapshot.mass_market_evs_sold >= 2000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.mass_market_evs_sold >= 2000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.mass_market_evs_sold >= 2000
+        and "Mass-market scale is proven; Megatruck engineering may proceed."
+        or string.format("Sell %d more Mass-market EVs to unlock the Megatruck market gate.", math.max(0, 2000 - snapshot.mass_market_evs_sold))
     }
   end
   if snapshot.autonomous_logistics_researched then
     market_rows[#market_rows + 1] = {
       sprite = "item/x-robotaxi-fleet", label = "Consumer EV scale",
       value = string.format("%d / 5,000 sold", snapshot.consumer_evs_sold),
-      color = snapshot.consumer_evs_sold >= 5000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.consumer_evs_sold >= 5000 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.consumer_evs_sold >= 5000
+        and "Consumer market scale is sufficient for Robotaxi deployment."
+        or string.format("Sell %d more consumer EVs of any type to unlock the Robotaxi market gate.", math.max(0, 5000 - snapshot.consumer_evs_sold))
     }
   end
   if snapshot.first_sale_complete then
     market_rows[#market_rows + 1] = {
-      sprite = "item/x-mass-market-ev", label = "Active customer EVs", value = tostring(snapshot.customer_ev_fleet)
+      sprite = "item/x-mass-market-ev", label = "Active customer EVs", value = tostring(snapshot.customer_ev_fleet),
+      tooltip = "Living mobile customers currently assigned a sold EV. Only completed sales add owners; customer deaths remove their vehicle and charging demand."
     }
     market_rows[#market_rows + 1] = {
       sprite = "item/x-ev-charging-station", label = "Charging service",
       value = snapshot.stranded_evs > 0 and string.format("%d EVs underserved", snapshot.stranded_evs)
         or "All owners served",
-      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good
+      color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good,
+      tooltip = snapshot.stranded_evs > 0
+        and "Some owners lack powered capacity near their home settlement. Follow settlement warning icons and add local chargers or grid power."
+        or "All EV owners have powered charging capacity near their home settlements."
     }
     if snapshot.angry_settlements > 0 then
       market_rows[#market_rows + 1] = {
         sprite = "entity/biter-spawner", label = "Unhappy settlements",
-        value = tostring(snapshot.angry_settlements), color = FACTORYX_STATE_COLORS.bad
+        value = tostring(snapshot.angry_settlements), color = FACTORYX_STATE_COLORS.bad,
+        tooltip = "These settlements exceeded their charging-service patience period. Restore powered local capacity; their hostility clears after service recovers."
       }
     end
     if snapshot.customer_commutes_en_route > 0 or snapshot.customer_commutes_charging > 0
       or snapshot.customer_commutes_completed > 0 then
       market_rows[#market_rows + 1] = {
         sprite = "item/x-prototype-roadster", label = "Charging commutes",
-        value = string.format("%d inbound, %d charging", snapshot.customer_commutes_en_route, snapshot.customer_commutes_charging)
+        value = string.format("%d inbound, %d charging", snapshot.customer_commutes_en_route, snapshot.customer_commutes_charging),
+        tooltip = "Physical EV owners currently walking to chargers or charging. This is a bounded visual simulation; settlement capacity remains authoritative."
       }
     end
   end
@@ -6842,7 +6912,10 @@ local function refresh_progress_panel(player)
       sprite = "item/x-ai-token", label = "AI Tokens generated",
       value = snapshot.terrestrial_ai_next_threshold
         and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
-        or string.format("%d; terrestrial ceiling", snapshot.terrestrial_ai_tokens_generated)
+        or string.format("%d; terrestrial ceiling", snapshot.terrestrial_ai_tokens_generated),
+      tooltip = snapshot.terrestrial_ai_next_threshold
+        and "Cumulative terrestrial AI Tokens toward the next automatic 10% efficiency level. Keep Datacenters powered and supplied with Dollars."
+        or "Terrestrial AI efficiency has reached its current ceiling. Orbital compute is required for endgame token scale."
     }
   end
   if snapshot.planetary_grid_researched then
@@ -6852,7 +6925,12 @@ local function refresh_progress_panel(player)
         or (snapshot.agi_training_unlocked
           and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
           or string.format("%d / %d AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate)),
-      color = snapshot.victory and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = snapshot.victory and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = snapshot.victory
+        and "AGI training completed. FactoryX's victory condition has been achieved."
+        or (snapshot.agi_training_unlocked
+          and "The AGI training run is active. Any power shortage resets this run to zero, so maintain full grid reliability."
+          or "Generate the required cumulative AI Tokens to unlock the final AGI training run. Orbital compute is intended to provide the necessary scale.")
     }
   end
   add_progress_section(content, "Business", market_rows)
@@ -6865,7 +6943,10 @@ local function refresh_progress_panel(player)
       sprite = stage_info.sprite,
       label = stage_info.name,
       value = stage_info.complete and "Complete" or "Current",
-      color = stage_info.complete and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning
+      color = stage_info.complete and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
+      tooltip = stage_info.complete
+        and (stage_info.name .. " is complete.")
+        or (stage_info.name .. " is the current progression stage. Follow the objective at the top of this panel.")
     }
     if not stage_info.complete then
       break

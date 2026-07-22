@@ -798,6 +798,23 @@ class FactoryXModTest(unittest.TestCase):
             objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
         )
 
+    def test_progress_panel_rows_have_actionable_full_row_tooltips(self):
+        control = (MOD / "control.lua").read_text()
+        metrics = control[
+            control.index("function add_progress_metrics"):
+            control.index("function add_progress_section")
+        ]
+        self.assertIn('local tooltip = (row.tooltip or', metrics)
+        self.assertIn('tooltip = tooltip}', metrics)
+        self.assertIn('caption = row.label, tooltip = tooltip', metrics)
+        self.assertIn('caption = row.value, tooltip = tooltip', metrics)
+        self.assertIn('"Red: action is required."', metrics)
+        self.assertIn('"Orange: prepare or keep progressing."', metrics)
+        self.assertIn('"Green: healthy or complete."', metrics)
+        self.assertIn("Prepare %.0f kW of spare generation now.", control)
+        self.assertIn("Place another powered charger there before selling more EVs.", control)
+        self.assertIn("Follow settlement warning icons", control)
+
     def test_tier_two_modules_are_terrestrial_capital_research(self):
         updates = (MOD / "data-updates.lua").read_text()
         module_rewrite = updates[
