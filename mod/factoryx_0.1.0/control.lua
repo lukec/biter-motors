@@ -3114,6 +3114,7 @@ function active_customer_vehicle_summary(force)
 end
 
 function settlement_vehicle_count(vehicle_summary, settlement)
+  if not settlement or not settlement.valid then return 0 end
   return vehicle_summary.by_settlement[settlement_key(settlement.surface, settlement)] or 0
 end
 
@@ -3547,15 +3548,33 @@ function settlement_friendly_after_service_check(force, key, operational, advanc
   return not state.angry, state.angry
 end
 
+function market_service_references_valid(service)
+  if not service then return false end
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    if not settlement or not settlement.valid then return false end
+  end
+  for _, assignment in pairs(service.assignments or {}) do
+    if not assignment.station or not assignment.station.valid then return false end
+  end
+  return true
+end
+
 customer_service_for_force = function(force, advance_mood)
   local generation = factoryx_market_generation()[force.index] or 0
   local cached = factoryx_market_cache()[force.index]
   if not advance_mood and cached and game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS
     and cached.generation == generation then
+    if market_service_references_valid(cached.service) then
+      storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+      storage.factoryx_perf_counters.market_snapshot_cache_hits =
+        (storage.factoryx_perf_counters.market_snapshot_cache_hits or 0) + 1
+      return cached.service
+    end
     storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
-    storage.factoryx_perf_counters.market_snapshot_cache_hits =
-      (storage.factoryx_perf_counters.market_snapshot_cache_hits or 0) + 1
-    return cached.service
+    storage.factoryx_perf_counters.invalid_market_snapshot_rebuilds =
+      (storage.factoryx_perf_counters.invalid_market_snapshot_rebuilds or 0) + 1
+    mark_factoryx_market_dirty(force, "invalid-market-snapshot")
+    generation = factoryx_market_generation()[force.index] or 0
   end
   local service = {
     assignments = {},
@@ -3766,28 +3785,30 @@ local function next_customer_charging_step(service, office)
     local config = station_config(station)
     if config then
       for _, settlement in ipairs(assignment.settlements or {}) do
-        local key = settlement_key(settlement.surface, settlement)
-        if eligible_keys[key]
-          and not recorded_keys[key]
-          and not assignment.requested_settlement_keys[key] then
-          recorded_keys[key] = true
-          local vehicle_count = settlement_vehicle_count(service.vehicle_summary, settlement)
-          local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
-          local candidate = {
-            available = true,
-            ev_owners_until = math.max(1, requested_capacity - vehicle_count + 1),
-            ev_capacity_added = config.evs_per_stall,
-            evs_per_stall = config.evs_per_stall,
-            power_kw = station_stall_power_watts(station) / 1000,
-            station_name = config.display_name,
-            settlement_key = key
-          }
-          if not best
-            or candidate.ev_owners_until < best.ev_owners_until
-            or (candidate.ev_owners_until == best.ev_owners_until
-              and (station.unit_number or 0) < (best.station_unit_number or math.huge)) then
-            candidate.station_unit_number = station.unit_number
-            best = candidate
+        if settlement and settlement.valid then
+          local key = settlement_key(settlement.surface, settlement)
+          if eligible_keys[key]
+            and not recorded_keys[key]
+            and not assignment.requested_settlement_keys[key] then
+            recorded_keys[key] = true
+            local vehicle_count = settlement_vehicle_count(service.vehicle_summary, settlement)
+            local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
+            local candidate = {
+              available = true,
+              ev_owners_until = math.max(1, requested_capacity - vehicle_count + 1),
+              ev_capacity_added = config.evs_per_stall,
+              evs_per_stall = config.evs_per_stall,
+              power_kw = station_stall_power_watts(station) / 1000,
+              station_name = config.display_name,
+              settlement_key = key
+            }
+            if not best
+              or candidate.ev_owners_until < best.ev_owners_until
+              or (candidate.ev_owners_until == best.ev_owners_until
+                and (station.unit_number or 0) < (best.station_unit_number or math.huge)) then
+              candidate.station_unit_number = station.unit_number
+              best = candidate
+            end
           end
         end
       end
@@ -6797,20 +6818,38 @@ function eligible_customer_buyers(office, needed)
 end
 
 function sales_office_buyer_status(office)
+  if not office or not office.valid then
+    return {
+      available = 0,
+      settlements = 0,
+      customers = 0,
+      owned = 0,
+      capacity = 0,
+      powered_capacity = 0,
+      underserved = 0,
+      friendly_settlements = 0
+    }
+  end
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
   local eligible_keys = {}
   local settlements = 0
+  local stale_snapshot = false
   for _, settlement in pairs(service.candidate_settlements or {}) do
-    local key = settlement_key(settlement.surface, settlement)
-    local population = customer_settlement_populations()[key]
-    if (service.capacity_by_settlement_key[key] or 0) > 0
-      and population and population.surface_index == office.surface.index
-      and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
+    if settlement and settlement.valid then
+      local key = settlement_key(settlement.surface, settlement)
+      local population = customer_settlement_populations()[key]
+      if (service.capacity_by_settlement_key[key] or 0) > 0
+        and population and population.surface_index == office.surface.index
+        and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
         eligible_keys[key] = true
         settlements = settlements + 1
+      end
+    else
+      stale_snapshot = true
     end
   end
+  if stale_snapshot then mark_factoryx_market_dirty(office.force, "invalid-market-settlement") end
   local available = 0
   local customers = 0
   local owned = 0
@@ -9164,6 +9203,8 @@ for _, event_name in pairs({
   if event_name then
 	    script.on_event(event_name, function(event)
 	      local entity = event.entity
+	      local removed_customer_settlement =
+	        entity and entity.valid and BITER_SETTLEMENT_NAMES[entity.name] or false
 	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
@@ -9210,7 +9251,15 @@ for _, event_name in pairs({
         factoryx_compute_power_failures()[entity.unit_number] = nil
         factoryx_compute_queue().members[entity.unit_number] = nil
       end
-      if entity and entity.valid then mark_factoryx_market_dirty(entity.force, "entity-removed") end
+      if removed_customer_settlement then
+        for _, force in pairs(game.forces) do
+          if player_market_force(force) then
+            mark_factoryx_market_dirty(force, "settlement-removed")
+          end
+        end
+      elseif entity and entity.valid then
+        mark_factoryx_market_dirty(entity.force, "entity-removed")
+      end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
         customer_growth_states()[entity.unit_number] = nil

@@ -606,6 +606,43 @@ local function find_unit(surface, name, unit_number)
   return nil
 end
 
+script.on_nth_tick(3300, function()
+  if game.tick < 3300 or storage.invalid_cache_spawner_unit_number then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local settlement = surface and create_named(
+    surface,
+    BITER_SPAWNER,
+    {36, -20},
+    game.forces.enemy
+  )
+  storage.invalid_cache_spawner_unit_number = settlement and settlement.unit_number or -1
+end)
+
+script.on_nth_tick(3440, function()
+  if game.tick < 3440 or storage.invalid_cache_tested then return end
+  storage.invalid_cache_tested = true
+  local surface = game.get_surface(storage.surface_index or 1)
+  local settlement = surface and find_unit(
+    surface,
+    BITER_SPAWNER,
+    storage.invalid_cache_spawner_unit_number
+  )
+  local before = remote.call("factoryx", "sales_office_status", "player")
+  if settlement then settlement.destroy() end
+  local after = remote.call("factoryx", "sales_office_status", "player")
+  local performance = remote.call("factoryx", "performance_status", "player")
+  write_report{
+    tick = game.tick,
+    status = "invalid_market_snapshot",
+    settlement_created = storage.invalid_cache_spawner_unit_number ~= -1,
+    settlement_destroyed = settlement ~= nil and not settlement.valid,
+    offices_before = #before,
+    offices_after = #after,
+    invalid_snapshot_rebuilds =
+      (performance.counters and performance.counters.invalid_market_snapshot_rebuilds) or 0
+  }
+end)
+
 script.on_nth_tick(101, function()
   if game.tick < 101 or storage.compute_brownout_started then return end
   storage.compute_brownout_started = true
@@ -1660,6 +1697,22 @@ overload = next((record for record in records if record.get("status") == "custom
 recovery = next((record for record in records if record.get("status") == "customer_recovery"), None)
 compute_brownout = next((record for record in records if record.get("status") == "compute_brownout"), None)
 commutes = next((record for record in records if record.get("status") == "customer_commutes"), None)
+invalid_market_snapshot = next(
+    (record for record in records if record.get("status") == "invalid_market_snapshot"),
+    None,
+)
+if (
+    invalid_market_snapshot is None
+    or not invalid_market_snapshot.get("settlement_created")
+    or not invalid_market_snapshot.get("settlement_destroyed")
+    or invalid_market_snapshot.get("offices_before") != 3
+    or invalid_market_snapshot.get("offices_after") != 3
+    or invalid_market_snapshot.get("invalid_snapshot_rebuilds", 0) < 1
+):
+    raise SystemExit(
+        f"destroyed settlement was not rejected from the cached market snapshot: "
+        f"{invalid_market_snapshot}"
+    )
 if compute_brownout is None or compute_brownout.get("progress_before", 0) <= 0:
     raise SystemExit(f"compute brownout test did not begin during an active run: {compute_brownout}")
 if compute_brownout.get("progress_after") != 0:

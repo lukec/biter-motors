@@ -2226,6 +2226,36 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("CUSTOMER_VEHICLE_CLASS_BY_ITEM", control)
         self.assertIn("process_customer_vehicle_variant_migration(50)", control)
 
+    def test_market_snapshots_reject_destroyed_settlements(self):
+        control = (MOD / "control.lua").read_text()
+        validator = (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text()
+
+        cache_start = control.index("function market_service_references_valid")
+        cache_end = control.index("local function next_customer_charging_step", cache_start)
+        cache = control[cache_start:cache_end]
+        self.assertIn("if not settlement or not settlement.valid then return false end", cache)
+        self.assertIn("if not assignment.station or not assignment.station.valid then return false end", cache)
+        self.assertIn("market_service_references_valid(cached.service)", cache)
+        self.assertIn("invalid_market_snapshot_rebuilds", cache)
+        self.assertIn('mark_factoryx_market_dirty(force, "invalid-market-snapshot")', cache)
+
+        buyer_start = control.index("function sales_office_buyer_status")
+        buyer_end = control.index("function classify_sales_office_market", buyer_start)
+        buyer = control[buyer_start:buyer_end]
+        self.assertIn("if settlement and settlement.valid then", buyer)
+        self.assertIn('mark_factoryx_market_dirty(office.force, "invalid-market-settlement")', buyer)
+
+        removal_start = control.index("for _, event_name in pairs({")
+        removal_end = control.index("script.on_nth_tick(1, function()", removal_start)
+        removal = control[removal_start:removal_end]
+        self.assertIn("removed_customer_settlement", removal)
+        self.assertIn('mark_factoryx_market_dirty(force, "settlement-removed")', removal)
+        self.assertIn("if player_market_force(force) then", removal)
+
+        self.assertIn('status = "invalid_market_snapshot"', validator)
+        self.assertIn("invalid_snapshot_rebuilds", validator)
+        self.assertIn("if settlement then settlement.destroy() end", validator)
+
     def test_vehicle_owner_classes_use_baked_prototypes(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
