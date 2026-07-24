@@ -6928,7 +6928,7 @@ function update_sales_office_market_feedback(office, buyer_status)
       label = "Market saturated - expand coverage"
       diode = defines.entity_status_diode.yellow
     elseif state.kind == "committed" then
-      label = string.format("No free prospects - %d remain", state.remaining)
+      label = string.format("All prospects assigned - %d remain", state.remaining)
       diode = defines.entity_status_diode.yellow
     elseif state.kind == "low" then
       label = string.format("Low prospects - %d remain", state.remaining)
@@ -6949,12 +6949,12 @@ function sales_office_market_alert_message(state)
     return "Sales Office market saturated. Establish Sales Office and powered charging coverage at another biter settlement."
   elseif state.kind == "committed" then
     return string.format(
-      "Sales Office has %d prospects left, but none are free; overlapping offices have committed this pool. Expand to another biter settlement.",
+      "Sales Office has %d prospects remaining, but all are assigned to active sales. Overlapping offices share this prospect pool. Expand to another biter settlement.",
       state.remaining
     )
   end
   return string.format(
-    "Sales Office has only %d prospects left (%d%% of its local market). Expand to another biter settlement.",
+    "Sales Office has only %d prospects remaining (%d%% of its local market). Expand to another biter settlement.",
     state.remaining,
     state.percent
   )
@@ -8227,7 +8227,7 @@ function entity_status_presentation(entity)
     elseif market.kind == "saturated" then
       return "Market saturated", FACTORYX_STATE_COLORS.warning
     elseif market.kind == "committed" then
-      return "No free prospects", FACTORYX_STATE_COLORS.warning
+      return "All prospects assigned", FACTORYX_STATE_COLORS.warning
     elseif buyers.friendly_settlements == 0 then
       return "Customers hostile", FACTORYX_STATE_COLORS.bad
     end
@@ -8237,7 +8237,7 @@ function entity_status_presentation(entity)
   if entity.name == SALES_OFFICE_NAME and status == defines.entity_status.working then
     local market = classify_sales_office_market(sales_office_buyer_status(entity))
     if market.kind == "committed" then
-      return "No free prospects", FACTORYX_STATE_COLORS.warning
+      return "All prospects assigned", FACTORYX_STATE_COLORS.warning
     elseif market.kind == "low" then
       return "Low prospects", FACTORYX_STATE_COLORS.warning
     end
@@ -8368,15 +8368,26 @@ local function show_manufacturer_info_panel(player, entity)
       or market_state.kind == "committed"
       or market_state.kind == "low")
       and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good
+    local prospect_value
+    if market_state.remaining == 0 then
+      prospect_value = "None remaining"
+    elseif market_state.available == 0 then
+      prospect_value = string.format("%d remaining; all assigned", market_state.remaining)
+    else
+      prospect_value = string.format(
+        "%d remaining; %d unassigned",
+        market_state.remaining,
+        market_state.available
+      )
+    end
     local metric_rows = {
       {sprite = "entity/biter-spawner", label = "Settlements", value = tostring(count_customer_settlements_near_office(entity))},
       {
         sprite = "entity/small-biter",
         label = "Prospects",
-        value = market_state.remaining == 0 and "None left"
-          or string.format("%d left; %d free", market_state.remaining, market_state.available),
+        value = prospect_value,
         color = prospect_color,
-        tooltip = "Unowned mobile customers in this office's local market. At zero, sales pause until colonies grow or coverage expands. Overlapping Sales Offices share and reserve the same prospects."
+        tooltip = "Prospects have not purchased an EV. Assigned prospects are reserved by an active Sales Office sale. Overlapping Sales Offices share the same prospect pool. At zero remaining, sales pause until colonies grow or coverage expands."
       },
       {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
       {
@@ -8435,19 +8446,19 @@ local function show_manufacturer_info_panel(player, entity)
         summary = "Market saturated. Expand to another settlement."
       elseif market_state.kind == "committed" then
         summary = string.format(
-          "%d prospects remain, but all are committed. Expand coverage.",
+          "%d prospects remain, but all are assigned. Expand coverage.",
           market_state.remaining
         )
       elseif buyer_status.friendly_settlements == 0 then
         summary = "Restore customer charging service."
       else
-        summary = "Waiting for an available buyer."
+        summary = "Waiting for an unassigned prospect."
       end
       summary_color = FACTORYX_STATE_COLORS.warning
     elseif entity.status == defines.entity_status.working then
       if market_state.kind == "committed" then
         summary, summary_color = string.format(
-          "Current sale is using the last free prospect; %d remain committed. Expand coverage.",
+          "Sales active; all %d remaining prospects are assigned. Expand coverage.",
           market_state.remaining
         ), FACTORYX_STATE_COLORS.warning
       elseif market_state.kind == "low" then
@@ -8548,7 +8559,7 @@ local function show_manufacturer_info_panel(player, entity)
     elseif buyers.friendly_settlements == 0 then
       next_step = "Blocked: no friendly buyers remain here. Restore powered charging capacity to recover these settlements, or expand to another market."
     else
-      next_step = "Blocked: no eligible mobile customer is ready. Waiting for an unassigned buyer from a powered settlement inside this office's coverage."
+      next_step = "Blocked: all prospects are assigned to active sales. Wait for a sale to complete or expand powered coverage to another settlement."
     end
   elseif missing_name then
     local item = prototypes.item[missing_name]
