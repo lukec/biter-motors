@@ -665,6 +665,17 @@ still requires reaching additional colonies. If an owner dies, its vehicle
 leaves the active fleet immediately; lifetime sales remain in the economic
 statistics.
 
+Sales Offices warn before that local market is exhausted. At 20% or fewer
+unowned prospects remaining, the office uses an amber beacon and native
+`Low prospects` status; at zero it reports `Market saturated`. Its diagnostics
+show both prospects remaining and prospects currently free to reserve.
+Overlapping Sales Offices share the same local prospect pools, so one office can
+show prospects remaining but none free while another office has committed them.
+A persistent map alert directs the player to establish Sales Office and powered
+charging coverage at another biter settlement. Reservation counters are
+periodically rebuilt from active contracts so an interrupted sale or old save
+cannot strand virtual prospects indefinitely.
+
 Holding or selecting a Sales Office shows its 128-tile customer conversion
 radius. Hostile biter entities inside that radius are converted into customer
 entities. The `Sales Office Coverage` shortcut, unlocked with the Sales Office
@@ -673,9 +684,10 @@ that player's force. The chart-only circles use a dark teal translucent fill and
 restrained outline, so they remain readable without washing out Remote View.
 
 Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
-uses a compact native icon/label/value table for state, settlements, available
-buyers, EV owners, powered charging capacity, underserved owners, and reserved
-buyers. It also forecasts the nearest local customer threshold as `N EV sales
+uses a compact native icon/label/value table for state, settlements, remaining
+and free prospects, EV owners, powered charging capacity, underserved owners,
+and reserved buyers. It also forecasts the nearest local customer threshold as
+`N EV sales
 -> +X kW`, using only settlements inside that office's market. This is the next
 possible charging-load step, not a globally pooled sales promise. It deliberately
 omits recipe, cycle, input, and output details already visible in Factorio's

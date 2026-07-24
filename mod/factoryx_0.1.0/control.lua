@@ -65,6 +65,9 @@ EV_AUTOPILOT_MANUAL_INPUTS = {
   ["x-ev-autopilot-manual-right"] = true
 }
 local SALES_OFFICE_NAME = "x-sales-office"
+SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20
+SALES_OFFICE_LOW_PROSPECT_MINIMUM = 5
+SALES_OFFICE_RESERVATION_RECONCILE_TICKS = 10 * 60
 local LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"
 local GIGAFACTORY_CONFIGS = {
   ["x-gigafactory-building"] = {
@@ -360,6 +363,7 @@ local FACTORYX_RUNTIME_VISUAL_CONFIGS = {
     status = true,
     sprite_prefix = "x-sales-office-status-red-frame-",
     working_sprite_prefix = "x-sales-office-status-green-frame-",
+    warning_sprite_prefix = "x-sales-office-status-amber-frame-",
     stopped_sprite_prefix = "x-sales-office-status-red-frame-",
     offset = {1.03, -1.18},
     scale = 0.5
@@ -517,6 +521,7 @@ local function attach_factoryx_runtime_visual(entity)
     entity = entity,
     sprite_prefix = config.sprite_prefix,
     working_sprite_prefix = config.working_sprite_prefix,
+    warning_sprite_prefix = config.warning_sprite_prefix,
     stopped_sprite_prefix = config.stopped_sprite_prefix,
     status = config.status == true,
     enabled = config.status == true
@@ -554,8 +559,17 @@ local function update_factoryx_runtime_visuals()
     else
       entry.object.visible = entry.status or entry.enabled
       if entry.status then
-        local prefix = entry.entity.status == defines.entity_status.working
-          and entry.working_sprite_prefix or entry.stopped_sprite_prefix
+        local market_state = storage.factoryx_sales_office_market_states
+          and storage.factoryx_sales_office_market_states[unit_number]
+        local market_warning = market_state
+          and (market_state.kind == "low"
+            or market_state.kind == "committed"
+            or market_state.kind == "saturated")
+          and (entry.entity.status == defines.entity_status.working
+            or entry.entity.disabled_by_script)
+        local prefix = market_warning and entry.warning_sprite_prefix
+          or (entry.entity.status == defines.entity_status.working
+            and entry.working_sprite_prefix or entry.stopped_sprite_prefix)
         entry.object.sprite = prefix .. frame_index
       elseif entry.enabled then
         entry.object.sprite = entry.sprite_prefix .. frame_index
@@ -2552,6 +2566,17 @@ end
 function office_buyer_reservations()
   storage.factoryx_office_buyer_reservations = storage.factoryx_office_buyer_reservations or {}
   return storage.factoryx_office_buyer_reservations
+end
+
+function sales_office_market_states()
+  storage.factoryx_sales_office_market_states = storage.factoryx_sales_office_market_states or {}
+  return storage.factoryx_sales_office_market_states
+end
+
+function sales_office_market_alert_states()
+  storage.factoryx_sales_office_market_alert_states =
+    storage.factoryx_sales_office_market_alert_states or {}
+  return storage.factoryx_sales_office_market_alert_states
 end
 
 function buyer_reserved_by_unit()
@@ -6583,6 +6608,82 @@ function clear_office_buyer_reservation(office_unit_number)
   reservations[office_unit_number] = nil
 end
 
+function reconcile_office_buyer_reservations()
+  local populations = customer_settlement_populations()
+  for _, population in pairs(populations) do
+    population.virtual_reserved = 0
+  end
+
+  local offices = {}
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
+    if office.valid and office.unit_number then
+      offices[office.unit_number] = office
+    end
+  end
+
+  local reservations = office_buyer_reservations()
+  local physical_reservations = {}
+  local virtual_reservations = {}
+  local cleared = 0
+  for office_unit_number, reservation in pairs(reservations) do
+    local office = offices[office_unit_number]
+    local recipe = office and office.get_recipe()
+    local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
+    local valid = office and recipe and sale and type(reservation.buyers) == "table"
+      and reservation.recipe_name == recipe.name
+      and #reservation.buyers == sale.vehicles
+    local pending_physical = {}
+    local pending_virtual = {}
+    if valid then
+      for _, buyer in pairs(reservation.buyers) do
+        if type(buyer) == "table" and buyer.virtual then
+          local population = populations[buyer.settlement_key]
+          local already_reserved = (virtual_reservations[buyer.settlement_key] or 0)
+            + (pending_virtual[buyer.settlement_key] or 0)
+          if not population or population.market_force_name ~= office.force.name
+            or already_reserved >= (population.virtual_unowned or 0) then
+            valid = false
+            break
+          end
+          pending_virtual[buyer.settlement_key] =
+            (pending_virtual[buyer.settlement_key] or 0) + 1
+        else
+          local entity = customer_unit_registry()[buyer]
+          local home = customer_home_settlements()[buyer]
+          if not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
+            or not home or home.market_force_name ~= office.force.name
+            or customer_vehicle_owners()[buyer]
+            or physical_reservations[buyer] or pending_physical[buyer] then
+            valid = false
+            break
+          end
+          pending_physical[buyer] = office_unit_number
+        end
+      end
+    end
+    if valid then
+      for unit_number, reserved_office in pairs(pending_physical) do
+        physical_reservations[unit_number] = reserved_office
+      end
+      for settlement_key_value, count in pairs(pending_virtual) do
+        virtual_reservations[settlement_key_value] =
+          (virtual_reservations[settlement_key_value] or 0) + count
+      end
+    else
+      reservations[office_unit_number] = nil
+      cleared = cleared + 1
+    end
+  end
+
+  storage.factoryx_buyer_reserved_by_unit = physical_reservations
+  for settlement_key_value, count in pairs(virtual_reservations) do
+    local population = populations[settlement_key_value]
+    if population then population.virtual_reserved = count end
+  end
+  if cleared > 0 then rebuild_customer_buyer_queues() end
+  return cleared
+end
+
 function office_has_all_sale_inputs(office, recipe)
   local inventory = office.get_inventory(crafter_input_inventory_id())
   if not inventory or not inventory.valid then
@@ -6738,6 +6839,117 @@ function sales_office_buyer_status(office)
   }
 end
 
+function classify_sales_office_market(buyer_status)
+  local customers = math.max(0, buyer_status.customers or 0)
+  local remaining = math.max(0, buyer_status.unowned or 0)
+  local available = math.max(0, buyer_status.available or 0)
+  local threshold = math.max(
+    SALES_OFFICE_LOW_PROSPECT_MINIMUM,
+    math.ceil(customers * SALES_OFFICE_LOW_PROSPECT_FRACTION)
+  )
+  local percent = customers > 0 and math.floor(remaining * 100 / customers + 0.5) or 0
+  local kind = "healthy"
+  if (buyer_status.settlements or 0) == 0 or customers == 0 then
+    kind = "no-market"
+  elseif remaining == 0 then
+    kind = "saturated"
+  elseif available == 0 then
+    kind = "committed"
+  elseif remaining <= threshold then
+    kind = "low"
+  end
+  return {
+    kind = kind,
+    customers = customers,
+    remaining = remaining,
+    available = available,
+    percent = percent,
+    threshold = threshold
+  }
+end
+
+function update_sales_office_market_feedback(office, buyer_status)
+  if not office or not office.valid or not office.unit_number then return nil end
+  local state = classify_sales_office_market(buyer_status)
+  sales_office_market_states()[office.unit_number] = state
+  local recipe = office.get_recipe()
+  local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
+  local label
+  local diode
+  if sale and (office.status == defines.entity_status.working or office.disabled_by_script) then
+    if state.kind == "saturated" then
+      label = "Market saturated - expand coverage"
+      diode = defines.entity_status_diode.yellow
+    elseif state.kind == "committed" then
+      label = string.format("No free prospects - %d remain", state.remaining)
+      diode = defines.entity_status_diode.yellow
+    elseif state.kind == "low" then
+      label = string.format("Low prospects - %d remain", state.remaining)
+      diode = defines.entity_status_diode.yellow
+    elseif state.kind == "no-market" and office.disabled_by_script then
+      label = "No customer market"
+      diode = defines.entity_status_diode.red
+    end
+  end
+  pcall(function()
+    office.custom_status = label and {diode = diode, label = label} or nil
+  end)
+  return state
+end
+
+function sales_office_market_alert_message(state)
+  if state.kind == "saturated" then
+    return "Sales Office market saturated. Establish Sales Office and powered charging coverage at another biter settlement."
+  elseif state.kind == "committed" then
+    return string.format(
+      "Sales Office has %d prospects left, but none are free; overlapping offices have committed this pool. Expand to another biter settlement.",
+      state.remaining
+    )
+  end
+  return string.format(
+    "Sales Office has only %d prospects left (%d%% of its local market). Expand to another biter settlement.",
+    state.remaining,
+    state.percent
+  )
+end
+
+function update_sales_office_market_alerts()
+  local states = sales_office_market_states()
+  local alerts_by_player = sales_office_market_alert_states()
+  for _, player in pairs(game.connected_players) do
+    alerts_by_player[player.index] = alerts_by_player[player.index] or {}
+    local prior = alerts_by_player[player.index]
+    local active = {}
+    for _, office in pairs(registered_factoryx_entities("sales_offices", player.force)) do
+      local state = office.valid and office.unit_number and states[office.unit_number]
+      local recipe = office.valid and office.get_recipe()
+      local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
+      local warning = state and (state.kind == "low"
+        or state.kind == "committed"
+        or state.kind == "saturated")
+      if sale and warning and office.surface == player.surface
+        and (office.status == defines.entity_status.working or office.disabled_by_script) then
+        active[office.unit_number] = office
+        if prior[office.unit_number] then
+          player.remove_alert{entity = office, type = defines.alert_type.custom}
+        end
+        player.add_custom_alert(
+          office,
+          {type = "item", name = DOLLAR_NAME},
+          sales_office_market_alert_message(state),
+          true
+        )
+      end
+    end
+    for unit_number, office in pairs(prior) do
+      if not active[unit_number] and office.valid then
+        player.remove_alert{entity = office, type = defines.alert_type.custom}
+      end
+    end
+    alerts_by_player[player.index] = active
+  end
+end
+
 function reserve_office_buyers(office, recipe_name, sale)
   clear_office_buyer_reservation(office.unit_number)
   local buyers = eligible_customer_buyers(office, sale.vehicles)
@@ -6768,8 +6980,16 @@ end
 
 function sync_sales_office_buyers()
   ensure_customer_settlement_population_cache()
+  if not storage.factoryx_last_reservation_reconcile_tick
+    or game.tick - storage.factoryx_last_reservation_reconcile_tick
+      >= SALES_OFFICE_RESERVATION_RECONCILE_TICKS then
+    reconcile_office_buyer_reservations()
+    storage.factoryx_last_reservation_reconcile_tick = game.tick
+  end
+  local seen = {}
   for _, office in pairs(registered_factoryx_entities("sales_offices")) do
       if office.valid and office.unit_number then
+        seen[office.unit_number] = true
         local recipe = office.get_recipe()
         local recipe_name = recipe and recipe.name
         local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
@@ -6811,7 +7031,11 @@ function sync_sales_office_buyers()
             office.disabled_by_script = not valid_reservation
           end
         end
+        update_sales_office_market_feedback(office, sales_office_buyer_status(office))
       end
+  end
+  for unit_number in pairs(sales_office_market_states()) do
+    if not seen[unit_number] then sales_office_market_states()[unit_number] = nil end
   end
 end
 
@@ -7950,16 +8174,27 @@ FACTORYX_STATE_COLORS = {
 function entity_status_presentation(entity)
   if entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
-    if buyers.settlements == 0 then
+    local market = classify_sales_office_market(buyers)
+    if market.kind == "no-market" then
       return "No customer settlements", FACTORYX_STATE_COLORS.bad
-    elseif buyers.unowned == 0 then
+    elseif market.kind == "saturated" then
       return "Market saturated", FACTORYX_STATE_COLORS.warning
+    elseif market.kind == "committed" then
+      return "No free prospects", FACTORYX_STATE_COLORS.warning
     elseif buyers.friendly_settlements == 0 then
       return "Customers hostile", FACTORYX_STATE_COLORS.bad
     end
     return "Waiting for buyer", FACTORYX_STATE_COLORS.warning
   end
   local status = entity.status
+  if entity.name == SALES_OFFICE_NAME and status == defines.entity_status.working then
+    local market = classify_sales_office_market(sales_office_buyer_status(entity))
+    if market.kind == "committed" then
+      return "No free prospects", FACTORYX_STATE_COLORS.warning
+    elseif market.kind == "low" then
+      return "Low prospects", FACTORYX_STATE_COLORS.warning
+    end
+  end
   if status == defines.entity_status.working then
     return "Working", FACTORYX_STATE_COLORS.good
   elseif status == defines.entity_status.no_power or status == defines.entity_status.low_power then
@@ -8077,13 +8312,25 @@ local function show_manufacturer_info_panel(player, entity)
 
   if entity.name == SALES_OFFICE_NAME then
     local buyer_status = sales_office_buyer_status(entity)
+    local market_state = classify_sales_office_market(buyer_status)
     local recipe = entity.get_recipe()
     local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
+    local prospect_color = (market_state.kind == "saturated"
+      or market_state.kind == "committed"
+      or market_state.kind == "low")
+      and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good
     local metric_rows = {
       {sprite = "entity/biter-spawner", label = "Settlements", value = tostring(count_customer_settlements_near_office(entity))},
-      {sprite = "entity/small-biter", label = "Buyers", value = string.format("%d available", buyer_status.available)},
+      {
+        sprite = "entity/small-biter",
+        label = "Prospects",
+        value = market_state.remaining == 0 and "None left"
+          or string.format("%d left; %d free", market_state.remaining, market_state.available),
+        color = prospect_color,
+        tooltip = "Unowned mobile customers in this office's local market. At zero, sales pause until colonies grow or coverage expands. Overlapping Sales Offices share and reserve the same prospects."
+      },
       {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
       {
         sprite = "item/x-ev-charging-station",
@@ -8137,8 +8384,13 @@ local function show_manufacturer_info_panel(player, entity)
     elseif entity.status == defines.entity_status.full_output then
       summary, summary_color = "Clear the Dollar output.", FACTORYX_STATE_COLORS.bad
     elseif entity.disabled_by_script then
-      if buyer_status.unowned == 0 then
-        summary = "Market saturated. Expand coverage."
+      if market_state.kind == "saturated" then
+        summary = "Market saturated. Expand to another settlement."
+      elseif market_state.kind == "committed" then
+        summary = string.format(
+          "%d prospects remain, but all are committed. Expand coverage.",
+          market_state.remaining
+        )
       elseif buyer_status.friendly_settlements == 0 then
         summary = "Restore customer charging service."
       else
@@ -8146,7 +8398,20 @@ local function show_manufacturer_info_panel(player, entity)
       end
       summary_color = FACTORYX_STATE_COLORS.warning
     elseif entity.status == defines.entity_status.working then
-      summary, summary_color = "Sales active.", FACTORYX_STATE_COLORS.good
+      if market_state.kind == "committed" then
+        summary, summary_color = string.format(
+          "Current sale is using the last free prospect; %d remain committed. Expand coverage.",
+          market_state.remaining
+        ), FACTORYX_STATE_COLORS.warning
+      elseif market_state.kind == "low" then
+        summary, summary_color = string.format(
+          "Low prospects: %d remain (%d%%). Expand coverage.",
+          market_state.remaining,
+          market_state.percent
+        ), FACTORYX_STATE_COLORS.warning
+      else
+        summary, summary_color = "Sales active.", FACTORYX_STATE_COLORS.good
+      end
     else
       summary, summary_color = "Waiting for product inputs.", FACTORYX_STATE_COLORS.neutral
     end
@@ -8531,7 +8796,11 @@ script.on_init(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  storage.factoryx_last_reservation_reconcile_tick = nil
+  reconcile_office_buyer_reservations()
+  storage.factoryx_last_reservation_reconcile_tick = game.tick
   rebuild_customer_buyer_queues()
+  sync_sales_office_buyers()
   rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
@@ -8564,7 +8833,11 @@ script.on_configuration_changed(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  storage.factoryx_last_reservation_reconcile_tick = nil
+  reconcile_office_buyer_reservations()
+  storage.factoryx_last_reservation_reconcile_tick = game.tick
   rebuild_customer_buyer_queues()
+  sync_sales_office_buyers()
   rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
   for _, player in pairs(game.players) do
@@ -8936,6 +9209,7 @@ for _, event_name in pairs({
         remove_station_support_entities(entity)
       elseif entity and entity.name == SALES_OFFICE_NAME then
         clear_office_buyer_reservation(entity.unit_number)
+        sales_office_market_states()[entity.unit_number] = nil
         robotaxi_audio_revenue_progress()[entity.unit_number] = nil
         mark_sales_office_coverage_dirty()
       elseif entity and entity.name == ROBOTAXI_SERVICE_CENTER_NAME and entity.unit_number then
@@ -9051,6 +9325,7 @@ end)
 script.on_nth_tick(600, function()
   sync_biter_customer_diplomacy()
   sync_customer_service_states()
+  update_sales_office_market_alerts()
   reconcile_factoryx_entity_registry_step()
 end)
 
@@ -9284,6 +9559,7 @@ remote.add_interface("factoryx", {
           )
         }
       end
+      local buyer_status = sales_office_buyer_status(office)
       rows[#rows + 1] = {
         unit_number = office.unit_number,
         position = office.position,
@@ -9291,7 +9567,8 @@ remote.add_interface("factoryx", {
         recipe = office.get_recipe() and office.get_recipe().name,
         has_inputs = office.get_recipe() and office_has_all_sale_inputs(office, office.get_recipe()) or false,
         crafting_progress = office.crafting_progress,
-        buyer_status = sales_office_buyer_status(office),
+        buyer_status = buyer_status,
+        market_state = classify_sales_office_market(buyer_status),
         settlements = settlements
       }
     end

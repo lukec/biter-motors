@@ -336,6 +336,7 @@ def paint_grid_charge(frame: Image.Image, index: int, count: int) -> None:
 
 def build_animations() -> None:
     animation_sheet("sales-office-status-green", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (72, 255, 105)))
+    animation_sheet("sales-office-status-amber", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (255, 178, 48)))
     animation_sheet("sales-office-status-red", 64, 64, lambda frame, index, count: paint_sales_status_light(frame, index, count, (255, 54, 42)))
     for state in ("idle", "low", "medium", "full", "overload", "charging"):
         animation_sheet(

@@ -626,6 +626,7 @@ local sales_office_status_sprites = {}
 for frame_index = 1, 8 do
   for _, status in pairs({
     {color = "green", filename = "__factoryx__/graphics/animation/sales-office-status-green.png"},
+    {color = "amber", filename = "__factoryx__/graphics/animation/sales-office-status-amber.png"},
     {color = "red", filename = "__factoryx__/graphics/animation/sales-office-status-red.png"}
   }) do
     sales_office_status_sprites[#sales_office_status_sprites + 1] = {

@@ -85,6 +85,11 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         self.assertIn('label = "EV owners"', control)
         self.assertIn('return "Market saturated", FACTORYX_STATE_COLORS.warning', control)
+        self.assertIn('label = "Prospects"', control)
+        self.assertIn('string.format("%d left; %d free"', control)
+        self.assertIn('"Low prospects"', control)
+        self.assertIn("SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20", control)
+        self.assertIn("Overlapping Sales Offices share and reserve the same prospects.", control)
         self.assertIn('label = "Charging"', control)
         self.assertIn('label = "Underserved"', control)
         self.assertIn("FACTORYX_STATE_COLORS", control)
@@ -118,10 +123,27 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         self.assertIn('"x-sales-office-status-green-frame-"', control)
+        self.assertIn('"x-sales-office-status-amber-frame-"', control)
         self.assertIn('"x-sales-office-status-red-frame-"', control)
+        self.assertIn('warning_sprite_prefix = "x-sales-office-status-amber-frame-"', control)
+        self.assertIn("defines.entity_status_diode.yellow", control)
+        self.assertIn("function update_sales_office_market_alerts()", control)
+        self.assertIn("Sales Office market saturated.", control)
         self.assertIn("entry.entity.status == defines.entity_status.working", control)
         self.assertIn('name = "x-sales-office-status-" .. status.color .. "-frame-" .. frame_index', data)
         self.assertNotIn('working_animation("sales-office-lights"', data)
+
+    def test_sales_office_reconciles_stale_buyer_reservations(self):
+        control = (MOD / "control.lua").read_text()
+        reconcile = control[
+            control.index("function reconcile_office_buyer_reservations()"):
+            control.index("function office_has_all_sale_inputs")
+        ]
+        self.assertIn("population.virtual_reserved = 0", reconcile)
+        self.assertIn("storage.factoryx_buyer_reserved_by_unit = physical_reservations", reconcile)
+        self.assertIn("reservations[office_unit_number] = nil", reconcile)
+        self.assertIn("rebuild_customer_buyer_queues()", reconcile)
+        self.assertIn("SALES_OFFICE_RESERVATION_RECONCILE_TICKS", control)
 
     def test_ev_progression_is_gated_by_completed_sales(self):
         control = (MOD / "control.lua").read_text()
@@ -497,7 +519,7 @@ class FactoryXModTest(unittest.TestCase):
         dequeue = control[control.index("function dequeue_available_buyer"):control.index("function eligible_customer_buyers")]
         self.assertNotIn("within_radius(office, entity", dequeue)
         self.assertIn("function sales_office_buyer_status(office)", control)
-        self.assertIn('label = "Buyers"', control)
+        self.assertIn('label = "Prospects"', control)
         self.assertIn("Waiting for an unassigned buyer from a powered settlement", control)
         self.assertIn("function rebuild_customer_settlement_population_cache()", control)
         self.assertIn("function ensure_customer_settlement_population_cache()", control)
@@ -670,6 +692,7 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         animation_sizes = {
             "sales-office-status-green.png": (512, 64),
+            "sales-office-status-amber.png": (512, 64),
             "sales-office-status-red.png": (512, 64),
             "charger-stall-idle.png": (256, 32),
             "charger-stall-low.png": (256, 32),
