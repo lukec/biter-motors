@@ -1892,6 +1892,7 @@ data:extend({
       unlock("x-battery-graphite"),
       unlock("x-tailings-neutralization"),
       unlock("x-high-nickel-cell"),
+      unlock("x-cell-scale-high-nickel"),
       unlock("x-high-energy-battery-pack"),
       unlock("x-premium-ev-cell-scale")
     },

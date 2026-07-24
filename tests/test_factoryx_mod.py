@@ -771,6 +771,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales", control)
         self.assertIn("Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels", control)
         self.assertIn("PREMIUM_PILOT_PRODUCTION_GATE = 100", control)
+        self.assertIn("ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE = 250", control)
         self.assertIn("function sync_advanced_battery_chemistry_gate", control)
         self.assertIn("Commodity battery supply has reached its scale limit after %d Premium EVs", control)
         chemistry_gate = control[
@@ -785,16 +786,19 @@ class FactoryXModTest(unittest.TestCase):
             control.index("function customer_ev_fleet_size")
         ]
         self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
-        self.assertIn("researched(force, ADVANCED_BATTERY_CHEMISTRY_TECH_NAME)", gate)
-        self.assertIn('and researched(force, "x-energy-products")', gate)
-        self.assertIn('and researched(force, "foundry")', gate)
-        self.assertIn('"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,', control)
-        self.assertIn('"x-cell-scale-high-nickel"', gate)
-        self.assertIn("Industrial scale unlocked: %d Premium EVs produced, Advanced Battery Chemistry and Energy Products established", control)
+        self.assertIn('researched(force, "x-premium-ev-program")', gate)
+        self.assertNotIn("researched(force, ADVANCED_BATTERY_CHEMISTRY_TECH_NAME)", gate)
+        self.assertNotIn('and researched(force, "foundry")', gate)
+        self.assertIn('"x-gigafactory-module", "x-gigafactory-building"', gate)
+        self.assertIn('solar_batch_recipe.enabled = unlocked and researched(force, "x-energy-products")', gate)
+        self.assertNotIn('"x-cell-scale-high-nickel"', gate)
+        self.assertIn("Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
+        self.assertIn('"Gigafactory scale"', control)
         self.assertIn("snapshot.premium_pilot_production_gate", control)
-        self.assertIn("Premium EV sales are working. Keep scaling the commodity-battery pilot to 100 vehicles", control)
+        self.assertIn("snapshot.advanced_battery_chemistry_production_gate", control)
+        self.assertIn("Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory", control)
         self.assertIn("factoryx_first_premium_ev_sales", control)
 
     def test_progress_panel_makes_charging_power_and_customer_impact_prominent(self):
@@ -815,7 +819,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("next_charging_step = next_charging_step", control)
         self.assertIn('label = "Next grid load"', control)
         self.assertIn('"No spare stalls; add charger"', control)
-        self.assertIn('"Research Energy Products before factory scale."', control)
+        self.assertIn('"Research Energy Products for industrial expansion."', control)
         self.assertIn('"Prove a 5 MW solar industrial block."', control)
         self.assertIn('"Research Metallurgical Scaling."', control)
         objective = control[
@@ -828,15 +832,19 @@ class FactoryXModTest(unittest.TestCase):
         )
         self.assertLess(
             objective.index('elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then'),
+            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
+        )
+        self.assertLess(
+            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
+            objective.index('elseif snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then'),
+        )
+        self.assertLess(
+            objective.index('elseif snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then'),
             objective.index('elseif not snapshot.advanced_battery_chemistry_researched then'),
         )
         self.assertLess(
             objective.index('elseif not snapshot.advanced_battery_chemistry_researched then'),
             objective.index('elseif not snapshot.energy_products_researched then'),
-        )
-        self.assertLess(
-            objective.index('elseif not snapshot.foundry_researched then'),
-            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
         )
 
     def test_progress_panel_rows_have_actionable_full_row_tooltips(self):
@@ -1110,7 +1118,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("Gigafactory logistics online", control)
         self.assertIn("logistic_system.enabled = true", control)
         self.assertNotIn("logistic_system.enabled = unlocked", control)
-        self.assertIn("Gigafactory construction and High-density Solar Panel mass production are now available", control)
+        self.assertIn("Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available", control)
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
@@ -1955,7 +1963,8 @@ class FactoryXModTest(unittest.TestCase):
             "lfp_cells_produced", "lfp_battery_packs_produced",
         ]:
             self.assertIn(field, control)
-        self.assertLess(objective.index('return "Premium pilot production"'), objective.index('return "Battery breakthrough"'))
+        self.assertLess(objective.index('return "Premium pilot production"'), objective.index('return "Gigafactory scale"'))
+        self.assertLess(objective.index('return "Gigafactory scale"'), objective.index('return "Battery breakthrough"'))
         self.assertLess(objective.index('return "Battery breakthrough"'), objective.index('return "Battery minerals"'))
         self.assertLess(objective.index('return "Battery minerals"'), objective.index('return "Battery refining"'))
         self.assertLess(objective.index('return "Battery refining"'), objective.index('return "Battery cells"'))

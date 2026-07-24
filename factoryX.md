@@ -296,30 +296,32 @@ The MVP already has these major loops:
    for Premium and Mass-market sales.
 9. Research EV Production Line, then build the first 100 Premium EVs in
    ordinary advanced assemblers as a pilot run.
-10. Producing 100 Premium EVs completes the manufacturing pilot. Finishing
-   Energy Products as well unlocks Gigafactory Modules and Gigafactory
-   construction, ensuring scalable power arrives before mass production.
+10. Producing 100 Premium EVs completes the manufacturing pilot and unlocks
+    Gigafactory Modules and Gigafactory construction.
 11. Combine ten modules with two Substations, then move Premium EV production
-    into the Gigafactory. Mass-market EVs remain Gigafactory-only.
-12. Build silver Megatrucks after Mass-market EV Production, then sell each
+    into the Gigafactory. Produce 250 Premium EVs at factory scale to expose
+    the commodity-cell supply bottleneck.
+12. Research Advanced Battery Chemistry, then switch Premium EV production to
+    high-energy nickel packs and develop LFP energy products.
+13. Build silver Megatrucks after Mass-market EV Production, then sell each
     one with an EV Reservation for 2 Dollars of profit.
-13. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
-14. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
-15. Spend 1,000 AI Tokens and 1,000 Dollars on Autonomous Logistics.
-16. Build Robotaxi Fleets in Gigafactory V2 and sell them without reservations.
-17. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
-18. Move AI production to space platforms with Orbital Compute Arrays.
-19. Drop AI Tokens back to the planet.
-20. Build a Planetary Energy Grid Controller and the energy infrastructure
+14. Research Terrestrial AI and build 8 MW datacenters for early AI Tokens.
+15. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
+16. Spend 1,000 AI Tokens and 1,000 Dollars on Autonomous Logistics.
+17. Build Robotaxi Fleets in Gigafactory V2 and sell them without reservations.
+18. Complete Small Orbital Launch, reusable launch, and satellite infrastructure.
+19. Move AI production to space platforms with Orbital Compute Arrays.
+20. Drop AI Tokens back to the planet.
+21. Build a Planetary Energy Grid Controller and the energy infrastructure
     needed for the final training run.
-19. Produce Planetary Grid Segments from AI Tokens, Megapacks, Satellite Buses,
+22. Produce Planetary Grid Segments from AI Tokens, Megapacks, Satellite Buses,
     and Ground Station Networks.
-20. Generate one billion cumulative AI Tokens across terrestrial and orbital
+23. Generate one billion cumulative AI Tokens across terrestrial and orbital
     compute. This unlocks the AGI Training Run; Tokens need not remain stored.
-21. Deliver 100 million physical AI Tokens, 10 million Dollars, and the required
+24. Deliver 100 million physical AI Tokens, 10 million Dollars, and the required
     Planetary Grid Segments to the controller.
-22. Sustain roughly 1 TW for a 60-minute AGI Training Run to trigger victory.
-23. Continue after victory with larger compute, energy, and customer systems if
+25. Sustain roughly 1 TW for a 60-minute AGI Training Run to trigger victory.
+26. Continue after victory with larger compute, energy, and customer systems if
     desired; AGI is the complete FactoryX victory.
 
 Current runtime behavior is intentionally small:
@@ -548,10 +550,12 @@ slots.
 
 The implemented branch deliberately starts with an inefficient commodity-cell
 era. EV Production Line unlocks a Premium EV pilot that consumes 48
-conventional Batteries per vehicle. Producing 100 Premium EVs exposes that
-supply-chain bottleneck and makes Advanced Battery Chemistry researchable.
-Only that research unlocks nickel and lithium extraction, high-nickel cells,
-High-energy Battery Packs, and the faster cell-scale Premium EV recipe.
+conventional Batteries per vehicle. Producing 100 Premium EVs proves the
+product and unlocks Gigafactory construction. Scaling that constrained line to
+250 produced Premium EVs exposes the supply-chain bottleneck and makes
+Advanced Battery Chemistry researchable. Only that research unlocks nickel
+and lithium extraction, high-nickel cells, High-energy Battery Packs, and the
+faster cell-scale Premium EV recipe.
 
 After the chemistry transition, Premium EVs use high-energy nickel packs;
 Mass-Market EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs;
@@ -1213,14 +1217,17 @@ Implemented design:
   `Premium EV`, and `Sell premium product` after the existing 50-Roadster
   market gate. It does not expose nickel, lithium, or engineered cells.
 - Premium EVs can initially be built in ordinary advanced assemblers from 48
-  conventional Batteries each. Producing 100 completes the pilot run and makes
-  Advanced Battery Chemistry researchable.
+  conventional Batteries each. Producing 100 completes the pilot run and
+  unlocks Gigafactory Modules and Gigafactory construction.
+- Producing 250 Premium EVs at Gigafactory scale exposes the commodity-cell
+  bottleneck and makes Advanced Battery Chemistry researchable.
 - Advanced Battery Chemistry costs 500 cycles through chemical science plus
   Dollars. It unlocks dirty nickel/lithium refining, High-Nickel Cells,
-  High-energy Battery Packs, and the faster cell-scale Premium EV recipe.
+  High-energy Battery Packs, cell-scale High-Nickel Manufacturing, and the
+  faster cell-scale Premium EV recipe.
 - Energy Products follows Advanced Battery Chemistry, adds the LFP branch, and
-  is required with Metallurgical Scaling before Gigafactory construction or
-  mass-market scaling.
+  enables Gigafactory energy-product manufacturing. Metallurgical Scaling and
+  the later capital gate control mass-market scaling.
 - Every Sales Office recipe uses the sold product as its dominant icon with a
   small gold coin badge. EV, Megapack, launch-service, and Robotaxi sales are
   visually distinct in the recipe chooser.
@@ -1291,8 +1298,9 @@ Gigafactory design:
 Gameplay loop:
 
 - Manufacture battery packs and drivetrains.
-- Build ten pilot Premium EVs in ordinary assemblers.
+- Build 100 pilot Premium EVs in ordinary assemblers.
 - Use the newly unlocked modules to build a Gigafactory and scale production.
+- Produce 250 Premium EVs to unlock Advanced Battery Chemistry.
 - Sell Premium EVs through Sales Offices for more Dollars.
 - Premium sales are faster than `Sell hopes and dreams`, because the business
   has moved from hand-built prototype to limited production: 30 seconds per EV
@@ -2051,15 +2059,15 @@ icons, and bounded working animations. Remaining work is narrower:
 - Add the 9x9 Gigafactory as the physical scale-up after a 100-Premium-EV pilot
   run in ordinary assemblers. It consumes ten Gigafactory Modules plus
   Substations and then scales Premium EV assembly. Implemented.
-- Keep that pilot on expensive conventional Batteries, then reveal Advanced
-  Battery Chemistry only after 100 Premium EVs. The new research unlocks
-  nickel/lithium processing and the scalable high-energy-pack recipe.
+- Keep the pilot and first factory-scale run on expensive conventional
+  Batteries, then reveal Advanced Battery Chemistry only after 250 Premium EVs.
+  The new research unlocks nickel/lithium processing and the scalable
+  high-energy-pack recipe.
   Implemented.
 - Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
   consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
   and fast-replaces V1. Implemented.
-- Unlock Gigafactory Modules after the 100-Premium-EV pilot, Advanced Battery
-  Chemistry, Energy Products, and Metallurgical Scaling, using the
+- Unlock Gigafactory Modules after the 100-Premium-EV pilot, using the
   production-cell recipe `Dollars + Assembling Machine 2s + Labs + Refined
   Concrete`. Implemented.
 - Change mass-market sales from a five-car batch to the literal contract

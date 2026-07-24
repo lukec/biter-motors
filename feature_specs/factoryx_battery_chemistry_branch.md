@@ -34,23 +34,27 @@ References:
 | --- | --- |
 | Prototype Roadster | Continues using ordinary Batteries, representing purchased commodity cells. |
 | EV Production Line + 50 Roadster sales | Unlocks Electric Drivetrains and an expensive Premium EV pilot recipe using 48 conventional Batteries per vehicle. Nickel, lithium, and engineered cells are not available yet. |
-| 100 Premium EV pilot | Exposes the commodity-cell bottleneck and makes Advanced Battery Chemistry researchable. It does not auto-complete the research. |
-| Advanced Battery Chemistry | Unlocks nickel and lithium extraction, dirty refining, High-Nickel Cells, High-Energy Battery Packs, and a faster cell-scale Premium EV recipe. |
-| Gigafactory V1 | Unlocks Cell-Scale High-Nickel Manufacturing: 25% better cell yield, without module productivity. |
+| 100 Premium EV pilot | Proves the product and unlocks Gigafactory Modules and Gigafactory construction. |
+| Gigafactory V1 | Scales the commodity-cell Premium EV line. Producing 250 Premium EVs makes Advanced Battery Chemistry researchable. |
+| Advanced Battery Chemistry | Unlocks nickel and lithium extraction, dirty refining, High-Nickel Cells, High-Energy Battery Packs, cell-scale High-Nickel Manufacturing, and a faster cell-scale Premium EV recipe. |
 | Energy Products | Builds on Advanced Battery Chemistry and unlocks LFP chemistry and LFP Battery Packs for Megapacks. |
 | Capital Scaling / Gigafactory V2 | Unlocks clean refining and dry-electrode recipes with lower acid, waste, power and craft time. |
 | First chemistry-specific battery scrap + Recycling | Makes Battery Material Recovery researchable. It does not auto-complete the research. |
 
 After the 50-Roadster market gate, the Progress panel first asks for a
-100-Premium-EV pilot using conventional Batteries. Only after that scale proof
-does it ask the player to research Advanced Battery Chemistry, extract both
-minerals, refine both precursors, produce High-Nickel Cells, and switch the
-Premium EV line to High-Energy Battery Packs.
+100-Premium-EV pilot using conventional Batteries. That pilot unlocks
+Gigafactory construction. The player then scales the same constrained
+commodity-cell line to 250 produced Premium EVs. Only after factory scale
+exposes the supply bottleneck does the panel ask the player to research
+Advanced Battery Chemistry, extract both minerals, refine both precursors,
+produce High-Nickel Cells, and switch the Premium EV line to High-Energy
+Battery Packs.
 
 When an older FactoryX save loads this progression, configuration migration
 revokes the chemistry recipes that EV Production Line used to unlock. The
 recipes remain disabled until Advanced Battery Chemistry is researched, so old
-saves follow the same 100-vehicle transition as new saves.
+saves follow the same 100-vehicle Gigafactory and 250-vehicle chemistry
+transitions as new saves.
 
 Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy

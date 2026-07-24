@@ -137,7 +137,6 @@ script.on_init(function()
   for _, technology_name in pairs({
     "x-sales-office",
     "x-premium-ev-program",
-    "x-advanced-battery-chemistry",
     "x-ev-charging-network",
     "x-capital-scaling",
     "x-energy-products",
@@ -153,6 +152,13 @@ script.on_init(function()
   local production_statistics = force.get_item_production_statistics(surface)
   storage.foundry_enabled_before_qualification = force.technologies.foundry.enabled
   production_statistics.set_output_count("x-premium-ev", 100)
+  local chemistry = force.technologies["x-advanced-battery-chemistry"]
+  remote.call("factoryx", "progress_status", force.name)
+  storage.advanced_battery_chemistry_enabled_at_100 = chemistry.enabled
+  production_statistics.set_output_count("x-premium-ev", 250)
+  remote.call("factoryx", "progress_status", force.name)
+  storage.advanced_battery_chemistry_enabled_at_250 = chemistry.enabled
+  chemistry.researched = true
   production_statistics.set_output_count(SOLAR_ARRAY, 25)
   production_statistics.set_output_count(MEGAPACK, 5)
 
@@ -765,6 +771,8 @@ script.on_nth_tick(3780, function()
     foundry_enabled_before_qualification = storage.foundry_enabled_before_qualification,
     foundry_enabled_after_qualification = storage.foundry_enabled_after_qualification,
     foundry_researched_after_qualification = game.forces.player.technologies.foundry.researched,
+    advanced_battery_chemistry_enabled_at_100 = storage.advanced_battery_chemistry_enabled_at_100,
+    advanced_battery_chemistry_enabled_at_250 = storage.advanced_battery_chemistry_enabled_at_250,
     gigafactory_recipe_enabled = gigafactory_item_recipe and gigafactory_item_recipe.enabled,
     gigafactory_module_recipe_enabled = gigafactory_module_recipe and gigafactory_module_recipe.enabled,
     premium_ev_recipe_enabled = premium_ev_recipe and premium_ev_recipe.enabled,
@@ -1555,8 +1563,12 @@ if not checked.get("foundry_enabled_after_qualification"):
     raise SystemExit(f"Metallurgical Scaling did not become available after producing 25 panels and 5 packs: {checked}")
 if not checked.get("foundry_researched_after_qualification"):
     raise SystemExit(f"Metallurgical Scaling could not be researched after qualification: {checked}")
+if checked.get("advanced_battery_chemistry_enabled_at_100"):
+    raise SystemExit(f"Advanced Battery Chemistry unlocked at the 100-vehicle pilot instead of factory scale: {checked}")
+if not checked.get("advanced_battery_chemistry_enabled_at_250"):
+    raise SystemExit(f"Advanced Battery Chemistry did not unlock after 250 Premium EVs: {checked}")
 if not checked.get("gigafactory_recipe_enabled"):
-    raise SystemExit(f"Energy Products did not unlock the Gigafactory recipe: {checked}")
+    raise SystemExit(f"The 100-vehicle Premium EV pilot did not unlock the Gigafactory recipe: {checked}")
 if not checked.get("logistic_system_available_before_sales"):
     raise SystemExit(f"Terrestrial industry did not expose Logistic System research: {checked}")
 if not checked.get("logistic_system_requires_manual_research"):

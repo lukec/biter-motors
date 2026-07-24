@@ -127,6 +127,7 @@ local ADVANCED_BATTERY_CHEMISTRY_RECIPES = {
   "x-battery-graphite",
   "x-tailings-neutralization",
   "x-high-nickel-cell",
+  "x-cell-scale-high-nickel",
   "x-high-energy-battery-pack",
   "x-premium-ev-cell-scale"
 }
@@ -138,6 +139,7 @@ PLAYER_VEHICLE_BATTERY_SCRAP = {
   [ELECTRIC_SEMI_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}
 }
 PREMIUM_PILOT_PRODUCTION_GATE = 100
+ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE = 250
 FOUNDRY_POWER_GATE = {
   solar_panels = 25,
   megapacks = 5
@@ -2550,7 +2552,7 @@ function sync_ev_sales_recipe_gates(force, announce)
           technology_ready and "" or " after its technology is researched"
         ))
         if gate_name == "premium" and technology_ready then
-          force.print("[FactoryX] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to expose the limits of that supply chain and make Advanced Battery Chemistry research available.")
+          force.print("[FactoryX] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to unlock Gigafactory construction, then scale factory output to 250 vehicles to make Advanced Battery Chemistry research available.")
         end
       end
     end
@@ -2582,7 +2584,7 @@ function sync_advanced_battery_chemistry_gate(force, announce)
   local technology = force.technologies and force.technologies[ADVANCED_BATTERY_CHEMISTRY_TECH_NAME]
   if not technology then return false end
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
-  local available = technology.researched or produced >= PREMIUM_PILOT_PRODUCTION_GATE
+  local available = technology.researched or produced >= ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE
   technology.enabled = available
   for _, recipe_name in pairs(ADVANCED_BATTERY_CHEMISTRY_RECIPES) do
     local recipe = force.recipes and force.recipes[recipe_name]
@@ -2594,7 +2596,7 @@ function sync_advanced_battery_chemistry_gate(force, announce)
     if announce ~= false then
       force.print(string.format(
         "[FactoryX] Commodity battery supply has reached its scale limit after %d Premium EVs. Advanced Battery Chemistry research is now available: develop nickel-rich cells, lithium processing, and a scalable pack architecture.",
-        PREMIUM_PILOT_PRODUCTION_GATE
+        ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE
       ))
     end
   end
@@ -2604,23 +2606,24 @@ end
 function sync_gigafactory_production_gate(force, announce)
   if not force or not force.valid then return false end
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
-  local unlocked = researched(force, ADVANCED_BATTERY_CHEMISTRY_TECH_NAME)
-    and researched(force, "x-energy-products")
-    and researched(force, "foundry")
+  local unlocked = researched(force, "x-premium-ev-program")
     and produced >= PREMIUM_PILOT_PRODUCTION_GATE
   for _, recipe_name in pairs({
-    "x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,
-    "x-cell-scale-high-nickel"
+    "x-gigafactory-module", "x-gigafactory-building"
   }) do
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
+  end
+  local solar_batch_recipe = force.recipes and force.recipes[HIGH_DENSITY_SOLAR_BATCH_RECIPE]
+  if solar_batch_recipe then
+    solar_batch_recipe.enabled = unlocked and researched(force, "x-energy-products")
   end
   local announcements = gigafactory_gate_announcements()
   if unlocked and not announcements[force.name] then
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced, Advanced Battery Chemistry and Energy Products established, and Metallurgical Scaling researched. Gigafactory construction and High-density Solar Panel mass production are now available.",
+        "[FactoryX] Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available; use its scale to reach 250 vehicles and unlock Advanced Battery Chemistry.",
         PREMIUM_PILOT_PRODUCTION_GATE
       ))
     end
@@ -5509,7 +5512,7 @@ local function announce_ev_production_line_researched(force)
     return
   end
 
-  force.print("[FactoryX] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. The pilot uses conventional Batteries until 100 Premium EVs prove the need for Advanced Battery Chemistry.")
+  force.print("[FactoryX] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. Build 100 commodity-battery Premium EVs to unlock Gigafactory construction.")
 end
 
 local function announce_mass_market_production_researched(force)
@@ -5539,7 +5542,7 @@ local function announce_first_premium_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] Premium EV sales are working. Keep scaling the commodity-battery pilot to 100 vehicles; that production milestone unlocks Advanced Battery Chemistry.")
+  force.print("[FactoryX] Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory, then use factory scale to reach 250 vehicles and unlock Advanced Battery Chemistry.")
 end
 
 local function announce_first_mass_market_ev_sale(force)
@@ -5595,7 +5598,7 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Supply Cars, High-energy Battery Packs, and Electric Drivetrains.",
+  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Run the commodity-cell recipe to reach 250 Premium EVs, then switch to cell-scale packs after Advanced Battery Chemistry.",
   ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
   [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
@@ -5673,16 +5676,17 @@ local function progression_integrity_status(force)
       table.insert(disabled, PROTOTYPE_ROADSTER_NAME)
     end
   end
-  if researched(force, ADVANCED_BATTERY_CHEMISTRY_TECH_NAME)
-    and researched(force, "x-energy-products")
-    and researched(force, "foundry")
+  if researched(force, "x-premium-ev-program")
     and count_item_produced(force, PREMIUM_EV_NAME) >= PREMIUM_PILOT_PRODUCTION_GATE then
-    for _, recipe_name in pairs({
-      "x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,
-      "x-cell-scale-high-nickel"
-    }) do
+    for _, recipe_name in pairs({"x-gigafactory-module", "x-gigafactory-building"}) do
       local recipe = force.recipes and force.recipes[recipe_name]
       if recipe and not recipe.enabled then table.insert(disabled, recipe_name) end
+    end
+    if researched(force, "x-energy-products") then
+      local solar_batch_recipe = force.recipes and force.recipes[HIGH_DENSITY_SOLAR_BATCH_RECIPE]
+      if solar_batch_recipe and not solar_batch_recipe.enabled then
+        table.insert(disabled, HIGH_DENSITY_SOLAR_BATCH_RECIPE)
+      end
     end
   end
   table.sort(disabled)
@@ -6354,6 +6358,7 @@ local function progress_snapshot(force)
     prototype_evs_produced = count_item_produced(force, PROTOTYPE_ROADSTER_NAME),
     premium_evs_produced = premium_evs_produced,
     premium_pilot_production_gate = PREMIUM_PILOT_PRODUCTION_GATE,
+    advanced_battery_chemistry_production_gate = ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE,
     mass_market_evs_produced = count_item_produced(force, "x-mass-market-ev"),
     robotaxi_fleets_produced = count_item_produced(force, "x-robotaxi-fleet"),
     robotaxi_service_centers = count_entities(force, ROBOTAXI_SERVICE_CENTER_NAME),
@@ -6389,13 +6394,28 @@ local function current_progress_objective(snapshot)
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
     return "Premium pilot production", string.format("Build %d Premium EVs with commodity Batteries.", snapshot.premium_pilot_production_gate), string.format(
-      "Pilot vehicles produced: %d / %d. Each early vehicle consumes 48 conventional Batteries; proving this line at scale will reveal the need for better cells and pack manufacturing.",
+      "Pilot vehicles produced: %d / %d. Each early vehicle consumes 48 conventional Batteries; completing the pilot unlocks Gigafactory construction.",
       snapshot.premium_evs_produced,
       snapshot.premium_pilot_production_gate
     )
+  elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
+    return "Premium production", "Construct the first Gigafactory.",
+      "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory. Its first job is scaling the commodity-cell Premium EV."
+  elseif not snapshot.premium_sale_complete then
+    return "Premium production", "Produce and sell a Premium EV.",
+      "Select the commodity-cell Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
+  elseif snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then
+    return "Gigafactory scale", string.format(
+      "Produce %d Premium EVs before changing battery technology.",
+      snapshot.advanced_battery_chemistry_production_gate
+    ), string.format(
+      "Factory-scale vehicles produced: %d / %d. Keep the conventional Battery supply running until its cost and throughput limits are proven at Gigafactory scale.",
+      snapshot.premium_evs_produced,
+      snapshot.advanced_battery_chemistry_production_gate
+    )
   elseif not snapshot.advanced_battery_chemistry_researched then
     return "Battery breakthrough", "Research Advanced Battery Chemistry.",
-      "The 100-vehicle pilot exposed the commodity-cell bottleneck. Invest 500 cycles of red, green, blue science, and Dollars to develop nickel-rich cells, lithium processing, and scalable packs."
+      "Producing 250 Premium EVs exposed the commodity-cell bottleneck. Invest 500 cycles of red, green, blue science, and Dollars to develop nickel-rich cells, lithium processing, and scalable packs."
   elseif snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
     local missing = {}
     if snapshot.nickel_ore_mined == 0 then missing[#missing + 1] = "Nickel Ore" end
@@ -6412,7 +6432,8 @@ local function current_progress_objective(snapshot)
     return "Battery packs", "Assemble the first High-energy Battery Pack.",
       "Combine one Accumulator, eight High-nickel Cells, and four Advanced Circuits. Switch Premium EV lines to the cell-scale recipe, which consumes eight packs per vehicle."
   elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Panels and Megapacks before adding the 20 MW Gigafactory."
+    return "Energy products", "Research Energy Products for industrial expansion.",
+      "Charging demand grows with every customer EV. Unlock High-density Solar Panels, LFP chemistry, and Megapacks before Foundry and mass-market expansion."
   elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then
     local gate = snapshot.foundry_power_gate
     return "Industrial electrification", "Prove a 5 MW solar industrial block.", string.format(
@@ -6425,10 +6446,6 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.foundry_researched then
     return "Metallurgical scaling", "Research Metallurgical Scaling.",
       "Invest 250 cycles of red, green, blue science, and Dollars. Each Foundry draws 2.5 MW; an ore-melting and casting pair draws 5 MW before modules."
-  elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
-    return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
-  elseif not snapshot.premium_sale_complete then
-    return "Premium production", "Produce and sell a Premium EV.", "Select Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
   elseif not snapshot.mass_market_ev_gate.market_ready then
     return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
   elseif not snapshot.charging_network_researched then
@@ -6509,6 +6526,7 @@ function progress_objective_icon(stage)
     ["Battery cells"] = "item/x-high-nickel-cell",
     ["Battery packs"] = "item/x-high-energy-battery-pack",
     ["Premium pilot production"] = "item/x-premium-ev",
+    ["Gigafactory scale"] = "item/x-gigafactory-building",
     ["Premium production"] = "item/x-premium-ev",
     ["Premium market scale"] = "item/x-premium-ev",
     ["Energy products"] = "item/x-high-density-solar-array",
@@ -6578,6 +6596,10 @@ function current_progress_measure(snapshot)
   if snapshot.ev_production_researched and snapshot.premium_ev_gate.market_ready
     and snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
     return "Premium pilot production", snapshot.premium_evs_produced, snapshot.premium_pilot_production_gate
+  end
+  if snapshot.gigafactories + snapshot.gigafactories_v2 > 0
+    and snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then
+    return "Gigafactory scale", snapshot.premium_evs_produced, snapshot.advanced_battery_chemistry_production_gate
   end
   if snapshot.advanced_battery_chemistry_researched then
     if snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
@@ -6973,17 +6995,28 @@ local function refresh_progress_panel(player)
       sprite = "item/x-premium-ev", label = "Premium EVs",
       value = snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate
         and string.format("%d / %d pilot built", snapshot.premium_evs_produced, snapshot.premium_pilot_production_gate)
-        or string.format("%d / 250 sold", snapshot.premium_evs_sold),
+        or snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate
+          and string.format(
+            "%d / %d factory built",
+            snapshot.premium_evs_produced,
+            snapshot.advanced_battery_chemistry_production_gate
+          )
+          or string.format("%d / 250 sold", snapshot.premium_evs_sold),
       color = snapshot.premium_evs_sold >= 250 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
       tooltip = snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate
         and string.format(
-          "Build %d more Premium EVs with the commodity-battery pilot line to unlock Advanced Battery Chemistry.",
+          "Build %d more Premium EVs with the commodity-battery pilot line to unlock Gigafactory construction.",
           math.max(0, snapshot.premium_pilot_production_gate - snapshot.premium_evs_produced)
         )
-        or string.format(
-          "Sell %d more Premium EVs to unlock Mass-market EV production.",
-          math.max(0, 250 - snapshot.premium_evs_sold)
-        )
+        or snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate
+          and string.format(
+            "Build %d more Premium EVs at factory scale to unlock Advanced Battery Chemistry.",
+            math.max(0, snapshot.advanced_battery_chemistry_production_gate - snapshot.premium_evs_produced)
+          )
+          or string.format(
+            "Sell %d more Premium EVs to unlock Mass-market EV production.",
+            math.max(0, 250 - snapshot.premium_evs_sold)
+          )
     }
   end
   if snapshot.mass_market_researched then
