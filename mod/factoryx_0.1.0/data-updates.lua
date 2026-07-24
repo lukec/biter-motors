@@ -120,9 +120,15 @@ rewrite_recipe("foundry", {
 })
 local foundry_tech = data.raw.technology.foundry
 mark_factoryx_technology(foundry_tech, "__space-age__/graphics/technology/foundry.png")
-foundry_tech.prerequisites = {"x-industrial-supply-chain", "concrete"}
+foundry_tech.prerequisites = {"x-industrial-supply-chain", "x-energy-products", "concrete"}
 foundry_tech.research_trigger = nil
-foundry_tech.unit = science(150, {"automation-science-pack", "logistic-science-pack"}, 30)
+foundry_tech.unit = science(250, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "x-dollar"
+}, 30)
+foundry_tech.enabled = false
 
 -- The Foundry's terrestrial ore/casting loop is useful; lava and tungsten
 -- recipes remain planetary. Preserve the vanilla foundry effects and add the

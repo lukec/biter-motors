@@ -1400,6 +1400,13 @@ Current code:
 - It unlocks the placeable 300 kW High-density Solar Panel, the placeable 100 MJ
   Megapack, and `Sell Megapack`.
 - Megapack charges and discharges at up to 5 MW.
+- Foundries no longer branch directly from the early Industrial Supply Chain.
+  After Energy Products, the player must produce 25 new High-density Solar
+  Panels and 5 new Megapacks; granted landing-kit equipment does not count.
+  This demonstrates approximately 5.25 MW average Nauvis solar generation and
+  500 MJ storage before `Metallurgical Scaling` becomes researchable for 250
+  red, green, blue, and Dollar cycles. Each Foundry draws 2.5 MW, so the
+  qualification corresponds to one basic ore-melting and casting pair.
 - The High-density Solar Panel is a 3x3, five-times-output direct upgrade from a
   conventional Solar Panel. A filtered upgrade planner lets construction robots
   modernize an existing field in place while returning the old panels to

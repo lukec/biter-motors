@@ -128,6 +128,10 @@ PLAYER_VEHICLE_BATTERY_SCRAP = {
   [ELECTRIC_SEMI_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}
 }
 GIGAFACTORY_PRODUCTION_GATE = 100
+FOUNDRY_POWER_GATE = {
+  solar_panels = 25,
+  megapacks = 5
+}
 local FIRST_PROTOTYPE_SALE_RECIPE = "x-sell-prototype-roadster"
 local PREMIUM_EV_SALE_RECIPE = "x-sell-premium-ev"
 local MASS_MARKET_EV_SALE_RECIPE = "x-sell-mass-market-ev"
@@ -2562,6 +2566,7 @@ function sync_gigafactory_production_gate(force, announce)
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
   local unlocked = researched(force, "x-premium-ev-program")
     and researched(force, "x-energy-products")
+    and researched(force, "foundry")
     and produced >= GIGAFACTORY_PRODUCTION_GATE
   for _, recipe_name in pairs({
     "x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,
@@ -2575,12 +2580,53 @@ function sync_gigafactory_production_gate(force, announce)
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced and Energy Products researched. Gigafactory construction and High-density Solar Panel mass production are now available.",
+        "[FactoryX] Industrial scale unlocked: %d Premium EVs produced, Energy Products established, and Metallurgical Scaling researched. Gigafactory construction and High-density Solar Panel mass production are now available.",
         GIGAFACTORY_PRODUCTION_GATE
       ))
     end
   end
   return unlocked
+end
+
+function foundry_power_gate_announcements()
+  storage.factoryx_foundry_power_gate_announcements =
+    storage.factoryx_foundry_power_gate_announcements or {}
+  return storage.factoryx_foundry_power_gate_announcements
+end
+
+function foundry_power_gate_status(force)
+  local solar_panels = count_item_produced(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)
+  local megapacks = count_item_produced(force, MEGAPACK_NAME)
+  local energy_ready = researched(force, "x-energy-products") == true
+  return {
+    solar_panels = solar_panels,
+    solar_target = FOUNDRY_POWER_GATE.solar_panels,
+    megapacks = megapacks,
+    megapack_target = FOUNDRY_POWER_GATE.megapacks,
+    energy_ready = energy_ready,
+    qualified = energy_ready
+      and solar_panels >= FOUNDRY_POWER_GATE.solar_panels
+      and megapacks >= FOUNDRY_POWER_GATE.megapacks
+  }
+end
+
+function sync_foundry_power_gate(force, announce)
+  if not force or not force.valid then return nil end
+  local technology = force.technologies and force.technologies.foundry
+  if not technology then return nil end
+  local gate = foundry_power_gate_status(force)
+  technology.enabled = technology.researched or gate.qualified
+  local announcements = foundry_power_gate_announcements()
+  if gate.qualified and not technology.researched and not announcements[force.name]
+    and announce ~= false then
+    announcements[force.name] = true
+    force.print(string.format(
+      "[FactoryX] Industrial power qualified: %d High-density Solar Panels and %d Megapacks produced. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
+      FOUNDRY_POWER_GATE.solar_panels,
+      FOUNDRY_POWER_GATE.megapacks
+    ))
+  end
+  return gate
 end
 
 function customer_ev_fleet_size(force)
@@ -5608,6 +5654,7 @@ local function sync_force_unlocks(force)
     logistic_system.enabled = true
   end
   sync_gigafactory_production_gate(force, false)
+  sync_foundry_power_gate(force, false)
   sync_agi_training_unlock(force, false)
   local v4_recipe = force.recipes and force.recipes["x-ev-charging-station-v4"]
   if v4_recipe then
@@ -6166,11 +6213,13 @@ local function progress_snapshot(force)
   local sales_gates = sync_ev_sales_recipe_gates(force, false)
   local sold = sold_customer_evs(force)
   local premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME)
+  local foundry_gate = sync_foundry_power_gate(force, false)
   local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
   return {
     industrial_supply_chain_researched = researched(force, "x-industrial-supply-chain"),
     big_mining_drill_researched = researched(force, "big-mining-drill"),
     foundry_researched = researched(force, "foundry"),
+    foundry_power_gate = foundry_gate,
     recycling_revealed = (force.technologies.recycling and force.technologies.recycling.enabled) or false,
     recycling_researched = researched(force, "recycling"),
     sales_office_researched = researched(force, "x-sales-office"),
@@ -6307,14 +6356,26 @@ local function current_progress_objective(snapshot)
   elseif snapshot.high_energy_battery_packs_produced == 0 then
     return "Battery packs", "Assemble the first High-energy Battery Pack.",
       "Combine one Accumulator, eight High-nickel Cells, and four Advanced Circuits. Premium EV pilot vehicles consume eight packs each."
+  elseif not snapshot.energy_products_researched then
+    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Panels and Megapacks before adding the 20 MW Gigafactory."
+  elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then
+    local gate = snapshot.foundry_power_gate
+    return "Industrial electrification", "Prove a 5 MW solar industrial block.", string.format(
+      "Produce %d / %d High-density Solar Panels and %d / %d Megapacks. Landing-kit equipment does not count; this milestone proves new Energy Products manufacturing before Foundries arrive.",
+      gate.solar_panels,
+      gate.solar_target,
+      gate.megapacks,
+      gate.megapack_target
+    )
+  elseif not snapshot.foundry_researched then
+    return "Metallurgical scaling", "Research Metallurgical Scaling.",
+      "Invest 250 cycles of red, green, blue science, and Dollars. Each Foundry draws 2.5 MW; an ore-melting and casting pair draws 5 MW before modules."
   elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then
     return "Premium pilot production", string.format("Build %d Premium EVs in assemblers.", snapshot.gigafactory_production_gate), string.format(
-      "Pilot vehicles produced: %d / %d. Complete the pilot and Energy Products to unlock Gigafactory construction.",
+      "Pilot vehicles produced: %d / %d. Metallurgical Scaling can reduce ore demand while you complete the pilot for Gigafactory construction.",
       snapshot.premium_evs_produced,
       snapshot.gigafactory_production_gate
     )
-  elseif not snapshot.energy_products_researched then
-    return "Energy products", "Research Energy Products before factory scale.", "Charging demand grows with every customer EV. Unlock High-density Solar Panels and Megapacks before adding the 20 MW Gigafactory."
   elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
     return "Premium production", "Construct the first Gigafactory.", "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory."
   elseif not snapshot.premium_sale_complete then
@@ -6401,6 +6462,8 @@ function progress_objective_icon(stage)
     ["Premium production"] = "item/x-premium-ev",
     ["Premium market scale"] = "item/x-premium-ev",
     ["Energy products"] = "item/x-high-density-solar-array",
+    ["Industrial electrification"] = "item/x-high-density-solar-array",
+    ["Metallurgical scaling"] = "item/foundry",
     ["Charging network"] = "item/x-ev-charging-station-v2",
     ["Mass-market scale"] = "item/x-mass-market-ev",
     ["Megatruck engineering"] = "item/x-cybertruck",
@@ -6677,6 +6740,22 @@ local function refresh_progress_panel(player)
       tooltip = snapshot.foundries > 0
         and "Foundries multiply terrestrial metal output. Ore-melting Foundries favor productivity modules; downstream casting Foundries favor efficiency modules."
         or "Foundries are researched but none are built. Start with the plate supply that is constraining expansion."
+    }
+  elseif snapshot.energy_products_researched and snapshot.foundry_power_gate then
+    local gate = snapshot.foundry_power_gate
+    industry_rows[#industry_rows + 1] = {
+      sprite = "item/x-high-density-solar-array", label = "Industrial power qualification",
+      value = gate.qualified and "Research available" or string.format(
+        "%d/%d panels; %d/%d packs",
+        gate.solar_panels,
+        gate.solar_target,
+        gate.megapacks,
+        gate.megapack_target
+      ),
+      color = FACTORYX_STATE_COLORS.warning,
+      tooltip = gate.qualified
+        and "New Energy Products manufacturing has demonstrated a 5 MW solar industrial block. Research Metallurgical Scaling to unlock Foundries."
+        or "Produce 25 new High-density Solar Panels and 5 new Megapacks. Starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
     }
   end
   if snapshot.logistic_system_available or snapshot.logistic_system_researched then
@@ -8038,6 +8117,7 @@ script.on_nth_tick(60, function()
     refresh_all_sales_office_coverage()
   end
   for _, force in pairs(game.forces) do
+    sync_foundry_power_gate(force, true)
     process_customer_growth(force)
     sync_gigafactory_production_gate(force, true)
   end

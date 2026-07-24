@@ -761,9 +761,10 @@ class FactoryXModTest(unittest.TestCase):
         ]
         self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
         self.assertIn('and researched(force, "x-energy-products")', gate)
+        self.assertIn('and researched(force, "foundry")', gate)
         self.assertIn('"x-gigafactory-module", "x-gigafactory-building", HIGH_DENSITY_SOLAR_BATCH_RECIPE,', control)
         self.assertIn('"x-cell-scale-high-nickel"', gate)
-        self.assertIn("Industrial scale unlocked: %d Premium EVs produced and Energy Products researched", control)
+        self.assertIn("Industrial scale unlocked: %d Premium EVs produced, Energy Products established, and Metallurgical Scaling researched", control)
         self.assertIn("sync_gigafactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
         self.assertIn("snapshot.gigafactory_production_gate", control)
@@ -789,12 +790,22 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('label = "Next grid load"', control)
         self.assertIn('"No spare stalls; add charger"', control)
         self.assertIn('"Research Energy Products before factory scale."', control)
+        self.assertIn('"Prove a 5 MW solar industrial block."', control)
+        self.assertIn('"Research Metallurgical Scaling."', control)
         objective = control[
             control.index("local function current_progress_objective"):
             control.index("function progress_objective_icon")
         ]
         self.assertLess(
             objective.index('elseif not snapshot.energy_products_researched then'),
+            objective.index('elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then'),
+        )
+        self.assertLess(
+            objective.index('elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then'),
+            objective.index('elseif snapshot.premium_evs_produced < snapshot.gigafactory_production_gate then'),
+        )
+        self.assertLess(
+            objective.index('elseif not snapshot.foundry_researched then'),
             objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
         )
 
@@ -1301,6 +1312,20 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('{"electronic-circuit", 20}', updates)
         self.assertIn('{"electric-furnace", 25}', updates)
         self.assertIn('{"refined-concrete", 200}', updates)
+        self.assertIn('foundry_tech.prerequisites = {"x-industrial-supply-chain", "x-energy-products", "concrete"}', updates)
+        self.assertIn('foundry_tech.unit = science(250, {', updates)
+        foundry_technology = updates[
+            updates.index("local foundry_tech = data.raw.technology.foundry"):
+            updates.index("-- The Foundry's terrestrial ore/casting loop")
+        ]
+        for ingredient in [
+            '"automation-science-pack"',
+            '"logistic-science-pack"',
+            '"chemical-science-pack"',
+            '"x-dollar"',
+        ]:
+            self.assertIn(ingredient, foundry_technology)
+        self.assertIn("foundry_tech.enabled = false", foundry_technology)
         self.assertNotIn('"molten-iron-from-lava",', updates)
         self.assertNotIn('"casting-low-density-structure",', updates)
         self.assertIn('initialize_patch_set("calcite", false)', updates)
@@ -1324,8 +1349,16 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('force.print', recycling_unlock)
         self.assertIn('output.insert{name = WRECKED_EV_NAME, count = removed}', control)
         self.assertIn('x-industrial-supply-chain=Industrial Supply Chain', locale)
-        self.assertIn('foundry=Conserves ore through molten-metal casting', locale)
-        self.assertIn('each Foundry draws 2.5 MW before modules', locale)
+        self.assertIn('foundry=Metallurgical Scaling', locale)
+        self.assertIn('a basic melting and casting pair draws 5 MW', locale)
+        self.assertIn("FOUNDRY_POWER_GATE = {", control)
+        self.assertIn("solar_panels = 25", control)
+        self.assertIn("megapacks = 5", control)
+        self.assertIn("function foundry_power_gate_status(force)", control)
+        self.assertIn("count_item_produced(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)", control)
+        self.assertIn("count_item_produced(force, MEGAPACK_NAME)", control)
+        self.assertIn("technology.enabled = technology.researched or gate.qualified", control)
+        self.assertIn('label = "Industrial power qualification"', control)
 
     def test_factoryx_technology_icons_share_one_badge(self):
         data = (MOD / "data.lua").read_text()

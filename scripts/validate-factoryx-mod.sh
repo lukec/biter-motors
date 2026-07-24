@@ -149,7 +149,11 @@ script.on_init(function()
       force.technologies[technology_name].researched = true
     end
   end
-  force.get_item_production_statistics(surface).set_output_count("x-premium-ev", 100)
+  local production_statistics = force.get_item_production_statistics(surface)
+  storage.foundry_enabled_before_qualification = force.technologies.foundry.enabled
+  production_statistics.set_output_count("x-premium-ev", 100)
+  production_statistics.set_output_count(SOLAR_ARRAY, 25)
+  production_statistics.set_output_count(MEGAPACK, 5)
 
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
@@ -482,6 +486,14 @@ script.on_nth_tick(120, function()
 end)
 
 script.on_nth_tick(300, function()
+  if not storage.foundry_qualification_checked then
+    local foundry = game.forces.player.technologies.foundry
+    storage.foundry_enabled_after_qualification = foundry.enabled
+    if foundry.enabled then
+      foundry.researched = true
+    end
+    storage.foundry_qualification_checked = true
+  end
   if storage.customer_ev_seeded and not storage.postproduction_market then
     local surface = game.get_surface(storage.surface_index or 1)
     for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE}) do
@@ -749,6 +761,9 @@ script.on_nth_tick(3780, function()
     first_sale_recipe_enabled = first_sale_recipe and first_sale_recipe.enabled,
     prototype_roadster_enabled = roadster_recipe and roadster_recipe.enabled,
     gigafactory_created = gigafactory ~= nil,
+    foundry_enabled_before_qualification = storage.foundry_enabled_before_qualification,
+    foundry_enabled_after_qualification = storage.foundry_enabled_after_qualification,
+    foundry_researched_after_qualification = game.forces.player.technologies.foundry.researched,
     gigafactory_recipe_enabled = gigafactory_item_recipe and gigafactory_item_recipe.enabled,
     gigafactory_module_recipe_enabled = gigafactory_module_recipe and gigafactory_module_recipe.enabled,
     premium_ev_recipe_enabled = premium_ev_recipe and premium_ev_recipe.enabled,
@@ -1055,14 +1070,20 @@ for recipe_name, expected in expected_terrestrial_recipes.items():
     actual = {row["name"]: row["amount"] for row in recipe["ingredients"]}
     if actual != expected or recipe.get("surface_conditions"):
         raise SystemExit(f"{recipe_name} terrestrial recipe mismatch: {recipe}")
-for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "foundry", "recycling"):
+for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "recycling"):
     packs = {row[0] for row in data["technology"][technology_name]["unit"]["ingredients"]}
     if packs != {"automation-science-pack", "logistic-science-pack"}:
         raise SystemExit(f"{technology_name} is not red-green terrestrial research: {packs}")
+foundry_technology = data["technology"]["foundry"]
+foundry_packs = {row[0] for row in foundry_technology["unit"]["ingredients"]}
+if foundry_packs != {
+    "automation-science-pack", "logistic-science-pack", "chemical-science-pack", "x-dollar"
+} or foundry_technology["unit"]["count"] != 250 or foundry_technology.get("enabled", True):
+    raise SystemExit(f"Metallurgical Scaling research mismatch: {foundry_technology}")
 expected_branch_prerequisites = {
     "x-industrial-supply-chain": {"automation-2", "electric-mining-drill", "steel-processing"},
     "big-mining-drill": {"x-industrial-supply-chain", "engine"},
-    "foundry": {"x-industrial-supply-chain", "concrete"},
+    "foundry": {"x-industrial-supply-chain", "x-energy-products", "concrete"},
     "recycling": {"x-industrial-supply-chain", "concrete"},
 }
 for technology_name, expected in expected_branch_prerequisites.items():
@@ -1527,6 +1548,12 @@ if not checked.get("prototype_roadster_enabled"):
     raise SystemExit(f"Prototype Roadster was not enabled by the first covered biter charging station: {checked}")
 if not checked.get("gigafactory_created"):
     raise SystemExit(f"Gigafactory entity was not created: {checked}")
+if checked.get("foundry_enabled_before_qualification"):
+    raise SystemExit(f"Metallurgical Scaling was available before its power-production milestone: {checked}")
+if not checked.get("foundry_enabled_after_qualification"):
+    raise SystemExit(f"Metallurgical Scaling did not become available after producing 25 panels and 5 packs: {checked}")
+if not checked.get("foundry_researched_after_qualification"):
+    raise SystemExit(f"Metallurgical Scaling could not be researched after qualification: {checked}")
 if not checked.get("gigafactory_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock the Gigafactory recipe: {checked}")
 if not checked.get("logistic_system_available_before_sales"):
