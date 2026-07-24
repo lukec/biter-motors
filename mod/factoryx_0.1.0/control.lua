@@ -5024,28 +5024,85 @@ function customer_settlement_alert_states()
   return storage.factoryx_customer_settlement_alert_states
 end
 
+function customer_settlement_map_tag_states()
+  storage.factoryx_customer_settlement_map_tag_states =
+    storage.factoryx_customer_settlement_map_tag_states or {}
+  return storage.factoryx_customer_settlement_map_tag_states
+end
+
+function update_customer_settlement_map_tags(force, disrupted)
+  local states_by_force = customer_settlement_map_tag_states()
+  states_by_force[force.index] = states_by_force[force.index] or {}
+  local states = states_by_force[force.index]
+
+  for key, state in pairs(states) do
+    if not disrupted[key] then
+      local tag = type(state) == "table" and state.tag or state
+      if tag and tag.valid then tag.destroy() end
+      states[key] = nil
+    end
+  end
+
+  for key, disruption in pairs(disrupted) do
+    local text
+    if disruption.kind == "capacity" then
+      text = string.format("%d EVs underserved - add charger", disruption.missing)
+    elseif disruption.kind == "power" then
+      text = string.format("%d EVs underserved - restore power", disruption.missing)
+    else
+      text = string.format("%d EVs underserved - charger + power", disruption.missing)
+    end
+
+    local state = states[key]
+    local tag = type(state) == "table" and state.tag or state
+    local changed = not tag or not tag.valid
+      or type(state) ~= "table"
+      or state.kind ~= disruption.kind
+      or state.missing ~= disruption.missing
+    if changed then
+      if tag and tag.valid then tag.destroy() end
+      tag = force.add_chart_tag(disruption.settlement.surface, {
+        position = disruption.settlement.position,
+        icon = {type = "virtual", name = "signal-red"},
+        text = text
+      })
+      states[key] = tag and {
+        tag = tag,
+        kind = disruption.kind,
+        missing = disruption.missing
+      } or nil
+    end
+  end
+end
+
 function update_customer_settlement_alerts(force, service)
-  local moods = customer_settlement_moods(force)
   local vehicle_summary = active_customer_vehicle_summary(force)
   local disrupted = {}
   for _, settlement in pairs(service.candidate_settlements or {}) do
     if settlement.valid then
       local key = settlement_key(settlement.surface, settlement)
-      local mood = moods[key]
       local vehicle_count = vehicle_summary.by_settlement[key] or 0
       local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
       local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
-      if vehicle_count > 0
-        and not service.operational_keys[key]
-        and mood and mood.was_customer then
+      if vehicle_count > powered_capacity then
+        local capacity_missing = math.max(0, vehicle_count - assigned_capacity)
+        local power_missing = math.max(
+          0,
+          math.min(vehicle_count, assigned_capacity) - powered_capacity
+        )
         disrupted[key] = {
           settlement = settlement,
-          kind = assigned_capacity < vehicle_count and "capacity" or "power",
-          missing = math.max(1, vehicle_count - powered_capacity)
+          kind = capacity_missing > 0
+            and (power_missing > 0 and "mixed" or "capacity") or "power",
+          missing = vehicle_count - powered_capacity,
+          capacity_missing = capacity_missing,
+          power_missing = power_missing
         }
       end
     end
   end
+
+  update_customer_settlement_map_tags(force, disrupted)
 
   local states = customer_settlement_alert_states()
   for _, player in pairs(force.connected_players) do
@@ -5077,7 +5134,7 @@ function update_customer_settlement_alerts(force, service)
           },
           true
         )
-      else
+      elseif disruption.kind == "power" then
         player.add_custom_alert(
           settlement,
           {type = "item", name = "accumulator"},
@@ -5085,6 +5142,20 @@ function update_customer_settlement_alerts(force, service)
             "",
             disruption.missing,
             " EVs lack powered charging service. Restore grid power."
+          },
+          true
+        )
+      else
+        player.add_custom_alert(
+          settlement,
+          {type = "virtual", name = "signal-red"},
+          {
+            "",
+            "Customer settlement is short charging capacity for ",
+            disruption.capacity_missing,
+            " EVs and powered service for ",
+            disruption.power_missing,
+            " more. Add or upgrade a charger and restore grid power."
           },
           true
         )
@@ -8093,7 +8164,7 @@ local function refresh_progress_panel(player)
         or string.format("%d / %d supported", supported_owners, snapshot.customer_ev_fleet),
       color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good,
       tooltip = snapshot.stranded_evs > 0
-        and "These sold EVs currently lack powered charging capacity. Hover underserved settlement alerts to find where capacity is missing."
+        and "These sold EVs currently lack powered charging capacity. Follow the red settlement map tags to the missing local capacity or power."
         or "Every active EV owner currently has powered charging capacity near its home settlement."
     }
     local step = snapshot.next_charging_step
@@ -8241,7 +8312,7 @@ local function refresh_progress_panel(player)
         or "All owners served",
       color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good,
       tooltip = snapshot.stranded_evs > 0
-        and "Some owners lack powered capacity near their home settlement. Follow settlement warning icons and add local chargers or grid power."
+        and "Some owners lack powered capacity near their home settlement. Follow the red settlement map tags and add local chargers or grid power."
         or "All EV owners have powered charging capacity near their home settlements."
     }
     if snapshot.angry_settlements > 0 then

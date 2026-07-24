@@ -848,13 +848,14 @@ Current implementation:
   5% to 25% per minute. Restored powered service makes it friendly immediately
   and clears its short memory of the outage.
 - Charging disruption and recovery do not print chat messages. Only affected
-  settlements receive a persistent flashing map alert while service is
-  unavailable. A charger icon means that settlement needs another or better
-  nearby charger; an accumulator icon means its assigned stalls are losing
-  service to grid power. Underpowered chargers also show their powered/requested
-  active stall count. Restoring service removes the alerts. Routine customer
-  settlement growth is silent, leaving the map and entity alerts as the
-  operational interface.
+  settlements receive a persistent flashing alert and a force-wide red chart
+  tag while service is unavailable. The chart tag states the exact underserved
+  EV count and whether to add a charger, restore power, or do both. A charger
+  alert icon means that settlement needs another or better nearby charger; an
+  accumulator icon means its assigned stalls are losing service to grid power.
+  Underpowered chargers also show their powered/requested active stall count.
+  Restoring service removes both signals. Routine customer settlement growth is
+  silent, leaving the map and entity alerts as the operational interface.
 - A charger with a reachable unsold buyer can print one slow bootstrap
   reservation before the first sale. Once owners exist, reservations scale at
   one per powered occupied stall per minute.

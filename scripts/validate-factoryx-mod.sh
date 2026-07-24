@@ -126,6 +126,14 @@ local function safe_value(getter)
   return {ok = true, value = value}
 end
 
+local function count_underserved_chart_tags(force, surface)
+  local count = 0
+  for _, tag in pairs(force.find_chart_tags(surface)) do
+    if string.find(tag.text or "", "EVs underserved", 1, true) then count = count + 1 end
+  end
+  return count
+end
+
 local function create_named(surface, name, position, force)
   local found = surface.find_non_colliding_position(name, position, 128, 1) or position
   return surface.create_entity{name = name, position = found, force = force}
@@ -755,10 +763,12 @@ script.on_nth_tick(5160, function()
   local power_source = find_unit(surface, POWER_SOURCE, storage.power_source_unit_number)
   local sub_network = power_source and power_source.electric_network
   local network = sub_network and sub_network.parent_network
+  local market = remote.call("factoryx", "refresh_biter_customer_market", "player")
   write_report{
     tick = game.tick,
     status = "customer_brownout",
-    market = remote.call("factoryx", "refresh_biter_customer_market", "player"),
+    market = market,
+    underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface),
     power_flow = network and network.flow_last_tick,
     source_production = power_source and power_source.power_production,
     source_output_limit = power_source and power_source.output_flow_limit
@@ -1070,10 +1080,13 @@ end)
 
 script.on_nth_tick(18320, function()
   if game.tick < 18320 then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local market = remote.call("factoryx", "refresh_biter_customer_market", "player")
   write_report{
     tick = game.tick,
     status = "customer_overload",
-    market = remote.call("factoryx", "refresh_biter_customer_market", "player"),
+    market = market,
+    underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface),
     sales_offices = remote.call("factoryx", "sales_office_status", "player")
   }
 end)
@@ -1090,10 +1103,13 @@ end)
 
 script.on_nth_tick(18500, function()
   if game.tick < 18500 then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local market = remote.call("factoryx", "refresh_biter_customer_market", "player")
   write_report{
     tick = game.tick,
     status = "customer_recovery",
-    market = remote.call("factoryx", "refresh_biter_customer_market", "player")
+    market = market,
+    underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface)
   }
 end)
 
@@ -2062,6 +2078,8 @@ if brownout is None or brownout.get("market", {}).get("active_customer_stalls") 
     raise SystemExit(f"50 percent charger power should proportionally leave one of two requested stalls powered: {brownout}")
 if brownout.get("market", {}).get("stranded_evs", 0) < 1:
     raise SystemExit(f"brownout should strand the owners at one settlement despite spare aggregate EV capacity: {brownout}")
+if brownout.get("underserved_chart_tags", 0) < 1:
+    raise SystemExit(f"brownout did not place an underserved-settlement chart tag: {brownout}")
 if brownout.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"customers should remain friendly during the three-minute service grace period: {brownout}")
 if growth is None or growth.get("spawner_growth", 0) < 1:
@@ -2072,6 +2090,8 @@ if growth.get("market", {}).get("grown_colonies", 0) < 1:
     raise SystemExit(f"customer growth state did not report the grown colony: {growth}")
 if overload is None or overload.get("market", {}).get("stranded_evs", 0) < 1:
     raise SystemExit(f"charging overload did not report stranded EVs: {overload}")
+if overload.get("underserved_chart_tags", 0) < 1:
+    raise SystemExit(f"charging overload did not remain visible on the global map: {overload}")
 if overload.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"full outage should not immediately turn a customer settlement hostile: {overload}")
 overload_offices = overload.get("sales_offices", [])
@@ -2086,6 +2106,8 @@ if not any(office.get("buyer_status", {}).get("friendly_settlements", 0) > 0 for
     raise SystemExit(f"charging overload became an immediate Sales Office hard stop: {overload}")
 if recovery is None or recovery.get("market", {}).get("stranded_evs") != 0:
     raise SystemExit(f"restored charging capacity did not clear stranded EVs: {recovery}")
+if recovery.get("underserved_chart_tags") != 0:
+    raise SystemExit(f"restored charging capacity did not clear global-map tags: {recovery}")
 if recovery.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"restored charging capacity did not recover angry settlements: {recovery}")
 if not checked.get("charger_reservations_generated"):

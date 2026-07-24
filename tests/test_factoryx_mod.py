@@ -1032,7 +1032,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('"Green: healthy or complete."', metrics)
         self.assertIn("Prepare %.0f kW of spare generation now.", control)
         self.assertIn("Place another powered charger there before selling more EVs.", control)
-        self.assertIn("Follow settlement warning icons", control)
+        self.assertIn("Follow the red settlement map tags", control)
 
     def test_tier_two_modules_are_terrestrial_capital_research(self):
         updates = (MOD / "data-updates.lua").read_text()
@@ -2740,14 +2740,31 @@ class FactoryXModTest(unittest.TestCase):
 
     def test_customer_service_alerts_are_entity_local_and_quiet(self):
         control = (MOD / "control.lua").read_text()
+        validator = (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text()
         self.assertIn("update_customer_settlement_alerts(force, service)", control)
-        self.assertIn('kind = assigned_capacity < vehicle_count and "capacity" or "power"', control)
+        self.assertIn("if vehicle_count > powered_capacity then", control)
+        self.assertIn('power_missing > 0 and "mixed" or "capacity"', control)
         self.assertIn("Place or upgrade an EV charger near this settlement.", control)
         self.assertIn("EVs lack powered charging service. Restore grid power.", control)
+        self.assertIn("Add or upgrade a charger and restore grid power.", control)
         self.assertIn('{type = "item", name = "x-ev-charging-station"}', control)
         self.assertIn('{type = "item", name = "accumulator"}', control)
+        self.assertIn('{type = "virtual", name = "signal-red"}', control)
         self.assertIn("player.add_custom_alert(", control)
         self.assertIn("player.remove_alert{entity = settlement", control)
+        self.assertIn("function update_customer_settlement_map_tags(force, disrupted)", control)
+        self.assertIn("force.add_chart_tag(disruption.settlement.surface", control)
+        self.assertIn("EVs underserved - add charger", control)
+        self.assertIn("EVs underserved - restore power", control)
+        self.assertIn("EVs underserved - charger + power", control)
+        self.assertIn("if tag and tag.valid then tag.destroy() end", control)
+        alert_logic = control[
+            control.index("function update_customer_settlement_alerts(force, service)"):
+            control.index("function ensure_seed_customer")
+        ]
+        self.assertNotIn("mood.was_customer", alert_logic)
+        self.assertIn("underserved_chart_tags", validator)
+        self.assertIn("restored charging capacity did not clear global-map tags", validator)
         self.assertIn("Custom alerts expire. Refresh persistent disruptions", control)
         self.assertNotIn("[FactoryX] Charging disruption:", control)
         self.assertNotIn("[FactoryX] Customer charging access restored.", control)
