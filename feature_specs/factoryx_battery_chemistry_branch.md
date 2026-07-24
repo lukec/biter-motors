@@ -47,6 +47,11 @@ does it ask the player to research Advanced Battery Chemistry, extract both
 minerals, refine both precursors, produce High-Nickel Cells, and switch the
 Premium EV line to High-Energy Battery Packs.
 
+When an older FactoryX save loads this progression, configuration migration
+revokes the chemistry recipes that EV Production Line used to unlock. The
+recipes remain disabled until Advanced Battery Chemistry is researched, so old
+saves follow the same 100-vehicle transition as new saves.
+
 Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
 packs, giving them both a large total pack count and the long-range chemistry.

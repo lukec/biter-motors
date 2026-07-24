@@ -121,6 +121,15 @@ local DOLLAR_NAME = "x-dollar"
 local PROTOTYPE_ROADSTER_NAME = "x-prototype-roadster"
 local PREMIUM_EV_NAME = "x-premium-ev"
 local ADVANCED_BATTERY_CHEMISTRY_TECH_NAME = "x-advanced-battery-chemistry"
+local ADVANCED_BATTERY_CHEMISTRY_RECIPES = {
+  "x-dirty-nickel-refining",
+  "x-lithium-extraction",
+  "x-battery-graphite",
+  "x-tailings-neutralization",
+  "x-high-nickel-cell",
+  "x-high-energy-battery-pack",
+  "x-premium-ev-cell-scale"
+}
 PLAYER_VEHICLE_BATTERY_SCRAP = {
   [PREMIUM_EV_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
   ["x-mass-market-ev"] = {[DAMAGED_LFP_PACK_NAME] = 4},
@@ -2575,6 +2584,10 @@ function sync_advanced_battery_chemistry_gate(force, announce)
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
   local available = technology.researched or produced >= PREMIUM_PILOT_PRODUCTION_GATE
   technology.enabled = available
+  for _, recipe_name in pairs(ADVANCED_BATTERY_CHEMISTRY_RECIPES) do
+    local recipe = force.recipes and force.recipes[recipe_name]
+    if recipe then recipe.enabled = technology.researched end
+  end
   local announcements = advanced_battery_chemistry_gate_announcements()
   if available and not technology.researched and not announcements[force.name] then
     announcements[force.name] = true

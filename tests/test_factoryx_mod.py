@@ -773,6 +773,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("PREMIUM_PILOT_PRODUCTION_GATE = 100", control)
         self.assertIn("function sync_advanced_battery_chemistry_gate", control)
         self.assertIn("Commodity battery supply has reached its scale limit after %d Premium EVs", control)
+        chemistry_gate = control[
+            control.index("function sync_advanced_battery_chemistry_gate"):
+            control.index("function sync_gigafactory_production_gate")
+        ]
+        self.assertIn("ADVANCED_BATTERY_CHEMISTRY_RECIPES", chemistry_gate)
+        self.assertIn("recipe.enabled = technology.researched", chemistry_gate)
         self.assertIn("function sync_gigafactory_production_gate", control)
         gate = control[
             control.index("function sync_gigafactory_production_gate"):
