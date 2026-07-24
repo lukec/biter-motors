@@ -512,8 +512,9 @@ Research levels and their effects are visible in the FactoryX Progress panel.
 | --- | ---: | --- | ---: |
 | Sales Office | 75 | Red, green | 20s |
 | EV Production Line | 250 | Red, green, blue, Dollar | 30s |
+| Advanced Battery Chemistry | 300 | Red, green, blue, Dollar | 30s |
 | EV Charging Network | 300 | Red, green, blue, Dollar | 30s |
-| Energy Products | 250 | Red, green, blue, Dollar | 30s |
+| Energy Products | 200 | Red, green, blue, Dollar | 30s |
 | Mass-market EV Production | 1,000 | Red through yellow, Dollar | 60s |
 | Terrestrial AI | 1,000 | Red through yellow, Dollar | 60s |
 | Autonomous Logistics | 1,000 | Red through yellow, AI Token, Dollar | 60s |
@@ -1254,7 +1255,7 @@ Implemented design:
   unlocks Gigafactory Modules and Gigafactory construction.
 - Producing 250 Premium EVs at Gigafactory scale exposes the commodity-cell
   bottleneck and makes Advanced Battery Chemistry researchable.
-- Advanced Battery Chemistry costs 500 cycles through chemical science plus
+- Advanced Battery Chemistry costs 300 cycles through chemical science plus
   Dollars. It unlocks dirty nickel/lithium refining, High-Nickel Cells,
   High-energy Battery Packs, cell-scale High-Nickel Manufacturing, and the
   faster cell-scale Premium EV recipe.

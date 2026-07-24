@@ -1991,7 +1991,7 @@ data:extend({
       unlock("x-high-energy-battery-pack"),
       unlock("x-premium-ev-cell-scale")
     },
-    500,
+    300,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2076,7 +2076,7 @@ data:extend({
       unlock("x-megapack"),
       unlock("x-sell-megapack")
     },
-    250,
+    200,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},

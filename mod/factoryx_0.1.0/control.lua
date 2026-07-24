@@ -7549,7 +7549,7 @@ local function current_progress_objective(snapshot)
     )
   elseif not snapshot.advanced_battery_chemistry_researched then
     return "Battery breakthrough", "Research Advanced Battery Chemistry.",
-      "Producing 250 Premium EVs exposed the commodity-cell bottleneck. Invest 500 cycles of red, green, blue science, and Dollars to develop nickel-rich cells, lithium processing, and scalable packs."
+      "Producing 250 Premium EVs exposed the commodity-cell bottleneck. Invest 300 cycles of red, green, blue science, and Dollars to develop nickel-rich cells, lithium processing, and scalable packs."
   elseif snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
     local missing = {}
     if snapshot.nickel_ore_mined == 0 then missing[#missing + 1] = "Nickel Ore" end
