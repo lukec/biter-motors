@@ -31,6 +31,56 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("ELECTRIC_VEHICLE_NAMES", control)
         self.assertIn("update_ev_reverse_warnings()", control)
 
+    def test_factoryx_ev_autopilot_is_physical_owned_bounded_and_excludes_roadster(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        runtime = (MOD / "runtime" / "ev_autopilot.lua").read_text()
+        locale = (MOD / "locale" / "en" / "factoryx.cfg").read_text()
+        roadmap = (ROOT / "factoryX.md").read_text()
+        validator = (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text()
+
+        for name in [
+            "x-premium-ev",
+            "x-mass-market-ev",
+            "x-cybertruck",
+            "x-robotaxi-fleet",
+        ]:
+            self.assertIn(f'["{name}"] = true', runtime)
+        self.assertNotIn('["x-prototype-roadster"] = true', runtime)
+        self.assertIn('name = "x-ev-autopilot-destination"', data)
+        self.assertIn('name = "x-navigate-factoryx-ev"', data)
+        self.assertIn('name = "x-summon-factoryx-ev"', data)
+        self.assertIn('technology_to_unlock = "x-autonomous-logistics"', data)
+        for control_name in ["move-up", "move-down", "move-left", "move-right"]:
+            self.assertIn(f'linked_game_control = "{control_name}"', data)
+
+        self.assertIn("vehicle.surface.request_path{", control)
+        self.assertIn("bounding_box = vehicle.prototype.collision_box", control)
+        self.assertIn("collision_mask = vehicle.prototype.collision_mask", control)
+        self.assertIn("entity_to_ignore = vehicle", control)
+        self.assertIn("vehicle.riding_state =", control)
+        self.assertIn("defines.events.on_script_path_request_finished", control)
+        self.assertIn("defines.events.on_player_selected_area", control)
+        self.assertIn("EV_AUTOPILOT_SUMMON_SHORTCUT", control)
+        self.assertIn("function nearest_recent_ev_for_player", control)
+        self.assertIn("runtime.owner_by_vehicle[unit_number] == player.index", control)
+        self.assertIn("function player_is_vehicle_driver", control)
+        self.assertIn('cancel_ev_autopilot(unit_number, "no route found"', control)
+        self.assertIn("EvAutopilot.config.max_active", control)
+        self.assertIn("EvAutopilot.config.updates_per_tick", control)
+        self.assertIn("safety_check_ticks = 30", runtime)
+        self.assertIn("state.next_safety_tick = game.tick + EvAutopilot.config.safety_check_ticks", control)
+        self.assertIn('state.mode == "summon"', control)
+        self.assertIn("return vehicle, vehicle, player", control)
+        self.assertNotIn("teleport", runtime)
+
+        self.assertIn("x-navigate-factoryx-ev=Navigate EV", locale)
+        self.assertIn("x-summon-factoryx-ev=Summon nearest recent EV", locale)
+        self.assertIn("Status: implemented in `0.1.0`.", roadmap)
+        self.assertIn('"test_ev_autopilot_start"', validator)
+        self.assertIn("autopilot_distance_moved", validator)
+        self.assertIn("blocked FactoryX EV route did not abort cleanly", validator)
+
     def test_sales_office_panel_explains_market_saturation(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn('label = "EV owners"', control)
@@ -2277,7 +2327,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('entity.disabled_by_script = true', control)
         self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)
         self.assertIn('entity.disabled_by_script = false', control)
-        self.assertIn('script.on_nth_tick(1, reset_underpowered_compute_progress)', control)
+        one_tick = control[control.index("script.on_nth_tick(1"):control.index("script.on_nth_tick(6")]
+        self.assertIn("reset_underpowered_compute_progress()", one_tick)
+        self.assertIn("process_ev_autopilots()", one_tick)
         self.assertIn('while processed < 32', control)
         self.assertIn('track_factoryx_compute_machine(entity)', control)
         self.assertIn('rebuild_factoryx_compute_machines()', control)

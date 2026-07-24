@@ -81,6 +81,7 @@ local POWER_SOURCE = "electric-energy-interface"
 local RESERVATION = "x-ev-reservation"
 local FIRST_SALE_RECIPE = "x-sell-prototype-roadster"
 local PROTOTYPE_ROADSTER = "x-prototype-roadster"
+local PREMIUM_EV = "x-premium-ev"
 local RESERVATION_SALES_RECIPE = "x-sell-mass-market-ev"
 local ROBOTAXI_SALE_RECIPE = "x-sell-robotaxi-fleet"
 local ROBOTAXI_FLEET = "x-robotaxi-fleet"
@@ -203,6 +204,40 @@ script.on_init(function()
   local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
   local power_source = create_named(surface, POWER_SOURCE, {1, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)
+  surface.request_to_generate_chunks({350, 100}, 3)
+  surface.force_generate_chunk_requests()
+  local autopilot_tiles = {}
+  for x = 280, 420 do
+    for y = 80, 120 do
+      autopilot_tiles[#autopilot_tiles + 1] = {name = "landfill", position = {x, y}}
+    end
+  end
+  surface.set_tiles(autopilot_tiles)
+  for _, existing_entity in pairs(surface.find_entities_filtered{
+    area = {{280, 80}, {420, 120}}
+  }) do
+    existing_entity.destroy()
+  end
+  local autopilot_ev = surface.create_entity{
+    name = PREMIUM_EV,
+    position = {300, 100},
+    orientation = 0.25,
+    force = force
+  }
+  local blocked_autopilot_ev = surface.create_entity{
+    name = PREMIUM_EV,
+    position = {380, 100},
+    orientation = 0.25,
+    force = force
+  }
+  for x = 372, 388 do
+    surface.create_entity{name = "stone-wall", position = {x, 92}, force = force}
+    surface.create_entity{name = "stone-wall", position = {x, 108}, force = force}
+  end
+  for y = 93, 107 do
+    surface.create_entity{name = "stone-wall", position = {372, y}, force = force}
+    surface.create_entity{name = "stone-wall", position = {388, y}, force = force}
+  end
   local datacenter = create_named(surface, TERRESTRIAL_DATACENTER, {0, -40}, force)
   local datacenter_pole = create_named(surface, POWER_POLE, {0, -35}, force)
   local datacenter_power = create_named(surface, POWER_SOURCE, {2, -35}, force)
@@ -244,14 +279,14 @@ script.on_init(function()
     robotaxi_power.power_usage = 0
     robotaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not autopilot_ev or not blocked_autopilot_ev or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
   end
 
   for _, entity in pairs({
     milestone_office, reservation_office, robotaxi_office,
-    station, station_v2, robotaxi_center, roadster
+    station, station_v2, robotaxi_center, roadster, autopilot_ev, blocked_autopilot_ev
   }) do
     script.raise_script_built{entity = entity}
   end
@@ -373,6 +408,16 @@ script.on_init(function()
   storage.megapack_unit_number = megapack.unit_number
   storage.power_source_unit_number = power_source.unit_number
   storage.roadster_unit_number = roadster.unit_number
+  storage.autopilot_ev_unit_number = autopilot_ev.unit_number
+  storage.autopilot_ev_initial_position = {
+    x = autopilot_ev.position.x,
+    y = autopilot_ev.position.y
+  }
+  storage.autopilot_ev_goal = {x = 340, y = 100}
+  storage.blocked_autopilot_ev_unit_number = blocked_autopilot_ev.unit_number
+  storage.autopilot_ev = autopilot_ev
+  storage.blocked_autopilot_ev = blocked_autopilot_ev
+  storage.roadster = roadster
   storage.datacenter_unit_number = datacenter.unit_number
   storage.datacenter_power_unit_number = datacenter_power.unit_number
   storage.biter_spawner_unit_number = biter_spawner.unit_number
@@ -414,6 +459,34 @@ script.on_init(function()
     solar_array_unit_number = storage.solar_array_unit_number,
     megapack_unit_number = megapack.unit_number
   }
+end)
+
+script.on_nth_tick(15, function()
+  if storage.autopilot_requested ~= nil then return end
+  storage.autopilot_requested = remote.call(
+    "factoryx",
+    "test_ev_autopilot_start",
+    nil,
+    storage.autopilot_ev.unit_number,
+    storage.autopilot_ev_goal,
+    "summon"
+  )
+  storage.blocked_autopilot_requested = remote.call(
+    "factoryx",
+    "test_ev_autopilot_start",
+    nil,
+    storage.blocked_autopilot_ev.unit_number,
+    {x = 400, y = 100},
+    "summon"
+  )
+  storage.roadster_autopilot_rejected = not remote.call(
+    "factoryx",
+    "test_ev_autopilot_start",
+    nil,
+    storage.roadster.unit_number,
+    {x = 20, y = -6},
+    "summon"
+  )
 end)
 
 script.on_event(defines.events.on_tick, function()
@@ -660,6 +733,12 @@ script.on_nth_tick(3780, function()
   local gigafactory_economics_test = storage.gigafactory_economics_test
   local solar_array = find_unit(surface, SOLAR_ARRAY, storage.solar_array_unit_number)
   local roadster = find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
+  local autopilot_ev = find_unit(surface, PREMIUM_EV, storage.autopilot_ev_unit_number)
+  local blocked_autopilot_ev = find_unit(
+    surface,
+    PREMIUM_EV,
+    storage.blocked_autopilot_ev_unit_number
+  )
   local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
   local station_output = station_v2 and station_v2.get_inventory(defines.inventory.chest)
   local controller_inventory = controller and controller.get_inventory(output_inventory_id())
@@ -742,6 +821,17 @@ script.on_nth_tick(3780, function()
   end
   local roadster_fuel = roadster and roadster.burner
     and roadster.burner.inventory.get_item_count("x-electric-drive-charge") or 0
+  local autopilot_distance_moved = 0
+  local autopilot_goal_distance = -1
+  if autopilot_ev and storage.autopilot_ev_initial_position then
+    local moved_x = autopilot_ev.position.x - storage.autopilot_ev_initial_position.x
+    local moved_y = autopilot_ev.position.y - storage.autopilot_ev_initial_position.y
+    autopilot_distance_moved = math.sqrt(moved_x * moved_x + moved_y * moved_y)
+    local goal_x = autopilot_ev.position.x - storage.autopilot_ev_goal.x
+    local goal_y = autopilot_ev.position.y - storage.autopilot_ev_goal.y
+    autopilot_goal_distance = math.sqrt(goal_x * goal_x + goal_y * goal_y)
+  end
+  local autopilot_status = remote.call("factoryx", "ev_autopilot_status", 1)
   local economics_output = gigafactory_economics_test and gigafactory_economics_test.valid
     and gigafactory_economics_test.get_inventory(output_inventory_id())
   if commanded_biter and storage.commanded_biter_initial_position then
@@ -812,6 +902,14 @@ script.on_nth_tick(3780, function()
     roadster_batteries = roadster_batteries,
     roadster_battery_energy = roadster_battery_energy,
     roadster_electric_fuel = roadster_fuel,
+    autopilot_requested = storage.autopilot_requested,
+    blocked_autopilot_requested = storage.blocked_autopilot_requested,
+    roadster_autopilot_rejected = storage.roadster_autopilot_rejected,
+    autopilot_ev_created = autopilot_ev ~= nil,
+    blocked_autopilot_ev_created = blocked_autopilot_ev ~= nil,
+    autopilot_distance_moved = autopilot_distance_moved,
+    autopilot_goal_distance = autopilot_goal_distance,
+    autopilot = autopilot_status,
     terrestrial_datacenter_created = datacenter ~= nil,
     terrestrial_datacenter_dollars_remaining = datacenter_input and datacenter_input.get_item_count(DOLLAR) or -1,
     terrestrial_datacenter_tokens = datacenter_output and datacenter_output.get_item_count("x-ai-token") or -1,
@@ -1499,6 +1597,27 @@ if not road_rage_test.get("attacking") or not road_rage_test.get("scheduled"):
     raise SystemExit(f"customer road rage did not issue and schedule a bounded attack: {checked}")
 if checked.get("road_rage_units") != 0:
     raise SystemExit(f"customer road rage did not restore temporary hostile customers: {checked}")
+if not checked.get("autopilot_requested") or not checked.get("blocked_autopilot_requested"):
+    raise SystemExit(f"FactoryX EV autopilot smoke routes were not accepted: {checked}")
+if not checked.get("roadster_autopilot_rejected"):
+    raise SystemExit(f"Prototype Roadster incorrectly accepted an Autopilot route: {checked}")
+if not checked.get("autopilot_ev_created") or not checked.get("blocked_autopilot_ev_created"):
+    raise SystemExit(f"FactoryX EV autopilot smoke vehicles did not survive: {checked}")
+if checked.get("autopilot_distance_moved", 0) < 20:
+    raise SystemExit(f"unoccupied FactoryX EV did not physically follow its requested route: {checked}")
+if checked.get("autopilot_goal_distance", 999) > 3:
+    raise SystemExit(f"FactoryX EV did not stop near its requested destination: {checked}")
+autopilot = checked.get("autopilot") or {}
+autopilot_stats = autopilot.get("stats") or {}
+if autopilot.get("active_count") != 0 or autopilot_stats.get("completed", 0) < 1:
+    raise SystemExit(f"FactoryX EV Autopilot did not complete and leave a clean active queue: {checked}")
+blocked_reasons = autopilot_stats.get("canceled_by_reason") or {}
+if not any(reason in blocked_reasons for reason in (
+    "no route found",
+    "route requires destroying an obstacle",
+    "EV remained stuck after three route attempts",
+)):
+    raise SystemExit(f"blocked FactoryX EV route did not abort cleanly: {checked}")
 victory = next((record for record in records if record.get("status") == "victory"), None)
 growth = next((record for record in records if record.get("status") == "customer_growth"), None)
 brownout = next((record for record in records if record.get("status") == "customer_brownout"), None)

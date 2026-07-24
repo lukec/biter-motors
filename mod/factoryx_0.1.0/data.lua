@@ -659,6 +659,28 @@ data:extend(sales_office_showroom_sprites)
 
 data:extend({
   {
+    type = "selection-tool",
+    name = "x-ev-autopilot-destination",
+    icon = "__factoryx__/graphics/icons/mass-market-ev.png",
+    icon_size = 256,
+    flags = {"only-in-cursor", "not-stackable", "spawnable", "always-show"},
+    hidden = true,
+    subgroup = "spawnables",
+    order = "z[factoryx]-c[ev-autopilot-destination]",
+    stack_size = 1,
+    always_include_tiles = true,
+    select = {
+      border_color = {r = 0.15, g = 0.85, b = 0.55},
+      mode = {"any-tile"},
+      cursor_box_type = "copy"
+    },
+    alt_select = {
+      border_color = {r = 0.15, g = 0.85, b = 0.55},
+      mode = {"any-tile"},
+      cursor_box_type = "copy"
+    }
+  },
+  {
     type = "shortcut",
     name = "x-open-factoryx-progress",
     order = "z[factoryx]-a[progress]",
@@ -679,6 +701,61 @@ data:extend({
     icon_size = 256,
     small_icon = "__factoryx__/graphics/icons/sales-office-coverage.png",
     small_icon_size = 256
+  },
+  {
+    type = "shortcut",
+    name = "x-navigate-factoryx-ev",
+    order = "z[factoryx]-c[navigate]",
+    action = "spawn-item",
+    item_to_spawn = "x-ev-autopilot-destination",
+    technology_to_unlock = "x-autonomous-logistics",
+    icon = "__factoryx__/graphics/icons/mass-market-ev.png",
+    icon_size = 256,
+    small_icon = "__factoryx__/graphics/icons/mass-market-ev.png",
+    small_icon_size = 256
+  },
+  {
+    type = "shortcut",
+    name = "x-summon-factoryx-ev",
+    order = "z[factoryx]-d[summon]",
+    action = "lua",
+    technology_to_unlock = "x-autonomous-logistics",
+    icon = "__factoryx__/graphics/icons/robotaxi-fleet.png",
+    icon_size = 256,
+    small_icon = "__factoryx__/graphics/icons/robotaxi-fleet.png",
+    small_icon_size = 256
+  },
+  {
+    type = "custom-input",
+    name = "x-ev-autopilot-manual-up",
+    key_sequence = "",
+    linked_game_control = "move-up",
+    consuming = "none",
+    action = "lua"
+  },
+  {
+    type = "custom-input",
+    name = "x-ev-autopilot-manual-down",
+    key_sequence = "",
+    linked_game_control = "move-down",
+    consuming = "none",
+    action = "lua"
+  },
+  {
+    type = "custom-input",
+    name = "x-ev-autopilot-manual-left",
+    key_sequence = "",
+    linked_game_control = "move-left",
+    consuming = "none",
+    action = "lua"
+  },
+  {
+    type = "custom-input",
+    name = "x-ev-autopilot-manual-right",
+    key_sequence = "",
+    linked_game_control = "move-right",
+    consuming = "none",
+    action = "lua"
   },
   {
     type = "item-subgroup",

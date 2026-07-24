@@ -104,13 +104,15 @@ prototype ids retain `x-electric-semi` to avoid needless code churn.
 
 #### EV Autopilot And Summon
 
-Status: roadmap. Unlock with `Autonomous Logistics`.
+Status: implemented in `0.1.0`. Unlock with `Autonomous Logistics`.
 
-- Add `Navigate` for an occupied FactoryX EV: select a destination in map or
-  Remote View and let the vehicle drive there while the player remains seated.
-- Add `Summon` for an unoccupied FactoryX EV: call the player's assigned or
-  last-driven vehicle to the player's position on the same surface, stopping at
-  a safe nearby position instead of driving into the player.
+- `Navigate` drives an occupied FactoryX EV to a selected destination in map or
+  Remote View while the player remains seated.
+- `Summon` calls the nearest available EV among the eight most recently driven
+  vehicles owned by that player. It stops about six tiles from the player and
+  never crosses surfaces.
+- Premium EVs, Mass-market EVs, Megatrucks, and Robotaxis support Autopilot.
+  The deliberately raw Prototype Roadster does not.
 - Use asynchronous `LuaSurface.request_path` requests with the selected
   vehicle's real collision box and collision mask. Standard cars are not
   commandable like Spidertrons, so a bounded runtime controller must follow the
@@ -118,15 +120,21 @@ Status: roadmap. Unlock with `Autonomous Logistics`.
   genuinely stuck.
 - Manual steering or braking always cancels occupied autopilot immediately.
   Empty-vehicle summon also cancels when a player enters the car, the vehicle
-  becomes invalid, its battery is too low, no safe path exists, enemies make
-  the route unsafe, or the player and vehicle are no longer on the same surface.
+  becomes invalid, its battery falls to 3%, no safe path exists, enemies come
+  within 20 tiles, or the player and vehicle are no longer on the same surface.
+  Summon requires at least 10% charge before starting.
 - Track explicit per-player vehicle ownership for multiplayer. A vehicle may
   have only one active destination and one controlling player at a time.
+  Driving transfers ownership; riding as a passenger does not.
 - Keep movement physical: no teleporting, clipping, or immunity from collision
   damage. Use conservative speed limits near structures and stop short of
   players, chargers, and other parked vehicles.
 - Maintain only active autopilot vehicles in a lifecycle registry and update
-  them through a fair, hard-capped scheduler. Never scan every EV every tick.
+  them through a fair, hard-capped scheduler. At most 32 routes may be active,
+  with 16 controller updates per tick. Never scan every EV every tick.
+- Physical impacts remain real. An unoccupied summoned EV that hits a customer
+  triggers the same bounded road-rage response, attributed to its owner; the
+  angry customer attacks the car and the route cancels as unsafe.
 - A later extension may let an idle EV drive to the nearest compatible powered
   charger and park, but charging automation is not required for the first
   Navigate/Summon release.
@@ -2259,8 +2267,9 @@ Implemented for player-driven EV collisions:
 - Vehicle character should affect consequences: the fragile Roadster takes
   meaningful collision damage, while the Megatruck can absorb impacts but
   provokes a larger nearby response.
-- Abstract Robotaxi operations do not trigger road rage; only a vehicle under a
-  player's direct control can cause it.
+- Abstract Robotaxi operations do not trigger road rage. Player-driven EVs and
+  physically moving summoned EVs can; a summoned collision is attributed to
+  the owner and the angry customer attacks the vehicle.
 - The implementation uses a bounded angry-customer registry and timing wheel.
   At most 256 customers may be angry at once. Only the collision site receives
   one bounded spatial query; there is no recurring scan of all mobile customers.

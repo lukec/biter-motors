@@ -5,6 +5,7 @@ BuyerQueues = require("runtime.buyer_queues")
 RobotaxiService = require("runtime.robotaxi_service")
 PowerQueue = require("runtime.power_queue")
 UiRefresh = require("runtime.ui_refresh")
+EvAutopilot = require("runtime.ev_autopilot")
 
 local STATION_NAMES = {
   "x-ev-charging-station",
@@ -53,6 +54,15 @@ local STATION_CONFIGS = {
 local STATION_GRID_CONNECTION_NAME = "x-ev-charging-grid-connection"
 local SALES_OFFICE_COVERAGE_SHORTCUT = "x-toggle-sales-office-coverage"
 local FACTORYX_PROGRESS_SHORTCUT = "x-open-factoryx-progress"
+EV_AUTOPILOT_DESTINATION_ITEM = "x-ev-autopilot-destination"
+EV_AUTOPILOT_SUMMON_SHORTCUT = "x-summon-factoryx-ev"
+EV_AUTOPILOT_TECH_NAME = "x-autonomous-logistics"
+EV_AUTOPILOT_MANUAL_INPUTS = {
+  ["x-ev-autopilot-manual-up"] = true,
+  ["x-ev-autopilot-manual-down"] = true,
+  ["x-ev-autopilot-manual-left"] = true,
+  ["x-ev-autopilot-manual-right"] = true
+}
 local SALES_OFFICE_NAME = "x-sales-office"
 local LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"
 local GIGAFACTORY_CONFIGS = {
@@ -1333,6 +1343,596 @@ function feed_tracked_electric_vehicles()
       electric_vehicle_registry()[unit_number] = nil
     end
   end
+end
+
+function ev_autopilot_runtime()
+  storage.factoryx_ev_autopilot = EvAutopilot.ensure(storage.factoryx_ev_autopilot)
+  return storage.factoryx_ev_autopilot
+end
+
+function is_ev_autopilot_eligible(entity)
+  return is_electric_vehicle(entity)
+    and entity.unit_number
+    and EvAutopilot.is_eligible_name(entity.name)
+end
+
+function player_is_vehicle_driver(player, vehicle)
+  if not player or not player.valid or not vehicle or not vehicle.valid then return false end
+  local driver = vehicle.get_driver()
+  return driver == player or driver == player.character
+end
+
+function set_ev_autopilot_status(vehicle, text, diode)
+  if not vehicle or not vehicle.valid then return end
+  pcall(function()
+    vehicle.custom_status = {
+      diode = diode or defines.entity_status_diode.green,
+      label = text
+    }
+  end)
+end
+
+function clear_ev_autopilot_status(vehicle)
+  if vehicle and vehicle.valid then pcall(function() vehicle.custom_status = nil end) end
+end
+
+function destroy_ev_autopilot_rendering(state)
+  for _, object in pairs(state and state.render_objects or {}) do
+    if object and object.valid then object.destroy() end
+  end
+  if state then state.render_objects = {} end
+end
+
+function draw_ev_autopilot_destination(state)
+  destroy_ev_autopilot_rendering(state)
+  local player = state.player_index and game.get_player(state.player_index)
+  local vehicle = state.vehicle
+  if not player or not vehicle or not vehicle.valid or not state.goal then return end
+  state.render_objects = {
+    rendering.draw_circle{
+      color = {r = 0.10, g = 0.90, b = 0.55, a = 0.22},
+      radius = state.mode == "summon" and 3 or 2,
+      width = 3,
+      filled = true,
+      draw_on_ground = true,
+      target = state.goal,
+      surface = vehicle.surface,
+      players = {player}
+    },
+    rendering.draw_circle{
+      color = {r = 0.15, g = 1.0, b = 0.65, a = 0.95},
+      radius = state.mode == "summon" and 3 or 2,
+      width = 4,
+      filled = false,
+      draw_on_ground = true,
+      target = state.goal,
+      surface = vehicle.surface,
+      players = {player}
+    },
+    rendering.draw_text{
+      text = state.mode == "summon" and "SUMMON" or "NAVIGATE",
+      color = {r = 0.55, g = 1.0, b = 0.72, a = 1},
+      alignment = "center",
+      target = state.goal,
+      target_offset = {0, -2.5},
+      surface = vehicle.surface,
+      players = {player},
+      scale = 0.9
+    }
+  }
+end
+
+function remember_player_ev(player, vehicle)
+  if not player or not player.valid or not is_ev_autopilot_eligible(vehicle) then return false end
+  local runtime = ev_autopilot_runtime()
+  local active = runtime.active[vehicle.unit_number]
+  if active and active.player_index ~= player.index then
+    cancel_ev_autopilot(vehicle.unit_number, "another player took control", {notify = true})
+  end
+  EvAutopilot.remember_vehicle(runtime, player.index, vehicle.unit_number)
+  return true
+end
+
+function remove_ev_from_autopilot_history(unit_number)
+  if not unit_number then return end
+  local runtime = ev_autopilot_runtime()
+  if runtime.active[unit_number] then
+    cancel_ev_autopilot(unit_number, "vehicle is no longer available", {notify = true})
+  end
+  EvAutopilot.forget_vehicle(runtime, unit_number)
+end
+
+function cancel_player_ev_autopilots(player_index, reason, notify)
+  local runtime = ev_autopilot_runtime()
+  local unit_numbers = {}
+  for unit_number, state in pairs(runtime.active) do
+    if state.player_index == player_index then
+      unit_numbers[#unit_numbers + 1] = unit_number
+    end
+  end
+  for _, unit_number in pairs(unit_numbers) do
+    cancel_ev_autopilot(unit_number, reason, {notify = notify == true})
+  end
+end
+
+function remove_player_ev_autopilot_history(player_index)
+  local runtime = ev_autopilot_runtime()
+  cancel_player_ev_autopilots(player_index, "controlling player disconnected", false)
+  for _, unit_number in pairs(runtime.recent_by_player[player_index] or {}) do
+    if runtime.owner_by_vehicle[unit_number] == player_index then
+      runtime.owner_by_vehicle[unit_number] = nil
+    end
+  end
+  runtime.recent_by_player[player_index] = nil
+end
+
+function reset_active_ev_autopilots()
+  local runtime = ev_autopilot_runtime()
+  local unit_numbers = {}
+  for unit_number in pairs(runtime.active) do unit_numbers[#unit_numbers + 1] = unit_number end
+  for _, unit_number in pairs(unit_numbers) do
+    cancel_ev_autopilot(unit_number, nil, {notify = false, record = false})
+  end
+  runtime.active = {}
+  runtime.order = {}
+  runtime.order_index = 1
+  runtime.path_requests = {}
+end
+
+function ev_autopilot_charge_ratio(vehicle)
+  local energy, capacity = vehicle_total_charge_energy(vehicle)
+  return capacity > 0 and energy / capacity or 0
+end
+
+function ev_autopilot_nearest_enemy(surface, force, position, radius)
+  if not surface or not surface.valid then return nil end
+  return surface.find_nearest_enemy{
+    position = position,
+    max_distance = radius or EvAutopilot.config.safety_radius,
+    force = force
+  }
+end
+
+function ev_autopilot_path_is_safe(state, path)
+  local vehicle = state.vehicle
+  if not vehicle or not vehicle.valid then return false, "vehicle is no longer available" end
+  for _, waypoint in pairs(path or {}) do
+    if waypoint.needs_destroy_to_reach then
+      return false, "route requires destroying an obstacle"
+    end
+  end
+  local stride = math.max(1, math.ceil(#path / 64))
+  for index = 1, #path, stride do
+    local enemy = ev_autopilot_nearest_enemy(
+      vehicle.surface,
+      vehicle.force,
+      path[index].position,
+      EvAutopilot.config.safety_radius
+    )
+    if enemy then return false, "hostile activity makes the route unsafe" end
+  end
+  return true
+end
+
+function ev_autopilot_safe_goal(vehicle, requested, stand_off)
+  local target = {x = requested.x, y = requested.y}
+  if stand_off and stand_off > 0 then
+    local dx = vehicle.position.x - target.x
+    local dy = vehicle.position.y - target.y
+    local length = math.sqrt(dx * dx + dy * dy)
+    if length < 0.001 then
+      dx, dy, length = 1, 0, 1
+    end
+    target.x = target.x + dx * stand_off / length
+    target.y = target.y + dy * stand_off / length
+  end
+  return vehicle.surface.find_non_colliding_position(
+    vehicle.name,
+    target,
+    8,
+    0.5,
+    false
+  )
+end
+
+function cancel_ev_autopilot(unit_number, reason, options)
+  options = options or {}
+  local runtime = ev_autopilot_runtime()
+  local state = runtime.active[unit_number]
+  if not state then return false end
+  runtime.active[unit_number] = nil
+  if state.path_request_id then runtime.path_requests[state.path_request_id] = nil end
+  destroy_ev_autopilot_rendering(state)
+  local vehicle = state.vehicle
+  if vehicle and vehicle.valid then
+    if not options.manual then
+      vehicle.riding_state = {
+        acceleration = defines.riding.acceleration.braking,
+        direction = defines.riding.direction.straight
+      }
+    end
+    clear_ev_autopilot_status(vehicle)
+  end
+  local player = state.player_index and game.get_player(state.player_index)
+  if player and options.notify ~= false and reason then
+    local prefix = options.completed and "[FactoryX] " or "[FactoryX] Autopilot canceled: "
+    player.print(prefix .. reason, options.completed
+      and {r = 0.35, g = 1.0, b = 0.55}
+      or {r = 1.0, g = 0.65, b = 0.20})
+  end
+  if options.record ~= false then
+    if options.completed then
+      runtime.stats.completed = (runtime.stats.completed or 0) + 1
+    else
+      runtime.stats.canceled = (runtime.stats.canceled or 0) + 1
+      local reason_key = reason or "unspecified"
+      runtime.stats.canceled_by_reason[reason_key] =
+        (runtime.stats.canceled_by_reason[reason_key] or 0) + 1
+    end
+  end
+  return true
+end
+
+function request_ev_autopilot_path(state)
+  local vehicle = state and state.vehicle
+  if not vehicle or not vehicle.valid then
+    if state then cancel_ev_autopilot(state.unit_number, "vehicle is no longer available", {notify = true}) end
+    return false
+  end
+  if ev_autopilot_nearest_enemy(
+    vehicle.surface,
+    vehicle.force,
+    vehicle.position,
+    EvAutopilot.config.safety_radius
+  ) or ev_autopilot_nearest_enemy(
+    vehicle.surface,
+    vehicle.force,
+    state.goal,
+    EvAutopilot.config.safety_radius
+  ) then
+    cancel_ev_autopilot(state.unit_number, "hostile activity makes the route unsafe", {notify = true})
+    return false
+  end
+  local runtime = ev_autopilot_runtime()
+  if state.path_request_id then runtime.path_requests[state.path_request_id] = nil end
+  local ok, request_id = pcall(function()
+    return vehicle.surface.request_path{
+      bounding_box = vehicle.prototype.collision_box,
+      collision_mask = vehicle.prototype.collision_mask,
+      start = vehicle.position,
+      goal = state.goal,
+      force = vehicle.force,
+      radius = 1.5,
+      can_open_gates = true,
+      max_gap_size = 0,
+      entity_to_ignore = vehicle
+    }
+  end)
+  if not ok or not request_id then
+    cancel_ev_autopilot(state.unit_number, "route request failed", {notify = true})
+    return false
+  end
+  state.path_request_id = request_id
+  state.status = "pathing"
+  state.path = nil
+  state.next_path_tick = nil
+  runtime.path_requests[request_id] = state.unit_number
+  set_ev_autopilot_status(vehicle, "Autopilot: calculating route", defines.entity_status_diode.yellow)
+  return true
+end
+
+function activate_ev_autopilot(vehicle, goal, mode, player_index, smoke_test)
+  local runtime = ev_autopilot_runtime()
+  if not runtime.active[vehicle.unit_number]
+    and EvAutopilot.active_count(runtime) >= EvAutopilot.config.max_active then
+    return false
+  end
+  if runtime.active[vehicle.unit_number] then
+    cancel_ev_autopilot(vehicle.unit_number, nil, {notify = false, manual = true})
+  end
+  local state = {
+    unit_number = vehicle.unit_number,
+    vehicle = vehicle,
+    player_index = player_index,
+    mode = mode,
+    goal = {x = goal.x, y = goal.y},
+    surface_index = vehicle.surface.index,
+    smoke_test = smoke_test == true,
+    path_retry_count = 0,
+    stuck_repaths = 0,
+    started_tick = game.tick,
+    progress_tick = game.tick,
+    progress_position = {x = vehicle.position.x, y = vehicle.position.y},
+    next_safety_tick = game.tick
+  }
+  runtime.active[vehicle.unit_number] = state
+  EvAutopilot.track_active(runtime, vehicle.unit_number)
+  draw_ev_autopilot_destination(state)
+  return request_ev_autopilot_path(state)
+end
+
+function start_ev_autopilot(player, vehicle, goal, mode)
+  if not player or not player.valid or not is_ev_autopilot_eligible(vehicle) then
+    if player then player.print("[FactoryX] This vehicle does not support Autopilot.") end
+    return false
+  end
+  if not researched(player.force, EV_AUTOPILOT_TECH_NAME) then
+    player.print("[FactoryX] Research Autonomous Logistics to unlock EV Autopilot.")
+    return false
+  end
+  if player.surface ~= vehicle.surface then
+    player.print("[FactoryX] Vehicle and destination must be on the same surface.")
+    return false
+  end
+  if mode == "navigate" and not player_is_vehicle_driver(player, vehicle) then
+    player.print("[FactoryX] Enter an eligible FactoryX EV before selecting Navigate.")
+    return false
+  end
+  if mode == "summon" and (vehicle.get_driver() or vehicle.get_passenger()) then
+    player.print("[FactoryX] The selected EV is occupied.")
+    return false
+  end
+  if ev_autopilot_charge_ratio(vehicle) < EvAutopilot.config.summon_start_charge then
+    player.print("[FactoryX] EV battery is below 10%; charge it before using Autopilot.")
+    return false
+  end
+  local runtime = ev_autopilot_runtime()
+  if not runtime.active[vehicle.unit_number]
+    and EvAutopilot.active_count(runtime) >= EvAutopilot.config.max_active then
+    player.print("[FactoryX] Autopilot controller is at its 32-vehicle safety limit.")
+    return false
+  end
+  remember_player_ev(player, vehicle)
+  return activate_ev_autopilot(vehicle, goal, mode, player.index, false)
+end
+
+function nearest_recent_ev_for_player(player)
+  local runtime = ev_autopilot_runtime()
+  local best = nil
+  local best_distance = nil
+  local saw_low_battery = false
+  for _, unit_number in pairs(runtime.recent_by_player[player.index] or {}) do
+    local vehicle = electric_vehicle_registry()[unit_number]
+    if runtime.owner_by_vehicle[unit_number] == player.index
+      and is_ev_autopilot_eligible(vehicle)
+      and vehicle.surface == player.surface
+      and not vehicle.get_driver()
+      and not vehicle.get_passenger() then
+      if ev_autopilot_charge_ratio(vehicle) >= EvAutopilot.config.summon_start_charge then
+        local distance = EvAutopilot.distance_squared(vehicle.position, player.position)
+        if not best_distance or distance < best_distance then
+          best = vehicle
+          best_distance = distance
+        end
+      else
+        saw_low_battery = true
+      end
+    end
+  end
+  return best, saw_low_battery
+end
+
+function summon_recent_ev(player)
+  if not player or not player.valid then return false end
+  if player.vehicle then
+    player.print("[FactoryX] Exit your current vehicle before summoning another EV.")
+    return false
+  end
+  local vehicle, saw_low_battery = nearest_recent_ev_for_player(player)
+  if not vehicle then
+    player.print(saw_low_battery
+      and "[FactoryX] Recent EVs on this surface are below 10% battery."
+      or "[FactoryX] No unoccupied recent EV is available on this surface.")
+    return false
+  end
+  local goal = ev_autopilot_safe_goal(vehicle, player.position, 6)
+  if not goal then
+    player.print("[FactoryX] No safe parking position was found near you.")
+    return false
+  end
+  return start_ev_autopilot(player, vehicle, goal, "summon")
+end
+
+function apply_ev_autopilot_drive(vehicle, decision)
+  local acceleration = defines.riding.acceleration[decision.acceleration]
+  local direction = defines.riding.direction[decision.direction]
+  vehicle.riding_state = {acceleration = acceleration, direction = direction}
+end
+
+function process_ev_autopilot_state(state)
+  local vehicle = state.vehicle
+  local player = state.player_index and game.get_player(state.player_index)
+  if not vehicle or not vehicle.valid then
+    cancel_ev_autopilot(state.unit_number, "vehicle was destroyed", {notify = true})
+    return
+  end
+  if not state.smoke_test and (not player or not player.valid or not player.connected) then
+    cancel_ev_autopilot(state.unit_number, "controlling player disconnected", {notify = false})
+    return
+  end
+  if vehicle.surface.index ~= state.surface_index
+    or (player and player.surface ~= vehicle.surface) then
+    cancel_ev_autopilot(state.unit_number, "player and EV are no longer on the same surface", {notify = true})
+    return
+  end
+  if state.mode == "navigate" and not player_is_vehicle_driver(player, vehicle) then
+    cancel_ev_autopilot(state.unit_number, "player left the EV", {notify = false})
+    return
+  end
+  if state.mode == "summon" and (vehicle.get_driver() or vehicle.get_passenger()) then
+    cancel_ev_autopilot(state.unit_number, "someone entered the summoned EV", {notify = true, manual = true})
+    return
+  end
+  if game.tick >= (state.next_safety_tick or game.tick) then
+    state.next_safety_tick = game.tick + EvAutopilot.config.safety_check_ticks
+    if ev_autopilot_charge_ratio(vehicle) <= EvAutopilot.config.cancel_charge then
+      cancel_ev_autopilot(state.unit_number, "battery reached 3%", {notify = true})
+      return
+    end
+    if ev_autopilot_nearest_enemy(
+      vehicle.surface,
+      vehicle.force,
+      vehicle.position,
+      EvAutopilot.config.safety_radius
+    ) then
+      cancel_ev_autopilot(state.unit_number, "hostile activity detected within 20 tiles", {notify = true})
+      return
+    end
+  end
+  if state.status == "retry" then
+    if game.tick >= (state.next_path_tick or game.tick) then request_ev_autopilot_path(state) end
+    return
+  end
+  if state.status ~= "driving" or not state.path then return end
+
+  while state.waypoint_index < #state.path
+    and EvAutopilot.distance_squared(
+      vehicle.position,
+      state.path[state.waypoint_index].position
+    ) <= 2.25 do
+    state.waypoint_index = state.waypoint_index + 1
+  end
+  local final_waypoint = state.waypoint_index >= #state.path
+  local waypoint = state.path[state.waypoint_index].position
+  local stop_distance = state.mode == "summon"
+    and EvAutopilot.config.summon_stop_distance
+    or EvAutopilot.config.navigate_stop_distance
+  local decision = EvAutopilot.drive_decision(vehicle, waypoint, final_waypoint, stop_distance)
+  if final_waypoint and decision.distance <= stop_distance and math.abs(vehicle.speed or 0) <= 0.025 then
+    cancel_ev_autopilot(
+      state.unit_number,
+      state.mode == "summon" and "Summoned EV arrived." or "Destination reached.",
+      {notify = true, completed = true}
+    )
+    return
+  end
+  apply_ev_autopilot_drive(vehicle, decision)
+
+  if EvAutopilot.distance_squared(vehicle.position, state.progress_position) >= 4 then
+    state.progress_position = {x = vehicle.position.x, y = vehicle.position.y}
+    state.progress_tick = game.tick
+  elseif game.tick - (state.progress_tick or game.tick) >= EvAutopilot.config.stuck_ticks then
+    state.stuck_repaths = (state.stuck_repaths or 0) + 1
+    if state.stuck_repaths > EvAutopilot.config.path_retry_limit then
+      cancel_ev_autopilot(state.unit_number, "EV remained stuck after three route attempts", {notify = true})
+    else
+      state.progress_tick = game.tick
+      state.progress_position = {x = vehicle.position.x, y = vehicle.position.y}
+      request_ev_autopilot_path(state)
+    end
+  end
+end
+
+function process_ev_autopilots()
+  local runtime = ev_autopilot_runtime()
+  for _ = 1, EvAutopilot.config.updates_per_tick do
+    local unit_number = EvAutopilot.next_active(runtime)
+    if not unit_number then return end
+    local state = runtime.active[unit_number]
+    if state then process_ev_autopilot_state(state) end
+  end
+end
+
+function handle_ev_autopilot_path_result(event)
+  local runtime = ev_autopilot_runtime()
+  local unit_number = runtime.path_requests[event.id]
+  if not unit_number then return end
+  runtime.path_requests[event.id] = nil
+  local state = runtime.active[unit_number]
+  if not state or state.path_request_id ~= event.id then return end
+  state.path_request_id = nil
+  if event.try_again_later then
+    state.path_retry_count = (state.path_retry_count or 0) + 1
+    if state.path_retry_count > EvAutopilot.config.path_retry_limit then
+      cancel_ev_autopilot(unit_number, "pathfinder remained busy after three retries", {notify = true})
+    else
+      state.status = "retry"
+      state.next_path_tick = game.tick + EvAutopilot.config.path_retry_ticks
+      set_ev_autopilot_status(state.vehicle, "Autopilot: waiting to retry route", defines.entity_status_diode.yellow)
+    end
+    return
+  end
+  if not event.path or #event.path == 0 then
+    cancel_ev_autopilot(unit_number, "no route found", {notify = true})
+    return
+  end
+  local safe, reason = ev_autopilot_path_is_safe(state, event.path)
+  if not safe then
+    cancel_ev_autopilot(unit_number, reason or "no safe route found", {notify = true})
+    return
+  end
+  state.path = event.path
+  state.waypoint_index = 1
+  state.status = "driving"
+  state.progress_position = {x = state.vehicle.position.x, y = state.vehicle.position.y}
+  state.progress_tick = game.tick
+  set_ev_autopilot_status(state.vehicle, state.mode == "summon"
+    and "Autopilot: summoning"
+    or "Autopilot: navigating", defines.entity_status_diode.green)
+end
+
+function handle_ev_autopilot_destination(event)
+  if event.item ~= EV_AUTOPILOT_DESTINATION_ITEM then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  local vehicle = player.vehicle
+  if not is_ev_autopilot_eligible(vehicle) then
+    player.print("[FactoryX] Navigate supports Premium, Mass-market, Megatruck, and Robotaxi EVs. The Prototype Roadster has no Autopilot.")
+    player.clear_cursor()
+    return
+  end
+  if event.surface ~= vehicle.surface then
+    player.print("[FactoryX] Select a destination on the EV's current surface.")
+    player.clear_cursor()
+    return
+  end
+  local requested = EvAutopilot.area_center(event.area)
+  local goal = ev_autopilot_safe_goal(vehicle, requested, 0)
+  player.clear_cursor()
+  if not goal then
+    player.print("[FactoryX] No safe stopping position was found near that destination.")
+    return
+  end
+  start_ev_autopilot(player, vehicle, goal, "navigate")
+end
+
+function cancel_player_ev_autopilot_manual(player)
+  if not player or not player.valid or not player.vehicle or not player.vehicle.unit_number then return end
+  local state = ev_autopilot_runtime().active[player.vehicle.unit_number]
+  if state and state.mode == "navigate" and state.player_index == player.index then
+    cancel_ev_autopilot(state.unit_number, "manual control", {notify = true, manual = true})
+  end
+end
+
+function ev_autopilot_status(player_index)
+  local runtime = ev_autopilot_runtime()
+  local recent = {}
+  for _, unit_number in pairs(runtime.recent_by_player[player_index] or {}) do
+    local vehicle = electric_vehicle_registry()[unit_number]
+    recent[#recent + 1] = {
+      unit_number = unit_number,
+      valid = vehicle and vehicle.valid or false,
+      name = vehicle and vehicle.valid and vehicle.name or nil,
+      owner = runtime.owner_by_vehicle[unit_number]
+    }
+  end
+  local active = {}
+  for unit_number, state in pairs(runtime.active) do
+    active[#active + 1] = {
+      unit_number = unit_number,
+      player_index = state.player_index,
+      mode = state.mode,
+      status = state.status,
+      waypoint_index = state.waypoint_index,
+      path_length = state.path and #state.path or 0
+    }
+  end
+  return {
+    recent = recent,
+    active = active,
+    active_count = #active,
+    stats = runtime.stats
+  }
 end
 
 local function customer_markers()
@@ -3397,6 +3997,13 @@ function player_driven_factoryx_ev_near(event, victim)
       if player.vehicle == vehicle and player.character and player.character.valid then
         return vehicle, player.character, player
       end
+    end
+  end
+  if vehicle and vehicle.valid and vehicle.unit_number then
+    local state = ev_autopilot_runtime().active[vehicle.unit_number]
+    local player = state and state.player_index and game.get_player(state.player_index)
+    if state and state.mode == "summon" and player then
+      return vehicle, vehicle, player
     end
   end
 
@@ -5582,7 +6189,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["x-advanced-battery-chemistry"] = "[FactoryX] Advanced Battery Chemistry researched. Locate Nickel Ore and Lithium Brine, refine both precursors, manufacture High-nickel Cells and High-energy Battery Packs, then switch Premium EV production to the cell-scale recipe.",
   ["x-energy-products"] = "[FactoryX] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
-  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. Robotaxi production requires 5,000 total consumer EV sales. Then build them in Gigafactory V2 and deploy them through a powered Robotaxi Service Center.",
+  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
   ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
   ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
@@ -7775,6 +8382,7 @@ local function sync_biter_customer_diplomacy()
 end
 
 script.on_init(function()
+  storage.factoryx_ev_autopilot = EvAutopilot.ensure(nil)
   configure_factoryx_new_game()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
@@ -7808,6 +8416,7 @@ script.on_init(function()
 end)
 
 script.on_configuration_changed(function()
+  reset_active_ev_autopilots()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
@@ -7846,6 +8455,10 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
   end
   if event.prototype_name == FACTORYX_PROGRESS_SHORTCUT then
     open_progress_panel(player)
+    return
+  end
+  if event.prototype_name == EV_AUTOPILOT_SUMMON_SHORTCUT then
+    summon_recent_ev(player)
     return
   end
   if event.prototype_name == SALES_OFFICE_COVERAGE_SHORTCUT then
@@ -7892,6 +8505,20 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
   local prior_state = player and ev_driver_overlay_states()[player.index]
   local prior_vehicle = prior_state and prior_state.vehicle
   local vehicle = player and player.vehicle
+  local changed_vehicle = event.entity
+  if changed_vehicle and changed_vehicle.valid and changed_vehicle.unit_number then
+    local state = ev_autopilot_runtime().active[changed_vehicle.unit_number]
+    if state and state.mode == "summon" and vehicle == changed_vehicle then
+      cancel_ev_autopilot(state.unit_number, nil, {notify = false, manual = true})
+    elseif state and state.mode == "navigate"
+      and state.player_index == player.index
+      and vehicle ~= changed_vehicle then
+      cancel_ev_autopilot(state.unit_number, nil, {notify = false})
+    end
+  end
+  if is_ev_autopilot_eligible(vehicle) and player_is_vehicle_driver(player, vehicle) then
+    remember_player_ev(player, vehicle)
+  end
   show_ev_battery_popup(
     player,
     vehicle and vehicle.valid and (is_electric_vehicle(vehicle) or vehicle.name == ELECTRIC_SEMI_NAME)
@@ -7959,12 +8586,14 @@ script.on_event(defines.events.on_player_joined_game, function(event)
 end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
+  cancel_player_ev_autopilots(event.player_index, "controlling player disconnected", false)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
 end)
 
 script.on_event(defines.events.on_player_removed, function(event)
+  remove_player_ev_autopilot_history(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
@@ -7979,9 +8608,24 @@ end)
 
 script.on_event(defines.events.on_player_changed_force, function(event)
   local player = game.get_player(event.player_index)
+  cancel_player_ev_autopilots(event.player_index, "player changed force", true)
   refresh_sales_office_coverage(player)
   refresh_progress_panel(player)
 end)
+
+script.on_event(defines.events.on_player_changed_surface, function(event)
+  cancel_player_ev_autopilots(event.player_index, "player changed surface", true)
+end)
+
+script.on_event(defines.events.on_player_selected_area, handle_ev_autopilot_destination)
+script.on_event(defines.events.on_player_alt_selected_area, handle_ev_autopilot_destination)
+script.on_event(defines.events.on_script_path_request_finished, handle_ev_autopilot_path_result)
+
+for input_name in pairs(EV_AUTOPILOT_MANUAL_INPUTS) do
+  script.on_event(input_name, function(event)
+    cancel_player_ev_autopilot_manual(game.get_player(event.player_index))
+  end)
+end
 
 script.on_event(defines.events.on_research_finished, function(event)
   local research = event.research
@@ -8126,6 +8770,7 @@ for _, event_name in pairs({
         unregister_customer_unit(entity)
       end
       if entity and entity.unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
+        remove_ev_from_autopilot_history(entity.unit_number)
         electric_vehicle_registry()[entity.unit_number] = nil
         if storage.factoryx_vehicle_charge_activity then
           storage.factoryx_vehicle_charge_activity[entity.unit_number] = nil
@@ -8171,7 +8816,10 @@ for _, event_name in pairs({
 end
 
 
-script.on_nth_tick(1, reset_underpowered_compute_progress)
+script.on_nth_tick(1, function()
+  reset_underpowered_compute_progress()
+  process_ev_autopilots()
+end)
 
 script.on_nth_tick(6, update_ev_battery_popups)
 script.on_nth_tick(6, process_electric_semi_runtime)
@@ -8271,6 +8919,25 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  ev_autopilot_status = function(player_index)
+    return ev_autopilot_status(player_index or 1)
+  end,
+  test_ev_autopilot_start = function(player_index, unit_number, goal, mode)
+    if not script.active_mods["factoryx_smoke"] then return false end
+    local vehicle = electric_vehicle_registry()[unit_number]
+    if not is_ev_autopilot_eligible(vehicle) or not goal then return false end
+    return activate_ev_autopilot(vehicle, goal, mode or "summon", player_index, true)
+  end,
+  test_ev_autopilot_remember = function(player_index, unit_number)
+    if not script.active_mods["factoryx_smoke"] then return false end
+    local player = game.get_player(player_index or 1)
+    local vehicle = electric_vehicle_registry()[unit_number]
+    return remember_player_ev(player, vehicle)
+  end,
+  test_ev_autopilot_summon = function(player_index)
+    if not script.active_mods["factoryx_smoke"] then return false end
+    return summon_recent_ev(game.get_player(player_index or 1))
+  end,
   open_entity_info = function(player_index, entity)
     local player = game.get_player(player_index)
     if not player or not entity or not entity.valid then return false end

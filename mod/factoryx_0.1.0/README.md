@@ -52,9 +52,12 @@ The MVP loop is intentionally physical:
 19. Feed 20 Dollars into an 8 MW datacenter to produce 20 AI Tokens every 30 seconds.
 20. Spend 1,000 AI Tokens, 1,000 Dollars, and cumulative red-through-yellow science on Autonomous
     Logistics.
-21. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
+21. Use the unlocked toolbar controls to Navigate or Summon Premium,
+    Mass-market, Megatruck, and Robotaxi EVs. The Prototype Roadster has no
+    Autopilot.
+22. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
     Reservations.
-22. Launch vanilla cargo rockets and establish a stationary platform over
+23. Launch vanilla cargo rockets and establish a stationary platform over
     Nauvis. There are no other planetary destinations in FactoryX.
 
 Custom production art now includes footprint-aligned Sales Office and
@@ -63,16 +66,16 @@ technology illustrations, and restrained working visuals for sales, charging,
 Gigafactory presses, datacenter cooling, Robotaxi dispatch, and grid charging.
 Runtime charger and Service Center lights use one render object per building;
 no animation rendering is attached to individual customer units.
-23. Research Orbital Compute, build its infrastructure on space platforms, and return
+24. Research Orbital Compute, build its infrastructure on space platforms, and return
     AI Tokens to the planet.
-24. Build a Planetary Energy Grid Controller.
-25. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
+25. Build a Planetary Energy Grid Controller.
+26. Produce Planetary Grid Segments from AI tokens, Megapacks, Satellite
     Buses, and Ground Station Networks.
-26. Generate one billion cumulative AI Tokens to unlock AGI Training Run.
-27. Package 100 million AI Tokens into 10,000 Training Datasets and 10 million
+27. Generate one billion cumulative AI Tokens to unlock AGI Training Run.
+28. Package 100 million AI Tokens into 10,000 Training Datasets and 10 million
     Dollars into 1,000 Capital Allocations, then add 10,000 Grid Segments and
     1,000 Megapacks.
-28. Sustain the controller's 1 TW draw through a 60-minute training run. Its
+29. Sustain the controller's 1 TW draw through a 60-minute training run. Its
     AGI Model output triggers victory and remains in the machine.
 
 ## Current Scope
@@ -82,6 +85,9 @@ no animation rendering is attached to individual customer units.
   Supercharger, and 20-stall solar-canopy V4 Supercharger.
 - Two large vehicle machines: the 9x9, 20 MW Gigafactory and its fast-replaceable
   30 MW V2 upgrade with 2x speed and 150% built-in productivity.
+- Physical EV Autopilot controls unlocked by Autonomous Logistics: Navigate an
+  occupied EV to a map destination or Summon the nearest available vehicle
+  among the player's eight most recently driven EVs. Roadsters are excluded.
 - Two placeable energy products: the 300 kW High-density Solar Array and the
   100 MJ, 5 MW Megapack.
 - The High-density Solar Array is a native 4x4 solar-panel entity with four
@@ -191,6 +197,17 @@ sales milestones, Energy Products, datacenters, and victory state. It also shows
 Dollar production, market throughput, infrastructure counts, and completed
 progression stages. `/factoryx-status` opens or refreshes the same window for a
 player and prints the current objective when called through RCON.
+
+Autonomous Logistics adds `Navigate EV` and `Summon nearest recent EV` to the
+toolbar. Navigate is available only while driving a Premium EV, Mass-market EV,
+Megatruck, or Robotaxi. Select one tile in map or Remote View; the vehicle
+physically follows an asynchronous path and the seated player can cancel with
+any steering, acceleration, or braking input. Summon chooses the nearest
+unoccupied, same-surface vehicle among the player's eight most recently driven
+eligible EVs and parks about six tiles away. It requires at least 10% battery,
+cancels at 3%, and aborts on no route, nearby hostiles, occupancy, disconnect,
+or a surface change. The controller is capped at 32 active vehicles and never
+scans the inactive EV fleet.
 
 Selecting or opening a Sales Office adds a FactoryX diagnostics panel with its
 customer count, selected contract, cycle progress, exact input and output
