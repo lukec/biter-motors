@@ -1141,13 +1141,81 @@ if grep -qE ' Error |Error while loading|Modifications: ' /tmp/factoryx-dump-dat
   cat /tmp/factoryx-dump-data.log
   exit 1
 fi
-python3 - "$tmp/script-output/data-raw-dump.json" <<'PY'
+python3 - \
+  "$tmp/script-output/data-raw-dump.json" \
+  "$repo_root/mod/factoryx_0.1.0/locale/en/factoryx.cfg" <<'PY'
 import json
 import math
 import sys
 from pathlib import Path
 
 data = json.loads(Path(sys.argv[1]).read_text())
+locale_path = Path(sys.argv[2])
+
+locale_keys = {}
+section = None
+for raw_line in locale_path.read_text().splitlines():
+    line = raw_line.strip()
+    if not line or line.startswith(("#", ";")):
+        continue
+    if line.startswith("[") and line.endswith("]"):
+        section = line[1:-1]
+        locale_keys.setdefault(section, set())
+    elif section and "=" in line:
+        locale_keys[section].add(line.split("=", 1)[0])
+
+prototype_locale_sections = {
+    "entity-name": {
+        "accumulator", "assembling-machine", "boiler", "car", "container",
+        "electric-energy-interface", "electric-pole", "furnace", "generator",
+        "heat-pipe", "inserter", "lab", "lamp", "locomotive",
+        "logistic-container", "mining-drill", "offshore-pump", "pipe",
+        "pipe-to-ground", "pump", "pumpjack", "radar", "reactor", "resource",
+        "roboport", "simple-entity", "solar-panel", "splitter", "storage-tank",
+        "train-stop", "transport-belt", "turret", "underground-belt", "unit",
+        "unit-spawner",
+    },
+    "item-name": {
+        "ammo", "armor", "capsule", "gun", "item", "item-with-entity-data",
+        "item-with-tags", "module", "rail-planner", "repair-tool",
+        "selection-tool", "spidertron-remote", "tool",
+    },
+    "recipe-name": {"recipe"},
+    "technology-name": {"technology"},
+    "fluid-name": {"fluid"},
+    "equipment-name": {
+        "active-defense-equipment", "battery-equipment",
+        "belt-immunity-equipment", "energy-shield-equipment",
+        "generator-equipment", "movement-bonus-equipment",
+        "night-vision-equipment", "roboport-equipment",
+        "solar-panel-equipment",
+    },
+    "virtual-signal-name": {"virtual-signal"},
+    "shortcut-name": {"shortcut"},
+    "fuel-category-name": {"fuel-category"},
+    "recipe-category-name": {"recipe-category"},
+    "item-subgroup-name": {"item-subgroup"},
+    "autoplace-control-names": {"autoplace-control"},
+}
+missing_locale = []
+for locale_section, prototype_types in prototype_locale_sections.items():
+    defined_keys = locale_keys.get(locale_section, set())
+    for prototype_type in prototype_types:
+        for name, prototype in data.get(prototype_type, {}).items():
+            if (
+                name.startswith("x-")
+                and not prototype.get("localised_name")
+                and name not in defined_keys
+            ):
+                missing_locale.append(
+                    f"{prototype_type}.{name} requires [{locale_section}] {name}"
+                )
+if missing_locale:
+    raise SystemExit(
+        "FactoryX prototypes have missing locale names:\n"
+        + "\n".join(sorted(missing_locale))
+    )
+print("FactoryX prototype locale coverage OK.")
 
 factoryx_badge = "__factoryx__/graphics/technology/factoryx-tech-badge.png"
 factoryx_technologies = {

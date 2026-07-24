@@ -18,6 +18,26 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("train AGI", locale)
         self.assertNotIn("discover other planets", locale)
 
+    def test_internal_power_helpers_have_player_facing_locale_names(self):
+        locale = (MOD / "locale/en/factoryx.cfg").read_text()
+        expected = {
+            "x-ev-charging-grid-connection": "EV Charging Station grid connection",
+            "x-ev-charging-power-sink": "EV Charging Station charging stalls",
+            "x-ev-charging-v2-power-sink": "EV Charging Station V2 charging stalls",
+            "x-ev-charging-v3-power-sink": "V3 Supercharger charging stalls",
+            "x-ev-charging-v4-power-sink": "V4 Supercharger charging stalls",
+            "x-robotaxi-service-power": "Robotaxi Service Center charging",
+            "x-semi-charging-power": "Cybertrain charging",
+        }
+        for key, label in expected.items():
+            self.assertIn(f"{key}={label}", locale)
+
+        validator = (ROOT / "scripts/validate-factoryx-mod.sh").read_text()
+        self.assertIn("FactoryX prototype locale coverage OK.", validator)
+        self.assertIn("FactoryX prototypes have missing locale names:", validator)
+        self.assertIn('"electric-energy-interface"', validator)
+        self.assertIn('"assembling-machine"', validator)
+
     def test_electric_vehicles_use_ev_audio(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
