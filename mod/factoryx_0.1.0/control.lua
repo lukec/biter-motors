@@ -4095,18 +4095,6 @@ function create_ev_driver_overlay(player, vehicle)
     visible = false
   }
   state.objects[#state.objects + 1] = state.charge_icon
-  state.charge_text = rendering.draw_text{
-    text = "",
-    surface = vehicle.surface,
-    target = vehicle,
-    target_offset = {0, -2.9},
-    color = {r = 0.55, g = 1.0, b = 0.60, a = 1},
-    alignment = "center",
-    scale = 0.85,
-    players = {player},
-    visible = false
-  }
-  state.objects[#state.objects + 1] = state.charge_text
   ev_driver_overlay_states()[player.index] = state
   return state
 end
@@ -4132,14 +4120,10 @@ function refresh_ev_driver_overlays()
         state = create_ev_driver_overlay(player, vehicle)
       end
       local charging = game.tick - (activity[vehicle.unit_number] or -1000) <= 75
-      local energy, capacity = vehicle_total_charge_energy(vehicle)
-      local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
       local pulse = 0.48 + (math.floor(game.tick / 10) % 2) * 0.14
       state.charge_icon.visible = charging
       state.charge_icon.x_scale = pulse
       state.charge_icon.y_scale = pulse
-      state.charge_text.visible = charging
-      state.charge_text.text = string.format("CHARGING %d%%", percent)
     end
   end
   for player_index in pairs(ev_driver_overlay_states()) do
@@ -9145,11 +9129,11 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
   if is_ev_autopilot_eligible(vehicle) and player_is_vehicle_driver(player, vehicle) then
     remember_player_ev(player, vehicle)
   end
-  show_ev_battery_popup(
-    player,
-    vehicle and vehicle.valid and (is_electric_vehicle(vehicle) or vehicle.name == ELECTRIC_SEMI_NAME)
-      and vehicle or prior_vehicle
-  )
+  if vehicle then
+    destroy_ev_battery_popup(player.index)
+  else
+    show_ev_battery_popup(player, prior_vehicle)
+  end
   refresh_ev_driver_overlays()
 end)
 

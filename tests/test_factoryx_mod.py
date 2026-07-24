@@ -593,14 +593,15 @@ class FactoryXModTest(unittest.TestCase):
         self.assertEqual(3, control.count("vehicle_charge_radius = 10"))
         self.assertIn("dx * dx + dy * dy <= 256 * 256", control)
         self.assertIn('sprite = "item/x-electric-drive-charge"', control)
-        self.assertIn('string.format("CHARGING %d%%", percent)', control)
+        self.assertNotIn('string.format("CHARGING %d%%", percent)', control)
+        self.assertNotIn("state.charge_text", control)
         self.assertIn("storage.factoryx_vehicle_charge_activity[vehicle.unit_number] = game.tick", control)
         self.assertIn("refresh_ev_driver_overlays()", control)
         self.assertIn("defines.events.on_player_driving_changed_state", control)
         self.assertIn("state.market_generation ~= (factoryx_market_generation()[vehicle.force.index] or 0)", control)
         self.assertIn("destroy_ev_driver_overlay(event.player_index)", control)
 
-    def test_ev_enter_and_exit_show_a_two_second_battery_popup(self):
+    def test_ev_exit_shows_a_two_second_battery_popup_without_driving_label(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn("EV_BATTERY_POPUP_TICKS = 2 * 60", control)
         self.assertIn("EV_BATTERY_POPUP_FADE_TICKS = 60", control)
@@ -611,7 +612,8 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('text = string.format("BATTERY %d%%", percent)', control)
         self.assertIn("players = {player}", control)
         self.assertIn("local prior_vehicle = prior_state and prior_state.vehicle", control)
-        self.assertIn("is_electric_vehicle(vehicle) or vehicle.name == ELECTRIC_SEMI_NAME", control)
+        self.assertIn("if vehicle then\n    destroy_ev_battery_popup(player.index)", control)
+        self.assertIn("else\n    show_ev_battery_popup(player, prior_vehicle)", control)
         self.assertIn("local alpha = math.min(1, remaining / EV_BATTERY_POPUP_FADE_TICKS)", control)
         self.assertIn("script.on_nth_tick(6, update_ev_battery_popups)", control)
 
