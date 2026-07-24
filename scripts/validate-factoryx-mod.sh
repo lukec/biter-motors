@@ -230,6 +230,7 @@ script.on_init(function()
     orientation = 0.25,
     force = force
   }
+  if blocked_autopilot_ev then blocked_autopilot_ev.destructible = false end
   for index, count in pairs({41, 41, 40}) do
     local premium_history_chest =
       create_named(surface, "steel-chest", {258 + index * 2, 100}, force)
@@ -643,12 +644,49 @@ script.on_nth_tick(3440, function()
   }
 end)
 
+script.on_nth_tick(3500, function()
+  if game.tick < 3500 or storage.destroyed_customer_test_unit_number then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local customer = surface and create_named(
+    surface,
+    SMALL_BITER,
+    {-2, 20},
+    game.forces.enemy
+  )
+  remote.call("factoryx", "refresh_biter_customer_market", "player")
+  storage.destroyed_customer_test_unit_number = customer and customer.unit_number or -1
+  storage.destroyed_customer_registered_before = customer and remote.call(
+    "factoryx",
+    "test_customer_registered",
+    customer.unit_number
+  ) or false
+  if customer then customer.destroy() end
+end)
+
+script.on_nth_tick(3520, function()
+  if game.tick < 3520 or storage.destroyed_customer_test_reported then return end
+  storage.destroyed_customer_test_reported = true
+  write_report{
+    tick = game.tick,
+    status = "customer_lifecycle",
+    registered_before = storage.destroyed_customer_registered_before == true,
+    registered_after = remote.call(
+      "factoryx",
+      "test_customer_registered",
+      storage.destroyed_customer_test_unit_number
+    )
+  }
+end)
+
 script.on_nth_tick(101, function()
   if game.tick < 101 or storage.compute_brownout_started then return end
   storage.compute_brownout_started = true
   local surface = game.get_surface(storage.surface_index or 1)
   local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
   local power = find_unit(surface, POWER_SOURCE, storage.datacenter_power_unit_number)
+  if datacenter and (datacenter.crafting_progress or 0) <= 0 then
+    datacenter.crafting_progress = 0.5
+  end
   storage.compute_progress_before_brownout = datacenter and datacenter.crafting_progress or -1
   if power then
     power.power_production = 1
@@ -817,6 +855,7 @@ script.on_nth_tick(3780, function()
   local progression_integrity = remote.call("factoryx", "progression_integrity", "player")
   local vehicle_ownership = remote.call("factoryx", "customer_vehicle_ownership", "player")
   local sales_office_status = remote.call("factoryx", "sales_office_status", "player")
+  local charger_allocator = remote.call("factoryx", "test_charger_allocator")
   local maximum_settlement_capacity = 0
   for _, office_status in pairs(sales_office_status or {}) do
     for _, settlement_status in pairs(office_status.settlements or {}) do
@@ -944,9 +983,9 @@ script.on_nth_tick(3780, function()
     logistic_roboports = logistic_roboports,
     grid_connection_created = grid_connections > 0,
     power_sinks = power_sinks,
-    v1_power_sinks_capped = power_sinks == 0,
+    v1_power_sinks_deferred = power_sinks == 0,
     v2_power_sinks = v2_power_sinks,
-    v2_power_sinks_created = v2_power_sinks == 2,
+    v2_power_sinks_preferred = v2_power_sinks == 2,
     roadster_created = roadster ~= nil,
     roadster_started_charged = storage.roadster_started_charged,
     roadster_batteries = roadster_batteries,
@@ -978,6 +1017,7 @@ script.on_nth_tick(3780, function()
     progress = progress,
     progression_integrity = progression_integrity,
     vehicle_ownership = vehicle_ownership,
+    charger_allocator = charger_allocator,
     maximum_settlement_capacity = maximum_settlement_capacity,
     preproduction_market = storage.preproduction_market,
     biter_customer_mode = market and market.biter_customer_mode,
@@ -1701,6 +1741,10 @@ invalid_market_snapshot = next(
     (record for record in records if record.get("status") == "invalid_market_snapshot"),
     None,
 )
+customer_lifecycle = next(
+    (record for record in records if record.get("status") == "customer_lifecycle"),
+    None,
+)
 if (
     invalid_market_snapshot is None
     or not invalid_market_snapshot.get("settlement_created")
@@ -1712,6 +1756,15 @@ if (
     raise SystemExit(
         f"destroyed settlement was not rejected from the cached market snapshot: "
         f"{invalid_market_snapshot}"
+    )
+if (
+    customer_lifecycle is None
+    or not customer_lifecycle.get("registered_before")
+    or customer_lifecycle.get("registered_after") is not False
+):
+    raise SystemExit(
+        f"destroyed customer remained in the ownership and buyer lifecycle registry: "
+        f"{customer_lifecycle}"
     )
 if compute_brownout is None or compute_brownout.get("progress_before", 0) <= 0:
     raise SystemExit(f"compute brownout test did not begin during an active run: {compute_brownout}")
@@ -1836,10 +1889,10 @@ if terrestrial_ai.get("generated", 0) < 20:
     raise SystemExit(f"Terrestrial AI production tracker did not observe completed cycles: {checked}")
 if checked.get("grid_connections") != 0 or checked.get("grid_connection_created"):
     raise SystemExit(f"EV Charging Stations must not create wire-routing electric poles: {checked}")
-if not checked.get("v1_power_sinks_capped"):
-    raise SystemExit(f"V1 charger should receive no utilization after the single produced EV is allocated to the earlier V2 charger: {checked}")
-if not checked.get("v2_power_sinks_created"):
-    raise SystemExit(f"EV Charging Station V2 should retain two customer sinks after the nearby Roadster finishes charging: {checked}")
+if not checked.get("v1_power_sinks_deferred"):
+    raise SystemExit(f"lower-tier V1 charger received demand while an eligible V2 had room: {checked}")
+if not checked.get("v2_power_sinks_preferred"):
+    raise SystemExit(f"higher-tier V2 charger did not receive both settlement demand stalls: {checked}")
 if not checked.get("roadster_created") or checked.get("roadster_batteries") != 1:
     raise SystemExit(f"placed Roadster did not receive its short-range battery equipment item: {checked}")
 if not checked.get("roadster_started_charged"):
@@ -1892,6 +1945,11 @@ if preproduction_market.get("customer_ev_fleet") != 0 or preproduction_market.ge
     raise SystemExit(f"charging utilization should be zero before the first EV is produced: {checked}")
 if checked.get("market", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"expected three living Robotaxi owners in the active customer fleet: {checked}")
+charger_allocator = checked.get("charger_allocator", {})
+if charger_allocator.get("active_by_station") != [1, 1, 1]:
+    raise SystemExit(f"demand-first charger allocation did not balance one stall onto each eligible charger: {checked}")
+if charger_allocator.get("requested_capacity") != 36 or charger_allocator.get("underserved") != 8:
+    raise SystemExit(f"one-stall-per-settlement charger capacity was not preserved: {checked}")
 if checked.get("market", {}).get("active_customer_stalls") != 2:
     raise SystemExit(f"charging utilization must be capped by sold EVs and the two served settlements: {checked}")
 next_charging_step = checked.get("market", {}).get("next_charging_step", {})

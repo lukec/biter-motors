@@ -668,13 +668,16 @@ statistics.
 Sales Offices warn before that local market is exhausted. At 20% or fewer
 unowned prospects remaining, the office uses an amber beacon and native
 `Low prospects` status; at zero it reports `Market saturated`. Its diagnostics
-show both prospects remaining and prospects currently free to reserve.
-Overlapping Sales Offices share the same local prospect pools, so one office can
-show prospects remaining but none free while another office has committed them.
+show prospects remaining, unassigned, reserved by active sales, or blocked by
+inadequate charging service. Overlapping Sales Offices share the same local
+prospect pools, but `reserved` is used only for a buyer actually held by an
+active sale; charging-blocked prospects are reported separately.
 A persistent map alert directs the player to establish Sales Office and powered
 charging coverage at another biter settlement. Reservation counters are
 periodically rebuilt from active contracts so an interrupted sale or old save
-cannot strand virtual prospects indefinitely.
+cannot strand virtual prospects indefinitely. If aggregate prospect counts say
+a buyer exists but the settlement queue cannot provide one, the Sales Office
+rebuilds the queue and retries immediately.
 
 Holding or selecting a Sales Office shows its 128-tile customer conversion
 radius. Hostile biter entities inside that radius are converted into customer
@@ -685,7 +688,7 @@ restrained outline, so they remain readable without washing out Remote View.
 
 Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
 uses a compact native icon/label/value table for state, settlements, remaining
-and free prospects, EV owners, powered charging capacity, underserved owners,
+and unassigned prospects, EV owners, powered charging capacity, underserved owners,
 and reserved buyers. It also forecasts the nearest local customer threshold as
 `N EV sales
 -> +X kW`, using only settlements inside that office's market. This is the next
@@ -812,6 +815,13 @@ Current implementation:
 - Potential demand and actual utilization are separate. A stall is requested
   only by a settlement containing at least one living mobile vehicle owner.
   Manufactured inventory and historical production do not count.
+- Stall assignment is demand-first across the whole force. Each charger may
+  assign at most one stall to a given settlement, preserving the physical
+  one-stall-per-spawner rule. Existing EV owners are assigned before remaining
+  stalls are spread across prospective settlements. Higher-tier chargers are
+  preferred over lower tiers; equivalent nearby chargers share active stalls
+  deterministically, so one cannot remain idle while a settlement it can still
+  accept is underserved.
 - Charger consumers measure the electric network's delivered fraction. Powered
   stalls are the requested stalls multiplied by power satisfaction and rounded
   down, so a 50% brownout serves roughly half the requested stalls and prints
@@ -2301,6 +2311,12 @@ Implemented performance architecture:
 - New mobile customers enter a settlement-specific available-buyer queue from
   `on_entity_spawned`. Sales Offices pop and lazily validate buyers instead of
   scanning every mobile customer for every contract.
+- Every registered physical customer is registered with Factorio's
+  `on_object_destroyed` lifecycle. Death or script destruction removes its
+  ownership, charging demand, reservations, and aggregate counts immediately.
+  Existing saves run one automatic population/queue repair after loading the
+  new lifecycle version; future Sales Office queue mismatches self-repair on
+  demand.
 - Commute dispatch uses a bounded 256-owner round-robin due queue and a separate
   active set capped at 512. Active station counts inspect only active commutes;
   the scheduler no longer walks every vehicle owner each second.

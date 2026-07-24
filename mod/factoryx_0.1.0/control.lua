@@ -7,6 +7,7 @@ PowerQueue = require("runtime.power_queue")
 UiRefresh = require("runtime.ui_refresh")
 EvAutopilot = require("runtime.ev_autopilot")
 ProductionHistory = require("runtime.production_history")
+ChargerAllocator = require("runtime.charger_allocator")
 
 local STATION_NAMES = {
   "x-ev-charging-station",
@@ -231,6 +232,7 @@ local CUSTOMER_GROWTH_STALL_MINUTES = 5
 local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
 local CUSTOMER_VISIBLE_GLOBAL_LIMIT = 2000
 local CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT = 128
+CUSTOMER_LIFECYCLE_VERSION = 1
 local CUSTOMER_MARKET_CACHE_TICKS = 120
 CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
@@ -2144,6 +2146,7 @@ function customer_settlement_population(settlement, market_force)
       market_force_name = market_force.name,
       surface_index = settlement.surface.index,
       position = {x = settlement.position.x, y = settlement.position.y},
+      settlement = settlement,
       physical = 0,
       virtual_unowned = 0,
       virtual_reserved = 0,
@@ -2154,6 +2157,7 @@ function customer_settlement_population(settlement, market_force)
     population.market_force_name = market_force.name
     population.surface_index = settlement.surface.index
     population.position = {x = settlement.position.x, y = settlement.position.y}
+    population.settlement = settlement
   end
   return key, population
 end
@@ -2972,15 +2976,34 @@ local function settlement_key(surface, settlement)
   )
 end
 
+function watch_customer_unit_destruction(entity)
+  if not entity or not entity.valid or not entity.unit_number then return end
+  storage.factoryx_customer_destruction_watches =
+    storage.factoryx_customer_destruction_watches or {}
+  if storage.factoryx_customer_destruction_watches[entity.unit_number] then return end
+  storage.factoryx_customer_destruction_watches[entity.unit_number] =
+    script.register_on_object_destroyed(entity)
+end
+
 function register_customer_unit(entity, settlement, market_force)
   if not entity or not entity.valid or entity.type ~= "unit" or not entity.unit_number then
     return false
   end
   local home_key, population = customer_settlement_population(settlement, market_force)
   if customer_unit_registry()[entity.unit_number] then
+    watch_customer_unit_destruction(entity)
+    customer_home_settlements()[entity.unit_number] =
+      customer_home_settlements()[entity.unit_number] or {
+        settlement_key = home_key,
+        market_force_name = market_force.name
+      }
     if not customer_population_members()[entity.unit_number] then
       population.physical = (population.physical or 0) + 1
       customer_population_members()[entity.unit_number] = home_key
+    end
+    if not customer_vehicle_owners()[entity.unit_number]
+      and not buyer_reserved_by_unit()[entity.unit_number] then
+      enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
     end
     return true
   end
@@ -2993,6 +3016,7 @@ function register_customer_unit(entity, settlement, market_force)
     return false
   end
   customer_unit_registry()[entity.unit_number] = entity
+  watch_customer_unit_destruction(entity)
   customer_home_settlements()[entity.unit_number] = {
     settlement_key = home_key,
     market_force_name = market_force.name
@@ -3034,6 +3058,46 @@ function rebuild_customer_vehicle_aggregates()
   )
 end
 
+function unregister_customer_unit_number(unit_number)
+  if not unit_number then return nil end
+  local registry = customer_unit_registry()
+  local was_registered = registry[unit_number] ~= nil
+  local home = customer_home_settlements()[unit_number]
+  local member_key = customer_population_members()[unit_number]
+  local ownership = remove_customer_vehicle_ownership(unit_number)
+  local reserved_office = buyer_reserved_by_unit()[unit_number]
+
+  customer_charging_commutes()[unit_number] = nil
+  customer_active_commutes()[unit_number] = nil
+  TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
+  TimingWheel.cancel(customer_road_rage_timing_wheel(), unit_number)
+  customer_road_rage_states()[unit_number] = nil
+  registry[unit_number] = nil
+  if storage.factoryx_customer_destruction_watches then
+    storage.factoryx_customer_destruction_watches[unit_number] = nil
+  end
+  customer_home_settlements()[unit_number] = nil
+  customer_population_members()[unit_number] = nil
+  buyer_reserved_by_unit()[unit_number] = nil
+
+  if member_key then
+    local population = customer_settlement_populations()[member_key]
+    if population then population.physical = math.max(0, (population.physical or 0) - 1) end
+  end
+  if was_registered then
+    storage.factoryx_customer_visible_count = math.max(0, customer_visible_count() - 1)
+  end
+  if reserved_office and clear_office_buyer_reservation then
+    clear_office_buyer_reservation(reserved_office)
+  end
+
+  local market_force_name = ownership and ownership.market_force_name
+    or home and home.market_force_name
+  local market_force = market_force_name and game.forces[market_force_name]
+  if market_force then mark_factoryx_market_dirty(market_force, "customer-removed") end
+  return ownership
+end
+
 function rebuild_customer_settlement_population_cache()
   local previous = storage.factoryx_customer_settlement_populations or {}
   storage.factoryx_customer_settlement_populations = {}
@@ -3049,6 +3113,7 @@ function rebuild_customer_settlement_population_cache()
   end
 
   local restored = 0
+  local stale_units = {}
   for unit_number, entity in pairs(customer_unit_registry()) do
     local home = customer_home_settlements()[unit_number]
     local settlement = home and settlements[home.settlement_key]
@@ -3057,9 +3122,13 @@ function rebuild_customer_settlement_population_cache()
       local _, population = customer_settlement_population(settlement, market_force)
       population.physical = (population.physical or 0) + 1
       customer_population_members()[unit_number] = home.settlement_key
+      watch_customer_unit_destruction(entity)
       restored = restored + 1
+    else
+      stale_units[#stale_units + 1] = unit_number
     end
   end
+  for _, unit_number in pairs(stale_units) do unregister_customer_unit_number(unit_number) end
 
   for key, old in pairs(previous) do
     local population = customer_settlement_populations()[key]
@@ -3069,9 +3138,10 @@ function rebuild_customer_settlement_population_cache()
       population.virtual_by_vehicle = old.virtual_by_vehicle or {}
     end
   end
+  storage.factoryx_customer_visible_count = restored
   rebuild_customer_vehicle_aggregates()
   rebuild_customer_buyer_queues()
-  return restored
+  return restored, #stale_units
 end
 
 function ensure_customer_settlement_population_cache()
@@ -3086,27 +3156,28 @@ function unregister_customer_unit(entity)
   if not entity or not entity.unit_number then
     return nil
   end
-  local unit_number = entity.unit_number
-  local home = customer_home_settlements()[unit_number]
-  local ownership = remove_customer_vehicle_ownership(unit_number)
-  customer_charging_commutes()[unit_number] = nil
-  customer_active_commutes()[unit_number] = nil
-  TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
-  TimingWheel.cancel(customer_road_rage_timing_wheel(), unit_number)
-  customer_road_rage_states()[unit_number] = nil
-  customer_unit_registry()[unit_number] = nil
-  customer_home_settlements()[unit_number] = nil
-  customer_population_members()[unit_number] = nil
-  if home then
-    local population = customer_settlement_populations()[home.settlement_key]
-    if population then population.physical = math.max(0, (population.physical or 0) - 1) end
-    storage.factoryx_customer_visible_count = math.max(0, customer_visible_count() - 1)
+  return unregister_customer_unit_number(entity.unit_number)
+end
+
+function reconcile_customer_lifecycle_state()
+  if storage.factoryx_customer_lifecycle_version == CUSTOMER_LIFECYCLE_VERSION then
+    return {repaired = false, restored = customer_visible_count(), removed = 0}
   end
-  buyer_reserved_by_unit()[unit_number] = nil
-  if ownership and ownership.market_force_name then
-    mark_factoryx_market_dirty(game.forces[ownership.market_force_name], "customer-removed")
+  local restored, removed = rebuild_customer_settlement_population_cache()
+  reconcile_office_buyer_reservations()
+  rebuild_customer_buyer_queues()
+  for _, force in pairs(game.forces) do
+    if player_market_force(force) then
+      mark_factoryx_market_dirty(force, "customer-lifecycle-repaired")
+    end
   end
-  return ownership
+  storage.factoryx_customer_lifecycle_version = CUSTOMER_LIFECYCLE_VERSION
+  storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+  storage.factoryx_perf_counters.customer_lifecycle_repairs =
+    (storage.factoryx_perf_counters.customer_lifecycle_repairs or 0) + 1
+  storage.factoryx_perf_counters.stale_customer_units_removed =
+    (storage.factoryx_perf_counters.stale_customer_units_removed or 0) + removed
+  return {repaired = true, restored = restored, removed = removed}
 end
 
 function active_customer_vehicle_summary(force)
@@ -3614,64 +3685,52 @@ customer_service_for_force = function(force, advance_mood)
   end
   sorted_entities(stations)
 
+  local demand_by_settlement_key = {}
+  for _, settlement in pairs(candidates) do
+    local key = settlement_key(settlement.surface, settlement)
+    demand_by_settlement_key[key] = settlement_vehicle_count(vehicle_summary, settlement)
+  end
+
+  local station_specs = {}
   for _, station in pairs(stations) do
     local config = station_config(station)
     local station_candidates = {}
     for _, settlement in pairs(candidates) do
       if settlement.valid and settlement.surface == station.surface
         and within_radius(station, settlement, config.customer_radius) then
-        station_candidates[#station_candidates + 1] = settlement
+        local dx = settlement.position.x - station.position.x
+        local dy = settlement.position.y - station.position.y
+        station_candidates[#station_candidates + 1] = {
+          key = settlement_key(station.surface, settlement),
+          settlement = settlement,
+          distance = dx * dx + dy * dy
+        }
       end
     end
     table.sort(station_candidates, function(left, right)
-      local left_key = settlement_key(left.surface, left)
-      local right_key = settlement_key(right.surface, right)
-      local left_capacity = service.assigned_capacity_by_settlement_key[left_key] or 0
-      local right_capacity = service.assigned_capacity_by_settlement_key[right_key] or 0
-      if left_capacity ~= right_capacity then return left_capacity < right_capacity end
-      local left_dx = left.position.x - station.position.x
-      local left_dy = left.position.y - station.position.y
-      local right_dx = right.position.x - station.position.x
-      local right_dy = right.position.y - station.position.y
-      local left_distance = left_dx * left_dx + left_dy * left_dy
-      local right_distance = right_dx * right_dx + right_dy * right_dy
-      if left_distance ~= right_distance then return left_distance < right_distance end
-      return entity_sort_key(left) < entity_sort_key(right)
+      if left.distance ~= right.distance then return left.distance < right.distance end
+      return left.key < right.key
     end)
-    local assignment = {
+    station_specs[#station_specs + 1] = {
+      key = station.unit_number,
       station = station,
-      settlements = {},
-      operational_settlements = {},
-      requested_settlement_keys = {},
-      stall_loads = {},
-      customer_requested_stalls = 0,
-      requested_stalls = 0,
-      powered_stalls = 0
+      stalls = config.stalls,
+      evs_per_stall = config.evs_per_stall,
+      candidates = station_candidates
     }
-    for _, settlement in pairs(station_candidates) do
-      local key = settlement_key(station.surface, settlement)
-      if #assignment.settlements < config.stalls then
-        assignment.settlements[#assignment.settlements + 1] = settlement
-        service.assignment_by_settlement_key[key] = service.assignment_by_settlement_key[key] or station
-        service.assigned_capacity_by_settlement_key[key] =
-          (service.assigned_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
-      end
-    end
-    for stall_index, settlement in ipairs(assignment.settlements) do
-      local key = settlement_key(settlement.surface, settlement)
-      local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
-      local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
-      assignment.stall_loads[stall_index] = math.max(
-        0,
-        math.min(config.evs_per_stall, vehicle_count - requested_capacity)
-      )
-      if vehicle_count > requested_capacity then
-        assignment.customer_requested_stalls = assignment.customer_requested_stalls + 1
-        assignment.requested_settlement_keys[key] = true
-        service.requested_capacity_by_settlement_key[key] = requested_capacity + config.evs_per_stall
-      end
-    end
-    assignment.requested_stalls = assignment.customer_requested_stalls
+  end
+
+  local allocation = ChargerAllocator.allocate(station_specs, demand_by_settlement_key)
+  service.assignment_by_settlement_key = allocation.first_station_by_settlement_key
+  service.assigned_capacity_by_settlement_key =
+    allocation.assigned_capacity_by_settlement_key
+  service.requested_capacity_by_settlement_key =
+    allocation.requested_capacity_by_settlement_key
+
+  for _, spec in pairs(station_specs) do
+    local station = spec.station
+    local config = station_config(station)
+    local assignment = allocation.assignments[spec.key]
     assignment.powered_stalls = powered_station_stalls(station, assignment.requested_stalls)
     local powered_remaining = assignment.powered_stalls
     for _, settlement in pairs(assignment.settlements) do
@@ -3683,13 +3742,13 @@ customer_service_for_force = function(force, advance_mood)
         powered_remaining = powered_remaining - 1
       end
     end
-    if #station_candidates > 0 then
+    if #spec.candidates > 0 then
       service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
       service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
       service.supported_ev_capacity = service.supported_ev_capacity
         + assignment.powered_stalls * config.evs_per_stall
     end
-    service.assignments[station.unit_number] = assignment
+    service.assignments[spec.key] = assignment
   end
 
   for _, settlement in pairs(candidates) do
@@ -4702,12 +4761,17 @@ function replace_customer_prospect_entity(entity)
 
   replacement.health = math.max(1, replacement.max_health * health_ratio)
   customer_unit_registry()[replacement.unit_number] = replacement
+  watch_customer_unit_destruction(replacement)
   customer_home_settlements()[replacement.unit_number] = home
   customer_population_members()[replacement.unit_number] = customer_population_members()[old_unit_number]
   if home then
     local queue = buyer_queue_for(home.market_force_name, home.settlement_key)
     for index = queue.head, #queue.units do
       if queue.units[index] == old_unit_number then queue.units[index] = replacement.unit_number end
+    end
+    if queue.members[old_unit_number] then
+      queue.members[old_unit_number] = nil
+      queue.members[replacement.unit_number] = true
     end
   end
   if reserved_office then
@@ -4722,6 +4786,9 @@ function replace_customer_prospect_entity(entity)
 
   destroy_customer_marker(entity)
   customer_unit_registry()[old_unit_number] = nil
+  if storage.factoryx_customer_destruction_watches then
+    storage.factoryx_customer_destruction_watches[old_unit_number] = nil
+  end
   customer_home_settlements()[old_unit_number] = nil
   customer_population_members()[old_unit_number] = nil
   buyer_reserved_by_unit()[old_unit_number] = nil
@@ -4756,6 +4823,7 @@ function replace_customer_vehicle_entity(entity, ownership)
 
   replacement.health = math.max(1, replacement.max_health * health_ratio)
   customer_unit_registry()[replacement.unit_number] = replacement
+  watch_customer_unit_destruction(replacement)
   customer_home_settlements()[replacement.unit_number] = home
   customer_population_members()[replacement.unit_number] = customer_population_members()[old_unit_number]
   customer_vehicle_owners()[replacement.unit_number] = ownership
@@ -4777,6 +4845,9 @@ function replace_customer_vehicle_entity(entity, ownership)
 
   destroy_customer_marker(entity)
   customer_unit_registry()[old_unit_number] = nil
+  if storage.factoryx_customer_destruction_watches then
+    storage.factoryx_customer_destruction_watches[old_unit_number] = nil
+  end
   customer_home_settlements()[old_unit_number] = nil
   customer_population_members()[old_unit_number] = nil
   customer_vehicle_owners()[old_unit_number] = nil
@@ -6742,16 +6813,21 @@ function dequeue_available_buyer(queue, office, expected_settlement_key)
   end)
 end
 
+function reserved_customer_buyers_by_settlement(force)
+  local reserved = {}
+  for unit_number in pairs(buyer_reserved_by_unit()) do
+    local home = customer_home_settlements()[unit_number]
+    if home and home.market_force_name == force.name then
+      reserved[home.settlement_key] = (reserved[home.settlement_key] or 0) + 1
+    end
+  end
+  return reserved
+end
+
 function eligible_customer_buyers(office, needed)
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
-  local reserved_by_settlement = {}
-  for unit_number, _ in pairs(buyer_reserved_by_unit()) do
-    local home = customer_home_settlements()[unit_number]
-    if home and home.market_force_name == office.force.name then
-      reserved_by_settlement[home.settlement_key] = (reserved_by_settlement[home.settlement_key] or 0) + 1
-    end
-  end
+  local reserved_by_settlement = reserved_customer_buyers_by_settlement(office.force)
   local pools = {}
   for key in pairs(service.served_keys) do
     local assigned_station = service.assignment_by_settlement_key[key]
@@ -6821,17 +6897,21 @@ function sales_office_buyer_status(office)
   if not office or not office.valid then
     return {
       available = 0,
+      assigned = 0,
+      service_blocked = 0,
       settlements = 0,
       customers = 0,
       owned = 0,
       capacity = 0,
       powered_capacity = 0,
       underserved = 0,
-      friendly_settlements = 0
+      friendly_settlements = 0,
+      unowned = 0
     }
   end
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
+  local reserved_by_settlement = reserved_customer_buyers_by_settlement(office.force)
   local eligible_keys = {}
   local settlements = 0
   local stale_snapshot = false
@@ -6856,25 +6936,37 @@ function sales_office_buyer_status(office)
   local capacity = 0
   local powered_capacity = 0
   local friendly_settlements = 0
+  local assigned = 0
+  local service_blocked = 0
   for key in pairs(eligible_keys) do
     local population = customer_settlement_populations()[key]
-    local queue = buyer_queue_for(office.force.name, key)
-    available = available + math.max(0, #queue.units - queue.head + 1)
-    available = available + math.max(
-      0,
-      (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
+    local key_owned = vehicle_summary.by_settlement[key] or 0
+    local key_customers = (population.physical or 0) + (population.virtual_unowned or 0)
+    for _, count in pairs(population.virtual_by_vehicle or {}) do
+      key_customers = key_customers + count
+    end
+    local key_prospects = math.max(0, key_customers - key_owned)
+    local key_assigned = math.min(
+      key_prospects,
+      (reserved_by_settlement[key] or 0) + (population.virtual_reserved or 0)
     )
-    owned = owned + (vehicle_summary.by_settlement[key] or 0)
+    local key_unassigned = math.max(0, key_prospects - key_assigned)
+    assigned = assigned + key_assigned
+    if service.served_keys[key] then
+      available = available + key_unassigned
+      friendly_settlements = friendly_settlements + 1
+    else
+      service_blocked = service_blocked + key_unassigned
+    end
+    owned = owned + key_owned
+    customers = customers + key_customers
     capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
     powered_capacity = powered_capacity + (service.powered_capacity_by_settlement_key[key] or 0)
-    if service.served_keys[key] then friendly_settlements = friendly_settlements + 1 end
-    customers = customers + (population.physical or 0) + (population.virtual_unowned or 0)
-    for _, count in pairs(population.virtual_by_vehicle or {}) do
-      customers = customers + count
-    end
   end
   return {
     available = available,
+    assigned = assigned,
+    service_blocked = service_blocked,
     settlements = settlements,
     customers = customers,
     owned = owned,
@@ -6890,6 +6982,8 @@ function classify_sales_office_market(buyer_status)
   local customers = math.max(0, buyer_status.customers or 0)
   local remaining = math.max(0, buyer_status.unowned or 0)
   local available = math.max(0, buyer_status.available or 0)
+  local assigned = math.max(0, buyer_status.assigned or 0)
+  local service_blocked = math.max(0, buyer_status.service_blocked or 0)
   local threshold = math.max(
     SALES_OFFICE_LOW_PROSPECT_MINIMUM,
     math.ceil(customers * SALES_OFFICE_LOW_PROSPECT_FRACTION)
@@ -6900,8 +6994,12 @@ function classify_sales_office_market(buyer_status)
     kind = "no-market"
   elseif remaining == 0 then
     kind = "saturated"
-  elseif available == 0 then
+  elseif available == 0 and service_blocked > 0 then
+    kind = "service-blocked"
+  elseif available == 0 and assigned >= remaining then
     kind = "committed"
+  elseif available == 0 then
+    kind = "unavailable"
   elseif remaining <= threshold then
     kind = "low"
   end
@@ -6910,6 +7008,8 @@ function classify_sales_office_market(buyer_status)
     customers = customers,
     remaining = remaining,
     available = available,
+    assigned = assigned,
+    service_blocked = service_blocked,
     percent = percent,
     threshold = threshold
   }
@@ -6927,8 +7027,14 @@ function update_sales_office_market_feedback(office, buyer_status)
     if state.kind == "saturated" then
       label = "Market saturated - expand coverage"
       diode = defines.entity_status_diode.yellow
+    elseif state.kind == "service-blocked" then
+      label = string.format("Charging service blocks %d prospects", state.service_blocked)
+      diode = defines.entity_status_diode.red
     elseif state.kind == "committed" then
-      label = string.format("All prospects assigned - %d remain", state.remaining)
+      label = string.format("All %d remaining prospects reserved", state.remaining)
+      diode = defines.entity_status_diode.yellow
+    elseif state.kind == "unavailable" then
+      label = "Refreshing prospect assignments"
       diode = defines.entity_status_diode.yellow
     elseif state.kind == "low" then
       label = string.format("Low prospects - %d remain", state.remaining)
@@ -6947,9 +7053,14 @@ end
 function sales_office_market_alert_message(state)
   if state.kind == "saturated" then
     return "Sales Office market saturated. Establish Sales Office and powered charging coverage at another biter settlement."
+  elseif state.kind == "service-blocked" then
+    return string.format(
+      "Sales Office has %d prospects blocked by inadequate charging service. Restore powered charging near their settlements.",
+      state.service_blocked
+    )
   elseif state.kind == "committed" then
     return string.format(
-      "Sales Office has %d prospects remaining, but all are assigned to active sales. Overlapping offices share this prospect pool. Expand to another biter settlement.",
+      "Sales Office has %d prospects remaining, all reserved by active sales. Overlapping offices share this prospect pool. Expand to another biter settlement.",
       state.remaining
     )
   end
@@ -6973,6 +7084,7 @@ function update_sales_office_market_alerts()
       local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
       local warning = state and (state.kind == "low"
         or state.kind == "committed"
+        or state.kind == "service-blocked"
         or state.kind == "saturated")
       if sale and warning and office.surface == player.surface
         and (office.status == defines.entity_status.working or office.disabled_by_script) then
@@ -7000,6 +7112,14 @@ end
 function reserve_office_buyers(office, recipe_name, sale)
   clear_office_buyer_reservation(office.unit_number)
   local buyers = eligible_customer_buyers(office, sale.vehicles)
+  if #buyers < sale.vehicles
+    and sales_office_buyer_status(office).available >= sale.vehicles then
+    rebuild_customer_buyer_queues()
+    buyers = eligible_customer_buyers(office, sale.vehicles)
+    storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
+    storage.factoryx_perf_counters.buyer_queue_self_repairs =
+      (storage.factoryx_perf_counters.buyer_queue_self_repairs or 0) + 1
+  end
   if #buyers < sale.vehicles then
     for _, buyer in pairs(buyers) do
       if type(buyer) ~= "table" then
@@ -8226,8 +8346,12 @@ function entity_status_presentation(entity)
       return "No customer settlements", FACTORYX_STATE_COLORS.bad
     elseif market.kind == "saturated" then
       return "Market saturated", FACTORYX_STATE_COLORS.warning
+    elseif market.kind == "service-blocked" then
+      return "Prospects need charging", FACTORYX_STATE_COLORS.bad
     elseif market.kind == "committed" then
-      return "All prospects assigned", FACTORYX_STATE_COLORS.warning
+      return "All prospects reserved", FACTORYX_STATE_COLORS.warning
+    elseif market.kind == "unavailable" then
+      return "Refreshing prospects", FACTORYX_STATE_COLORS.warning
     elseif buyers.friendly_settlements == 0 then
       return "Customers hostile", FACTORYX_STATE_COLORS.bad
     end
@@ -8237,7 +8361,9 @@ function entity_status_presentation(entity)
   if entity.name == SALES_OFFICE_NAME and status == defines.entity_status.working then
     local market = classify_sales_office_market(sales_office_buyer_status(entity))
     if market.kind == "committed" then
-      return "All prospects assigned", FACTORYX_STATE_COLORS.warning
+      return "All prospects reserved", FACTORYX_STATE_COLORS.warning
+    elseif market.kind == "service-blocked" then
+      return "Prospects need charging", FACTORYX_STATE_COLORS.bad
     elseif market.kind == "low" then
       return "Low prospects", FACTORYX_STATE_COLORS.warning
     end
@@ -8366,13 +8492,28 @@ local function show_manufacturer_info_panel(player, entity)
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
     local prospect_color = (market_state.kind == "saturated"
       or market_state.kind == "committed"
+      or market_state.kind == "service-blocked"
+      or market_state.kind == "unavailable"
       or market_state.kind == "low")
       and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good
+    if market_state.kind == "service-blocked" then
+      prospect_color = FACTORYX_STATE_COLORS.bad
+    end
     local prospect_value
     if market_state.remaining == 0 then
       prospect_value = "None remaining"
-    elseif market_state.available == 0 then
-      prospect_value = string.format("%d remaining; all assigned", market_state.remaining)
+    elseif market_state.kind == "service-blocked" then
+      prospect_value = string.format(
+        "%d remaining; %d need charging",
+        market_state.remaining,
+        market_state.service_blocked
+      )
+    elseif market_state.available == 0 and market_state.assigned > 0 then
+      prospect_value = string.format(
+        "%d remaining; %d reserved",
+        market_state.remaining,
+        market_state.assigned
+      )
     else
       prospect_value = string.format(
         "%d remaining; %d unassigned",
@@ -8387,7 +8528,7 @@ local function show_manufacturer_info_panel(player, entity)
         label = "Prospects",
         value = prospect_value,
         color = prospect_color,
-        tooltip = "Prospects have not purchased an EV. Assigned prospects are reserved by an active Sales Office sale. Overlapping Sales Offices share the same prospect pool. At zero remaining, sales pause until colonies grow or coverage expands."
+        tooltip = "Prospects have not purchased an EV. Reserved prospects belong to a sale already in progress. Prospects that need charging cannot buy until powered service returns. Overlapping Sales Offices share one prospect pool."
       },
       {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
       {
@@ -8444,21 +8585,28 @@ local function show_manufacturer_info_panel(player, entity)
     elseif entity.disabled_by_script then
       if market_state.kind == "saturated" then
         summary = "Market saturated. Expand to another settlement."
+      elseif market_state.kind == "service-blocked" then
+        summary = string.format(
+          "Restore charging service for %d prospects.",
+          market_state.service_blocked
+        )
       elseif market_state.kind == "committed" then
         summary = string.format(
-          "%d prospects remain, but all are assigned. Expand coverage.",
+          "All %d remaining prospects are reserved by active sales.",
           market_state.remaining
         )
+      elseif market_state.kind == "unavailable" then
+        summary = "Refreshing prospect assignments."
       elseif buyer_status.friendly_settlements == 0 then
         summary = "Restore customer charging service."
       else
-        summary = "Waiting for an unassigned prospect."
+        summary = "Waiting for a prospect."
       end
       summary_color = FACTORYX_STATE_COLORS.warning
     elseif entity.status == defines.entity_status.working then
       if market_state.kind == "committed" then
         summary, summary_color = string.format(
-          "Sales active; all %d remaining prospects are assigned. Expand coverage.",
+          "Sales active; all %d remaining prospects are reserved by active sales. Expand coverage.",
           market_state.remaining
         ), FACTORYX_STATE_COLORS.warning
       elseif market_state.kind == "low" then
@@ -8554,12 +8702,20 @@ local function show_manufacturer_info_panel(player, entity)
       or "Blocked: remove finished products from the output inventory."
   elseif entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
-    if buyers.unowned == 0 then
+    local market = classify_sales_office_market(buyers)
+    if market.kind == "saturated" then
       next_step = "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
-    elseif buyers.friendly_settlements == 0 then
-      next_step = "Blocked: no friendly buyers remain here. Restore powered charging capacity to recover these settlements, or expand to another market."
+    elseif market.kind == "service-blocked" then
+      next_step = string.format(
+        "Blocked: restore powered charging service for %d prospects.",
+        market.service_blocked
+      )
+    elseif market.kind == "committed" then
+      next_step = "Waiting: every remaining prospect is reserved by a sale already in progress."
+    elseif market.kind == "unavailable" then
+      next_step = "Waiting: FactoryX is refreshing this office's prospect assignments."
     else
-      next_step = "Blocked: all prospects are assigned to active sales. Wait for a sale to complete or expand powered coverage to another settlement."
+      next_step = "Waiting for a prospect."
     end
   elseif missing_name then
     local item = prototypes.item[missing_name]
@@ -8854,6 +9010,7 @@ script.on_init(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  storage.factoryx_customer_lifecycle_version = CUSTOMER_LIFECYCLE_VERSION
   storage.factoryx_last_reservation_reconcile_tick = nil
   reconcile_office_buyer_reservations()
   storage.factoryx_last_reservation_reconcile_tick = game.tick
@@ -8891,6 +9048,8 @@ script.on_configuration_changed(function()
   sync_all_force_unlocks()
   sync_biter_customer_diplomacy()
   sync_customer_settlements()
+  storage.factoryx_customer_lifecycle_version = nil
+  reconcile_customer_lifecycle_state()
   storage.factoryx_last_reservation_reconcile_tick = nil
   reconcile_office_buyer_reservations()
   storage.factoryx_last_reservation_reconcile_tick = game.tick
@@ -9293,6 +9452,13 @@ for _, event_name in pairs({
   end
 end
 
+script.on_event(defines.events.on_object_destroyed, function(event)
+  if event.type == defines.target_type.entity and event.useful_id
+    and customer_unit_registry()[event.useful_id] then
+    unregister_customer_unit_number(event.useful_id)
+  end
+end)
+
 
 script.on_nth_tick(1, function()
   reset_underpowered_compute_progress()
@@ -9391,6 +9557,8 @@ script.on_nth_tick(UiRefresh.interval_ticks, function()
 end)
 
 script.on_nth_tick(600, function()
+  local lifecycle = reconcile_customer_lifecycle_state()
+  if lifecycle.repaired then sync_sales_office_buyers() end
   sync_biter_customer_diplomacy()
   sync_customer_service_states()
   update_sales_office_market_alerts()
@@ -9519,6 +9687,37 @@ remote.add_interface("factoryx", {
       attacking = command and command.type == defines.command.attack or false,
       scheduled = customer_road_rage_states()[unit_number] ~= nil
     }
+  end,
+  test_charger_allocator = function()
+    if not script.active_mods["factoryx_smoke"] then return nil end
+    local specs = {}
+    for station_key = 1, 3 do
+      specs[#specs + 1] = {
+        key = station_key,
+        station = station_key,
+        stalls = 4,
+        evs_per_stall = 12,
+        candidates = {{key = "settlement", settlement = "settlement", distance = station_key}}
+      }
+    end
+    local allocation = ChargerAllocator.allocate(specs, {settlement = 44})
+    local active_by_station = {}
+    for station_key = 1, 3 do
+      active_by_station[station_key] =
+        allocation.assignments[station_key].customer_requested_stalls
+    end
+    local requested_capacity =
+      allocation.requested_capacity_by_settlement_key.settlement or 0
+    return {
+      active_by_station = active_by_station,
+      requested_capacity = requested_capacity,
+      underserved = math.max(0, 44 - requested_capacity)
+    }
+  end,
+  test_customer_registered = function(unit_number)
+    if not script.active_mods["factoryx_smoke"] then return nil end
+    local entity = customer_unit_registry()[unit_number]
+    return entity ~= nil and entity.valid
   end,
   continuous_improvements = function(force_name)
     local force = game.forces[force_name or "player"]
