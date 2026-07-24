@@ -1163,6 +1163,9 @@ The branch should be implemented and balanced in this order:
    probabilistic recovery of recognizable EV ingredients. Explicit
    recipes are preferred over automatic recipe reversal so returns can be
    balanced and cannot create ingredient loops.
+   Wrecked EV remains visible in the Intermediate Products tab and logistic
+   request/filter selectors before Recycling is researched, so wreck cleanup
+   can be automated as soon as the first wreck appears.
 6. **Tesla Weapons** relocates the Tesla Gun/Turret branch without holmium,
    electrolyte, superconductors, or electromagnetic science. Recipes should use
    existing terrestrial and FactoryX intermediates such as Battery Packs,

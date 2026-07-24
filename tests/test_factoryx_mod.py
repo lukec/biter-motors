@@ -1118,10 +1118,16 @@ class FactoryXModTest(unittest.TestCase):
             ("x-high-energy-battery-pack", "x-factoryx-components"),
             ("x-dollar", "x-factoryx-capital"),
             ("x-ev-reservation", "raw-material"),
+            ("x-wrecked-ev", "x-factoryx-components"),
         ]:
             self.assertIn(f'item("{name}"', data)
             item_start = data.index(f'item("{name}"')
             self.assertIn(f'"{subgroup}"', data[item_start:item_start + 300])
+
+        wrecked_ev_start = data.index('item("x-wrecked-ev"')
+        wrecked_ev = data[wrecked_ev_start:wrecked_ev_start + 300]
+        self.assertIn('flags = {"always-show"}', wrecked_ev)
+        self.assertIn('"z[wrecked-ev]", 1', wrecked_ev)
 
         for name, subgroup in [
             ("x-prototype-roadster", "transport"),
@@ -1463,7 +1469,11 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn('holmium-plate', updates)
         self.assertNotIn('superconductor', updates)
         self.assertIn('item("x-wrecked-ev"', data)
-        self.assertIn('item("x-wrecked-ev", wrecked_ev_icon, "transport"', data)
+        self.assertIn(
+            'item("x-wrecked-ev", wrecked_ev_icon, "x-factoryx-components"',
+            data,
+        )
+        self.assertIn('flags = {"always-show"}', data)
         self.assertIn('recipe("x-wrecked-ev-recycling"', data)
         self.assertIn('if math.random() < 0.01', control)
         recycling_unlock = control[

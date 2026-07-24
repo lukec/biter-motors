@@ -1361,6 +1361,7 @@ expected_item_subgroups = {
     "x-high-energy-battery-pack": "x-factoryx-components",
     "x-dollar": "x-factoryx-capital",
     "x-ev-reservation": "raw-material",
+    "x-wrecked-ev": "x-factoryx-components",
 }
 for item_name, expected_subgroup in expected_item_subgroups.items():
     actual_subgroup = data["item"][item_name]["subgroup"]
@@ -1368,6 +1369,13 @@ for item_name, expected_subgroup in expected_item_subgroups.items():
         raise SystemExit(f"{item_name} item subgroup mismatch: {actual_subgroup}")
 if data["item"]["x-ev-reservation"].get("hidden", False):
     raise SystemExit("EV Reservation must remain visible in item-filter selectors")
+wrecked_ev = data["item"]["x-wrecked-ev"]
+if wrecked_ev.get("hidden", False):
+    raise SystemExit("Wrecked EV must remain visible in item-filter selectors")
+if "always-show" not in wrecked_ev.get("flags", []):
+    raise SystemExit("Wrecked EV must remain requestable before Recycling is unlocked")
+if wrecked_ev["stack_size"] != 1:
+    raise SystemExit(f"Wrecked EV stack size mismatch: {wrecked_ev['stack_size']}")
 
 expected_recipe_subgroups = {
     "x-prototype-roadster": "transport",

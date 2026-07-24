@@ -875,7 +875,9 @@ data:extend({
 data:extend({
   item("x-dollar", dollar_icon, "x-factoryx-capital", "a[dollar]", 100000),
   item("x-ev-reservation", ev_reservation_icon, "raw-material", "z[factoryx-ev-reservation]", 1000),
-  item("x-wrecked-ev", wrecked_ev_icon, "transport", "x-f[wrecked-ev]", 1),
+  item("x-wrecked-ev", wrecked_ev_icon, "x-factoryx-components", "z[wrecked-ev]", 1, {
+    flags = {"always-show"}
+  }),
   item("x-gigafactory-module", gigafactory_module_icon, "x-factoryx-components", "c[gigafactory-module]", 1),
   item("x-gigacast", gigacast_icon, "x-factoryx-components", "d[gigacast]", 10),
   item("x-ai-token", ai_token_icon, "science-pack", "h[x-ai-token]", 1000000, {weight = 1}),
