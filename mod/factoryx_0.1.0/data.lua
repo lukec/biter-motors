@@ -1540,18 +1540,18 @@ data:extend({
   ),
   recipe("x-high-energy-battery-pack", {"advanced-crafting", "x-vertical-integration"}, "x-factoryx-components", "c-a[high-energy-pack]",
     {
-      {type = "item", name = "accumulator", amount = 1},
-      {type = "item", name = "x-high-nickel-cell", amount = 8},
-      {type = "item", name = "advanced-circuit", amount = 4}
+      {type = "item", name = "x-high-nickel-cell", amount = 4},
+      {type = "item", name = "steel-plate", amount = 4},
+      {type = "item", name = "advanced-circuit", amount = 2}
     },
     {{type = "item", name = "x-high-energy-battery-pack", amount = 1}}, 8,
     {allow_productivity = false}
   ),
   recipe("x-lfp-battery-pack", {"advanced-crafting", "x-vertical-integration"}, "x-factoryx-components", "c-b[lfp-pack]",
     {
-      {type = "item", name = "accumulator", amount = 1},
-      {type = "item", name = "x-lfp-cell", amount = 8},
-      {type = "item", name = "electronic-circuit", amount = 4}
+      {type = "item", name = "x-lfp-cell", amount = 4},
+      {type = "item", name = "steel-plate", amount = 4},
+      {type = "item", name = "electronic-circuit", amount = 2}
     },
     {{type = "item", name = "x-lfp-battery-pack", amount = 1}}, 6,
     {allow_productivity = false}
@@ -1722,12 +1722,12 @@ data:extend({
   ),
   recipe("x-high-energy-battery-recovery", {"recycling"}, "x-factoryx-components", "z-a[high-energy-recovery]",
     {{type = "item", name = "x-damaged-high-energy-battery-pack", amount = 10}},
-    {{type = "item", name = "x-high-nickel-cell", amount = 72}}, 20,
+    {{type = "item", name = "x-high-nickel-cell", amount = 36}}, 20,
     {allow_productivity = false, auto_recycle = false}
   ),
   recipe("x-lfp-battery-recovery", {"recycling"}, "x-factoryx-components", "z-b[lfp-recovery]",
     {{type = "item", name = "x-damaged-lfp-battery-pack", amount = 10}},
-    {{type = "item", name = "x-lfp-cell", amount = 72}}, 20,
+    {{type = "item", name = "x-lfp-cell", amount = 36}}, 20,
     {allow_productivity = false, auto_recycle = false}
   ),
   recipe("x-electric-semi", {"advanced-crafting", "x-vertical-integration"}, "transport", "x-f[electric-semi]",

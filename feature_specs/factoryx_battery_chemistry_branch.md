@@ -74,10 +74,13 @@ Only two new natural resources are added to Nauvis:
 - `Nickel Ore`: solid drill-mined patches.
 - `Lithium Brine`: pumpjack fields.
 
-Both use uranium's ordinary 1.25 patches/km2, but their regular-resource fade-in
-begins at 240 tiles instead of uranium's 300. This allows battery deposits to
-begin at exactly 80% of uranium's exclusion distance without guaranteeing a
-starting-area patch. The actual nearest deposit remains map-seed dependent.
+Lithium Brine uses uranium's ordinary 1.25 patches/km2. Nickel is a mainline
+manufacturing input, so it uses 2.0 expected patches/km2 at 1.25 base density
+instead of uranium-like 1.25 patches/km2 at 2.0 density. Expected total nickel
+remains roughly unchanged, but it is distributed across more, smaller deposits
+and is less vulnerable to a bad map seed. Both resources begin their
+regular-resource fade-in at 240 tiles instead of uranium's 300, without a
+guaranteed starting-area patch.
 
 Existing resources supply the rest: coal becomes Battery Graphite, stone
 becomes Phosphate, and iron supplies LFP cathodes. Early nickel refining emits
@@ -108,8 +111,8 @@ Quantities are balance targets for the first implementation pass.
 | Cell-scale Premium EV | 1 Car + 8 High-Energy Battery Packs + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 20 s |
 | LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 4 LFP Cells | 6 s |
 | Cell-scale LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
-| High-Energy Battery Pack | 1 Accumulator + 8 High-Nickel Cells + 4 Advanced Circuits | 1 pack | 8 s |
-| LFP Battery Pack | 1 Accumulator + 8 LFP Cells + 4 Electronic Circuits | 1 pack | 6 s |
+| High-Energy Battery Pack | 4 High-Nickel Cells + 4 Steel Plates + 2 Advanced Circuits | 1 pack | 8 s |
+| LFP Battery Pack | 4 LFP Cells + 4 Steel Plates + 2 Electronic Circuits | 1 pack | 6 s |
 
 Gigafactory V2's clean recipes are capped at these yields:
 
@@ -142,14 +145,14 @@ Ninety percent means active cell-material recovery, not recovery of the entire
 vehicle bill of materials:
 
 ```text
-10 Damaged High-Energy Battery Packs -> 72 High-Nickel Cells
-10 Damaged LFP Battery Packs         -> 72 LFP Cells
+10 Damaged High-Energy Battery Packs -> 36 High-Nickel Cells
+10 Damaged LFP Battery Packs         -> 36 LFP Cells
 ```
 
-Ten original packs contain 80 cells; 72 recovered cells can rebuild nine
-packs. The player must still supply nine fresh Accumulators and nine sets of
-electronics. Chassis, drivetrains, circuits, quality bonuses, Dollars and
-science are never created by battery recovery.
+Ten original packs contain 40 cells; 36 recovered cells can rebuild nine
+packs. The player must still supply fresh steel and electronics for all nine.
+Chassis, drivetrains, circuits, quality bonuses, Dollars and science are never
+created by battery recovery.
 
 Vehicle retirement produces damaged packs according to the packs embodied in
 that vehicle class. The existing Wrecked EV remains chassis salvage. Killing
@@ -166,12 +169,13 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
 - The commodity-cell pilot consumes 48 conventional Batteries per Premium EV.
   One hundred vehicles therefore require 4,800 Batteries, making the old
   sulfuric-acid, iron, and copper supply chain a visible scale bottleneck.
-- A dirty High-Energy Pack costs about 15 Iron, 25 Copper, 8 Plastic and 300
-  Sulfuric Acid before productivity, then adds 20 Nickel Ore, 50 Lithium Brine
-  and 10 Coal.
-- An LFP pack avoids nickel, cobalt, graphite and red circuits, but still adds
-  approximately 8 Iron, 10 Stone, 100 Lithium Brine and 50 Sulfuric Acid to its
-  Accumulator-and-green-circuit base. It is cheaper, not free.
+- A dirty High-Energy Pack uses one complete early cell batch: 10 Nickel Ore,
+  25 Lithium Brine and 5 Coal, plus 4 Steel Plates and 2 Advanced Circuits for
+  its enclosure and battery management. Nickel mining/refining and tailings
+  treatment remain the dominant chemical cost.
+- An LFP pack avoids nickel, cobalt, graphite and red circuits. It still needs
+  25 Lithium Brine, iron and phosphate for four cells, plus 4 Steel Plates and
+  2 Electronic Circuits for pack hardware. It is cheaper, not free.
 - Cell-scale recipes improve cell yield by 25%. Clean refining plus cell-scale
   manufacturing improves cells per ore by about 56% over the dirty process;
   the branch does not reach a 2x material multiplier.
@@ -180,7 +184,7 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
   This prevents Gigafactory V2's 150% built-in productivity from compounding
   with 90% recycling.
 - Recycling recovers exactly 90% of cells in ten-pack batches and zero fresh
-  electronics, Accumulators or vehicle parts. No probabilistic output can
+  electronics, steel or vehicle parts. No probabilistic output can
   round recovery above 90%.
 - Tailings treatment is a disposal cost. It does not return acid, nickel or
   lithium, so dirty refining cannot form a positive material loop.

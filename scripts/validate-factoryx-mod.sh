@@ -1354,6 +1354,37 @@ for recipe_name, expected in expected_terrestrial_recipes.items():
     actual = {row["name"]: row["amount"] for row in recipe["ingredients"]}
     if actual != expected or recipe.get("surface_conditions"):
         raise SystemExit(f"{recipe_name} terrestrial recipe mismatch: {recipe}")
+
+expected_battery_pack_recipes = {
+    "x-high-energy-battery-pack": {
+        "x-high-nickel-cell": 4, "steel-plate": 4, "advanced-circuit": 2,
+    },
+    "x-lfp-battery-pack": {
+        "x-lfp-cell": 4, "steel-plate": 4, "electronic-circuit": 2,
+    },
+}
+for recipe_name, expected in expected_battery_pack_recipes.items():
+    recipe = data["recipe"][recipe_name]
+    actual = {row["name"]: row["amount"] for row in recipe["ingredients"]}
+    if actual != expected or recipe.get("allow_productivity", True):
+        raise SystemExit(f"{recipe_name} chemistry replacement mismatch: {recipe}")
+
+expected_battery_recovery = {
+    "x-high-energy-battery-recovery": (
+        "x-damaged-high-energy-battery-pack", "x-high-nickel-cell", 36,
+    ),
+    "x-lfp-battery-recovery": (
+        "x-damaged-lfp-battery-pack", "x-lfp-cell", 36,
+    ),
+}
+for recipe_name, (damaged_pack, cell_name, cell_count) in expected_battery_recovery.items():
+    recipe = data["recipe"][recipe_name]
+    ingredients = {row["name"]: row["amount"] for row in recipe["ingredients"]}
+    products = {row["name"]: row["amount"] for row in recipe["results"]}
+    if ingredients != {damaged_pack: 10}:
+        raise SystemExit(f"{recipe_name} damaged-pack input mismatch: {recipe}")
+    if products != {cell_name: cell_count} or recipe.get("allow_productivity", True):
+        raise SystemExit(f"{recipe_name} must recover exactly 90 percent of active cells: {recipe}")
 for technology_name in ("x-industrial-supply-chain", "big-mining-drill", "recycling"):
     packs = {row[0] for row in data["technology"][technology_name]["unit"]["ingredients"]}
     if packs != {"automation-science-pack", "logistic-science-pack"}:

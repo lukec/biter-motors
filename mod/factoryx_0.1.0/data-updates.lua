@@ -411,8 +411,10 @@ end
 data.raw.resource["x-nickel-ore"].autoplace = battery_mineral_autoplace({
   name = "x-nickel-ore",
   order = "d",
-  base_density = 2.0,
-  base_spots_per_km2 = 1.25,
+  -- Keep total expected ore roughly flat while making individual deposits
+  -- smaller and less seed-dependent than uranium-scale spacing.
+  base_density = 1.25,
+  base_spots_per_km2 = 2.0,
   random_spot_size_minimum = 2,
   random_spot_size_maximum = 4,
   regular_rq_factor_multiplier = 1.0,

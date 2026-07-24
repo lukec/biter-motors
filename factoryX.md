@@ -571,11 +571,14 @@ Mass-Market EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs;
 Megatrucks add high-energy packs to their mass-market donor vehicles. Nickel
 Ore and Lithium Brine are the only new natural resources. Coal supplies
 graphite, stone supplies phosphate, and early nickel refining produces a small
-cobalt byproduct.
+cobalt byproduct. Nickel uses more frequent, smaller deposits than uranium:
+`2.0` expected patches/km2 at `1.25` base density, with no deposits inside the
+240-tile exclusion. This keeps expected total ore roughly flat while reducing
+seed-dependent scarcity.
 
 Battery recycling is 90% efficient for active cell material only: ten damaged
-packs return 72 of their original 80 cells, enough to rebuild nine packs after
-supplying fresh Accumulators and electronics. Chemistry cannot be transmuted,
+packs return 36 of their original 40 cells, enough to rebuild nine packs after
+supplying fresh steel and electronics. Chemistry cannot be transmuted,
 customer kills do not drop recoverable packs, and battery refining, cell, pack,
 and recycling recipes reject productivity to prevent Gigafactory V2's built-in
 productivity from creating an overly rich closed loop.
@@ -588,8 +591,8 @@ Current simplified terrestrial recipes:
 
 - Sales Office: `Assembling Machine 2 + Radar + Concrete`.
 - V1 EV Charging Station: `Substation + Accumulators + Concrete`.
-- High-energy Battery Pack: `Accumulator + 8 High-Nickel Cells + 4 Advanced Circuits`.
-- LFP Battery Pack: `Accumulator + 8 LFP Cells + 4 Electronic Circuits`.
+- High-energy Battery Pack: `4 High-Nickel Cells + 4 Steel Plates + 2 Advanced Circuits`.
+- LFP Battery Pack: `4 LFP Cells + 4 Steel Plates + 2 Electronic Circuits`.
 - Electric Drivetrain: `Electric Engine Unit + Advanced Circuits + Copper Cable`.
 - Prototype Roadster: `Car + Batteries + Advanced Circuits`.
 - Premium EV pilot: `Car + 48 Batteries + Electric Drivetrains + Advanced Circuits`.

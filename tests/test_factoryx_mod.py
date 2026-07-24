@@ -914,10 +914,10 @@ class FactoryXModTest(unittest.TestCase):
         premium_sale_recipe = data[data.index('recipe("x-sell-premium-ev"'):data.index('recipe("x-sell-mass-market-ev"')]
 
         self.assertIn('{"advanced-crafting", "x-vertical-integration"}', battery_recipe)
-        self.assertIn('"accumulator"', battery_recipe)
-        self.assertIn('"x-high-nickel-cell"', battery_recipe)
-        self.assertIn('"advanced-circuit"', battery_recipe)
-        self.assertNotIn('"steel-plate"', battery_recipe)
+        self.assertNotIn('"accumulator"', battery_recipe)
+        self.assertIn('name = "x-high-nickel-cell", amount = 4', battery_recipe)
+        self.assertIn('name = "steel-plate", amount = 4', battery_recipe)
+        self.assertIn('name = "advanced-circuit", amount = 2', battery_recipe)
         self.assertIn('{"advanced-crafting"}', drivetrain_recipe)
         self.assertIn('"electric-engine-unit"', drivetrain_recipe)
         self.assertIn('"advanced-circuit"', drivetrain_recipe)
@@ -2096,8 +2096,35 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('initialize_patch_set("x-lithium-brine", false)', updates)
         self.assertIn('local battery_mineral_fade = "clamp((distance - 240) / 60, 0, 1)"', updates)
         self.assertIn("local function battery_mineral_autoplace", updates)
-        self.assertEqual(updates.count("base_spots_per_km2 = 1.25"), 2)
+        nickel_autoplace = updates[
+            updates.index('data.raw.resource["x-nickel-ore"].autoplace'):
+            updates.index('resource_autoplace.initialize_patch_set("x-lithium-brine", false)')
+        ]
+        lithium_autoplace = updates[
+            updates.index('data.raw.resource["x-lithium-brine"].autoplace'):
+            updates.index('nauvis.map_gen_settings.autoplace_controls["x-nickel-ore"]')
+        ]
+        self.assertIn("base_density = 1.25", nickel_autoplace)
+        self.assertIn("base_spots_per_km2 = 2.0", nickel_autoplace)
+        self.assertIn("base_density = 5.0", lithium_autoplace)
+        self.assertIn("base_spots_per_km2 = 1.25", lithium_autoplace)
         self.assertIn('frequency = 1.0, size = 1.0, richness = 1.0', updates)
+        high_pack = data[
+            data.index('recipe("x-high-energy-battery-pack"'):
+            data.index('recipe("x-lfp-battery-pack"')
+        ]
+        lfp_pack = data[
+            data.index('recipe("x-lfp-battery-pack"'):
+            data.index('recipe("x-clean-nickel-refining"')
+        ]
+        self.assertNotIn('"accumulator"', high_pack)
+        self.assertIn('name = "x-high-nickel-cell", amount = 4', high_pack)
+        self.assertIn('name = "steel-plate", amount = 4', high_pack)
+        self.assertIn('name = "advanced-circuit", amount = 2', high_pack)
+        self.assertNotIn('"accumulator"', lfp_pack)
+        self.assertIn('name = "x-lfp-cell", amount = 4', lfp_pack)
+        self.assertIn('name = "steel-plate", amount = 4', lfp_pack)
+        self.assertIn('name = "electronic-circuit", amount = 2', lfp_pack)
         premium = data[data.index('recipe("x-premium-ev-cell-scale"'):data.index('recipe("x-mass-market-ev"')]
         mass = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-cybertruck"')]
         megapack = data[data.index('recipe("x-megapack"'):data.index('recipe("x-autonomy-computer"')]
@@ -2107,9 +2134,9 @@ class FactoryXModTest(unittest.TestCase):
         high_recovery = data[data.index('recipe("x-high-energy-battery-recovery"'):data.index('recipe("x-lfp-battery-recovery"')]
         lfp_recovery = data[data.index('recipe("x-lfp-battery-recovery"'):data.index('recipe("x-electric-semi"')]
         self.assertIn('amount = 10', high_recovery)
-        self.assertIn('name = "x-high-nickel-cell", amount = 72', high_recovery)
+        self.assertIn('name = "x-high-nickel-cell", amount = 36', high_recovery)
         self.assertIn('amount = 10', lfp_recovery)
-        self.assertIn('name = "x-lfp-cell", amount = 72', lfp_recovery)
+        self.assertIn('name = "x-lfp-cell", amount = 36', lfp_recovery)
         self.assertIn('allow_productivity = false', high_recovery)
         self.assertIn('allow_productivity = false', lfp_recovery)
         item_art_slugs = [
