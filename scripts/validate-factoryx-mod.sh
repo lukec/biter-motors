@@ -856,6 +856,7 @@ script.on_nth_tick(3780, function()
   local vehicle_ownership = remote.call("factoryx", "customer_vehicle_ownership", "player")
   local sales_office_status = remote.call("factoryx", "sales_office_status", "player")
   local charger_allocator = remote.call("factoryx", "test_charger_allocator")
+  local sales_office_market = remote.call("factoryx", "test_sales_office_market")
   local maximum_settlement_capacity = 0
   for _, office_status in pairs(sales_office_status or {}) do
     for _, settlement_status in pairs(office_status.settlements or {}) do
@@ -1018,6 +1019,7 @@ script.on_nth_tick(3780, function()
     progression_integrity = progression_integrity,
     vehicle_ownership = vehicle_ownership,
     charger_allocator = charger_allocator,
+    sales_office_market = sales_office_market,
     maximum_settlement_capacity = maximum_settlement_capacity,
     preproduction_market = storage.preproduction_market,
     biter_customer_mode = market and market.biter_customer_mode,
@@ -2019,6 +2021,18 @@ if charger_allocator.get("active_by_station") != [1, 1, 1]:
     raise SystemExit(f"demand-first charger allocation did not balance one stall onto each eligible charger: {checked}")
 if charger_allocator.get("requested_capacity") != 36 or charger_allocator.get("underserved") != 8:
     raise SystemExit(f"one-stall-per-settlement charger capacity was not preserved: {checked}")
+sales_office_market = checked.get("sales_office_market", {})
+for field in (
+    "keeper_retained",
+    "duplicate_flagged",
+    "isolated_retained",
+    "unique_edge_retained",
+    "partial_duplicate_flagged",
+):
+    if sales_office_market.get(field) is not True:
+        raise SystemExit(f"Sales Office market redundancy policy failed {field}: {checked}")
+if sales_office_market.get("shared_market_offices") != 4:
+    raise SystemExit(f"Sales Office market peer count was not local and deterministic: {checked}")
 if checked.get("market", {}).get("active_customer_stalls") != 2:
     raise SystemExit(f"charging utilization must be capped by sold EVs and the two served settlements: {checked}")
 next_charging_step = checked.get("market", {}).get("next_charging_step", {})

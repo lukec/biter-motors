@@ -666,19 +666,25 @@ still requires reaching additional colonies. If an owner dies, its vehicle
 leaves the active fleet immediately; lifetime sales remain in the economic
 statistics.
 
-Sales Offices warn before that local market is exhausted. At 20% or fewer
-unowned prospects remaining, the office uses an amber beacon and native
-`Low prospects` status; at zero it reports `Market saturated`. Its diagnostics
-show prospects remaining, unassigned, reserved by active sales, or blocked by
-inadequate charging service. Overlapping Sales Offices share the same local
-prospect pools, but `reserved` is used only for a buyer actually held by an
-active sale; charging-blocked prospects are reported separately.
-A persistent map alert directs the player to establish Sales Office and powered
-charging coverage at another biter settlement. Reservation counters are
-periodically rebuilt from active contracts so an interrupted sale or old save
-cannot strand virtual prospects indefinitely. If aggregate prospect counts say
-a buyer exists but the settlement queue cannot provide one, the Sales Office
-rebuilds the queue and retries immediately.
+Sales Office saturation warnings are intentionally cleanup-oriented. The
+clicked panel always reports local prospect health, but amber beacons and
+persistent map alerts appear at 20% or fewer prospects only on an office whose
+entire settlement coverage is duplicated by other offices. FactoryX
+deterministically preserves the oldest office needed for each settlement and
+marks only later, fully redundant offices as `Surplus Sales Office`; the alert
+asks the player to deconstruct that office while keeping one local office for
+future settlement growth. An office that adds unique edge coverage is never
+flagged merely because part of its market overlaps another office. Charging
+service failures remain red and actionable regardless of office count.
+
+Sales Office diagnostics show prospects remaining, unassigned, reserved by
+active sales, or blocked by inadequate charging service. Overlapping Sales
+Offices share the same local prospect pools, but `reserved` is used only for a
+buyer actually held by an active sale; charging-blocked prospects are reported
+separately. Reservation counters are periodically rebuilt from active contracts
+so an interrupted sale or old save cannot strand virtual prospects indefinitely.
+If aggregate prospect counts say a buyer exists but the settlement queue cannot
+provide one, the Sales Office rebuilds the queue and retries immediately.
 
 Holding or selecting a Sales Office shows its 128-tile customer conversion
 radius. Hostile biter entities inside that radius are converted into customer

@@ -104,14 +104,15 @@ class FactoryXModTest(unittest.TestCase):
     def test_sales_office_panel_explains_market_saturation(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn('label = "EV owners"', control)
-        self.assertIn('return "Market saturated", FACTORYX_STATE_COLORS.warning', control)
+        self.assertIn('return "Surplus Sales Office", FACTORYX_STATE_COLORS.warning', control)
+        self.assertIn('return "Waiting for market growth", FACTORYX_STATE_COLORS.neutral', control)
         self.assertIn('label = "Prospects"', control)
         self.assertIn('"%d remaining; %d reserved"', control)
         self.assertIn('"%d remaining; %d need charging"', control)
         self.assertIn('"%d remaining; %d unassigned"', control)
-        self.assertIn('return "All prospects reserved", FACTORYX_STATE_COLORS.warning', control)
+        self.assertIn('return "Prospects reserved", FACTORYX_STATE_COLORS.neutral', control)
         self.assertIn('return "Prospects need charging", FACTORYX_STATE_COLORS.bad', control)
-        self.assertIn('"Low prospects"', control)
+        self.assertIn('"Surplus office - %d prospects remain"', control)
         self.assertIn("SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20", control)
         self.assertIn("Reserved prospects belong to a sale already in progress.", control)
         self.assertIn("Overlapping Sales Offices share one prospect pool.", control)
@@ -169,10 +170,39 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('warning_sprite_prefix = "x-sales-office-status-amber-frame-"', control)
         self.assertIn("defines.entity_status_diode.yellow", control)
         self.assertIn("function update_sales_office_market_alerts()", control)
-        self.assertIn("Sales Office market saturated.", control)
+        self.assertIn("Surplus Sales Office in a saturated market.", control)
         self.assertIn("entry.entity.status == defines.entity_status.working", control)
         self.assertIn('name = "x-sales-office-status-" .. status.color .. "-frame-" .. frame_index', data)
         self.assertNotIn('working_animation("sales-office-lights"', data)
+
+    def test_sales_office_saturation_only_warns_on_surplus_coverage(self):
+        control = (MOD / "control.lua").read_text()
+        market_policy = (MOD / "runtime" / "sales_office_market.lua").read_text()
+        validator = (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text()
+
+        self.assertIn('require("runtime.sales_office_market")', control)
+        self.assertIn("function SalesOfficeMarket.classify(office_specs)", market_policy)
+        self.assertIn("state.market_office_count > 1", market_policy)
+        self.assertIn("and not preserves_settlement", market_policy)
+        self.assertIn("build_sales_office_market_topology(", control)
+        self.assertIn("service.sales_office_market", control)
+        self.assertIn("surplus_office = buyer_status.surplus_office == true", control)
+
+        visual = control[
+            control.index("local function update_factoryx_runtime_visuals()"):
+            control.index("function charger_stall_visuals()")
+        ]
+        self.assertIn("and market_state.surplus_office", visual)
+        self.assertIn("quiet_mature_market", visual)
+
+        alerts = control[
+            control.index("function sales_office_market_alert_message"):
+            control.index("function reserve_office_buyers")
+        ]
+        self.assertIn("state and state.surplus_office", alerts)
+        self.assertIn("Deconstruct this office", alerts)
+        self.assertIn('test_sales_office_market = function()', control)
+        self.assertIn('"unique_edge_retained"', validator)
 
     def test_sales_office_reconciles_stale_buyer_reservations(self):
         control = (MOD / "control.lua").read_text()
@@ -2585,6 +2615,7 @@ class FactoryXModTest(unittest.TestCase):
         robotaxi_service = (MOD / "runtime/robotaxi_service.lua").read_text()
         power_queue = (MOD / "runtime/power_queue.lua").read_text()
         ui_refresh = (MOD / "runtime/ui_refresh.lua").read_text()
+        sales_office_market = (MOD / "runtime/sales_office_market.lua").read_text()
         benchmark = (ROOT / "scripts/benchmark-factoryx-scale.sh").read_text()
         self.assertIn("function TimingWheel.schedule", timing_wheel)
         self.assertIn("function TimingWheel.pop_due", timing_wheel)
@@ -2600,9 +2631,11 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("interval_ticks = 300", ui_refresh)
         self.assertIn("progress_interval_ticks = 1800", ui_refresh)
         self.assertIn("function UiRefresh.should_refresh_progress", ui_refresh)
+        self.assertIn("function SalesOfficeMarket.classify", sales_office_market)
         self.assertIn('require("runtime.robotaxi_service")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.power_queue")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.ui_refresh")', (MOD / "control.lua").read_text())
+        self.assertIn('require("runtime.sales_office_market")', (MOD / "control.lua").read_text())
         self.assertIn("factoryx_progress_panel_signatures", (MOD / "control.lua").read_text())
         self.assertIn("FACTORYX_BENCHMARK_UNITS:-20000", benchmark)
         self.assertIn("FACTORYX_BENCHMARK_CAPS", benchmark)

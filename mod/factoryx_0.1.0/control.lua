@@ -8,6 +8,7 @@ UiRefresh = require("runtime.ui_refresh")
 EvAutopilot = require("runtime.ev_autopilot")
 ProductionHistory = require("runtime.production_history")
 ChargerAllocator = require("runtime.charger_allocator")
+SalesOfficeMarket = require("runtime.sales_office_market")
 
 local STATION_NAMES = {
   "x-ev-charging-station",
@@ -567,9 +568,14 @@ local function update_factoryx_runtime_visuals()
           and (market_state.kind == "low"
             or market_state.kind == "committed"
             or market_state.kind == "saturated")
+          and market_state.surplus_office
           and (entry.entity.status == defines.entity_status.working
             or entry.entity.disabled_by_script)
+        local quiet_mature_market = market_state
+          and (market_state.kind == "saturated" or market_state.kind == "committed")
+          and not market_state.surplus_office
         local prefix = market_warning and entry.warning_sprite_prefix
+          or (quiet_mature_market and entry.working_sprite_prefix)
           or (entry.entity.status == defines.entity_status.working
             and entry.working_sprite_prefix or entry.stopped_sprite_prefix)
         entry.object.sprite = prefix .. frame_index
@@ -3570,6 +3576,42 @@ local function office_covered_settlements(offices)
   return sorted_entities(settlements)
 end
 
+function build_sales_office_market_topology(
+  offices,
+  settlements,
+  capacity_by_settlement_key
+)
+  local specs = {}
+  local specs_by_unit_number = {}
+  for _, office in pairs(offices or {}) do
+    if office.valid and office.unit_number then
+      local spec = {
+        key = office.unit_number,
+        settlement_keys = {}
+      }
+      specs[#specs + 1] = spec
+      specs_by_unit_number[office.unit_number] = spec
+    end
+  end
+
+  for _, settlement in pairs(settlements or {}) do
+    if settlement and settlement.valid then
+      local key = settlement_key(settlement.surface, settlement)
+      local population = customer_settlement_populations()[key]
+      if population and (capacity_by_settlement_key[key] or 0) > 0 then
+        for _, office in pairs(offices or {}) do
+          if office.valid and office.surface == settlement.surface
+            and within_radius(office, settlement, SALES_OFFICE_CUSTOMER_RADIUS) then
+            specs_by_unit_number[office.unit_number].settlement_keys[key] = true
+          end
+        end
+      end
+    end
+  end
+
+  return SalesOfficeMarket.classify(specs)
+end
+
 function customer_settlement_moods(force)
   storage.factoryx_customer_settlement_moods = storage.factoryx_customer_settlement_moods or {}
   storage.factoryx_customer_settlement_moods[force.index] = storage.factoryx_customer_settlement_moods[force.index] or {}
@@ -3663,7 +3705,8 @@ customer_service_for_force = function(force, advance_mood)
     supported_ev_capacity = 0,
     average_evs_per_stall = 0,
     stranded_evs = 0,
-    underserved_settlements = 0
+    underserved_settlements = 0,
+    sales_office_market = {by_office = {}}
   }
   if not player_market_force(force) then
     return service
@@ -3794,6 +3837,11 @@ customer_service_for_force = function(force, advance_mood)
       service.supported_ev_capacity / service.powered_stall_capacity + 0.5
     )
   end
+  service.sales_office_market = build_sales_office_market_topology(
+    offices,
+    candidates,
+    service.capacity_by_settlement_key
+  )
   storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
   storage.factoryx_perf_counters.market_snapshot_builds =
     (storage.factoryx_perf_counters.market_snapshot_builds or 0) + 1
@@ -6890,24 +6938,31 @@ function sales_office_buyer_status(office)
       powered_capacity = 0,
       underserved = 0,
       friendly_settlements = 0,
-      unowned = 0
+      unowned = 0,
+      market_office_count = 0,
+      duplicated_settlements = 0,
+      surplus_office = false
     }
   end
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
   local reserved_by_settlement = reserved_customer_buyers_by_settlement(office.force)
-  local eligible_keys = {}
-  local settlements = 0
+  local office_market = service.sales_office_market
+    and service.sales_office_market.by_office[office.unit_number]
+  local eligible_keys = office_market and office_market.settlement_keys or {}
+  local settlements = office_market and office_market.settlement_count or 0
   local stale_snapshot = false
   for _, settlement in pairs(service.candidate_settlements or {}) do
     if settlement and settlement.valid then
-      local key = settlement_key(settlement.surface, settlement)
-      local population = customer_settlement_populations()[key]
-      if (service.capacity_by_settlement_key[key] or 0) > 0
-        and population and population.surface_index == office.surface.index
-        and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
-        eligible_keys[key] = true
-        settlements = settlements + 1
+      if not office_market then
+        local key = settlement_key(settlement.surface, settlement)
+        local population = customer_settlement_populations()[key]
+        if (service.capacity_by_settlement_key[key] or 0) > 0
+          and population and population.surface_index == office.surface.index
+          and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS) then
+          eligible_keys[key] = true
+          settlements = settlements + 1
+        end
       end
     else
       stale_snapshot = true
@@ -6958,7 +7013,11 @@ function sales_office_buyer_status(office)
     powered_capacity = powered_capacity,
     underserved = math.max(0, owned - powered_capacity),
     friendly_settlements = friendly_settlements,
-    unowned = math.max(0, customers - owned)
+    unowned = math.max(0, customers - owned),
+    market_office_count = office_market and office_market.market_office_count
+      or (settlements > 0 and 1 or 0),
+    duplicated_settlements = office_market and office_market.duplicated_settlements or 0,
+    surplus_office = office_market and office_market.surplus_office == true or false
   }
 end
 
@@ -6995,7 +7054,10 @@ function classify_sales_office_market(buyer_status)
     assigned = assigned,
     service_blocked = service_blocked,
     percent = percent,
-    threshold = threshold
+    threshold = threshold,
+    market_office_count = buyer_status.market_office_count or 0,
+    duplicated_settlements = buyer_status.duplicated_settlements or 0,
+    surplus_office = buyer_status.surplus_office == true
   }
 end
 
@@ -7009,19 +7071,29 @@ function update_sales_office_market_feedback(office, buyer_status)
   local diode
   if sale and (office.status == defines.entity_status.working or office.disabled_by_script) then
     if state.kind == "saturated" then
-      label = "Market saturated - expand coverage"
-      diode = defines.entity_status_diode.yellow
+      if state.surplus_office then
+        label = "Surplus office - market saturated"
+        diode = defines.entity_status_diode.yellow
+      else
+        label = "Waiting for market growth"
+        diode = defines.entity_status_diode.green
+      end
     elseif state.kind == "service-blocked" then
       label = string.format("Charging service blocks %d prospects", state.service_blocked)
       diode = defines.entity_status_diode.red
     elseif state.kind == "committed" then
-      label = string.format("All %d remaining prospects reserved", state.remaining)
-      diode = defines.entity_status_diode.yellow
+      if state.surplus_office then
+        label = string.format("Surplus office - %d prospects remain", state.remaining)
+        diode = defines.entity_status_diode.yellow
+      else
+        label = string.format("%d prospects reserved by active sales", state.remaining)
+        diode = defines.entity_status_diode.green
+      end
     elseif state.kind == "unavailable" then
       label = "Refreshing prospect assignments"
       diode = defines.entity_status_diode.yellow
-    elseif state.kind == "low" then
-      label = string.format("Low prospects - %d remain", state.remaining)
+    elseif state.kind == "low" and state.surplus_office then
+      label = string.format("Surplus office - %d prospects remain", state.remaining)
       diode = defines.entity_status_diode.yellow
     elseif state.kind == "no-market" and office.disabled_by_script then
       label = "No customer market"
@@ -7036,7 +7108,7 @@ end
 
 function sales_office_market_alert_message(state)
   if state.kind == "saturated" then
-    return "Sales Office market saturated. Establish Sales Office and powered charging coverage at another biter settlement."
+    return "Surplus Sales Office in a saturated market. Deconstruct this office; another Sales Office preserves local coverage for future growth."
   elseif state.kind == "service-blocked" then
     return string.format(
       "Sales Office has %d prospects blocked by inadequate charging service. Restore powered charging near their settlements.",
@@ -7044,12 +7116,12 @@ function sales_office_market_alert_message(state)
     )
   elseif state.kind == "committed" then
     return string.format(
-      "Sales Office has %d prospects remaining, all reserved by active sales. Overlapping offices share this prospect pool. Expand to another biter settlement.",
+      "Surplus Sales Office shares %d prospects already reserved by active sales. Deconstruct this office; another Sales Office preserves local coverage.",
       state.remaining
     )
   end
   return string.format(
-    "Sales Office has only %d prospects remaining (%d%% of its local market). Expand to another biter settlement.",
+    "Surplus Sales Office shares a nearly saturated market with only %d prospects remaining (%d%%). Deconstruct this office; another Sales Office preserves local coverage.",
     state.remaining,
     state.percent
   )
@@ -7066,10 +7138,11 @@ function update_sales_office_market_alerts()
       local state = office.valid and office.unit_number and states[office.unit_number]
       local recipe = office.valid and office.get_recipe()
       local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
-      local warning = state and (state.kind == "low"
-        or state.kind == "committed"
-        or state.kind == "service-blocked"
-        or state.kind == "saturated")
+      local saturation_warning = state and state.surplus_office
+        and (state.kind == "low"
+          or state.kind == "committed"
+          or state.kind == "saturated")
+      local warning = state and (state.kind == "service-blocked" or saturation_warning)
       if sale and warning and office.surface == player.surface
         and (office.status == defines.entity_status.working or office.disabled_by_script) then
         active[office.unit_number] = office
@@ -8329,11 +8402,17 @@ function entity_status_presentation(entity)
     if market.kind == "no-market" then
       return "No customer settlements", FACTORYX_STATE_COLORS.bad
     elseif market.kind == "saturated" then
-      return "Market saturated", FACTORYX_STATE_COLORS.warning
+      if market.surplus_office then
+        return "Surplus Sales Office", FACTORYX_STATE_COLORS.warning
+      end
+      return "Waiting for market growth", FACTORYX_STATE_COLORS.neutral
     elseif market.kind == "service-blocked" then
       return "Prospects need charging", FACTORYX_STATE_COLORS.bad
     elseif market.kind == "committed" then
-      return "All prospects reserved", FACTORYX_STATE_COLORS.warning
+      if market.surplus_office then
+        return "Surplus Sales Office", FACTORYX_STATE_COLORS.warning
+      end
+      return "Prospects reserved", FACTORYX_STATE_COLORS.neutral
     elseif market.kind == "unavailable" then
       return "Refreshing prospects", FACTORYX_STATE_COLORS.warning
     elseif buyers.friendly_settlements == 0 then
@@ -8344,12 +8423,10 @@ function entity_status_presentation(entity)
   local status = entity.status
   if entity.name == SALES_OFFICE_NAME and status == defines.entity_status.working then
     local market = classify_sales_office_market(sales_office_buyer_status(entity))
-    if market.kind == "committed" then
-      return "All prospects reserved", FACTORYX_STATE_COLORS.warning
-    elseif market.kind == "service-blocked" then
+    if market.kind == "service-blocked" then
       return "Prospects need charging", FACTORYX_STATE_COLORS.bad
-    elseif market.kind == "low" then
-      return "Low prospects", FACTORYX_STATE_COLORS.warning
+    elseif market.surplus_office and (market.kind == "committed" or market.kind == "low") then
+      return "Surplus Sales Office", FACTORYX_STATE_COLORS.warning
     end
   end
   if status == defines.entity_status.working then
@@ -8474,14 +8551,18 @@ local function show_manufacturer_info_panel(player, entity)
     local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
-    local prospect_color = (market_state.kind == "saturated"
-      or market_state.kind == "committed"
-      or market_state.kind == "service-blocked"
-      or market_state.kind == "unavailable"
-      or market_state.kind == "low")
-      and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good
-    if market_state.kind == "service-blocked" then
+    local prospect_color = FACTORYX_STATE_COLORS.good
+    if market_state.kind == "service-blocked" or market_state.kind == "no-market" then
       prospect_color = FACTORYX_STATE_COLORS.bad
+    elseif market_state.kind == "unavailable"
+      or (market_state.surplus_office and (
+        market_state.kind == "saturated"
+          or market_state.kind == "committed"
+          or market_state.kind == "low"
+      )) then
+      prospect_color = FACTORYX_STATE_COLORS.warning
+    elseif market_state.kind == "saturated" or market_state.kind == "committed" then
+      prospect_color = FACTORYX_STATE_COLORS.neutral
     end
     local prospect_value
     if market_state.remaining == 0 then
@@ -8512,7 +8593,7 @@ local function show_manufacturer_info_panel(player, entity)
         label = "Prospects",
         value = prospect_value,
         color = prospect_color,
-        tooltip = "Prospects have not purchased an EV. Reserved prospects belong to a sale already in progress. Prospects that need charging cannot buy until powered service returns. Overlapping Sales Offices share one prospect pool."
+        tooltip = "Prospects have not purchased an EV. Reserved prospects belong to a sale already in progress. Prospects that need charging cannot buy until powered service returns. Overlapping Sales Offices share one prospect pool. Only an office whose entire settlement coverage is duplicated is flagged as surplus; one local office remains for future growth."
       },
       {sprite = "item/x-mass-market-ev", label = "EV owners", value = string.format("%d / %d", buyer_status.owned, buyer_status.customers)},
       {
@@ -8568,34 +8649,52 @@ local function show_manufacturer_info_panel(player, entity)
       summary, summary_color = "Clear the Dollar output.", FACTORYX_STATE_COLORS.bad
     elseif entity.disabled_by_script then
       if market_state.kind == "saturated" then
-        summary = "Market saturated. Expand to another settlement."
+        if market_state.surplus_office then
+          summary = "Market saturated. Deconstruct this surplus office; another local office preserves coverage."
+          summary_color = FACTORYX_STATE_COLORS.warning
+        else
+          summary = "Market saturated. Keep this office for future growth or expand sales elsewhere."
+          summary_color = FACTORYX_STATE_COLORS.neutral
+        end
       elseif market_state.kind == "service-blocked" then
         summary = string.format(
           "Restore charging service for %d prospects.",
           market_state.service_blocked
         )
+        summary_color = FACTORYX_STATE_COLORS.bad
       elseif market_state.kind == "committed" then
-        summary = string.format(
-          "All %d remaining prospects are reserved by active sales.",
-          market_state.remaining
-        )
+        if market_state.surplus_office then
+          summary = string.format(
+            "This surplus office shares %d prospects already reserved by active sales.",
+            market_state.remaining
+          )
+          summary_color = FACTORYX_STATE_COLORS.warning
+        else
+          summary = string.format(
+            "All %d remaining prospects are reserved by active sales.",
+            market_state.remaining
+          )
+          summary_color = FACTORYX_STATE_COLORS.neutral
+        end
       elseif market_state.kind == "unavailable" then
         summary = "Refreshing prospect assignments."
+        summary_color = FACTORYX_STATE_COLORS.warning
       elseif buyer_status.friendly_settlements == 0 then
         summary = "Restore customer charging service."
+        summary_color = FACTORYX_STATE_COLORS.bad
       else
         summary = "Waiting for a prospect."
+        summary_color = FACTORYX_STATE_COLORS.neutral
       end
-      summary_color = FACTORYX_STATE_COLORS.warning
     elseif entity.status == defines.entity_status.working then
-      if market_state.kind == "committed" then
+      if market_state.surplus_office and market_state.kind == "committed" then
         summary, summary_color = string.format(
-          "Sales active; all %d remaining prospects are reserved by active sales. Expand coverage.",
+          "Sales active, but this office duplicates coverage for all %d remaining prospects.",
           market_state.remaining
         ), FACTORYX_STATE_COLORS.warning
-      elseif market_state.kind == "low" then
+      elseif market_state.surplus_office and market_state.kind == "low" then
         summary, summary_color = string.format(
-          "Low prospects: %d remain (%d%%). Expand coverage.",
+          "This surplus office shares a nearly saturated market: %d prospects remain (%d%%).",
           market_state.remaining,
           market_state.percent
         ), FACTORYX_STATE_COLORS.warning
@@ -8688,7 +8787,9 @@ local function show_manufacturer_info_panel(player, entity)
     local buyers = sales_office_buyer_status(entity)
     local market = classify_sales_office_market(buyers)
     if market.kind == "saturated" then
-      next_step = "Market saturated: every mobile customer in this office's coverage already owns an EV. Establish powered charging and Sales Office coverage at another biter settlement."
+      next_step = market.surplus_office
+        and "Market saturated: deconstruct this surplus office; another local Sales Office preserves coverage for future growth."
+        or "Market saturated: keep this office for future growth, and establish powered charging and Sales Office coverage at another biter settlement."
     elseif market.kind == "service-blocked" then
       next_step = string.format(
         "Blocked: restore powered charging service for %d prospects.",
@@ -9696,6 +9797,24 @@ remote.add_interface("factoryx", {
       active_by_station = active_by_station,
       requested_capacity = requested_capacity,
       underserved = math.max(0, 44 - requested_capacity)
+    }
+  end,
+  test_sales_office_market = function()
+    if not script.active_mods["factoryx_smoke"] then return nil end
+    local market = SalesOfficeMarket.classify({
+      {key = 10, settlement_keys = {a = true, b = true}},
+      {key = 20, settlement_keys = {a = true, b = true}},
+      {key = 30, settlement_keys = {c = true}},
+      {key = 40, settlement_keys = {b = true, d = true}},
+      {key = 50, settlement_keys = {a = true}}
+    })
+    return {
+      keeper_retained = not market.by_office[10].surplus_office,
+      duplicate_flagged = market.by_office[20].surplus_office,
+      isolated_retained = not market.by_office[30].surplus_office,
+      unique_edge_retained = not market.by_office[40].surplus_office,
+      partial_duplicate_flagged = market.by_office[50].surplus_office,
+      shared_market_offices = market.by_office[10].market_office_count
     }
   end,
   test_customer_registered = function(unit_number)
