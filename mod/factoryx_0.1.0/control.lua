@@ -6,6 +6,7 @@ RobotaxiService = require("runtime.robotaxi_service")
 PowerQueue = require("runtime.power_queue")
 UiRefresh = require("runtime.ui_refresh")
 EvAutopilot = require("runtime.ev_autopilot")
+ProductionHistory = require("runtime.production_history")
 
 local STATION_NAMES = {
   "x-ev-charging-station",
@@ -797,12 +798,147 @@ local function safe_products_finished(entity)
 end
 
 function count_item_produced(force, item_name)
+  if item_name == PREMIUM_EV_NAME then
+    return count_premium_evs_produced(force)
+  end
+  return count_item_produced_raw(force, item_name)
+end
+
+function count_item_produced_raw(force, item_name)
   local count = 0
   for _, surface in pairs(game.surfaces) do
     local statistics = force.get_item_production_statistics(surface)
     count = count + (statistics.output_counts[item_name] or 0)
   end
   return count
+end
+
+function count_item_consumed_raw(force, item_name)
+  local count = 0
+  for _, surface in pairs(game.surfaces) do
+    local statistics = force.get_item_production_statistics(surface)
+    count = count + (statistics.input_counts[item_name] or 0)
+  end
+  return count
+end
+
+function production_history_by_force()
+  storage.factoryx_production_history_by_force =
+    storage.factoryx_production_history_by_force or {}
+  return storage.factoryx_production_history_by_force
+end
+
+TRANSPORT_LINE_ENTITY_TYPES = {
+  ["transport-belt"] = true,
+  ["underground-belt"] = true,
+  ["splitter"] = true,
+  ["loader"] = true,
+  ["loader-1x1"] = true
+}
+
+function unique_inventory_ids()
+  if factoryx_unique_inventory_ids then return factoryx_unique_inventory_ids end
+  local seen = {}
+  factoryx_unique_inventory_ids = {}
+  for _, inventory_id in pairs(defines.inventory) do
+    if not seen[inventory_id] then
+      seen[inventory_id] = true
+      factoryx_unique_inventory_ids[#factoryx_unique_inventory_ids + 1] = inventory_id
+    end
+  end
+  table.sort(factoryx_unique_inventory_ids)
+  return factoryx_unique_inventory_ids
+end
+
+function count_premium_ev_stock(force)
+  local count = 0
+  local inventory_ids = unique_inventory_ids()
+  for _, surface in pairs(game.surfaces) do
+    for _, entity in pairs(surface.find_entities_filtered{force = force}) do
+      if entity.type ~= "character" then
+        if entity.name == PREMIUM_EV_NAME then count = count + 1 end
+        for _, inventory_id in pairs(inventory_ids) do
+          local ok, inventory = pcall(function()
+            return entity.get_inventory(inventory_id)
+          end)
+          if ok and inventory and inventory.valid then
+            count = count + inventory.get_item_count(PREMIUM_EV_NAME)
+          end
+        end
+        if entity.type == "inserter"
+          and entity.held_stack.valid_for_read
+          and entity.held_stack.name == PREMIUM_EV_NAME then
+          count = count + entity.held_stack.count
+        end
+        if TRANSPORT_LINE_ENTITY_TYPES[entity.type] then
+          local max_line = entity.get_max_transport_line_index()
+          for line_index = 1, max_line do
+            count = count + entity.get_transport_line(line_index)
+              .get_item_count(PREMIUM_EV_NAME)
+          end
+        end
+      end
+    end
+    for _, entity in pairs(surface.find_entities_filtered{type = "item-entity"}) do
+      if entity.stack and entity.stack.valid_for_read
+        and entity.stack.name == PREMIUM_EV_NAME then
+        count = count + entity.stack.count
+      end
+    end
+  end
+  for _, player in pairs(force.players) do
+    local main = player.get_main_inventory()
+    if main then count = count + main.get_item_count(PREMIUM_EV_NAME) end
+    local ok, trash = pcall(function()
+      return player.get_inventory(defines.inventory.character_trash)
+    end)
+    if ok and trash then count = count + trash.get_item_count(PREMIUM_EV_NAME) end
+  end
+  return count
+end
+
+function premium_ev_production_history(force)
+  local histories = production_history_by_force()
+  histories[force.name] = ProductionHistory.ensure(histories[force.name])
+  return histories[force.name]
+end
+
+function count_premium_evs_produced(force)
+  local raw = count_item_produced_raw(force, PREMIUM_EV_NAME)
+  local consumed = count_item_consumed_raw(force, PREMIUM_EV_NAME)
+  local state = premium_ev_production_history(force)
+  local statistics_reset = state.reconciled and raw < state.last_raw
+  local proven_floor = consumed
+  if not state.reconciled or statistics_reset then
+    proven_floor = consumed + count_premium_ev_stock(force)
+  end
+  local was_reconciled = state.reconciled
+  local total
+  total, state = ProductionHistory.observe(state, raw, proven_floor)
+  production_history_by_force()[force.name] = state
+  if not was_reconciled and total > raw and not state.announced then
+    state.announced = true
+    force.print(string.format(
+      "[FactoryX] Reconciled Premium EV production history: %d lifetime vehicles (%d native production-stat count).",
+      total,
+      raw
+    ))
+  end
+  return total
+end
+
+function premium_ev_production_history_status(force)
+  local total = count_premium_evs_produced(force)
+  local state = premium_ev_production_history(force)
+  return {
+    total = total,
+    raw = count_item_produced_raw(force, PREMIUM_EV_NAME),
+    consumed = count_item_consumed_raw(force, PREMIUM_EV_NAME),
+    offset = state.offset,
+    reset_count = state.reset_count,
+    last_proven_floor = state.last_proven_floor,
+    reconciled = state.reconciled
+  }
 end
 
 function count_fluid_produced(force, fluid_name)
@@ -8919,6 +9055,10 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  premium_ev_production_history = function(force_name)
+    local force = game.forces[force_name or "player"]
+    return force and premium_ev_production_history_status(force) or nil
+  end,
   ev_autopilot_status = function(player_index)
     return ev_autopilot_status(player_index or 1)
   end,

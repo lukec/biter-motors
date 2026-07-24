@@ -230,6 +230,18 @@ script.on_init(function()
     orientation = 0.25,
     force = force
   }
+  for index, count in pairs({41, 41, 40}) do
+    local premium_history_chest =
+      create_named(surface, "steel-chest", {258 + index * 2, 100}, force)
+    premium_history_chest.get_inventory(defines.inventory.chest).insert{
+      name = PREMIUM_EV,
+      count = count
+    }
+  end
+  production_statistics.set_input_count(PREMIUM_EV, 156)
+  production_statistics.set_output_count(PREMIUM_EV, 0)
+  storage.premium_ev_history_after_reset =
+    remote.call("factoryx", "premium_ev_production_history", force.name)
   for x = 372, 388 do
     surface.create_entity{name = "stone-wall", position = {x, 92}, force = force}
     surface.create_entity{name = "stone-wall", position = {x, 108}, force = force}
@@ -863,6 +875,7 @@ script.on_nth_tick(3780, function()
     foundry_researched_after_qualification = game.forces.player.technologies.foundry.researched,
     advanced_battery_chemistry_enabled_at_100 = storage.advanced_battery_chemistry_enabled_at_100,
     advanced_battery_chemistry_enabled_at_250 = storage.advanced_battery_chemistry_enabled_at_250,
+    premium_ev_history_after_reset = storage.premium_ev_history_after_reset,
     gigafactory_recipe_enabled = gigafactory_item_recipe and gigafactory_item_recipe.enabled,
     gigafactory_module_recipe_enabled = gigafactory_module_recipe and gigafactory_module_recipe.enabled,
     premium_ev_recipe_enabled = premium_ev_recipe and premium_ev_recipe.enabled,
@@ -1686,6 +1699,13 @@ if checked.get("advanced_battery_chemistry_enabled_at_100"):
     raise SystemExit(f"Advanced Battery Chemistry unlocked at the 100-vehicle pilot instead of factory scale: {checked}")
 if not checked.get("advanced_battery_chemistry_enabled_at_250"):
     raise SystemExit(f"Advanced Battery Chemistry did not unlock after 250 Premium EVs: {checked}")
+premium_history = checked.get("premium_ev_history_after_reset") or {}
+if premium_history.get("total") != 280:
+    raise SystemExit(f"Premium EV lifetime history did not reconcile sold, stocked, and placed vehicles: {checked}")
+if premium_history.get("raw") != 0 or premium_history.get("reset_count", 0) < 1:
+    raise SystemExit(f"Premium EV lifetime history did not survive a native statistics reset: {checked}")
+if premium_history.get("last_proven_floor") != 280:
+    raise SystemExit(f"Premium EV lifetime history recorded the wrong proven floor: {checked}")
 if not checked.get("gigafactory_recipe_enabled"):
     raise SystemExit(f"The 100-vehicle Premium EV pilot did not unlock the Gigafactory recipe: {checked}")
 if not checked.get("logistic_system_available_before_sales"):

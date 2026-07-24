@@ -135,6 +135,21 @@ class FactoryXModTest(unittest.TestCase):
         prototype_sale = data[data.index('recipe("x-sell-prototype-roadster"'):data.index('recipe("x-sell-premium-ev"')]
         self.assertIn('}}, 60,', prototype_sale)
 
+    def test_premium_ev_production_history_survives_statistics_resets(self):
+        control = (MOD / "control.lua").read_text()
+        runtime = (MOD / "runtime" / "production_history.lua").read_text()
+        validator = (ROOT / "scripts" / "validate-factoryx-mod.sh").read_text()
+
+        self.assertIn('ProductionHistory = require("runtime.production_history")', control)
+        self.assertIn("function count_premium_ev_stock(force)", control)
+        self.assertIn("function count_premium_evs_produced(force)", control)
+        self.assertIn("consumed + count_premium_ev_stock(force)", control)
+        self.assertIn("raw < state.last_raw", control)
+        self.assertIn("premium_ev_production_history = function", control)
+        self.assertIn("state.total - raw", runtime)
+        self.assertIn("math.max(state.total, raw + state.offset, floor)", runtime)
+        self.assertIn("premium_ev_history_after_reset", validator)
+
     def test_factoryx_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
         self.assertEqual(info["name"], "factoryx")

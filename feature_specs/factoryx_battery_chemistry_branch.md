@@ -56,6 +56,13 @@ recipes remain disabled until Advanced Battery Chemistry is researched, so old
 saves follow the same 100-vehicle Gigafactory and 250-vehicle chemistry
 transitions as new saves.
 
+Premium EV production milestones use a persistent monotonic lifetime counter,
+not Factorio's resettable production-stat window directly. On first observation
+or after a statistics reset, FactoryX reconciles the lower bound from completed
+Premium EV sales plus surviving stocked and placed vehicles. It stores the
+offset from native statistics so later production continues from the repaired
+lifetime total without recurring full-factory scans.
+
 Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
 packs, giving them both a large total pack count and the long-range chemistry.
