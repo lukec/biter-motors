@@ -642,19 +642,34 @@ end
 data:extend(sales_office_status_sprites)
 
 local sales_office_showroom_sprites = {}
-for _, vehicle_name in pairs({
-  "prototype-roadster",
-  "premium-ev",
-  "mass-market-ev",
-  "cybertruck"
-}) do
-  sales_office_showroom_sprites[#sales_office_showroom_sprites + 1] = {
-    type = "sprite",
-    name = "x-sales-office-showroom-" .. vehicle_name,
-    filename = "__factoryx__/graphics/entity/sales-office/showroom/" .. vehicle_name .. ".png",
-    width = 256,
-    height = 128
+for _, vehicle in pairs({
+  {
+    name = "prototype-roadster",
+    filename = "__factoryx__/graphics/animation/sales-office-showroom-prototype-roadster.png"
+  },
+  {
+    name = "premium-ev",
+    filename = "__factoryx__/graphics/animation/sales-office-showroom-premium-ev.png"
+  },
+  {
+    name = "mass-market-ev",
+    filename = "__factoryx__/graphics/animation/sales-office-showroom-mass-market-ev.png"
+  },
+  {
+    name = "cybertruck",
+    filename = "__factoryx__/graphics/animation/sales-office-showroom-cybertruck.png"
   }
+}) do
+  for frame_index = 1, 8 do
+    sales_office_showroom_sprites[#sales_office_showroom_sprites + 1] = {
+      type = "sprite",
+      name = "x-sales-office-showroom-" .. vehicle.name .. "-frame-" .. frame_index,
+      filename = vehicle.filename,
+      width = 512,
+      height = 512,
+      x = (frame_index - 1) * 512
+    }
+  end
 end
 data:extend(sales_office_showroom_sprites)
 

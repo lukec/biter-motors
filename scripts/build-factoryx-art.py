@@ -6,7 +6,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +17,16 @@ TECHNOLOGY_DIR = MOD_GRAPHICS / "technology"
 SHOWROOM_DIR = MOD_GRAPHICS / "entity/sales-office/showroom"
 ICON_SOURCE_DIR = ROOT / "art/factoryx-icon-sources"
 MASTER_DIR = ROOT / "art/factoryx-masters/final"
+ACTIVE_SHOWROOM_SOURCE = (
+    ROOT / "art/factoryx-masters/sources/sales-office-active-empty-chroma.png"
+)
+VEHICLE_ICON_NAMES = {
+    "prototype-roadster",
+    "premium-ev",
+    "mass-market-ev",
+    "cybertruck",
+    "robotaxi-fleet",
+}
 
 ENTITY_ICON_SOURCES = {
     "sales-office": "sales-office/sales-office.png",
@@ -62,6 +72,8 @@ def derive_and_normalize_icons() -> None:
         normalized_icon(Image.open(source), 218).save(ICON_DIR / f"{slug}.png", optimize=True)
 
     for source in sorted(ICON_SOURCE_DIR.glob("*.png")):
+        if source.stem in VEHICLE_ICON_NAMES:
+            continue
         normalized_icon(Image.open(source)).save(ICON_DIR / source.name, optimize=True)
 
     normalized_icon(Image.open(MASTER_DIR / "agi-model.png")).save(ICON_DIR / "agi-model.png", optimize=True)
@@ -70,17 +82,7 @@ def derive_and_normalize_icons() -> None:
 def build_sales_office_showroom_vehicles() -> None:
     SHOWROOM_DIR.mkdir(parents=True, exist_ok=True)
     for name in ("prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"):
-        sheet = Image.open(MOD_GRAPHICS / f"entity/vehicles/{name}.png").convert("RGBA")
-        # A shallow isometric view matches the showroom floor better than the
-        # side-on driving frame and keeps each model recognizable behind glass.
-        frame_index = 12
-        left = (frame_index % 8) * 192
-        top = (frame_index // 8) * 192
-        frame = sheet.crop((left, top, left + 192, top + 192))
-        bbox = alpha_bbox(frame)
-        if not bbox:
-            raise RuntimeError(f"Vehicle showroom frame is empty: {name}")
-        vehicle = frame.crop(bbox)
+        vehicle = sales_office_vehicle(name)
         scale = min(190 / vehicle.width, 78 / vehicle.height)
         vehicle = vehicle.resize(
             (max(1, round(vehicle.width * scale)), max(1, round(vehicle.height * scale))),
@@ -103,6 +105,171 @@ def build_sales_office_showroom_vehicles() -> None:
         glass_draw.line((27, 108, 229, 108), fill=(112, 168, 181, 52), width=3)
         canvas.alpha_composite(glass)
         canvas.save(SHOWROOM_DIR / f"{name}.png", optimize=True)
+
+
+def sales_office_vehicle(name: str) -> Image.Image:
+    sheet = Image.open(MOD_GRAPHICS / f"entity/vehicles/{name}.png").convert("RGBA")
+    # This shallow top-down direction displays the body shape and color while
+    # still matching the showroom floor's orientation.
+    frame_index = 12
+    left = (frame_index % 8) * 192
+    top = (frame_index // 8) * 192
+    frame = sheet.crop((left, top, left + 192, top + 192))
+    bbox = alpha_bbox(frame)
+    if not bbox:
+        raise RuntimeError(f"Vehicle showroom frame is empty: {name}")
+    return frame.crop(bbox)
+
+
+def aligned_active_showroom_source() -> Image.Image:
+    source = Image.open(ACTIVE_SHOWROOM_SOURCE).convert("RGB")
+    red, green, blue = source.split()
+    high_red = red.point(lambda value: 255 if value > 220 else 0)
+    low_green = green.point(lambda value: 255 if value < 90 else 0)
+    high_blue = blue.point(lambda value: 255 if value > 220 else 0)
+    chroma = ImageChops.multiply(ImageChops.multiply(high_red, low_green), high_blue)
+    subject_mask = ImageChops.invert(chroma)
+    subject_bbox = subject_mask.getbbox()
+    if not subject_bbox:
+        raise RuntimeError("Active Sales Office source contains no non-chroma subject")
+
+    base = Image.open(MOD_GRAPHICS / "entity/sales-office/sales-office.png").convert("RGBA")
+    base_bbox = alpha_bbox(base)
+    if not base_bbox:
+        raise RuntimeError("Sales Office base sprite is empty")
+
+    subject = source.crop(subject_bbox).resize(
+        (base_bbox[2] - base_bbox[0], base_bbox[3] - base_bbox[1]),
+        Image.Resampling.LANCZOS,
+    )
+    aligned = Image.new("RGBA", base.size)
+    aligned.alpha_composite(subject.convert("RGBA"), (base_bbox[0], base_bbox[1]))
+    return aligned
+
+
+def active_showroom_background() -> tuple[Image.Image, Image.Image]:
+    aligned = aligned_active_showroom_source()
+    # Keep the generated detail inside the glass. The original exterior and
+    # footprint remain pixel-identical in every working frame.
+    mask = Image.new("L", aligned.size)
+    draw = ImageDraw.Draw(mask)
+    draw.polygon(
+        ((145, 300), (370, 300), (370, 411), (141, 411)),
+        fill=255,
+    )
+    mask = mask.filter(ImageFilter.GaussianBlur(radius=1.2))
+    background = Image.new("RGBA", aligned.size)
+    background.paste(aligned, (0, 0), mask)
+    return background, mask
+
+
+def paint_active_sales_showroom(
+    frame: Image.Image,
+    vehicle: Image.Image,
+    background: Image.Image,
+    window_mask: Image.Image,
+    index: int,
+    count: int,
+) -> None:
+    frame.alpha_composite(background)
+    phase = index / count * math.tau
+    pulse = (math.sin(phase) + 1) / 2
+
+    floor_light = Image.new("RGBA", frame.size)
+    floor_draw = ImageDraw.Draw(floor_light, "RGBA")
+    floor_draw.ellipse(
+        (161, 316, 351, 407),
+        fill=(255, 179, 67, round(18 + pulse * 20)),
+        outline=(255, 202, 103, round(125 + pulse * 65)),
+        width=5,
+    )
+    floor_draw.arc(
+        (163, 318, 349, 405),
+        math.degrees(phase),
+        math.degrees(phase) + 72,
+        fill=(255, 229, 177, 235),
+        width=7,
+    )
+    floor_draw.arc(
+        (163, 318, 349, 405),
+        math.degrees(phase) + 180,
+        math.degrees(phase) + 245,
+        fill=(99, 225, 255, 220),
+        width=6,
+    )
+    floor_light.putalpha(ImageChops.multiply(floor_light.getchannel("A"), window_mask))
+    frame.alpha_composite(floor_light)
+
+    shadow = Image.new("RGBA", frame.size)
+    shadow_draw = ImageDraw.Draw(shadow, "RGBA")
+    shadow_draw.ellipse((166, 337, 346, 393), fill=(8, 11, 13, 150))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=7))
+    frame.alpha_composite(shadow)
+
+    vehicle_scale = min(186 / vehicle.width, 76 / vehicle.height)
+    displayed_vehicle = vehicle.resize(
+        (
+            max(1, round(vehicle.width * vehicle_scale)),
+            max(1, round(vehicle.height * vehicle_scale)),
+        ),
+        Image.Resampling.LANCZOS,
+    )
+    vehicle_x = (frame.width - displayed_vehicle.width) // 2
+    vehicle_y = 359 - displayed_vehicle.height // 2
+    frame.alpha_composite(displayed_vehicle, (vehicle_x, vehicle_y))
+
+    effects = Image.new("RGBA", frame.size)
+    effects_draw = ImageDraw.Draw(effects, "RGBA")
+    # Moving glass reflection and ceiling spotlights make working state legible
+    # at normal Factorio zoom without becoming a floating UI indicator.
+    sweep_x = 145 + round(index / (count - 1) * 190)
+    effects_draw.polygon(
+        (
+            (sweep_x - 25, 301),
+            (sweep_x - 5, 301),
+            (sweep_x + 42, 411),
+            (sweep_x + 18, 411),
+        ),
+        fill=(216, 246, 255, 38),
+    )
+    for light_x, target_x in ((179, 218), (333, 294)):
+        effects_draw.polygon(
+            ((light_x - 8, 303), (light_x + 8, 303), (target_x + 31, 391), (target_x - 31, 391)),
+            fill=(255, 224, 171, round(13 + pulse * 15)),
+        )
+        glow(effects_draw, (light_x, 306), 3, (255, 234, 199), round(145 + pulse * 80))
+
+    for light_index, light_x in enumerate(range(158, 360, 25)):
+        distance = (light_index - index) % 8
+        alpha = 245 if distance == 0 else 115 if distance in (1, 7) else 42
+        glow(effects_draw, (light_x, 300), 3, (255, 168, 45), alpha)
+
+    effects = effects.filter(ImageFilter.GaussianBlur(radius=0.45))
+    effects.putalpha(ImageChops.multiply(effects.getchannel("A"), window_mask))
+    frame.alpha_composite(effects)
+
+
+def build_sales_office_showroom_animations() -> None:
+    background, window_mask = active_showroom_background()
+    ANIMATION_DIR.mkdir(parents=True, exist_ok=True)
+    for name in ("prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"):
+        vehicle = sales_office_vehicle(name)
+        sheet = Image.new("RGBA", (512 * 8, 512))
+        for frame_index in range(8):
+            frame = Image.new("RGBA", (512, 512))
+            paint_active_sales_showroom(
+                frame,
+                vehicle,
+                background,
+                window_mask,
+                frame_index,
+                8,
+            )
+            sheet.alpha_composite(frame, (frame_index * 512, 0))
+        sheet.save(
+            ANIMATION_DIR / f"sales-office-showroom-{name}.png",
+            optimize=True,
+        )
 
 
 def glow(draw: ImageDraw.ImageDraw, center: tuple[float, float], radius: int, color: tuple[int, int, int], alpha: int) -> None:
@@ -385,10 +552,12 @@ def build_technology_icons() -> None:
 def main() -> int:
     derive_and_normalize_icons()
     build_sales_office_showroom_vehicles()
+    build_sales_office_showroom_animations()
     build_animations()
     build_technology_icons()
     print(f"Built normalized icons in {ICON_DIR}")
     print(f"Built Sales Office vehicle overlays in {SHOWROOM_DIR}")
+    print(f"Built active Sales Office showroom animations in {ANIMATION_DIR}")
     print(f"Built animation overlays in {ANIMATION_DIR}")
     print(f"Built technology icons in {TECHNOLOGY_DIR}")
     return 0

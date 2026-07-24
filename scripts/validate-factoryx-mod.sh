@@ -1522,6 +1522,20 @@ print("EV Charging Station V2/V3/V4 engine prototypes OK.")
 if shortcut["action"] != "lua" or not shortcut["toggleable"] or shortcut["technology_to_unlock"] != "x-sales-office":
     raise SystemExit(f"Sales Office Coverage shortcut mismatch: {shortcut}")
 print("Sales Office Coverage shortcut prototype OK.")
+for vehicle_name in (
+    "prototype-roadster",
+    "premium-ev",
+    "mass-market-ev",
+    "cybertruck",
+):
+    for frame_index in range(1, 9):
+        sprite_name = f"x-sales-office-showroom-{vehicle_name}-frame-{frame_index}"
+        sprite = data["sprite"][sprite_name]
+        if sprite["width"] != 512 or sprite["height"] != 512:
+            raise SystemExit(f"Sales Office showroom sprite size mismatch: {sprite_name}")
+        if sprite.get("x", 0) != (frame_index - 1) * 512:
+            raise SystemExit(f"Sales Office showroom frame offset mismatch: {sprite_name}")
+print("Sales Office active showroom animation prototypes OK.")
 if progress_shortcut["action"] != "lua" or progress_shortcut.get("toggleable"):
     raise SystemExit(f"FactoryX Progress shortcut mismatch: {progress_shortcut}")
 print("FactoryX Progress shortcut prototype OK.")

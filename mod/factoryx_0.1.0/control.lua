@@ -171,10 +171,10 @@ CUSTOMER_EV_SALE_RECIPES = {
   [ROBOTAXI_SALE_RECIPE] = {item = "x-robotaxi-fleet", vehicles = 3}
 }
 SALES_OFFICE_SHOWROOM_SPRITES = {
-  [FIRST_PROTOTYPE_SALE_RECIPE] = "x-sales-office-showroom-prototype-roadster",
-  [PREMIUM_EV_SALE_RECIPE] = "x-sales-office-showroom-premium-ev",
-  [MASS_MARKET_EV_SALE_RECIPE] = "x-sales-office-showroom-mass-market-ev",
-  [CYBERTRUCK_SALE_RECIPE] = "x-sales-office-showroom-cybertruck"
+  [FIRST_PROTOTYPE_SALE_RECIPE] = "x-sales-office-showroom-prototype-roadster-frame-",
+  [PREMIUM_EV_SALE_RECIPE] = "x-sales-office-showroom-premium-ev-frame-",
+  [MASS_MARKET_EV_SALE_RECIPE] = "x-sales-office-showroom-mass-market-ev-frame-",
+  [CYBERTRUCK_SALE_RECIPE] = "x-sales-office-showroom-cybertruck-frame-"
 }
 EV_SALES_GATES = {
   premium = {
@@ -711,29 +711,37 @@ function destroy_sales_office_showroom_rendering(unit_number)
 end
 
 function update_sales_office_showrooms()
+  local frame_index = math.floor(game.tick / 30) % 8 + 1
   local seen = {}
   for _, office in pairs(registered_factoryx_entities("sales_offices")) do
     if office.valid and office.unit_number then
       seen[office.unit_number] = true
       local recipe = office.get_recipe()
-      local sprite = recipe and SALES_OFFICE_SHOWROOM_SPRITES[recipe.name]
-      local active = sprite and office.status == defines.entity_status.working
+      local sprite_prefix = recipe and SALES_OFFICE_SHOWROOM_SPRITES[recipe.name]
+      local active = sprite_prefix and office.status == defines.entity_status.working
       local entry = sales_office_showroom_renderings()[office.unit_number]
-      if active and (not entry or entry.sprite ~= sprite or not entry.object or not entry.object.valid) then
+      if active and (
+          not entry
+          or entry.sprite_prefix ~= sprite_prefix
+          or not entry.object
+          or not entry.object.valid
+        ) then
         destroy_sales_office_showroom_rendering(office.unit_number)
         local object = rendering.draw_sprite{
-          sprite = sprite,
+          sprite = sprite_prefix .. frame_index,
           surface = office.surface,
           target = office,
-          target_offset = {0, 0.55},
-          x_scale = 0.2,
-          y_scale = 0.2,
+          target_offset = {0, 0},
+          x_scale = 0.19,
+          y_scale = 0.19,
           render_layer = "higher-object-above"
         }
         sales_office_showroom_renderings()[office.unit_number] = {
           object = object,
-          sprite = sprite
+          sprite_prefix = sprite_prefix
         }
+      elseif active and entry then
+        entry.object.sprite = sprite_prefix .. frame_index
       elseif not active and entry then
         destroy_sales_office_showroom_rendering(office.unit_number)
       end

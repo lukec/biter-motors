@@ -1943,7 +1943,7 @@ FactoryX products live beside the vanilla systems they extend:
 
 | Prototype | Player Name | Current Base | Needs New Artwork? | Notes |
 | --- | --- | --- | --- | --- |
-| `x-sales-office` | Sales Office | Final footprint-aligned generated master | No | The square 3x3 showroom is empty while idle. During an active sale, a runtime overlay derived from the corresponding drivable vehicle sheet displays the Roadster, Premium EV, Mass-market EV, or Megatruck on the showroom pad. |
+| `x-sales-office` | Sales Office | Final footprint-aligned generated master plus recipe-specific active showroom animation | No | The square 3x3 showroom is dark and empty while idle. During an active sale, one bounded runtime overlay lights the showroom, adds customers and staff, displays the correct Roadster, Premium EV, Mass-market EV, or Megatruck, and animates the turntable, spotlights, glass sweep, and awning chase lights. |
 | `x-ev-charging-station` | EV Charging Station | Dedicated aligned 2x2, four-stall sprite | No | Square footprint-filling art and matching icon are wired. |
 | `x-ev-charging-station-v2` | EV Charging Station V2 | Dedicated aligned 4x4, eight-stall sprite | No | Larger transformers and cyan high-power treatment distinguish V2. |
 | `x-ev-charging-station-v3` | V3 Supercharger | Dedicated aligned 5x5, 12-stall sprite | No | Twelve visible charger pedestals and liquid-cooled edge equipment distinguish V3. |

@@ -106,18 +106,32 @@ class FactoryXModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         art_script = (ROOT / "scripts/build-factoryx-art.py").read_text()
-        self.assertIn('name = "x-sales-office-showroom-" .. vehicle_name', data)
+        self.assertIn(
+            'name = "x-sales-office-showroom-" .. vehicle.name .. "-frame-" .. frame_index',
+            data,
+        )
         for vehicle in ["prototype-roadster", "premium-ev", "mass-market-ev", "cybertruck"]:
             self.assertIn(f'"{vehicle}"', data)
-            showroom_path = MOD / f"graphics/entity/sales-office/showroom/{vehicle}.png"
+            showroom_path = MOD / f"graphics/animation/sales-office-showroom-{vehicle}.png"
             self.assertTrue(showroom_path.exists())
             with Image.open(showroom_path) as image:
-                self.assertEqual(image.size, (256, 128))
+                self.assertEqual(image.size, (4096, 512))
+                first = image.crop((0, 0, 512, 512))
+                fifth = image.crop((2048, 0, 2560, 512))
+                self.assertIsNotNone(first.getchannel("A").getbbox())
+                self.assertIsNotNone(ImageChops.difference(first, fifth).getbbox())
         self.assertIn("SALES_OFFICE_SHOWROOM_SPRITES", control)
         self.assertIn("office.status == defines.entity_status.working", control)
+        self.assertIn("math.floor(game.tick / 30) % 8 + 1", control)
+        self.assertIn("entry.object.sprite = sprite_prefix .. frame_index", control)
+        self.assertIn("target_offset = {0, 0}", control)
+        self.assertIn("x_scale = 0.19", control)
         self.assertIn("function update_sales_office_showrooms()", control)
         self.assertIn("destroy_sales_office_showroom_rendering(entity.unit_number)", control)
-        self.assertIn("build_sales_office_showroom_vehicles()", art_script)
+        self.assertIn("build_sales_office_showroom_animations()", art_script)
+        self.assertIn("sales-office-active-empty-chroma.png", art_script)
+        self.assertIn("VEHICLE_ICON_NAMES", art_script)
+        self.assertIn("if source.stem in VEHICLE_ICON_NAMES", art_script)
 
     def test_sales_office_beacon_reflects_working_state(self):
         data = (MOD / "data.lua").read_text()
@@ -694,6 +708,10 @@ class FactoryXModTest(unittest.TestCase):
             "sales-office-status-green.png": (512, 64),
             "sales-office-status-amber.png": (512, 64),
             "sales-office-status-red.png": (512, 64),
+            "sales-office-showroom-prototype-roadster.png": (4096, 512),
+            "sales-office-showroom-premium-ev.png": (4096, 512),
+            "sales-office-showroom-mass-market-ev.png": (4096, 512),
+            "sales-office-showroom-cybertruck.png": (4096, 512),
             "charger-stall-idle.png": (256, 32),
             "charger-stall-low.png": (256, 32),
             "charger-stall-medium.png": (256, 32),
