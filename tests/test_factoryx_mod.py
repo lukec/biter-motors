@@ -918,6 +918,11 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-high-nickel-cell", amount = 4', battery_recipe)
         self.assertIn('name = "steel-plate", amount = 4', battery_recipe)
         self.assertIn('name = "advanced-circuit", amount = 2', battery_recipe)
+        cell_scale_recipe = data[
+            data.index('recipe("x-cell-scale-high-nickel"'):
+            data.index('recipe("x-lfp-cell"')
+        ]
+        self.assertIn('name = "x-cobalt-concentrate", amount = 1', cell_scale_recipe)
         self.assertIn('{"advanced-crafting"}', drivetrain_recipe)
         self.assertIn('"electric-engine-unit"', drivetrain_recipe)
         self.assertIn('"advanced-circuit"', drivetrain_recipe)
@@ -2139,6 +2144,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-lfp-cell", amount = 36', lfp_recovery)
         self.assertIn('allow_productivity = false', high_recovery)
         self.assertIn('allow_productivity = false', lfp_recovery)
+        locale = (MOD / "locale" / "en" / "factoryx.cfg").read_text()
+        self.assertIn("x-high-nickel-cell=High-nickel cells (Chemical Plant)", locale)
+        self.assertIn("x-cell-scale-high-nickel=High-nickel cells (Gigafactory)", locale)
+        self.assertIn("x-lfp-cell=LFP cells (Chemical Plant)", locale)
+        self.assertIn("x-cell-scale-lfp=LFP cells (Gigafactory)", locale)
+        self.assertIn("one four-cell batch fills one High-energy Battery Pack", locale)
+        self.assertIn("same dirty-refining precursors and cobalt", locale)
         item_art_slugs = [
             "nickel-ore", "nickel-sulfate", "lithium-carbonate", "battery-graphite",
             "cobalt-concentrate", "phosphate",

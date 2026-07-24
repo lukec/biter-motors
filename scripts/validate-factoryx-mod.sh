@@ -1369,6 +1369,21 @@ for recipe_name, expected in expected_battery_pack_recipes.items():
     if actual != expected or recipe.get("allow_productivity", True):
         raise SystemExit(f"{recipe_name} chemistry replacement mismatch: {recipe}")
 
+cell_scale_high_nickel = data["recipe"]["x-cell-scale-high-nickel"]
+cell_scale_inputs = {
+    row["name"]: row["amount"] for row in cell_scale_high_nickel["ingredients"]
+}
+if cell_scale_inputs != {
+    "x-nickel-sulfate": 4,
+    "x-lithium-carbonate": 1,
+    "x-battery-graphite": 2,
+    "x-cobalt-concentrate": 1,
+}:
+    raise SystemExit(
+        "Gigafactory high-nickel cells must consume dirty refining's cobalt: "
+        f"{cell_scale_high_nickel}"
+    )
+
 expected_battery_recovery = {
     "x-high-energy-battery-recovery": (
         "x-damaged-high-energy-battery-pack", "x-high-nickel-cell", 36,

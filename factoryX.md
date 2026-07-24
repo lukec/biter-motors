@@ -574,7 +574,10 @@ graphite, stone supplies phosphate, and early nickel refining produces a small
 cobalt byproduct. Nickel uses more frequent, smaller deposits than uranium:
 `2.0` expected patches/km2 at `1.25` base density, with no deposits inside the
 240-tile exclusion. This keeps expected total ore roughly flat while reducing
-seed-dependent scarcity.
+seed-dependent scarcity. Recipe names expose their machine directly:
+Chemical Plants turn one dirty-refining precursor set, including its cobalt
+byproduct, into four cells; a Gigafactory consumes the same set and returns
+five. The later clean-refining and dry-electrode pair removes cobalt.
 
 Battery recycling is 90% efficient for active cell material only: ten damaged
 packs return 36 of their original 40 cells, enough to rebuild nine packs after

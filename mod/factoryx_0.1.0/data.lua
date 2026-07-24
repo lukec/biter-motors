@@ -1515,7 +1515,8 @@ data:extend({
     {
       {type = "item", name = "x-nickel-sulfate", amount = 4},
       {type = "item", name = "x-lithium-carbonate", amount = 1},
-      {type = "item", name = "x-battery-graphite", amount = 2}
+      {type = "item", name = "x-battery-graphite", amount = 2},
+      {type = "item", name = "x-cobalt-concentrate", amount = 1}
     },
     {{type = "item", name = "x-high-nickel-cell", amount = 5}}, 6,
     {allow_productivity = false}

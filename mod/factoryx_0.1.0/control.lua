@@ -6550,7 +6550,7 @@ end
 
 local RESEARCH_COMPLETION_MESSAGES = {
   ["x-sales-office"] = "[FactoryX] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
-  ["x-advanced-battery-chemistry"] = "[FactoryX] Advanced Battery Chemistry researched. Locate Nickel Ore and Lithium Brine, refine both precursors, manufacture High-nickel Cells and High-energy Battery Packs, then switch Premium EV production to the cell-scale recipe.",
+  ["x-advanced-battery-chemistry"] = "[FactoryX] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Gigafactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
   ["x-energy-products"] = "[FactoryX] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
   ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
   ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
@@ -7689,10 +7689,10 @@ local function current_progress_objective(snapshot)
       "Use Chemical Plants. Route Acidic Tailings into tanks, then neutralize it with Calcite instead of allowing byproduct backpressure to stop refining."
   elseif snapshot.high_nickel_cells_produced == 0 then
     return "Battery cells", "Manufacture the first High-nickel Cells.",
-      "Combine Nickel Sulfate, Lithium Carbonate, Battery Graphite, and the Cobalt Concentrate recovered by early dirty nickel refining."
+      "Use High-nickel cells (Chemical Plant) for a four-cell batch, or High-nickel cells (Gigafactory) for five. Both consume Nickel Sulfate, Lithium Carbonate, Battery Graphite, and the Cobalt Concentrate from dirty refining."
   elseif snapshot.high_energy_battery_packs_produced == 0 then
     return "Battery packs", "Assemble the first High-energy Battery Pack.",
-      "Combine one Accumulator, eight High-nickel Cells, and four Advanced Circuits. Switch Premium EV lines to the cell-scale recipe, which consumes eight packs per vehicle."
+      "Combine four High-nickel Cells, four Steel Plates, and two Advanced Circuits. One Chemical Plant cell batch fills one pack; the Gigafactory route yields one spare cell per cycle."
   elseif not snapshot.energy_products_researched then
     return "Energy products", "Research Energy Products for industrial expansion.",
       "Charging demand grows with every customer EV. Unlock High-density Solar Panels, LFP chemistry, and Megapacks before Foundry and mass-market expansion."

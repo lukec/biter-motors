@@ -84,9 +84,11 @@ guaranteed starting-area patch.
 
 Existing resources supply the rest: coal becomes Battery Graphite, stone
 becomes Phosphate, and iron supplies LFP cathodes. Early nickel refining emits
-a small Cobalt Concentrate byproduct; later high-nickel recipes stop requiring
-it. Both natural resources must appear in map preview and be generated on new
-FactoryX worlds. No save migration is required.
+a small Cobalt Concentrate byproduct. Both initial cell routes consume that
+cobalt so choosing the Gigafactory recipe cannot jam dirty refining. Later
+clean refining and dry-electrode cells remove cobalt from the flow. Both
+natural resources must appear in map preview and be generated on new FactoryX
+worlds. No save migration is required.
 
 New logistics items are Nickel Sulfate, Lithium Carbonate, Battery Graphite,
 Cobalt Concentrate, Phosphate, High-Nickel Cells, LFP Cells, High-Energy
@@ -105,12 +107,12 @@ Quantities are balance targets for the first implementation pass.
 | Battery graphite | 5 Coal | 2 Battery Graphite | 5 s |
 | Phosphate extraction | 10 Stone + 50 Sulfuric Acid | 4 Phosphate + 100 Acidic Tailings | 8 s |
 | Tailings neutralization | 100 Acidic Tailings + 5 Calcite | 2 Stone | 5 s |
-| Early high-nickel cells | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 4 High-Nickel Cells | 8 s |
-| Cell-scale high-nickel cells | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite | 5 High-Nickel Cells | 6 s |
+| High-nickel cells (Chemical Plant) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 4 High-Nickel Cells | 8 s |
+| High-nickel cells (Gigafactory) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 5 High-Nickel Cells | 6 s |
 | Commodity-cell Premium EV pilot | 1 Car + 48 Batteries + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 30 s |
 | Cell-scale Premium EV | 1 Car + 8 High-Energy Battery Packs + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 20 s |
-| LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 4 LFP Cells | 6 s |
-| Cell-scale LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
+| LFP cells (Chemical Plant) | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 4 LFP Cells | 6 s |
+| LFP cells (Gigafactory) | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
 | High-Energy Battery Pack | 4 High-Nickel Cells + 4 Steel Plates + 2 Advanced Circuits | 1 pack | 8 s |
 | LFP Battery Pack | 4 LFP Cells + 4 Steel Plates + 2 Electronic Circuits | 1 pack | 6 s |
 
