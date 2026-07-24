@@ -2,8 +2,9 @@
 
 ## Status And Direction
 
-Implemented in FactoryX 0.1.0. The values below are now the initial playtest
-balance rather than a proposal; future changes should preserve the audited
+Implemented in FactoryX 0.1.0 and revised after the first Premium EV
+playtest. The values below are the initial playtest balance rather than a
+proposal; future changes should preserve both the progression and the audited
 material-loop constraints.
 
 This is the proposed terrestrial battery branch for the Biter Motors refocus.
@@ -32,16 +33,19 @@ References:
 | Existing gate | Battery change |
 | --- | --- |
 | Prototype Roadster | Continues using ordinary Batteries, representing purchased commodity cells. |
-| EV Production Line | Unlocks Nickel Ore, Lithium Brine, dirty refining, High-Nickel Cells and High-Energy Battery Packs for Premium EVs. |
-| 100 Premium EV pilot / Gigafactory V1 | Unlocks Cell-Scale Manufacturing: 25% better cell yield, without module productivity. |
-| Energy Products | Also unlocks LFP chemistry and LFP Battery Packs for Megapacks. This is folded into the existing gate so power products are not delayed. |
+| EV Production Line + 50 Roadster sales | Unlocks Electric Drivetrains and an expensive Premium EV pilot recipe using 48 conventional Batteries per vehicle. Nickel, lithium, and engineered cells are not available yet. |
+| 100 Premium EV pilot | Exposes the commodity-cell bottleneck and makes Advanced Battery Chemistry researchable. It does not auto-complete the research. |
+| Advanced Battery Chemistry | Unlocks nickel and lithium extraction, dirty refining, High-Nickel Cells, High-Energy Battery Packs, and a faster cell-scale Premium EV recipe. |
+| Gigafactory V1 | Unlocks Cell-Scale High-Nickel Manufacturing: 25% better cell yield, without module productivity. |
+| Energy Products | Builds on Advanced Battery Chemistry and unlocks LFP chemistry and LFP Battery Packs for Megapacks. |
 | Capital Scaling / Gigafactory V2 | Unlocks clean refining and dry-electrode recipes with lower acid, waste, power and craft time. |
 | First chemistry-specific battery scrap + Recycling | Makes Battery Material Recovery researchable. It does not auto-complete the research. |
 
-After the 50-Roadster market gate, the Progress panel explicitly walks through
-extracting both minerals, refining both precursors, producing the first
-High-Nickel Cells, and assembling the first High-Energy Battery Pack before it
-asks for the 100-Premium-EV pilot.
+After the 50-Roadster market gate, the Progress panel first asks for a
+100-Premium-EV pilot using conventional Batteries. Only after that scale proof
+does it ask the player to research Advanced Battery Chemistry, extract both
+minerals, refine both precursors, produce High-Nickel Cells, and switch the
+Premium EV line to High-Energy Battery Packs.
 
 Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
@@ -84,6 +88,8 @@ Quantities are balance targets for the first implementation pass.
 | Tailings neutralization | 100 Acidic Tailings + 5 Calcite | 2 Stone | 5 s |
 | Early high-nickel cells | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 4 High-Nickel Cells | 8 s |
 | Cell-scale high-nickel cells | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite | 5 High-Nickel Cells | 6 s |
+| Commodity-cell Premium EV pilot | 1 Car + 48 Batteries + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 30 s |
+| Cell-scale Premium EV | 1 Car + 8 High-Energy Battery Packs + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 20 s |
 | LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 4 LFP Cells | 6 s |
 | Cell-scale LFP cells | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
 | High-Energy Battery Pack | 1 Accumulator + 8 High-Nickel Cells + 4 Advanced Circuits | 1 pack | 8 s |
@@ -97,9 +103,11 @@ Gigafactory V2's clean recipes are capped at these yields:
 - Dry high-nickel and LFP recipes produce 6 cells from the same inputs used by
   their 5-cell scale recipes. They reduce craft time but not mineral inputs.
 
-Vehicle and energy-product recipes retain their current pack counts:
+Vehicle and energy-product pack counts after Advanced Battery Chemistry:
 
-- Premium EV: 8 High-Energy Battery Packs.
+- Premium EV cell-scale recipe: 8 High-Energy Battery Packs. The earlier pilot
+  recipe remains available as an expensive fallback so existing assemblers and
+  saves retain their selected recipe.
 - Mass-Market EV: 4 LFP Battery Packs.
 - Megatruck: 2 Mass-Market EVs + 20 Steel Plates + 4 High-Energy Battery Packs.
 - Robotaxi Fleet: inherits 16 LFP packs through its four Mass-Market EVs.
@@ -139,10 +147,12 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
 
 ## Recipe Richness Audit
 
-- The current generic Battery Pack costs approximately 11 Iron Plates, 16
-  Copper Plates and 100 Sulfuric Acid before productivity. A dirty High-Energy
-  Pack raises that conventional bill to about 15 Iron, 25 Copper, 8 Plastic and
-  300 Sulfuric Acid, then adds 20 Nickel Ore, 50 Lithium Brine and 10 Coal.
+- The commodity-cell pilot consumes 48 conventional Batteries per Premium EV.
+  One hundred vehicles therefore require 4,800 Batteries, making the old
+  sulfuric-acid, iron, and copper supply chain a visible scale bottleneck.
+- A dirty High-Energy Pack costs about 15 Iron, 25 Copper, 8 Plastic and 300
+  Sulfuric Acid before productivity, then adds 20 Nickel Ore, 50 Lithium Brine
+  and 10 Coal.
 - An LFP pack avoids nickel, cobalt, graphite and red circuits, but still adds
   approximately 8 Iron, 10 Stone, 100 Lithium Brine and 50 Sulfuric Acid to its
   Accumulator-and-green-circuit base. It is cheaper, not free.

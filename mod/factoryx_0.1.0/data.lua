@@ -223,8 +223,8 @@ local function unlock(recipe_name)
   }
 end
 
-local function tech(name, icon, prerequisites, effects, count, ingredients, time)
-  return {
+local function tech(name, icon, prerequisites, effects, count, ingredients, time, extra)
+  local prototype = {
     type = "technology",
     name = name,
     icons = tech_icon(icon),
@@ -236,6 +236,10 @@ local function tech(name, icon, prerequisites, effects, count, ingredients, time
       time = time or 30
     }
   }
+  for key, value in pairs(extra or {}) do
+    prototype[key] = value
+  end
+  return prototype
 end
 
 local function infinite_tech(name, icon, prerequisites, effects, count_formula, ingredients, time)
@@ -1521,7 +1525,16 @@ data:extend({
     },
     {{type = "item", name = "x-prototype-roadster", amount = 1}}, 30
   ),
-  recipe("x-premium-ev", {"advanced-crafting", "x-vehicle-assembly"}, "transport", "x-b[premium-ev]",
+  recipe("x-premium-ev", {"advanced-crafting", "x-vehicle-assembly"}, "transport", "x-b[premium-ev-legacy]",
+    {
+      {type = "item", name = "car", amount = 1},
+      {type = "item", name = "battery", amount = 48},
+      {type = "item", name = "x-electric-drivetrain", amount = 2},
+      {type = "item", name = "advanced-circuit", amount = 10}
+    },
+    {{type = "item", name = "x-premium-ev", amount = 1}}, 30
+  ),
+  recipe("x-premium-ev-cell-scale", {"advanced-crafting", "x-vehicle-assembly"}, "transport", "x-b2[premium-ev-cell-scale]",
     {
       {type = "item", name = "car", amount = 1},
       {type = "item", name = "x-high-energy-battery-pack", amount = 8},
@@ -1857,12 +1870,6 @@ data:extend({
       "concrete"
     },
     {
-      unlock("x-dirty-nickel-refining"),
-      unlock("x-lithium-extraction"),
-      unlock("x-battery-graphite"),
-      unlock("x-tailings-neutralization"),
-      unlock("x-high-nickel-cell"),
-      unlock("x-high-energy-battery-pack"),
       unlock("x-electric-drivetrain"),
       unlock("x-premium-ev"),
       unlock("x-sell-premium-ev")
@@ -1875,6 +1882,28 @@ data:extend({
       {"x-dollar", 1}
     },
     30
+  ),
+  tech("x-advanced-battery-chemistry",
+    "__factoryx__/graphics/icons/high-energy-battery-pack.png",
+    {"x-premium-ev-program", "sulfur-processing"},
+    {
+      unlock("x-dirty-nickel-refining"),
+      unlock("x-lithium-extraction"),
+      unlock("x-battery-graphite"),
+      unlock("x-tailings-neutralization"),
+      unlock("x-high-nickel-cell"),
+      unlock("x-high-energy-battery-pack"),
+      unlock("x-premium-ev-cell-scale")
+    },
+    500,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"x-dollar", 1}
+    },
+    30,
+    {enabled = false}
   ),
   tech("x-capital-scaling",
     "__factoryx__/graphics/icons/mass-market-ev.png",
@@ -1941,7 +1970,7 @@ data:extend({
   ),
   tech("x-energy-products",
     "__factoryx__/graphics/icons/megapack.png",
-    {"x-premium-ev-program", "electric-energy-accumulators", "solar-energy"},
+    {"x-advanced-battery-chemistry", "electric-energy-accumulators", "solar-energy"},
     {
       unlock("x-high-density-solar-array"),
       unlock("x-phosphate-extraction"),

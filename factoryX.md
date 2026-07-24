@@ -546,12 +546,19 @@ slots.
 
 ### Battery Chemistry Branch
 
-The implemented branch replaces the generic Battery Pack with high-nickel and
-LFP chemistry families. Premium EVs use high-energy nickel packs; Mass-Market
-EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs; Megatrucks add
-high-energy packs to their mass-market donor vehicles. Nickel Ore and Lithium
-Brine are the only new natural resources. Coal supplies graphite, stone supplies
-phosphate, and early nickel refining produces a small cobalt byproduct.
+The implemented branch deliberately starts with an inefficient commodity-cell
+era. EV Production Line unlocks a Premium EV pilot that consumes 48
+conventional Batteries per vehicle. Producing 100 Premium EVs exposes that
+supply-chain bottleneck and makes Advanced Battery Chemistry researchable.
+Only that research unlocks nickel and lithium extraction, high-nickel cells,
+High-energy Battery Packs, and the faster cell-scale Premium EV recipe.
+
+After the chemistry transition, Premium EVs use high-energy nickel packs;
+Mass-Market EVs, Robotaxis, and Megapacks use cheaper long-life LFP packs;
+Megatrucks add high-energy packs to their mass-market donor vehicles. Nickel
+Ore and Lithium Brine are the only new natural resources. Coal supplies
+graphite, stone supplies phosphate, and early nickel refining produces a small
+cobalt byproduct.
 
 Battery recycling is 90% efficient for active cell material only: ten damaged
 packs return 72 of their original 80 cells, enough to rebuild nine packs after
@@ -572,7 +579,8 @@ Current simplified terrestrial recipes:
 - LFP Battery Pack: `Accumulator + 8 LFP Cells + 4 Electronic Circuits`.
 - Electric Drivetrain: `Electric Engine Unit + Advanced Circuits + Copper Cable`.
 - Prototype Roadster: `Car + Batteries + Advanced Circuits`.
-- Premium EV: `Car + 8 High-energy Battery Packs + Electric Drivetrains + Advanced Circuits`.
+- Premium EV pilot: `Car + 48 Batteries + Electric Drivetrains + Advanced Circuits`.
+- Cell-scale Premium EV: `Car + 8 High-energy Battery Packs + Electric Drivetrains + Advanced Circuits`.
 - Mass-Market EV: `Car + 4 LFP Battery Packs + Electric Drivetrain`.
 - Megatruck: `2 Mass-Market EVs + 20 Steel Plates + 4 High-energy Battery Packs`.
 - High-density Solar Panel: `1 Solar Panel + 2 Processing Units + 2 Low Density Structures + 1 Dollar`.
@@ -1187,8 +1195,10 @@ Next concrete unlock:
 
 Tesla-like meaning:
 
-- The first capital goes into tooling: battery packs, drivetrains, jigs,
-  assemblers, power electronics, and better shop-floor logistics.
+- The first capital goes into drivetrains, jigs, assemblers, power electronics,
+  and better shop-floor logistics while relying on costly commodity cells.
+- Only after the Premium pilot reaches meaningful volume does that inherited
+  battery supply fail to scale, motivating new cells, chemistries, and packs.
 
 Implemented design:
 
@@ -1199,14 +1209,17 @@ Implemented design:
   the truly large science jump for mass-market scale.
 - The first completed `Sell hopes and dreams` sale prints a next-step message
   telling the player to research EV Production Line.
-- EV Production Line unlocks dirty nickel/lithium refining, High-Nickel Cells,
-  High-energy Battery Packs, `Electric Drivetrain`, `Premium EV`, and `Sell
-  premium product` after the existing 50-Roadster market gate.
-- Premium EVs can initially be built in ordinary advanced assemblers. Producing
-  100 completes the pilot run; the pilot plus Energy Products unlock both
-  `Gigafactory Module` and the Gigafactory construction recipe.
-- Energy Products remains a parallel power branch for High-density Solar
-  Arrays and Megapacks, and is required before Gigafactory construction or
+- EV Production Line unlocks `Electric Drivetrain`, a commodity-battery
+  `Premium EV`, and `Sell premium product` after the existing 50-Roadster
+  market gate. It does not expose nickel, lithium, or engineered cells.
+- Premium EVs can initially be built in ordinary advanced assemblers from 48
+  conventional Batteries each. Producing 100 completes the pilot run and makes
+  Advanced Battery Chemistry researchable.
+- Advanced Battery Chemistry costs 500 cycles through chemical science plus
+  Dollars. It unlocks dirty nickel/lithium refining, High-Nickel Cells,
+  High-energy Battery Packs, and the faster cell-scale Premium EV recipe.
+- Energy Products follows Advanced Battery Chemistry, adds the LFP branch, and
+  is required with Metallurgical Scaling before Gigafactory construction or
   mass-market scaling.
 - Every Sales Office recipe uses the sold product as its dominant icon with a
   small gold coin badge. EV, Megapack, launch-service, and Robotaxi sales are
@@ -2038,12 +2051,17 @@ icons, and bounded working animations. Remaining work is narrower:
 - Add the 9x9 Gigafactory as the physical scale-up after a 100-Premium-EV pilot
   run in ordinary assemblers. It consumes ten Gigafactory Modules plus
   Substations and then scales Premium EV assembly. Implemented.
+- Keep that pilot on expensive conventional Batteries, then reveal Advanced
+  Battery Chemistry only after 100 Premium EVs. The new research unlocks
+  nickel/lithium processing and the scalable high-energy-pack recipe.
+  Implemented.
 - Add Gigacast and Gigafactory V2 as the mass-market production gate. V2
   consumes V1, draws 30 MW, runs at 2x speed, has 150% built-in productivity,
   and fast-replaces V1. Implemented.
-- Unlock Gigafactory Modules after both the 100-Premium-EV pilot milestone and
-  Energy Products, using the production-cell recipe `Dollars + Assembling
-  Machine 2s + Labs + Refined Concrete`. Implemented.
+- Unlock Gigafactory Modules after the 100-Premium-EV pilot, Advanced Battery
+  Chemistry, Energy Products, and Metallurgical Scaling, using the
+  production-cell recipe `Dollars + Assembling Machine 2s + Labs + Refined
+  Concrete`. Implemented.
 - Change mass-market sales from a five-car batch to the literal contract
   `1 Mass-Market EV + 1 EV Reservation -> 1 Dollar`. Implemented.
 - Ensure every Sales Office recipe has a sensible sale time:

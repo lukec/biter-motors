@@ -137,6 +137,7 @@ script.on_init(function()
   for _, technology_name in pairs({
     "x-sales-office",
     "x-premium-ev-program",
+    "x-advanced-battery-chemistry",
     "x-ev-charging-network",
     "x-capital-scaling",
     "x-energy-products",
