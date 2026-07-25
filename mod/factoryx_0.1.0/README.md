@@ -172,7 +172,7 @@ chances to become hostile. Restored powered service makes them friendly
 immediately. Affected settlements show a flashing entity alert until service
 returns; disruption, recovery, and routine settlement growth stay out of chat.
 Cars do not permanently occupy stalls. Active stalls
-accumulate adoption; five active stall-minutes can grow one new customer spawner
+accumulate adoption; four active stall-minutes can grow one new customer spawner
 when the charger has a spare stall. Every grown settlement has a 25%, 50%, or
 75% chance of an evolution-scaled worm as evolution rises; any worm remains on
 the hostile enemy force. Growth is bounded

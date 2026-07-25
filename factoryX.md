@@ -926,8 +926,8 @@ Current research notes from Factorio 2.1.9 docs and wiki:
   reduces vanilla combat pressure so customer infrastructure remains the main
   terrestrial problem. Pollution-funded attack units cost 4x the vanilla
   pollution, no more than 10 automatic attack groups gather at once, attack
-  groups cap at 80 units, and expansion attempts are spaced 20-90 minutes
-  apart. Pollution-driven evolution uses one-third of the vanilla factor.
+  groups cap at 80 units, while enemy expansion retains its vanilla 10-60
+  minute cadence. Pollution-driven evolution uses one-third of the vanilla factor.
   Existing active waves can be dispersed with the bounded
   `factoryx.relieve_enemy_pressure` runtime operation without deleting nests,
   worms, or idle enemies.
@@ -1042,7 +1042,8 @@ Implemented v1 behavior:
   powered stall serves them. Mining an EV never returns the hidden drive-fuel
   token; only the physical vehicle returns to inventory.
 - Customer-colony growth accrues from powered customer stalls and spare local
-  settlement capacity. It remains a five active-stall-minute process, while
+  settlement capacity. Happy, fully served customers grow after four active
+  stall-minutes, 25% faster than the original five-minute tuning, while
   hostile worms retain their normal randomized appearance.
 - While a player drives a FactoryX EV, powered chargers within 256 tiles show a
   private translucent green circle matching that tier's real player-vehicle
@@ -1057,7 +1058,7 @@ Implemented v1 behavior:
   or red by charge level, remains solid for one second, then fades for one
   second. It uses the same embedded-battery measurement as the live charging
   indicator.
-- Every active stall contributes one adoption point per second. Five active
+- Every active stall contributes one adoption point per second. Four active
   stall-minutes grow one new customer spawner when that charger still has a
   spare settlement stall and there are no stranded EVs.
 - Each new customer spawner rolls for at most one hostile worm: 25% below 0.3
