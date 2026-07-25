@@ -5008,6 +5008,73 @@ function charger_placement_overlay_states()
   return storage.factoryx_charger_placement_overlay_states
 end
 
+function charger_hover_overlay_states()
+  storage.factoryx_charger_hover_overlay_states = storage.factoryx_charger_hover_overlay_states or {
+    by_player = {},
+    by_station = {}
+  }
+  return storage.factoryx_charger_hover_overlay_states
+end
+
+function release_charger_hover_overlay(player_index)
+  local states = charger_hover_overlay_states()
+  local unit_number = states.by_player[player_index]
+  if not unit_number then return end
+  states.by_player[player_index] = nil
+
+  local state = states.by_station[unit_number]
+  if not state then return end
+  state.viewers = math.max(0, (state.viewers or 1) - 1)
+  if state.viewers > 0 then return end
+
+  if state.entity and state.entity.valid and not state.was_disabled_by_script then
+    pcall(function() state.entity.disabled_by_script = false end)
+  end
+  states.by_station[unit_number] = nil
+end
+
+function reset_charger_hover_overlays()
+  local states = charger_hover_overlay_states()
+  for _, state in pairs(states.by_station) do
+    if state.entity and state.entity.valid and not state.was_disabled_by_script then
+      pcall(function() state.entity.disabled_by_script = false end)
+    end
+  end
+  storage.factoryx_charger_hover_overlay_states = {
+    by_player = {},
+    by_station = {}
+  }
+end
+
+function sync_charger_hover_overlay(player)
+  if not player or not player.valid then return end
+  local selected = player.selected
+  local unit_number = is_station(selected) and selected.unit_number or nil
+  local states = charger_hover_overlay_states()
+  if states.by_player[player.index] == unit_number then return end
+
+  release_charger_hover_overlay(player.index)
+  if not unit_number then return end
+
+  local state = states.by_station[unit_number]
+  if state then
+    state.viewers = state.viewers + 1
+    states.by_player[player.index] = unit_number
+    return
+  end
+
+  local was_disabled_by_script = selected.disabled_by_script
+  local suppressed = pcall(function() selected.disabled_by_script = true end)
+  if suppressed then
+    states.by_station[unit_number] = {
+      entity = selected,
+      viewers = 1,
+      was_disabled_by_script = was_disabled_by_script
+    }
+    states.by_player[player.index] = unit_number
+  end
+end
+
 function set_charger_placement_overlay(player, enabled)
   if not player or not player.valid or not player.connected then
     return false
@@ -5075,8 +5142,9 @@ local function convert_biter_entity(entity, force)
   end
   if entity.valid and entity.type == "unit" and force.name == CUSTOMER_FORCE_NAME and entity.commandable then
     local commute = entity.unit_number and customer_charging_commutes()[entity.unit_number]
-    if not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging"
-      and commute.phase ~= "returning_home") then
+    if not megapack_buyer_reservations()[entity.unit_number]
+      and (not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging"
+        and commute.phase ~= "returning_home")) then
       give_customer_wander_command(entity)
     end
     pcall(function()
@@ -7361,21 +7429,14 @@ function install_megapack_at_settlement(unit_number)
   return true
 end
 
-function handle_megapack_buyer_command_completed(event)
-  local trip = event.unit_number and megapack_buyer_trips()[event.unit_number]
-  if not trip then return false end
-  local entity = customer_unit_registry()[event.unit_number]
-  if not entity or not entity.valid then
-    clear_megapack_buyer_trip(event.unit_number, false)
-    return true
-  end
-  local destination = trip.destination
-  local dx = destination and entity.position.x - destination.x or math.huge
-  local dy = destination and entity.position.y - destination.y or math.huge
-  if not destination or dx * dx + dy * dy > 64 then
-    clear_megapack_buyer_trip(event.unit_number, true)
-    return true
-  end
+function complete_megapack_buyer_arrival(unit_number)
+  local trip = megapack_buyer_trips()[unit_number]
+  local entity = customer_unit_registry()[unit_number]
+  if not trip or not entity or not entity.valid or not trip.destination then return false end
+  local dx = entity.position.x - trip.destination.x
+  local dy = entity.position.y - trip.destination.y
+  if dx * dx + dy * dy > 64 then return false end
+
   if trip.phase == "to_office" then
     trip.phase = "waiting_product"
     trip.destination = nil
@@ -7388,8 +7449,22 @@ function handle_megapack_buyer_command_completed(event)
     }
     return true
   elseif trip.phase == "returning_home" then
-    install_megapack_at_settlement(event.unit_number)
+    install_megapack_at_settlement(unit_number)
     return true
+  end
+  return false
+end
+
+function handle_megapack_buyer_command_completed(event)
+  local trip = event.unit_number and megapack_buyer_trips()[event.unit_number]
+  if not trip then return false end
+  local entity = customer_unit_registry()[event.unit_number]
+  if not entity or not entity.valid then
+    clear_megapack_buyer_trip(event.unit_number, false)
+    return true
+  end
+  if not complete_megapack_buyer_arrival(event.unit_number) then
+    clear_megapack_buyer_trip(event.unit_number, true)
   end
   return true
 end
@@ -7407,6 +7482,9 @@ function process_megapack_buyer_trips()
     end
     if invalid then
       clear_megapack_buyer_trip(unit_number, true)
+    elseif (trip.phase == "to_office" or trip.phase == "returning_home")
+      and complete_megapack_buyer_arrival(unit_number) then
+      if megapack_buyer_trips()[unit_number] then active = active + 1 end
     elseif (trip.phase == "to_office" or trip.phase == "returning_home")
       and game.tick - (trip.command_started_tick or game.tick)
         >= MEGAPACK_BUYER_PATH_TIMEOUT_TICKS then
@@ -9950,6 +10028,7 @@ end)
 
 script.on_configuration_changed(function()
   reset_active_ev_autopilots()
+  reset_charger_hover_overlays()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
@@ -10039,6 +10118,10 @@ script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
   sync_charger_placement_overlay(game.get_player(event.player_index))
 end)
 
+script.on_event(defines.events.on_selected_entity_changed, function(event)
+  sync_charger_hover_overlay(game.get_player(event.player_index))
+end)
+
 script.on_event(defines.events.on_player_driving_changed_state, function(event)
   local player = game.get_player(event.player_index)
   local prior_state = player and ev_driver_overlay_states()[player.index]
@@ -10123,6 +10206,7 @@ end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
+  release_charger_hover_overlay(event.player_index)
   sync_charger_placement_overlay(player)
   refresh_sales_office_coverage(player)
   refresh_progress_panel(player)
@@ -10130,6 +10214,7 @@ end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
   cancel_player_ev_autopilots(event.player_index, "controlling player disconnected", false)
+  release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
@@ -10137,6 +10222,7 @@ end)
 
 script.on_event(defines.events.on_player_removed, function(event)
   remove_player_ev_autopilot_history(event.player_index)
+  release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_factoryx_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)

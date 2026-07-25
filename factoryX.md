@@ -811,6 +811,11 @@ Current implementation:
   logistic-container panel and opens only the movable FactoryX charger
   inspector; logistic coverage and robot counts are implementation details and
   are not shown as charger mechanics.
+- Hovering a charger temporarily removes only that charger from the logistic
+  network, suppressing Factorio's unrelated orange logistics and green
+  construction overlays. Moving the cursor away immediately restores normal
+  passive-provider operation. The outer customer-service field is therefore
+  the only coverage area shown while inspecting a charger.
 - Holding or selecting a station shows a 64-tile customer coverage radius using
   Factorio's native radius visualization. The field uses a muted leaf-green
   tint at low opacity so it remains readable without washing out terrain or

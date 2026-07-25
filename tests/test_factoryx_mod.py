@@ -1731,6 +1731,7 @@ class FactoryXModTest(unittest.TestCase):
             "MEGAPACK_BUYER_STARTS_PER_SECOND = 4",
             "function sync_megapack_adoption_waves()",
             "function begin_megapack_buyer_trip(",
+            "function complete_megapack_buyer_arrival(",
             "function send_megapack_buyer_home(",
             "function install_megapack_at_settlement(",
             "function handle_megapack_buyer_command_completed(",
@@ -1740,6 +1741,10 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(contract, control)
         self.assertIn(
             "if not handle_megapack_buyer_command_completed(event) then",
+            control,
+        )
+        self.assertIn(
+            "if not megapack_buyer_reservations()[entity.unit_number]",
             control,
         )
         self.assertIn("complete_megapack_sale(office)", control)
@@ -1961,7 +1966,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('commands.add_command("factoryx-coverage"', control)
         self.assertIn("STATION_INFO_PANEL_NAME", control)
         self.assertIn("show_station_info_panel", control)
-        self.assertNotIn("on_selected_entity_changed", control)
+        self.assertIn("on_selected_entity_changed", control)
+        self.assertIn("sync_charger_hover_overlay", control)
+        self.assertIn("release_charger_hover_overlay", control)
+        self.assertIn("reset_charger_hover_overlays", control)
+        self.assertIn("selected.disabled_by_script = true", control)
+        self.assertIn("state.entity.disabled_by_script = false", control)
         self.assertIn("on_gui_opened", control)
         self.assertIn("on_gui_closed", control)
         self.assertIn("player.gui.relative.add", control)
