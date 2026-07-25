@@ -8171,19 +8171,17 @@ local function refresh_progress_panel(player)
     }
     local step = snapshot.next_charging_step
     if step and step.available then
-      local warning_distance = math.max(1, math.ceil((step.evs_per_stall or 1) * 0.25))
       grid_rows[#grid_rows + 1] = {
-        sprite = "item/x-ev-charging-station", label = "Next load step",
+        sprite = "item/x-ev-charging-station", label = "Next charger activation",
         value = string.format(
-          "%d EV sale%s -> +%.0f kW",
+          "%d EV sale%s: +%.0f kW",
           step.ev_owners_until,
           step.ev_owners_until == 1 and "" or "s",
           step.power_kw
         ),
-        color = step.ev_owners_until <= warning_distance
-          and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good,
+        color = FACTORYX_STATE_COLORS.neutral,
         tooltip = string.format(
-          "After %d more EV sale%s, the closest settlement will activate another %s stall. Prepare %.0f kW of spare generation now. The new stall then supports %d more EVs.",
+          "Information only: after %d more EV sale%s, the next settlement will activate another %s stall and add %.0f kW of grid load. No action is required while EV grid load and Powered capacity remain green; otherwise add generation or storage. The new stall supports %d more EVs.",
           step.ev_owners_until,
           step.ev_owners_until == 1 and "" or "s",
           step.station_name,
@@ -8193,7 +8191,7 @@ local function refresh_progress_panel(player)
       }
     elseif step and step.needs_charger then
       grid_rows[#grid_rows + 1] = {
-        sprite = "item/x-ev-charging-station", label = "Next load step",
+        sprite = "item/x-ev-charging-station", label = "Next charger activation",
         value = "No spare stalls; add a charger",
         color = snapshot.stranded_evs > 0 and FACTORYX_STATE_COLORS.bad
           or FACTORYX_STATE_COLORS.warning,
@@ -8683,20 +8681,18 @@ local function show_manufacturer_info_panel(player, entity)
     }
     local next_step = next_customer_charging_step(customer_service_for_force(entity.force), entity)
     if next_step.available then
-      local warning_distance = math.max(1, math.ceil((next_step.evs_per_stall or 1) * 0.25))
       metric_rows[#metric_rows + 1] = {
         sprite = "item/accumulator",
-        label = "Next grid load",
+        label = "Next charger activation",
         value = string.format(
-          "%d EV sale%s -> +%.0f kW",
+          "%d EV sale%s: +%.0f kW",
           next_step.ev_owners_until,
           next_step.ev_owners_until == 1 and "" or "s",
           next_step.power_kw
         ),
-        color = next_step.ev_owners_until <= warning_distance
-          and FACTORYX_STATE_COLORS.warning or FACTORYX_STATE_COLORS.good,
+        color = FACTORYX_STATE_COLORS.neutral,
         tooltip = string.format(
-          "Nearest threshold in this Sales Office market. The next %s stall supports %d EVs.",
+          "Information only: this is the nearest charging threshold in this Sales Office market. No action is required while Charging and Underserved remain healthy. The next %s stall supports %d EVs.",
           next_step.station_name,
           next_step.ev_capacity_added
         )
@@ -8704,7 +8700,7 @@ local function show_manufacturer_info_panel(player, entity)
     elseif next_step.needs_charger then
       metric_rows[#metric_rows + 1] = {
         sprite = "item/accumulator",
-        label = "Next grid load",
+        label = "Next charger activation",
         value = "No spare stalls; add charger",
         color = buyer_status.underserved > 0 and FACTORYX_STATE_COLORS.bad
           or FACTORYX_STATE_COLORS.warning
