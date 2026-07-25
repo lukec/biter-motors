@@ -1466,7 +1466,7 @@ data:extend({
       {type = "item", name = "x-nickel-sulfate", amount = 4},
       {type = "item", name = "x-cobalt-concentrate", amount = 1},
       {type = "fluid", name = "x-acidic-tailings", amount = 200}
-    }, 10, {allow_productivity = false, main_product = "x-nickel-sulfate"}
+    }, 10, {allow_productivity = true, main_product = "x-nickel-sulfate"}
   ),
   recipe("x-lithium-extraction", {"chemistry"}, "x-factoryx-components", "a-b[lithium]",
     {
@@ -1476,12 +1476,12 @@ data:extend({
     {
       {type = "item", name = "x-lithium-carbonate", amount = 4},
       {type = "fluid", name = "x-acidic-tailings", amount = 100}
-    }, 10, {allow_productivity = false, main_product = "x-lithium-carbonate"}
+    }, 10, {allow_productivity = true, main_product = "x-lithium-carbonate"}
   ),
   recipe("x-battery-graphite", {"chemistry"}, "x-factoryx-components", "a-c[graphite]",
     {{type = "item", name = "coal", amount = 5}},
     {{type = "item", name = "x-battery-graphite", amount = 2}}, 5,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-phosphate-extraction", {"chemistry"}, "x-factoryx-components", "a-d[phosphate]",
     {
@@ -1491,7 +1491,7 @@ data:extend({
     {
       {type = "item", name = "x-phosphate", amount = 4},
       {type = "fluid", name = "x-acidic-tailings", amount = 100}
-    }, 8, {allow_productivity = false, main_product = "x-phosphate"}
+    }, 8, {allow_productivity = true, main_product = "x-phosphate"}
   ),
   recipe("x-tailings-neutralization", {"chemistry"}, "x-factoryx-components", "a-e[tailings]",
     {
@@ -1499,7 +1499,7 @@ data:extend({
       {type = "item", name = "calcite", amount = 5}
     },
     {{type = "item", name = "stone", amount = 2}}, 5,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-high-nickel-cell", {"chemistry"}, "x-factoryx-components", "b-a[high-nickel-cell]",
     {
@@ -1509,7 +1509,7 @@ data:extend({
       {type = "item", name = "x-cobalt-concentrate", amount = 1}
     },
     {{type = "item", name = "x-high-nickel-cell", amount = 4}}, 8,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-cell-scale-high-nickel", {"x-vertical-integration"}, "x-factoryx-components", "b-b[cell-scale-high-nickel]",
     {
@@ -1519,7 +1519,7 @@ data:extend({
       {type = "item", name = "x-cobalt-concentrate", amount = 1}
     },
     {{type = "item", name = "x-high-nickel-cell", amount = 5}}, 6,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-lfp-cell", {"chemistry"}, "x-factoryx-components", "b-c[lfp-cell]",
     {
@@ -1528,7 +1528,7 @@ data:extend({
       {type = "item", name = "x-phosphate", amount = 2}
     },
     {{type = "item", name = "x-lfp-cell", amount = 4}}, 6,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-cell-scale-lfp", {"x-vertical-integration"}, "x-factoryx-components", "b-d[cell-scale-lfp]",
     {
@@ -1537,7 +1537,7 @@ data:extend({
       {type = "item", name = "x-phosphate", amount = 2}
     },
     {{type = "item", name = "x-lfp-cell", amount = 5}}, 5,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-high-energy-battery-pack", {"advanced-crafting", "x-vertical-integration"}, "x-factoryx-components", "c-a[high-energy-pack]",
     {
@@ -1546,7 +1546,7 @@ data:extend({
       {type = "item", name = "advanced-circuit", amount = 2}
     },
     {{type = "item", name = "x-high-energy-battery-pack", amount = 1}}, 8,
-    {allow_productivity = false}
+    {allow_productivity = true, maximum_productivity = 0.1}
   ),
   recipe("x-lfp-battery-pack", {"advanced-crafting", "x-vertical-integration"}, "x-factoryx-components", "c-b[lfp-pack]",
     {
@@ -1555,7 +1555,7 @@ data:extend({
       {type = "item", name = "electronic-circuit", amount = 2}
     },
     {{type = "item", name = "x-lfp-battery-pack", amount = 1}}, 6,
-    {allow_productivity = false}
+    {allow_productivity = true, maximum_productivity = 0.1}
   ),
   recipe("x-clean-nickel-refining", {"chemistry"}, "x-factoryx-components", "e-a[clean-nickel]",
     {
@@ -1565,7 +1565,7 @@ data:extend({
     {
       {type = "item", name = "x-nickel-sulfate", amount = 5},
       {type = "fluid", name = "x-acidic-tailings", amount = 50}
-    }, 8, {allow_productivity = false, main_product = "x-nickel-sulfate"}
+    }, 8, {allow_productivity = true, main_product = "x-nickel-sulfate"}
   ),
   recipe("x-clean-lithium-extraction", {"chemistry"}, "x-factoryx-components", "e-b[clean-lithium]",
     {
@@ -1575,7 +1575,7 @@ data:extend({
     {
       {type = "item", name = "x-lithium-carbonate", amount = 5},
       {type = "fluid", name = "x-acidic-tailings", amount = 25}
-    }, 8, {allow_productivity = false, main_product = "x-lithium-carbonate"}
+    }, 8, {allow_productivity = true, main_product = "x-lithium-carbonate"}
   ),
   recipe("x-clean-phosphate-extraction", {"chemistry"}, "x-factoryx-components", "e-c[clean-phosphate]",
     {
@@ -1585,7 +1585,7 @@ data:extend({
     {
       {type = "item", name = "x-phosphate", amount = 5},
       {type = "fluid", name = "x-acidic-tailings", amount = 25}
-    }, 6, {allow_productivity = false, main_product = "x-phosphate"}
+    }, 6, {allow_productivity = true, main_product = "x-phosphate"}
   ),
   recipe("x-dry-high-nickel-cell", {"x-vertical-integration"}, "x-factoryx-components", "e-d[dry-high-nickel]",
     {
@@ -1594,7 +1594,7 @@ data:extend({
       {type = "item", name = "x-battery-graphite", amount = 2}
     },
     {{type = "item", name = "x-high-nickel-cell", amount = 6}}, 4,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-dry-lfp-cell", {"x-vertical-integration"}, "x-factoryx-components", "e-e[dry-lfp]",
     {
@@ -1603,7 +1603,7 @@ data:extend({
       {type = "item", name = "x-phosphate", amount = 2}
     },
     {{type = "item", name = "x-lfp-cell", amount = 6}}, 4,
-    {allow_productivity = false}
+    {allow_productivity = true}
   ),
   recipe("x-electric-drivetrain", {"advanced-crafting"}, "x-factoryx-components", "b[electric-drivetrain]",
     {

@@ -2090,7 +2090,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("legacy_robotaxi_sale.enabled = false", control)
         self.assertIn("x-robotaxi-service-center=Robotaxi Service Center", locale)
 
-    def test_battery_chemistry_branch_is_physical_and_not_productive(self):
+    def test_battery_chemistry_branch_is_physical_and_productive_where_safe(self):
         data = (MOD / "data.lua").read_text()
         updates = (MOD / "data-updates.lua").read_text()
         self.assertNotIn('item("x-battery-pack"', data)
@@ -2134,6 +2134,29 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-lfp-cell", amount = 4', lfp_pack)
         self.assertIn('name = "steel-plate", amount = 4', lfp_pack)
         self.assertIn('name = "electronic-circuit", amount = 2', lfp_pack)
+        for recipe_name in [
+            "x-dirty-nickel-refining",
+            "x-lithium-extraction",
+            "x-battery-graphite",
+            "x-phosphate-extraction",
+            "x-tailings-neutralization",
+            "x-high-nickel-cell",
+            "x-cell-scale-high-nickel",
+            "x-lfp-cell",
+            "x-cell-scale-lfp",
+            "x-clean-nickel-refining",
+            "x-clean-lithium-extraction",
+            "x-clean-phosphate-extraction",
+            "x-dry-high-nickel-cell",
+            "x-dry-lfp-cell",
+        ]:
+            start = data.index(f'recipe("{recipe_name}"')
+            end = data.index('recipe("', start + len('recipe("'))
+            self.assertIn("allow_productivity = true", data[start:end], recipe_name)
+        self.assertIn("allow_productivity = true", high_pack)
+        self.assertIn("maximum_productivity = 0.1", high_pack)
+        self.assertIn("allow_productivity = true", lfp_pack)
+        self.assertIn("maximum_productivity = 0.1", lfp_pack)
         premium = data[data.index('recipe("x-premium-ev-cell-scale"'):data.index('recipe("x-mass-market-ev"')]
         mass = data[data.index('recipe("x-mass-market-ev"'):data.index('recipe("x-cybertruck"')]
         megapack = data[data.index('recipe("x-megapack"'):data.index('recipe("x-autonomy-computer"')]

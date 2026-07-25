@@ -181,10 +181,12 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
 - Cell-scale recipes improve cell yield by 25%. Clean refining plus cell-scale
   manufacturing improves cells per ore by about 56% over the dirty process;
   the branch does not reach a 2x material multiplier.
-- All custom battery refining, precursor, cell, pack, and recycling recipes
-  disallow productivity. Dedicated scale recipes provide the audited improvements.
-  This prevents Gigafactory V2's 150% built-in productivity from compounding
-  with 90% recycling.
+- Battery refining, precursor, tailings-treatment, cell, and pack recipes allow
+  productivity because they produce physical intermediates. Pack recipes cap
+  total productivity at 10%; combined with 90% cell recovery, that can rebuild
+  at most 99% of the original packs and cannot create a positive material loop.
+  Recovery recipes remain non-productive. Finished vehicles, Megapacks, and
+  other final products continue to reject productivity.
 - Recycling recovers exactly 90% of cells in ten-pack batches and zero fresh
   electronics, steel or vehicle parts. No probabilistic output can
   round recovery above 90%.

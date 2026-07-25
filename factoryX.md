@@ -584,10 +584,13 @@ five. The later clean-refining and dry-electrode pair removes cobalt.
 
 Battery recycling is 90% efficient for active cell material only: ten damaged
 packs return 36 of their original 40 cells, enough to rebuild nine packs after
-supplying fresh steel and electronics. Chemistry cannot be transmuted,
-customer kills do not drop recoverable packs, and battery refining, cell, pack,
-and recycling recipes reject productivity to prevent Gigafactory V2's built-in
-productivity from creating an overly rich closed loop.
+supplying fresh steel and electronics. Chemistry cannot be transmuted and
+customer kills do not drop recoverable packs. Refining, precursor, tailings,
+cell, and pack recipes accept productivity because they are physical
+intermediates. Pack recipes cap total productivity at 10%, so recycling 90% of
+their cells can rebuild at most 99% of the original packs. Recovery recipes
+remain non-productive, as do finished vehicles, Megapacks, and other final
+products.
 
 The complete recipes, balance audit, progression gates, and implementation
 notes are in

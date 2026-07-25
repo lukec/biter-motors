@@ -1370,8 +1370,32 @@ expected_battery_pack_recipes = {
 for recipe_name, expected in expected_battery_pack_recipes.items():
     recipe = data["recipe"][recipe_name]
     actual = {row["name"]: row["amount"] for row in recipe["ingredients"]}
-    if actual != expected or recipe.get("allow_productivity", True):
+    if (
+        actual != expected
+        or recipe.get("allow_productivity") is not True
+        or not math.isclose(recipe.get("maximum_productivity", 0), 0.1)
+    ):
         raise SystemExit(f"{recipe_name} chemistry replacement mismatch: {recipe}")
+
+productive_battery_intermediates = {
+    "x-dirty-nickel-refining",
+    "x-lithium-extraction",
+    "x-battery-graphite",
+    "x-phosphate-extraction",
+    "x-tailings-neutralization",
+    "x-high-nickel-cell",
+    "x-cell-scale-high-nickel",
+    "x-lfp-cell",
+    "x-cell-scale-lfp",
+    "x-clean-nickel-refining",
+    "x-clean-lithium-extraction",
+    "x-clean-phosphate-extraction",
+    "x-dry-high-nickel-cell",
+    "x-dry-lfp-cell",
+}
+for recipe_name in productive_battery_intermediates:
+    if data["recipe"][recipe_name].get("allow_productivity") is not True:
+        raise SystemExit(f"{recipe_name} must accept productivity modules")
 
 cell_scale_high_nickel = data["recipe"]["x-cell-scale-high-nickel"]
 cell_scale_inputs = {
