@@ -2706,7 +2706,25 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('require("runtime.timing_wheel")', control)
         self.assertIn('require("runtime.performance_state")', control)
         self.assertIn("reconcile_factoryx_entity_registry_step", control)
+        self.assertIn("FACTORYX_REGISTRY_RECONCILIATION_CHUNKS_PER_STEP = 2", control)
+        self.assertIn("rebuild_factoryx_registry_reconciliation_chunks", control)
+        self.assertIn("register_factoryx_reconciliation_chunk(event.surface, event.position)", control)
         self.assertIn('mark_factoryx_market_dirty(entity.force, "infrastructure-built")', control)
+        reconciliation_start = control.index("function reconcile_factoryx_entity_registry_step")
+        reconciliation_end = control.index("function factoryx_market_cache", reconciliation_start)
+        reconciliation = control[reconciliation_start:reconciliation_end]
+        self.assertIn("area = area", reconciliation)
+        self.assertNotIn("name = config.names", reconciliation)
+        half_second = control[
+            control.index("script.on_nth_tick(30, function()"):
+            control.index("script.on_nth_tick(60, function()")
+        ]
+        self.assertIn("reconcile_factoryx_entity_registry_step()", half_second)
+        ten_seconds = control[
+            control.index("script.on_nth_tick(600, function()"):
+            control.index('remote.add_interface("factoryx"', control.index("script.on_nth_tick(600, function()"))
+        ]
+        self.assertNotIn("reconcile_factoryx_entity_registry_step()", ten_seconds)
         buyer_start = control.index("function eligible_customer_buyers")
         buyer_end = control.index("function reserve_office_buyers", buyer_start)
         self.assertNotIn("pairs(customer_unit_registry())", control[buyer_start:buyer_end])
@@ -2721,6 +2739,7 @@ class FactoryXModTest(unittest.TestCase):
             control.index("script.on_nth_tick(UiRefresh.interval_ticks")
         ]
         self.assertEqual(once_per_second.count("calculate_station_utilization(station.force)"), 1)
+        self.assertIn("if player_market_force(force) then", once_per_second)
         self.assertIn("sync_sales_office_buyers()", once_per_second)
         self.assertNotIn("active_station_stalls(station)", once_per_second)
         self.assertIn("allocations_by_force[force_index]", once_per_second)

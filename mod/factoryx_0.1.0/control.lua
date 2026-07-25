@@ -283,6 +283,18 @@ local AI_EFFICIENCY_MACHINE_NAMES = {
   ["x-terrestrial-datacenter"] = true,
   ["x-orbital-compute-array"] = true
 }
+FACTORYX_REGISTRY_RECONCILIATION_VERSION = 1
+FACTORYX_REGISTRY_RECONCILIATION_CHUNKS_PER_STEP = 2
+FACTORYX_REGISTRY_ENTITY_NAMES = {
+  "x-ev-charging-station",
+  "x-ev-charging-station-v2",
+  "x-ev-charging-station-v3",
+  "x-ev-charging-station-v4",
+  "x-sales-office",
+  "x-robotaxi-service-center",
+  "x-terrestrial-datacenter",
+  "x-orbital-compute-array"
+}
 FACTORYX_START_TECHNOLOGIES = {
   "steam-power",
   "automation-science-pack",
@@ -2449,42 +2461,121 @@ function rebuild_factoryx_entity_registries()
       track_factoryx_entity(entity)
     end
   end
+  rebuild_factoryx_registry_reconciliation_chunks()
+end
+
+function rebuild_factoryx_registry_reconciliation_chunks()
+  local state = {
+    version = FACTORYX_REGISTRY_RECONCILIATION_VERSION,
+    by_surface = {},
+    surface_order = {},
+    surface_cursor = 1
+  }
+  for _, surface in pairs(game.surfaces) do
+    local surface_state = {chunks = {}, keys = {}, cursor = 1}
+    state.by_surface[surface.index] = surface_state
+    state.surface_order[#state.surface_order + 1] = surface.index
+    for chunk in surface.get_chunks() do
+      local key = chunk.x .. ":" .. chunk.y
+      surface_state.keys[key] = true
+      surface_state.chunks[#surface_state.chunks + 1] = {x = chunk.x, y = chunk.y}
+    end
+  end
+  table.sort(state.surface_order)
+  storage.factoryx_registry_reconciliation = state
+  return state
+end
+
+function factoryx_registry_reconciliation_state()
+  local state = storage.factoryx_registry_reconciliation
+  if not state or state.version ~= FACTORYX_REGISTRY_RECONCILIATION_VERSION then
+    state = rebuild_factoryx_registry_reconciliation_chunks()
+  end
+  return state
+end
+
+function register_factoryx_reconciliation_chunk(surface, position)
+  if not surface or not surface.valid or not position then return end
+  local state = factoryx_registry_reconciliation_state()
+  local surface_state = state.by_surface[surface.index]
+  if not surface_state then
+    surface_state = {chunks = {}, keys = {}, cursor = 1}
+    state.by_surface[surface.index] = surface_state
+    state.surface_order[#state.surface_order + 1] = surface.index
+    table.sort(state.surface_order)
+  end
+  local key = position.x .. ":" .. position.y
+  if surface_state.keys[key] then return end
+  surface_state.keys[key] = true
+  surface_state.chunks[#surface_state.chunks + 1] = {x = position.x, y = position.y}
+end
+
+function next_factoryx_reconciliation_chunk(state)
+  local attempts = #state.surface_order
+  while attempts > 0 and #state.surface_order > 0 do
+    if state.surface_cursor > #state.surface_order then state.surface_cursor = 1 end
+    local surface_index = state.surface_order[state.surface_cursor]
+    local surface = game.surfaces[surface_index]
+    local surface_state = state.by_surface[surface_index]
+    if not surface or not surface.valid or not surface_state then
+      table.remove(state.surface_order, state.surface_cursor)
+      state.by_surface[surface_index] = nil
+    elseif #surface_state.chunks == 0 then
+      state.surface_cursor = state.surface_cursor + 1
+    else
+      if surface_state.cursor > #surface_state.chunks then surface_state.cursor = 1 end
+      local chunk = surface_state.chunks[surface_state.cursor]
+      surface_state.cursor = surface_state.cursor + 1
+      if surface_state.cursor > #surface_state.chunks then
+        surface_state.cursor = 1
+        state.surface_cursor = state.surface_cursor + 1
+      end
+      return surface, chunk
+    end
+    attempts = attempts - 1
+  end
+  return nil, nil
 end
 
 function reconcile_factoryx_entity_registry_step()
-  local state = PerformanceState.ensure(storage)
-  local surfaces = {}
-  for _, surface in pairs(game.surfaces) do surfaces[#surfaces + 1] = surface end
-  if #surfaces == 0 then return end
-  table.sort(surfaces, function(left, right) return left.index < right.index end)
-  local kinds = {
-    {kind = "stations", names = STATION_NAMES},
-    {kind = "sales_offices", names = {SALES_OFFICE_NAME}},
-    {kind = "robotaxi_centers", names = {ROBOTAXI_SERVICE_CENTER_NAME}},
-    {kind = "ai_machines", names = {"x-terrestrial-datacenter", "x-orbital-compute-array"}}
-  }
-  local cursor = state.reconciliation
-  if cursor.surface > #surfaces then cursor.surface = 1 end
-  if cursor.kind > #kinds then cursor.kind = 1 end
-  local surface = surfaces[cursor.surface]
-  local config = kinds[cursor.kind]
-  local registry = state.registries[config.kind]
-  for _, entity in pairs(surface.find_entities_filtered{name = config.names}) do
-    if entity.unit_number and not registry[entity.unit_number] then
-      PerformanceState.track(state, config.kind, entity)
-      mark_factoryx_market_dirty(entity.force, "registry-reconciled")
+  local reconciliation = factoryx_registry_reconciliation_state()
+  local performance_state = PerformanceState.ensure(storage)
+  local discovered = 0
+  local scanned = 0
+  for _ = 1, FACTORYX_REGISTRY_RECONCILIATION_CHUNKS_PER_STEP do
+    local surface, chunk = next_factoryx_reconciliation_chunk(reconciliation)
+    if not surface then break end
+    local area = {
+      {chunk.x * 32, chunk.y * 32},
+      {(chunk.x + 1) * 32, (chunk.y + 1) * 32}
+    }
+    for _, entity in pairs(surface.find_entities_filtered{
+      name = FACTORYX_REGISTRY_ENTITY_NAMES,
+      area = area
+    }) do
+      local unit_number = entity.unit_number
+      local registries = performance_state.registries
+      local tracked = unit_number and (
+        registries.stations[unit_number]
+        or registries.sales_offices[unit_number]
+        or registries.robotaxi_centers[unit_number]
+        or registries.ai_machines[unit_number]
+      )
+      if unit_number and not tracked then
+        track_factoryx_entity(entity)
+        mark_factoryx_market_dirty(entity.force, "registry-reconciled")
+        discovered = discovered + 1
+      end
     end
-  end
-  PerformanceState.entities(state, config.kind, nil, surface)
-  cursor.kind = cursor.kind + 1
-  if cursor.kind > #kinds then
-    cursor.kind = 1
-    cursor.surface = cursor.surface + 1
-    if cursor.surface > #surfaces then cursor.surface = 1 end
+    scanned = scanned + 1
   end
   storage.factoryx_perf_counters = storage.factoryx_perf_counters or {}
   storage.factoryx_perf_counters.registry_reconciliation_steps =
     (storage.factoryx_perf_counters.registry_reconciliation_steps or 0) + 1
+  storage.factoryx_perf_counters.registry_reconciliation_chunks =
+    (storage.factoryx_perf_counters.registry_reconciliation_chunks or 0) + scanned
+  storage.factoryx_perf_counters.registry_reconciliation_discoveries =
+    (storage.factoryx_perf_counters.registry_reconciliation_discoveries or 0) + discovered
 end
 
 function factoryx_market_cache()
@@ -10257,6 +10348,10 @@ script.on_event(defines.events.on_entity_spawned, function(event)
   end
 end)
 
+script.on_event(defines.events.on_chunk_generated, function(event)
+  register_factoryx_reconciliation_chunk(event.surface, event.position)
+end)
+
 script.on_event(defines.events.on_ai_command_completed, function(event)
   if not handle_megapack_buyer_command_completed(event) then
     handle_customer_commute_command_completed(event)
@@ -10533,6 +10628,7 @@ script.on_nth_tick(6, update_ev_battery_popups)
 script.on_nth_tick(6, process_electric_semi_runtime)
 
 script.on_nth_tick(30, function()
+  reconcile_factoryx_entity_registry_step()
   update_factoryx_runtime_visuals()
   update_charger_stall_visuals()
   update_sales_office_showrooms()
@@ -10556,10 +10652,12 @@ script.on_nth_tick(60, function()
     refresh_all_sales_office_coverage()
   end
   for _, force in pairs(game.forces) do
-    sync_foundry_power_gate(force, true)
-    process_customer_growth(force)
-    sync_advanced_battery_chemistry_gate(force, true)
-    sync_gigafactory_production_gate(force, true)
+    if player_market_force(force) then
+      sync_foundry_power_gate(force, true)
+      process_customer_growth(force)
+      sync_advanced_battery_chemistry_gate(force, true)
+      sync_gigafactory_production_gate(force, true)
+    end
   end
   sync_sales_office_buyers()
   local allocations_by_force = {}
@@ -10625,7 +10723,6 @@ script.on_nth_tick(600, function()
   sync_biter_customer_diplomacy()
   sync_customer_service_states()
   update_sales_office_market_alerts()
-  reconcile_factoryx_entity_registry_step()
 end)
 
 remote.add_interface("factoryx", {

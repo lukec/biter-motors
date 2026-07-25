@@ -2393,6 +2393,10 @@ Implemented performance architecture:
 - Stations, Sales Offices, and Robotaxi Service Centers are maintained in
   lifecycle registries. Recurring handlers no longer search every surface for
   these entities; configuration changes rebuild the registries once.
+- Lifecycle events are the primary source of registry updates. The defensive
+  reconciliation fallback scans two generated 32x32 chunks every half-second,
+  so even an 8,465-chunk playtest world is repaired gradually without a
+  recurring whole-surface frame hitch.
 - Each force shares one immutable customer-service snapshot per simulation
   tick. Growth, stall utilization, reservation generation, commute dispatch,
   alerts, and inspectors reuse it instead of reconstructing the market several
