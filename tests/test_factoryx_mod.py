@@ -1554,6 +1554,13 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('unlock("x-wrecked-ev-recycling")', updates)
         self.assertIn('recycling_tech.enabled = false', updates)
         self.assertIn('rewrite_recipe("teslagun"', updates)
+        tesla_ammo = updates[
+            updates.index('rewrite_recipe("tesla-ammo"'):
+            updates.index("local tesla_tech")
+        ]
+        self.assertIn('{"x-high-nickel-cell", 1}', tesla_ammo)
+        self.assertNotIn("x-high-energy-battery-pack", tesla_ammo)
+        self.assertIn("energy_required = 5", tesla_ammo)
         self.assertNotIn('holmium-plate', updates)
         self.assertNotIn('superconductor', updates)
         self.assertIn('item("x-wrecked-ev"', data)

@@ -190,11 +190,11 @@ rewrite_recipe("tesla-turret", {
 rewrite_recipe("tesla-ammo", {
   categories = {"advanced-crafting"},
   ingredients = ingredients(
-    {"x-high-energy-battery-pack", 1},
+    {"x-high-nickel-cell", 1},
     {"advanced-circuit", 2},
     {"copper-cable", 10}
   ),
-  energy_required = 10
+  energy_required = 5
 })
 local tesla_tech = data.raw.technology["tesla-weapons"]
 mark_factoryx_technology(tesla_tech, "__space-age__/graphics/technology/tesla-weapons.png")

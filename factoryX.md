@@ -1207,9 +1207,11 @@ The branch should be implemented and balanced in this order:
 6. **Tesla Weapons** relocates the Tesla Gun/Turret branch without holmium,
    electrolyte, superconductors, or electromagnetic science. Recipes should use
    existing terrestrial and FactoryX intermediates such as Battery Packs,
-   Processing Units, steel, accumulators, and Dollars. This is a later
-   terrestrial branch, not part of the red-and-green bootstrap; exact recipes
-   and placement relative to Robotaxis remain a balance decision.
+   Processing Units, steel, accumulators, and Dollars. Tesla ammunition uses one
+   high-nickel cell, two Advanced Circuits, and ten Copper Cables per ten-shot
+   magazine; consuming an entire vehicle-scale Battery Pack per magazine was
+   rejected as disproportionately expensive. This is a later terrestrial
+   branch, not part of the red-and-green bootstrap.
 7. **Mech Armor** remains future content. It must be built from an Optimus
    Humanoid Robot when that product exists, making the armor the wearable result
    of FactoryX robotics rather than a transplanted Fulgora recipe. Its other

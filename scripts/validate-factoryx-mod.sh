@@ -1392,7 +1392,7 @@ expected_terrestrial_recipes = {
     "recycler": {"steel-plate": 20, "iron-gear-wheel": 40, "electronic-circuit": 20, "concrete": 20},
     "teslagun": {"x-high-energy-battery-pack": 4, "processing-unit": 10, "steel-plate": 20},
     "tesla-turret": {"teslagun": 1, "x-high-energy-battery-pack": 10, "processing-unit": 20, "accumulator": 4},
-    "tesla-ammo": {"x-high-energy-battery-pack": 1, "advanced-circuit": 2, "copper-cable": 10},
+    "tesla-ammo": {"x-high-nickel-cell": 1, "advanced-circuit": 2, "copper-cable": 10},
 }
 for recipe_name, expected in expected_terrestrial_recipes.items():
     recipe = data["recipe"][recipe_name]
