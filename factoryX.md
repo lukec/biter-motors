@@ -922,6 +922,15 @@ Current research notes from Factorio 2.1.9 docs and wiki:
   expansion has an `enabled` flag, chunk scoring coefficients, settler group
   sizes, and cooldowns. Source:
   <https://lua-api.factorio.com/latest/concepts/EnemyExpansionMapSettings.html>
+- Biter Motors intentionally keeps hostile worms and unconverted colonies, but
+  reduces vanilla combat pressure so customer infrastructure remains the main
+  terrestrial problem. Pollution-funded attack units cost 4x the vanilla
+  pollution, no more than 10 automatic attack groups gather at once, attack
+  groups cap at 80 units, and expansion attempts are spaced 20-90 minutes
+  apart. Pollution-driven evolution uses one-third of the vanilla factor.
+  Existing active waves can be dispersed with the bounded
+  `factoryx.relieve_enemy_pressure` runtime operation without deleting nests,
+  worms, or idle enemies.
 - Vanilla enemy expansion is not enough by itself for this design. The base
   game expands into "unclaimed" territory and penalizes chunks near player
   structures and existing spawners, so chargers would not naturally attract

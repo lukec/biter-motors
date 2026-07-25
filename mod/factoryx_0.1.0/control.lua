@@ -240,6 +240,13 @@ CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
 CUSTOMER_MOOD_MAX_ANGER_CHANCE = 0.25
+FACTORYX_ENEMY_PRESSURE_VERSION = 1
+FACTORYX_ENEMY_ATTACK_POLLUTION_COST = 4
+FACTORYX_MAX_GATHERING_ATTACK_GROUPS = 10
+FACTORYX_MAX_ATTACK_GROUP_SIZE = 80
+FACTORYX_MIN_EXPANSION_COOLDOWN_TICKS = 20 * 60 * 60
+FACTORYX_MAX_EXPANSION_COOLDOWN_TICKS = 90 * 60 * 60
+FACTORYX_POLLUTION_EVOLUTION_FACTOR = 3e-7
 CUSTOMER_COMMUTE_MAX_ACTIVE = 512
 CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8
 CUSTOMER_COMMUTE_SCHEDULER_BATCH = 256
@@ -2999,6 +3006,56 @@ end
 
 local function biter_customer_mode_enabled()
   return true
+end
+
+function apply_factoryx_enemy_pressure_settings()
+  if not biter_customer_mode_enabled() then return false end
+  local map_settings = game.map_settings
+  map_settings.pollution.enemy_attack_pollution_consumption_modifier =
+    FACTORYX_ENEMY_ATTACK_POLLUTION_COST
+  map_settings.unit_group.max_gathering_unit_groups =
+    FACTORYX_MAX_GATHERING_ATTACK_GROUPS
+  map_settings.unit_group.max_unit_group_size = FACTORYX_MAX_ATTACK_GROUP_SIZE
+  map_settings.enemy_expansion.min_expansion_cooldown =
+    FACTORYX_MIN_EXPANSION_COOLDOWN_TICKS
+  map_settings.enemy_expansion.max_expansion_cooldown =
+    FACTORYX_MAX_EXPANSION_COOLDOWN_TICKS
+  map_settings.enemy_evolution.pollution_factor =
+    FACTORYX_POLLUTION_EVOLUTION_FACTOR
+  storage.factoryx_enemy_pressure_version = FACTORYX_ENEMY_PRESSURE_VERSION
+  return true
+end
+
+function relieve_factoryx_enemy_pressure(max_evolution)
+  apply_factoryx_enemy_pressure_settings()
+  local enemy = game.forces.enemy
+  if not enemy then return {dispersed_units = 0, adjusted_surfaces = 0} end
+  local dispersed_units = 0
+  local adjusted_surfaces = 0
+  local evolution_cap = max_evolution or 0.70
+  for _, surface in pairs(game.surfaces) do
+    if enemy.get_evolution_factor(surface) > evolution_cap then
+      enemy.set_evolution_factor(evolution_cap, surface)
+      adjusted_surfaces = adjusted_surfaces + 1
+    end
+    for _, entity in pairs(surface.find_entities_filtered{force = enemy, type = "unit"}) do
+      local commandable = entity.commandable
+      local command = commandable and commandable.command
+      if command and command.type ~= defines.command.wander then
+        commandable.set_command{
+          type = defines.command.wander,
+          distraction = defines.distraction.none,
+          radius = 16
+        }
+        dispersed_units = dispersed_units + 1
+      end
+    end
+  end
+  return {
+    dispersed_units = dispersed_units,
+    adjusted_surfaces = adjusted_surfaces,
+    evolution_cap = evolution_cap
+  }
 end
 
 local function area_around(position, radius)
@@ -9990,6 +10047,7 @@ end
 script.on_init(function()
   storage.factoryx_ev_autopilot = EvAutopilot.ensure(nil)
   configure_factoryx_new_game()
+  apply_factoryx_enemy_pressure_settings()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
   rebuild_electric_vehicles()
@@ -10028,6 +10086,7 @@ end)
 
 script.on_configuration_changed(function()
   reset_active_ev_autopilots()
+  apply_factoryx_enemy_pressure_settings()
   reset_charger_hover_overlays()
   cleanup_legacy_station_grid_connections()
   rebuild_factoryx_entity_registries()
@@ -10558,6 +10617,9 @@ script.on_nth_tick(UiRefresh.interval_ticks, function()
 end)
 
 script.on_nth_tick(600, function()
+  if storage.factoryx_enemy_pressure_version ~= FACTORYX_ENEMY_PRESSURE_VERSION then
+    apply_factoryx_enemy_pressure_settings()
+  end
   local lifecycle = reconcile_customer_lifecycle_state()
   if lifecycle.repaired then sync_sales_office_buyers() end
   sync_biter_customer_diplomacy()
@@ -10567,6 +10629,24 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("factoryx", {
+  relieve_enemy_pressure = function(max_evolution)
+    return relieve_factoryx_enemy_pressure(max_evolution)
+  end,
+  enemy_pressure_status = function()
+    local map_settings = game.map_settings
+    return {
+      attack_pollution_cost =
+        map_settings.pollution.enemy_attack_pollution_consumption_modifier,
+      max_gathering_groups = map_settings.unit_group.max_gathering_unit_groups,
+      max_group_size = map_settings.unit_group.max_unit_group_size,
+      min_expansion_cooldown =
+        map_settings.enemy_expansion.min_expansion_cooldown,
+      max_expansion_cooldown =
+        map_settings.enemy_expansion.max_expansion_cooldown,
+      pollution_evolution_factor =
+        map_settings.enemy_evolution.pollution_factor
+    }
+  end,
   premium_ev_production_history = function(force_name)
     local force = game.forces[force_name or "player"]
     return force and premium_ev_production_history_status(force) or nil

@@ -1900,6 +1900,21 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("state.angry = false", control)
         self.assertIn("EVs lack powered charging service. Restore grid power.", control)
 
+    def test_biter_motors_reduces_vanilla_enemy_attack_pressure(self):
+        control = (MOD / "control.lua").read_text()
+
+        self.assertIn("FACTORYX_ENEMY_ATTACK_POLLUTION_COST = 4", control)
+        self.assertIn("FACTORYX_MAX_GATHERING_ATTACK_GROUPS = 10", control)
+        self.assertIn("FACTORYX_MAX_ATTACK_GROUP_SIZE = 80", control)
+        self.assertIn("FACTORYX_MIN_EXPANSION_COOLDOWN_TICKS = 20 * 60 * 60", control)
+        self.assertIn("FACTORYX_MAX_EXPANSION_COOLDOWN_TICKS = 90 * 60 * 60", control)
+        self.assertIn("FACTORYX_POLLUTION_EVOLUTION_FACTOR = 3e-7", control)
+        self.assertIn("apply_factoryx_enemy_pressure_settings()", control)
+        self.assertIn("relieve_factoryx_enemy_pressure(max_evolution)", control)
+        self.assertIn("command.type ~= defines.command.wander", control)
+        self.assertIn('relieve_enemy_pressure = function(max_evolution)', control)
+        self.assertIn("enemy_pressure_status = function()", control)
+
     def test_factoryx_control_generates_physical_reservations_at_chargers(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn('"x-ev-charging-station"', control)
