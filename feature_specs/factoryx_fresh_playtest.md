@@ -252,6 +252,11 @@ progression stage, and the text. It should also trigger an immediate paired
 snapshot/frame. Notes are evidence, not chat advice, and should never invoke a
 model during play.
 
+The recorder also maintains `playtests/gameplay-notes.jsonl` as a deduplicated
+cross-session inbox. Session `notes.jsonl` files remain scoped to notes recorded
+after that session starts, while the inbox ensures notes made while a recorder
+was stopped or pointed at another session are still available for review.
+
 ## P1: Post-Play Balance Report
 
 Add a deterministic report generator that consumes one session directory and
