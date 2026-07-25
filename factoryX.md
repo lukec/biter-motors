@@ -1540,6 +1540,39 @@ Target additions:
 - This stage should teach the player that the final victory will be an energy
   infrastructure problem, not just a research problem.
 
+Approved Megapack customer-market design:
+
+- Megapacks are sold through Sales Offices to physical biter buyers rather than
+  through an unlimited eight-second industrial conversion.
+- A Megapack sale pays 20 Dollars, takes 30 seconds after its buyer arrives,
+  and does not consume EV Reservation paperwork. The physically present buyer
+  is the reservation.
+- Megapack buyers use a 384-tile Sales Office market radius, compared with the
+  normal 128-tile EV market radius.
+- Each settlement initially seeds 5% of its current population as energy
+  believers. Once that settlement receives its first installed Megapack, every
+  five minutes another 5% of its remaining non-owner population becomes
+  eligible. Eligibility accumulates if production is slow, ownership persists,
+  and new population creates new eventual demand. A settlement therefore trends
+  toward 100% Megapack adoption without allowing one customer to buy repeatedly.
+- An eligible buyer travels to the Sales Office, waits for a supplied Megapack,
+  returns home carrying a battery icon, and installs it near the settlement.
+  The sale is not complete until the buyer has been assigned; failed routes
+  release the buyer for a later retry.
+- Installed Megapacks are tracked as an aggregate settlement count. Artwork
+  should show only a bounded number of cabinets plus a count badge, avoiding one
+  permanent entity or rendering object per sale.
+- Physical trips use the existing fair commute scheduler with a hard global
+  active cap. Adoption waves operate on cached settlement populations and must
+  not scan every mobile biter.
+- The Sales Office inspector should show waiting energy believers, buyers in
+  transit, installed Megapacks, adoption percentage, and time to the next
+  word-of-mouth wave. The larger recipe-specific coverage uses a distinct,
+  subdued overlay.
+- A later functional pass may let installed Megapacks modestly extend a
+  settlement's charging-outage patience. It must not remove the need for player
+  generation or charging infrastructure.
+
 Next concrete unlock:
 
 - Small Orbital Launch.
