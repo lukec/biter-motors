@@ -1063,10 +1063,14 @@ script.on_nth_tick(18200, function()
   if game.tick < 18200 then return end
   local surface = game.get_surface(storage.surface_index or 1)
   local market = remote.call("factoryx", "refresh_biter_customer_market", "player")
+  local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
+  local station_output = station_v2 and station_v2.get_inventory(defines.inventory.chest)
   write_report{
     tick = game.tick,
     status = "customer_growth",
     market = market,
+    charger_reservations = station_output
+      and station_output.get_item_count(RESERVATION) or -1,
     spawner_growth = #surface.find_entities_filtered{type = "unit-spawner"} - (storage.initial_spawner_count or 0),
     worm_growth = #surface.find_entities_filtered{type = "turret", name = WORM} - (storage.initial_worm_count or 0)
   }
@@ -2156,8 +2160,11 @@ if recovery.get("underserved_chart_tags") != 0:
     raise SystemExit(f"restored charging capacity did not clear global-map tags: {recovery}")
 if recovery.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"restored charging capacity did not recover angry settlements: {recovery}")
-if not checked.get("charger_reservations_generated"):
-    raise SystemExit(f"EV reservations were not generated in the charger output: {checked}")
+if growth.get("charger_reservations", 0) < 1:
+    raise SystemExit(
+        "unsold prospects did not retry into physical EV reservations after five minutes: "
+        f"{growth}"
+    )
 if checked.get("logistic_roboports") != 0:
     raise SystemExit(f"smoke test should prove charger output without a logistics network: {checked}")
 if not checked.get("agi_training_unlocked") or not checked.get("agi_training_selected"):

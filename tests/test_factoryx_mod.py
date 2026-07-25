@@ -1954,9 +1954,12 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("[FactoryX] %s online", control)
         self.assertIn("EV Charging Network researched. Craft a separate V2 charger", control)
         self.assertIn("script.on_nth_tick(60", control)
-        self.assertIn("RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE = 1", control)
+        self.assertIn("PROSPECT_RESERVATION_RETRY_MINUTES = 5", control)
         self.assertIn("RESERVATION_SAMPLES_PER_PRINT = 60", control)
         self.assertIn("factoryx_reservation_print_progress", control)
+        self.assertIn("station_reservation_rate_per_minute", control)
+        self.assertIn('label = "Prospects"', control)
+        self.assertIn("Each unsold prospect files one EV Reservation", control)
         self.assertIn("station_reservation_inventory", control)
         self.assertIn("generate_station_reservations", control)
         self.assertIn("top_up_station_reservations", control)
@@ -1997,7 +2000,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("count_covered_biter_settlements", control)
         self.assertIn('"biter-spawner"', control)
         self.assertIn('"spitter-spawner"', control)
-        self.assertIn("RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE", control)
+        self.assertIn("PROSPECT_RESERVATION_RETRY_MINUTES", control)
         self.assertIn('CUSTOMER_FORCE_NAME = "factoryx-customers"', control)
         self.assertIn("SALES_OFFICE_CUSTOMER_RADIUS = 128", control)
         self.assertIn("game.create_force(CUSTOMER_FORCE_NAME)", control)
@@ -2823,11 +2826,14 @@ class FactoryXModTest(unittest.TestCase):
         control = (MOD / "control.lua").read_text()
         waiting = control[
             control.index("function waiting_market_buyers_at_station"):
-            control.index("function station_reservation_demand")
+            control.index("function station_reservation_rate_per_minute")
         ]
         self.assertIn("if not is_station(station) then return 0 end", waiting)
         self.assertIn("if settlement and settlement.valid then", waiting)
         self.assertIn('mark_factoryx_market_dirty(station.force, "invalid-assigned-settlement")', waiting)
+        self.assertIn("service.assignment_by_settlement_key[key] == station", waiting)
+        self.assertIn("service.prospects_by_settlement_key[key]", waiting)
+        self.assertNotIn("customer_unit_registry()", waiting)
         self.assertIn("local key = settlement and settlement.valid and", control)
         self.assertIn("if not station or not station.valid then", control)
 

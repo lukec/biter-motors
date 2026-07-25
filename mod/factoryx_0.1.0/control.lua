@@ -227,7 +227,7 @@ local FIRST_CUSTOMER_CHARGER_UNLOCK_RECIPES = {
   "x-prototype-roadster"
 }
 local RESERVATION_BUFFER_LIMIT = 200
-local RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE = 1
+local PROSPECT_RESERVATION_RETRY_MINUTES = 5
 local RESERVATION_SAMPLES_PER_PRINT = 60
 local CUSTOMER_GROWTH_STALL_MINUTES = 5
 local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
@@ -3696,6 +3696,7 @@ customer_service_for_force = function(force, advance_mood)
     requested_capacity_by_settlement_key = {},
     powered_capacity_by_settlement_key = {},
     capacity_by_settlement_key = {},
+    prospects_by_settlement_key = {},
     operational_keys = {},
     served_keys = {},
     served_settlements = {},
@@ -3731,7 +3732,17 @@ customer_service_for_force = function(force, advance_mood)
   local demand_by_settlement_key = {}
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
-    demand_by_settlement_key[key] = settlement_vehicle_count(vehicle_summary, settlement)
+    local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
+    local population = customer_settlement_populations()[key]
+    local customer_count = population and (
+      (population.physical or 0) + (population.virtual_unowned or 0)
+    ) or 0
+    for _, count in pairs(population and population.virtual_by_vehicle or {}) do
+      customer_count = customer_count + count
+    end
+    demand_by_settlement_key[key] = vehicle_count
+    service.prospects_by_settlement_key[key] =
+      math.max(0, customer_count - vehicle_count)
   end
 
   local station_specs = {}
@@ -5585,11 +5596,15 @@ function waiting_market_buyers_at_station(station, service)
   if not is_station(station) then return 0 end
   service = service or customer_service_for_force(station.force)
   local assignment = service.assignments[station.unit_number]
-  local assigned_keys = {}
   local stale_assignment = false
+  local count = 0
   for _, settlement in pairs(assignment and assignment.settlements or {}) do
     if settlement and settlement.valid then
-      assigned_keys[settlement_key(settlement.surface, settlement)] = true
+      local key = settlement_key(settlement.surface, settlement)
+      if service.operational_keys[key]
+        and service.assignment_by_settlement_key[key] == station then
+        count = count + (service.prospects_by_settlement_key[key] or 0)
+      end
     else
       stale_assignment = true
     end
@@ -5597,37 +5612,12 @@ function waiting_market_buyers_at_station(station, service)
   if stale_assignment then
     mark_factoryx_market_dirty(station.force, "invalid-assigned-settlement")
   end
-  local count = 0
-  for key, population in pairs(customer_settlement_populations()) do
-    if population.market_force_name == station.force.name
-      and service.operational_keys[key]
-      and assigned_keys[key] then
-      count = count + math.max(
-        0,
-        (population.virtual_unowned or 0) - (population.virtual_reserved or 0)
-      )
-    end
-  end
-  for unit_number, entity in pairs(customer_unit_registry()) do
-    local home = customer_home_settlements()[unit_number]
-    if entity and entity.valid and entity.force.name == CUSTOMER_FORCE_NAME
-      and home and service.operational_keys[home.settlement_key]
-      and assigned_keys[home.settlement_key]
-      and not customer_vehicle_owners()[unit_number]
-      and not buyer_reserved_by_unit()[unit_number] then
-      count = count + 1
-    end
-  end
   return count
 end
 
-function station_reservation_demand(station, active_stalls, service)
-  service = service or customer_service_for_force(station.force)
-  local customer_powered = active_customer_station_stalls(station, service)
-  if customer_powered > 0 then
-    return customer_powered
-  end
-  return waiting_market_buyers_at_station(station, service) > 0 and 1 or 0
+function station_reservation_rate_per_minute(station, service)
+  return waiting_market_buyers_at_station(station, service)
+    / PROSPECT_RESERVATION_RETRY_MINUTES
 end
 
 local function count_active_customer_stalls(force)
@@ -5752,8 +5742,8 @@ local function show_station_info_panel(player, station)
   local allocations = calculate_station_utilization(station.force)
   local active_stalls = active_station_stalls(station, allocations)
   local service = customer_growth_summary(station.force)
-  local reservation_rate = station_reservation_demand(station, active_stalls, service)
-    * RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE
+  local waiting_prospects = waiting_market_buyers_at_station(station, service)
+  local reservation_rate = station_reservation_rate_per_minute(station, service)
   local reservation_inventory = station_reservation_inventory(station)
   local reservation_stock = reservation_inventory and reservation_inventory.get_item_count(RESERVATION_NAME) or 0
   local researched_power_per_stall_kw = station_stall_power_watts(station) / 1000
@@ -5813,10 +5803,11 @@ local function show_station_info_panel(player, station)
     {sprite = "item/x-ev-charging-station", label = "Stalls", value = string.format("%d / %d active", active_stalls, config.stalls)},
     {sprite = "item/x-mass-market-ev", label = "EV capacity", value = string.format("%d / %d", active_stalls * config.evs_per_stall, config.stalls * config.evs_per_stall)},
     {sprite = "entity/biter-spawner", label = "Settlements", value = string.format("%d served", friendly_here)},
+    {sprite = "item/x-premium-ev", label = "Prospects", value = tostring(waiting_prospects), tooltip = string.format("Each unsold prospect files one EV Reservation every %d minutes until purchasing.", PROSPECT_RESERVATION_RETRY_MINUTES)},
     {sprite = "item/x-ev-charging-station", label = "Underserved", value = tostring(underserved_here), color = underserved_here > 0 and FACTORYX_STATE_COLORS.bad or FACTORYX_STATE_COLORS.good},
     {sprite = "item/x-prototype-roadster", label = "Commutes", value = string.format("%d in / %d charging", commute_counts.en_route, commute_counts.charging)},
     {sprite = "item/accumulator", label = "Power", value = string.format("%.0f / %.0f kW", power_draw_kw, config.stalls * researched_power_per_stall_kw)},
-    {sprite = "item/x-ev-reservation", label = "Reservations", value = string.format("%d / min", reservation_rate)},
+    {sprite = "item/x-ev-reservation", label = "Reservations", value = string.format("%.1f / min", reservation_rate)},
     {sprite = "item/x-ev-reservation", label = "Stored", value = tostring(reservation_stock)}
   })
 
@@ -5840,23 +5831,26 @@ local function biter_customer_market_summary(force)
   local powered_stations, charging_stall_capacity = count_powered_stations(force)
   local customer_mode = biter_customer_mode_enabled()
   local covered_settlements = 0
-  local demand_units = powered_stations
+  local reservation_rate = powered_stations
+  local customer_prospects = 0
+  local reservation_prospects = 0
   local active_customer_stalls = powered_stations
   local service = nil
 
   if customer_mode then
     covered_settlements = count_covered_biter_settlements(force)
     active_customer_stalls = count_active_customer_stalls(force)
-    demand_units = 0
+    reservation_rate = 0
     service = customer_service_for_force(force)
-    local allocations = calculate_station_utilization(force)
+    for _, prospects in pairs(service.prospects_by_settlement_key or {}) do
+      customer_prospects = customer_prospects + prospects
+    end
     for _, surface in pairs(game.surfaces) do
       for _, station in pairs(find_stations(surface, force)) do
-        demand_units = demand_units + station_reservation_demand(
-          station,
-          active_station_stalls(station, allocations),
-          service
-        )
+        local prospects = waiting_market_buyers_at_station(station, service)
+        reservation_prospects = reservation_prospects + prospects
+        reservation_rate = reservation_rate
+          + prospects / PROSPECT_RESERVATION_RETRY_MINUTES
       end
     end
   end
@@ -5901,8 +5895,10 @@ local function biter_customer_market_summary(force)
     grown_colonies = growth.grown_colonies,
     growth_progress = growth.growth_progress,
     growth_progress_required = growth.growth_progress_required,
-    demand_units = demand_units,
-    reservations_per_minute = demand_units * RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE
+    customer_prospects = customer_prospects,
+    reservation_prospects = reservation_prospects,
+    demand_units = reservation_rate,
+    reservations_per_minute = reservation_rate
   }
 end
 
@@ -5988,21 +5984,19 @@ local function reservation_print_progress()
   return storage.factoryx_reservation_print_progress
 end
 
-local function generate_station_reservations(force, allocations, service)
+local function generate_station_reservations(force, service)
   if not researched(force, "x-ev-charging-network") and not first_prototype_sale_unlocked(force) then
     return
   end
 
-  allocations = allocations or calculate_station_utilization(force)
   service = service or customer_service_for_force(force)
   local progress = reservation_print_progress()
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
-      local active_stalls = active_station_stalls(station, allocations)
-      local demand_stalls = station_reservation_demand(station, active_stalls, service)
-      if demand_stalls > 0 and station_has_grid_access(station) then
+      local reservation_rate = station_reservation_rate_per_minute(station, service)
+      if reservation_rate > 0 and station_has_grid_access(station) then
         local key = station.unit_number
-        local accumulated = (progress[key] or 0) + demand_stalls * RESERVATIONS_PER_ACTIVE_STALL_PER_MINUTE
+        local accumulated = (progress[key] or 0) + reservation_rate
         local ready = math.floor(accumulated / RESERVATION_SAMPLES_PER_PRINT)
         if ready > 0 then
           local inserted = top_up_station_reservations(station, ready)
@@ -7596,6 +7590,8 @@ local function progress_snapshot(force)
     stranded_evs = market.stranded_evs,
     grown_colonies = market.grown_colonies,
     reservations_per_minute = market.reservations_per_minute,
+    customer_prospects = market.customer_prospects,
+    reservation_prospects = market.reservation_prospects,
     reservation_stock = market.charger_reservation_stock,
     gigafactories = count_entities(force, "x-gigafactory-building"),
     gigafactories_v2 = count_entities(force, "x-gigafactory-v2"),
@@ -8235,11 +8231,11 @@ local function refresh_progress_panel(player)
     }
     market_rows[#market_rows + 1] = {
       sprite = "item/x-ev-reservation", label = "EV Reservations",
-      value = string.format("%d stored, %d/min", snapshot.reservation_stock, snapshot.reservations_per_minute),
+      value = string.format("%d stored, %.1f/min", snapshot.reservation_stock, snapshot.reservations_per_minute),
       color = snapshot.reservations_per_minute > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
       tooltip = snapshot.reservations_per_minute > 0
-        and "Chargers print physical buyer paperwork from active stalls. Move reservations to Sales Offices with belts or logistic bots."
-        or "No reservations are being printed. Chargers need powered active stalls and reachable customer settlements."
+        and string.format("%d charger-served prospects retry every %d minutes. Move their physical paperwork to Sales Offices with belts or logistic bots.", snapshot.reservation_prospects, PROSPECT_RESERVATION_RETRY_MINUTES)
+        or "No reservations are being printed. Chargers need reachable unsold prospects in operational customer settlements."
     }
   end
   if snapshot.prototype_evs_produced > 0 or snapshot.first_sale_complete then
@@ -9673,13 +9669,9 @@ script.on_nth_tick(60, function()
       end
     end
   end
-  for force_index, allocations in pairs(allocations_by_force) do
+  for force_index in pairs(allocations_by_force) do
     local force = game.forces[force_index]
-    generate_station_reservations(
-      force,
-      allocations,
-      services_by_force[force_index]
-    )
+    generate_station_reservations(force, services_by_force[force_index])
   end
   process_customer_charging_commutes()
 end)
@@ -10176,8 +10168,9 @@ commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid conn
   local message
   if market.biter_customer_mode then
     message = string.format(
-      "[FactoryX] Biter customer market: %d customer EVs, %d/%d stations grid-connected, %d covered biter settlements, %d/%d active charging stalls, %d active EV Sales Offices, %d EV Reservations printed at chargers per minute.",
+      "[FactoryX] Biter customer market: %d customer EVs, %d prospects, %d/%d stations grid-connected, %d covered biter settlements, %d/%d active charging stalls, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
       market.customer_ev_fleet,
+      market.customer_prospects,
       market.powered_stations,
       stations,
       market.covered_biter_settlements,
@@ -10188,7 +10181,7 @@ commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid conn
     )
   else
     message = string.format(
-      "[FactoryX] EV charging capacity: %d customer EVs, %d/%d stations grid-connected, %d active EV Sales Offices, %d EV Reservations printed at chargers per minute.",
+      "[FactoryX] EV charging capacity: %d customer EVs, %d/%d stations grid-connected, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
       market.customer_ev_fleet,
       market.powered_stations,
       stations,

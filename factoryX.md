@@ -297,11 +297,12 @@ The MVP already has these major loops:
 3. Place a powered EV Charging Station near biter customer settlements.
 4. The first covered biter customer charging site unlocks Prototype Roadsters.
 5. Craft Prototype Roadsters.
-6. Active charger stalls print physical EV Reservation paperwork. Belt or bot
-   one reservation to the Sales Office with each Prototype Roadster.
+6. Each covered unsold prospect files physical EV Reservation paperwork every
+   five minutes until purchasing. Belt or bot one reservation to the Sales
+   Office with each Prototype Roadster.
 7. Run `Sell hopes and dreams`, then belt Dollars out of the Sales Office.
-8. Scale charging stations and the completed EV fleet to print more reservations
-   for Premium and Mass-market sales.
+8. Reach more settlements to add prospects and increase reservation flow for
+   Premium and Mass-market sales.
 9. Research EV Production Line, then build the first 100 Premium EVs in
    ordinary advanced assemblers as a pilot run.
 10. Producing 100 Premium EVs completes the manufacturing pilot and unlocks
@@ -343,8 +344,10 @@ Current runtime behavior is intentionally small:
 - The first covered biter customer charging site unlocks Prototype Roadsters
   for `Sell hopes and dreams`.
 - If the EV charging network technology is researched or the first customer
-  charging site has been covered, each active charging stall prints one EV
-  Reservation per minute into its charger's output inventory.
+  charging site has been covered, each covered unsold prospect files one EV
+  Reservation every five minutes into its assigned charger's output inventory.
+  The aggregate cached settlement population supplies this rate without a
+  recurring timer on every visible customer.
 - Chargers have a one-slot output inventory. Inserters can always move the
   physical paperwork; logistic bots can also collect it when optional logistic
   coverage is available. Logistic coverage never gates charger operation.
@@ -356,8 +359,8 @@ Current runtime behavior is intentionally small:
   Mass-market white, Megatruck silver, and Robotaxi gold.
 - Each placed EV receives embedded battery equipment. Powered charger tiers
   reserve spare stalls for nearby player EVs, draw their normal per-stall grid
-  power, and refill those batteries. Customer stalls are allocated first and
-  only customer stalls generate EV Reservation paperwork.
+  power, and refill those batteries. Customer stalls are allocated first;
+  paperwork comes from unsold prospects rather than existing EV owners.
 - The `/factoryx-coverage` command reports total station count,
   grid-connected station count, covered biter settlements, active charging
   stalls, active EV Sales Offices, and EV Reservation rate.
@@ -823,8 +826,10 @@ Current implementation:
   The Substation already embodies switchgear, power electronics, heavy
   conductors, and a steel enclosure; the Accumulators add local buffering; the
   Concrete represents site work.
-- More active charging stalls mean more EV Reservations: one per active stall
-  per minute.
+- Each unsold prospect assigned to an operational charger files one EV
+  Reservation every five minutes until purchasing. Overlapping chargers use
+  one deterministic settlement assignment, so they do not duplicate the same
+  prospect's paperwork.
 - Potential demand and actual utilization are separate. A stall is requested
   only by a settlement containing at least one living mobile vehicle owner.
   Manufactured inventory and historical production do not count.
@@ -837,8 +842,8 @@ Current implementation:
   accept is underserved.
 - Charger consumers measure the electric network's delivered fraction. Powered
   stalls are the requested stalls multiplied by power satisfaction and rounded
-  down, so a 50% brownout serves roughly half the requested stalls and prints
-  half the paperwork.
+  down, so a 50% brownout serves roughly half the requested stalls. Reservation
+  generation is instead driven by unsold prospects in operational settlements.
 - Each charger renders one small status light per physical stall. A dark light
   is unused; cyan pulses move from slow to faster as that stall rises through
   low, medium, and near-full utilization; red means sold vehicles are
@@ -862,9 +867,10 @@ Current implementation:
   Underpowered chargers also show their powered/requested active stall count.
   Restoring service removes both signals. Routine customer settlement growth is
   silent, leaving the map and entity alerts as the operational interface.
-- A charger with a reachable unsold buyer can print one slow bootstrap
-  reservation before the first sale. Once owners exist, reservations scale at
-  one per powered occupied stall per minute.
+- Every reachable unsold buyer remains a prospect and files one reservation
+  every five minutes until purchasing. Printed paperwork is never invalidated
+  when the prospect retries or the local market later saturates; a full charger
+  output simply pauses further printing.
 - Prototype, Premium, and Mass-market consumer EV sales consume EV Reservations,
   starting with the first Prototype Roadster. Robotaxis are capital-gated.
 - This creates a reason to build charging infrastructure before high-volume
@@ -1383,7 +1389,8 @@ Current implemented rule:
 - Total active stalls are capped by cumulative EV sales across the force.
 - Active stall draw rises by tier: V1 50 kW, V2 150 kW, V3 250 kW, and V4
   500 kW. Peak site demand is therefore 200 kW, 1.2 MW, 3 MW, and 10 MW.
-- Every active stall creates one EV Reservation per minute in its charger.
+- Every unsold prospect creates one EV Reservation every five minutes in the
+  single charger assigned to its settlement.
 - Sales Office customer conversion range is larger than charger range: 2x the
   V1 charger radius, currently 128 tiles.
 
@@ -2231,8 +2238,8 @@ Balance questions for playtesting, not blockers for first implementation:
   hostile.
 - Count customer spawners near powered EV Charging Stations as covered biter
   settlements.
-- Generate EV Reservations from active charger stalls rather than from raw
-  charger count alone.
+- Generate EV Reservations from unsold prospects at operational customer
+  settlements. Each prospect retries every five minutes until purchasing.
 - Add `/factoryx-market` or extend `/factoryx-coverage` to report:
   - Powered chargers.
   - Covered biter settlements.
@@ -2763,10 +2770,9 @@ Current validation state, 2026-07-10:
   that 40 lifetime Dollars in Factorio's production statistics render as `40`
   in the FactoryX Progress panel.
 - The engine smoke test verifies a mixed V1/V2 network: 12 total stalls, one
-  sold EV demand, active 150 kW V2 sinks, no duplicated V1 allocation, and fleet-capped
-  reservation generation. After one minute, the active charger contains one
-  physical EV Reservation. Its pre-production snapshot verifies zero active
-  stalls and zero reservations.
+  sold EV demand, active 150 kW V2 sinks, no duplicated V1 allocation, and
+  prospect-driven reservation generation. After five minutes, unsold prospects
+  have filed physical EV Reservations in their assigned charger.
 - Isolated `--dump-data` with Factorio 2.1.9 + Space Age loads
   `factoryx 0.1.0` successfully.
 - The engine prototype check verifies that Prototype Roadster remains an
@@ -2792,14 +2798,14 @@ Current validation state, 2026-07-10:
   - A nearby biter settlement was converted to the `factoryx-customers` force,
     while a far biter settlement remained `enemy`.
   - A covered biter customer charging site enabled Prototype Roadsters.
-  - One active charging stall generated one EV Reservation in the charger's
-    passive-provider output after one minute.
+  - Unsold prospects generated EV Reservations in the assigned charger's
+    passive-provider output after their five-minute retry interval.
   - A tracked Planetary Energy Grid Controller exposed the AGI Training Run
     after one billion cumulative AI Tokens.
   - `game.finished` was true after an AGI Model appeared in its output.
 
 For runtime script changes, benchmark a disposable save long enough for the
-one-minute EV Reservation printer cycle:
+five-minute prospect reservation retry cycle:
 
 ```sh
 "/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio" \
