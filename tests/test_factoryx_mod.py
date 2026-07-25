@@ -2207,6 +2207,14 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('name = "x-lfp-cell", amount = 4', lfp_pack)
         self.assertIn('name = "steel-plate", amount = 4', lfp_pack)
         self.assertIn('name = "electronic-circuit", amount = 2', lfp_pack)
+        neutralization = data[
+            data.index('recipe("x-tailings-neutralization"'):
+            data.index('recipe("x-high-nickel-cell"')
+        ]
+        self.assertIn('name = "x-acidic-tailings", amount = 100', neutralization)
+        self.assertIn('name = "calcite", amount = 2', neutralization)
+        self.assertIn('name = "stone", amount = 2', neutralization)
+        self.assertIn("}}, 5", neutralization)
         for recipe_name in [
             "x-dirty-nickel-refining",
             "x-lithium-extraction",

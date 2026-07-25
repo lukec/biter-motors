@@ -106,7 +106,7 @@ Quantities are balance targets for the first implementation pass.
 | Lithium extraction | 100 Lithium Brine + 5 Calcite | 4 Lithium Carbonate + 100 Acidic Tailings | 10 s |
 | Battery graphite | 5 Coal | 2 Battery Graphite | 5 s |
 | Phosphate extraction | 10 Stone + 50 Sulfuric Acid | 4 Phosphate + 100 Acidic Tailings | 8 s |
-| Tailings neutralization | 100 Acidic Tailings + 5 Calcite | 2 Stone | 5 s |
+| Tailings neutralization | 100 Acidic Tailings + 2 Calcite | 2 Stone | 5 s |
 | High-nickel cells (Chemical Plant) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 4 High-Nickel Cells | 8 s |
 | High-nickel cells (Gigafactory) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 5 High-Nickel Cells | 6 s |
 | Commodity-cell Premium EV pilot | 1 Car + 48 Batteries + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 30 s |
@@ -192,6 +192,10 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
   round recovery above 90%.
 - Tailings treatment is a disposal cost. It does not return acid, nickel or
   lithium, so dirty refining cannot form a positive material loop.
+- Tailings neutralization consumes two Calcite per 100 fluid. This keeps dirty
+  chemistry materially expensive without making Calcite logistics dominate the
+  branch: one early High-Energy Battery Pack requires about 5.75 Calcite in
+  total, versus roughly 1.1 after clean refining and dry-electrode production.
 
 ## Implementation Slices
 

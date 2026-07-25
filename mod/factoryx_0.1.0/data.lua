@@ -1496,7 +1496,7 @@ data:extend({
   recipe("x-tailings-neutralization", {"chemistry"}, "x-factoryx-components", "a-e[tailings]",
     {
       {type = "fluid", name = "x-acidic-tailings", amount = 100},
-      {type = "item", name = "calcite", amount = 5}
+      {type = "item", name = "calcite", amount = 2}
     },
     {{type = "item", name = "stone", amount = 2}}, 5,
     {allow_productivity = true}
