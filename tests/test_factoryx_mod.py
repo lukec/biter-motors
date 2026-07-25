@@ -1696,14 +1696,55 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("refresh_sales_office_coverage", control)
         self.assertIn("rendering.draw_circle", control)
         self.assertIn('render_mode = "chart"', control)
-        self.assertIn("radius = SALES_OFFICE_CUSTOMER_RADIUS", control)
+        self.assertIn(
+            "local radius = megapack_market and MEGAPACK_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS",
+            control,
+        )
+        self.assertIn("radius = radius", control)
         self.assertIn("players = {player}", control)
         self.assertIn("set_shortcut_toggled", control)
         self.assertIn("on_lua_shortcut", control)
         self.assertIn("mark_sales_office_coverage_dirty", control)
-        self.assertIn("color = {r = 0.03, g = 0.16, b = 0.18, a = 0.18}", control)
-        self.assertIn("color = {r = 0.18, g = 0.62, b = 0.58, a = 0.72}", control)
+        self.assertIn("{r = 0.03, g = 0.16, b = 0.18, a = 0.18}", control)
+        self.assertIn("{r = 0.18, g = 0.62, b = 0.58, a = 0.72}", control)
+        self.assertIn("{r = 0.10, g = 0.20, b = 0.08, a = 0.10}", control)
         self.assertNotIn("color = {r = 0.2, g = 1.0, b = 0.35", control)
+
+    def test_megapack_sales_use_social_adoption_and_physical_buyers(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        sale = data[
+            data.index('recipe("x-sell-megapack"'):
+            data.index('recipe("x-sell-small-launch"')
+        ]
+
+        self.assertIn('name = "x-megapack", amount = 1', sale)
+        self.assertIn('name = "x-dollar", amount = 20', sale)
+        self.assertIn("}}, 30,", sale)
+        self.assertNotIn("x-ev-reservation", sale)
+        for contract in [
+            "MEGAPACK_SALES_RADIUS = 384",
+            "MEGAPACK_INITIAL_ADOPTION_FRACTION = 0.05",
+            "MEGAPACK_REFERRAL_FRACTION = 0.05",
+            "MEGAPACK_REFERRAL_WAVE_TICKS = 5 * 60 * 60",
+            "MEGAPACK_BUYER_MAX_ACTIVE = 32",
+            "MEGAPACK_BUYER_STARTS_PER_SECOND = 4",
+            "function sync_megapack_adoption_waves()",
+            "function begin_megapack_buyer_trip(",
+            "function send_megapack_buyer_home(",
+            "function install_megapack_at_settlement(",
+            "function handle_megapack_buyer_command_completed(",
+            "function sync_megapack_sales_offices()",
+            'sprite = "item/" .. MEGAPACK_NAME',
+        ]:
+            self.assertIn(contract, control)
+        self.assertIn(
+            "if not handle_megapack_buyer_command_completed(event) then",
+            control,
+        )
+        self.assertIn("complete_megapack_sale(office)", control)
+        self.assertIn("Megapack adoption", control)
+        self.assertIn("Next referral wave", control)
 
     def test_factoryx_progress_interface_is_live_and_actionable(self):
         data = (MOD / "data.lua").read_text()

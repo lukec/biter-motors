@@ -96,6 +96,7 @@ local PREMIUM_EV_ECONOMICS_RECIPE = "factoryx-smoke-premium-ev-economics"
 local MASS_MARKET_EV_RECIPE = "x-mass-market-ev"
 local SOLAR_ARRAY = "x-high-density-solar-array"
 local MEGAPACK = "x-megapack"
+local MEGAPACK_SALE_RECIPE = "x-sell-megapack"
 local BITER_SPAWNER = "biter-spawner"
 local SMALL_BITER = "small-biter"
 local GUN_TURRET = "gun-turret"
@@ -174,6 +175,8 @@ script.on_init(function()
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
   local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
+  local megapack_office = create_named(surface, SALES_OFFICE, {8, -10}, force)
+  local megapack_office_pole = create_named(surface, POWER_POLE, {8, -3}, force)
   local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {200, -100}, force)
   local robotaxi_power_tiles = {}
   local robotaxi_x = robotaxi_center and robotaxi_center.position.x or 200
@@ -300,13 +303,13 @@ script.on_init(function()
     robotaxi_power.power_usage = 0
     robotaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not autopilot_ev or not blocked_autopilot_ev or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not robotaxi_office or not megapack_office or not megapack_office_pole or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not autopilot_ev or not blocked_autopilot_ev or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
     return
   end
 
   for _, entity in pairs({
-    milestone_office, reservation_office, robotaxi_office,
+    milestone_office, reservation_office, robotaxi_office, megapack_office,
     station, station_v2, robotaxi_center, roadster, autopilot_ev, blocked_autopilot_ev
   }) do
     script.raise_script_built{entity = entity}
@@ -344,6 +347,10 @@ script.on_init(function()
   pcall(function() milestone_office.set_recipe(FIRST_SALE_RECIPE) end)
   pcall(function() reservation_office.set_recipe(RESERVATION_SALES_RECIPE) end)
   pcall(function() robotaxi_office.set_recipe(ROBOTAXI_SALE_RECIPE) end)
+  pcall(function() megapack_office.set_recipe(MEGAPACK_SALE_RECIPE) end)
+  local megapack_sale_input = megapack_office.get_inventory(input_inventory_id())
+  storage.megapack_sale_input = megapack_sale_input
+    and megapack_sale_input.insert{name = MEGAPACK, count = 1} or 0
   local robotaxi_input = robotaxi_office.get_inventory(input_inventory_id())
   local inserted_robotaxi_fleet = robotaxi_input and robotaxi_input.insert{name = ROBOTAXI_FLEET, count = 3} or 0
   local robotaxi_center_inventory = robotaxi_center.get_inventory(defines.inventory.chest)
@@ -420,7 +427,9 @@ script.on_init(function()
   local inserted_sale_dollar = office_output and office_output.insert{name = DOLLAR, count = 1} or 0
   storage.reservation_office_unit_number = reservation_office.unit_number
   storage.robotaxi_office_unit_number = robotaxi_office.unit_number
+  storage.megapack_office_unit_number = megapack_office.unit_number
   storage.robotaxi_office = robotaxi_office
+  storage.megapack_office = megapack_office
   storage.station_v2_unit_number = station_v2.unit_number
   storage.controller_unit_number = controller.unit_number
   storage.gigafactory_unit_number = gigafactory.unit_number
@@ -517,6 +526,10 @@ script.on_event(defines.events.on_tick, function()
   local office = storage.robotaxi_office
   if office and office.valid then
     office.energy = 100000000
+  end
+  local megapack_office = storage.megapack_office
+  if megapack_office and megapack_office.valid then
+    megapack_office.energy = 100000000
   end
   local economics_test = storage.gigafactory_economics_test
   if economics_test and economics_test.valid then
@@ -813,6 +826,7 @@ script.on_nth_tick(3780, function()
   end
   local office = find_unit(surface, SALES_OFFICE, storage.reservation_office_unit_number)
   local robotaxi_office = find_unit(surface, SALES_OFFICE, storage.robotaxi_office_unit_number)
+  local megapack_office = find_unit(surface, SALES_OFFICE, storage.megapack_office_unit_number)
   local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
   local controller = find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local biter_spawner = find_unit(surface, BITER_SPAWNER, storage.biter_spawner_unit_number)
@@ -858,6 +872,8 @@ script.on_nth_tick(3780, function()
   local selected_gigafactory_v2_recipe = gigafactory_v2 and gigafactory_v2.get_recipe()
   local selected_reservation_office_recipe = office and office.get_recipe()
   local robotaxi_output = robotaxi_office and robotaxi_office.get_inventory(output_inventory_id())
+  local megapack_sale_output = megapack_office
+    and megapack_office.get_inventory(output_inventory_id())
   local small_launch_technology = game.forces.player.technologies[SMALL_LAUNCH_TECH]
   local logistic_system_technology = game.forces.player.technologies["logistic-system"]
   local market = remote.call("factoryx", "refresh_biter_customer_market", "player")
@@ -886,6 +902,7 @@ script.on_nth_tick(3780, function()
     "factoryx", "test_electric_semi_reserve", electric_semis[1].unit_number, 0, 0.5
   ) or false
   local robotaxi_services = remote.call("factoryx", "robotaxi_service_status", "player")
+  local megapack_adoption = remote.call("factoryx", "megapack_adoption_status", "player")
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
   local logistic_roboports = #surface.find_entities_filtered{type = "roboport", force = game.forces.player}
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
@@ -948,6 +965,10 @@ script.on_nth_tick(3780, function()
     electric_semi_status = electric_semis,
     electric_semi_reserve_test = electric_semi_reserve_test,
     robotaxi_service_status = robotaxi_services,
+    megapack_adoption = megapack_adoption,
+    megapack_sale_input = storage.megapack_sale_input,
+    megapack_sale_dollars = megapack_sale_output
+      and megapack_sale_output.get_item_count(DOLLAR) or 0,
     prospect_units = prospect_units,
     ev_charging_station_enabled = station_recipe and station_recipe.enabled,
     ev_charging_station_v2_created = find_unit(surface, STATION_V2, storage.station_v2_unit_number) ~= nil,
@@ -1124,6 +1145,26 @@ script.on_nth_tick(8000, function()
     status = "customer_commutes",
     commutes = remote.call("factoryx", "customer_charging_commutes", "player"),
     performance = remote.call("factoryx", "performance_status", "player")
+  }
+end)
+
+script.on_nth_tick(17000, function()
+  if game.tick < 17000 then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local office = surface
+    and find_unit(surface, SALES_OFFICE, storage.megapack_office_unit_number)
+  local output = office and office.get_inventory(output_inventory_id())
+  local input = office and office.get_inventory(input_inventory_id())
+  write_report{
+    tick = game.tick,
+    status = "megapack_sale",
+    dollars = output and output.get_item_count(DOLLAR) or 0,
+    megapacks = input and input.get_item_count(MEGAPACK) or 0,
+    disabled = office and office.disabled_by_script,
+    entity_status = office and office.status,
+    crafting_progress = office and office.crafting_progress,
+    products_finished = office and office.products_finished,
+    adoption = remote.call("factoryx", "megapack_adoption_status", "player")
   }
 end)
 
@@ -1861,6 +1902,10 @@ from pathlib import Path
 report = Path(sys.argv[1])
 records = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
 checked = next((record for record in records if record.get("status") == "checked"), None)
+megapack_sale = next(
+    (record for record in records if record.get("status") == "megapack_sale"),
+    None,
+)
 if checked is None:
     raise SystemExit("smoke report missing checked record")
 road_rage_test = checked.get("road_rage_test") or {}
@@ -1910,8 +1955,8 @@ if (
     invalid_market_snapshot is None
     or not invalid_market_snapshot.get("settlement_created")
     or not invalid_market_snapshot.get("settlement_destroyed")
-    or invalid_market_snapshot.get("offices_before") != 3
-    or invalid_market_snapshot.get("offices_after") != 3
+    or invalid_market_snapshot.get("offices_before") != 4
+    or invalid_market_snapshot.get("offices_after") != 4
     or invalid_market_snapshot.get("invalid_snapshot_rebuilds", 0) < 1
 ):
     raise SystemExit(
@@ -1935,7 +1980,7 @@ if commutes is None or commutes.get("commutes", {}).get("completed", 0) < 1:
     raise SystemExit(f"customer EV owners did not complete a physical charging commute: {commutes}")
 performance = commutes.get("performance", {})
 counters = performance.get("counters", {})
-if performance.get("registered_sales_offices") != 3 or performance.get("registered_stations", 0) < 3:
+if performance.get("registered_sales_offices") != 4 or performance.get("registered_stations", 0) < 3:
     raise SystemExit(f"FactoryX entity registries missed smoke entities: {performance}")
 if performance.get("registered_robotaxi_centers") != 1:
     raise SystemExit(f"Robotaxi Service Center registry missed smoke entity: {performance}")
@@ -2035,6 +2080,15 @@ if not checked.get("megapack_created") or not checked.get("megapack_recipe_enabl
     raise SystemExit(f"Energy Products did not unlock a placeable Megapack: {checked}")
 if not checked.get("sell_megapack_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock Sell Megapack: {checked}")
+if checked.get("megapack_sale_input") != 1:
+    raise SystemExit(f"Megapack Sales Office did not accept its physical product: {checked}")
+megapack_adoption = checked.get("megapack_adoption") or {}
+if megapack_adoption.get("settlements", 0) < 1 or megapack_adoption.get("eligible", 0) < 1:
+    raise SystemExit(f"Megapack social adoption did not seed energy believers: {checked}")
+if megapack_sale is None or megapack_sale.get("dollars", 0) < 20:
+    raise SystemExit(f"Physical Megapack buyer did not complete a 20 Dollar sale: {megapack_sale}")
+if (megapack_sale.get("adoption") or {}).get("installed", 0) < 1:
+    raise SystemExit(f"Megapack buyer did not return home and install the product: {megapack_sale}")
 if not checked.get("terrestrial_datacenter_created"):
     raise SystemExit(f"Terrestrial Datacenter was not created in smoke test: {checked}")
 if checked.get("terrestrial_datacenter_tokens", 0) < 20:

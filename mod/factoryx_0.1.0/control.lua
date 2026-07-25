@@ -94,6 +94,7 @@ local GIGAFACTORY_CONFIGS = {
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "x-high-density-solar-array"
 local HIGH_DENSITY_SOLAR_BATCH_RECIPE = "x-high-density-solar-array-batch"
 local MEGAPACK_NAME = "x-megapack"
+MEGAPACK_SALE_RECIPE = "x-sell-megapack"
 local TERRESTRIAL_DATACENTER_NAME = "x-terrestrial-datacenter"
 ROBOTAXI_SERVICE_CENTER_NAME = "x-robotaxi-service-center"
 ROBOTAXI_SERVICE_RECIPE = "x-operate-robotaxis"
@@ -381,6 +382,13 @@ CHARGER_STALL_VISUAL_LAYOUTS = {
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
+MEGAPACK_SALES_RADIUS = 384
+MEGAPACK_INITIAL_ADOPTION_FRACTION = 0.05
+MEGAPACK_REFERRAL_FRACTION = 0.05
+MEGAPACK_REFERRAL_WAVE_TICKS = 5 * 60 * 60
+MEGAPACK_BUYER_MAX_ACTIVE = 32
+MEGAPACK_BUYER_STARTS_PER_SECOND = 4
+MEGAPACK_BUYER_PATH_TIMEOUT_TICKS = 3 * 60 * 60
 local CUSTOMER_MOBILE_SERVICE_RADIUS = 48
 local CUSTOMER_WANDER_RADIUS = 8
 local ENEMY_RELEASE_WANDER_TICKS = 60
@@ -2515,7 +2523,8 @@ function rebuild_customer_buyer_queues()
   for unit_number, entity in pairs(customer_unit_registry()) do
     local home = customer_home_settlements()[unit_number]
     if entity and entity.valid and home and not customer_vehicle_owners()[unit_number]
-      and not buyer_reserved_by_unit()[unit_number] then
+      and not buyer_reserved_by_unit()[unit_number]
+      and not megapack_buyer_reservations()[unit_number] then
       enqueue_customer_buyer(unit_number, home)
     end
   end
@@ -2586,6 +2595,34 @@ function office_buyer_reservations()
   return storage.factoryx_office_buyer_reservations
 end
 
+function megapack_adoption_states()
+  storage.factoryx_megapack_adoption_states = storage.factoryx_megapack_adoption_states or {}
+  return storage.factoryx_megapack_adoption_states
+end
+
+function megapack_office_reservations()
+  storage.factoryx_megapack_office_reservations =
+    storage.factoryx_megapack_office_reservations or {}
+  return storage.factoryx_megapack_office_reservations
+end
+
+function megapack_buyer_trips()
+  storage.factoryx_megapack_buyer_trips = storage.factoryx_megapack_buyer_trips or {}
+  return storage.factoryx_megapack_buyer_trips
+end
+
+function megapack_buyer_reservations()
+  storage.factoryx_megapack_buyer_reservations =
+    storage.factoryx_megapack_buyer_reservations or {}
+  return storage.factoryx_megapack_buyer_reservations
+end
+
+function megapack_installation_renderings()
+  storage.factoryx_megapack_installation_renderings =
+    storage.factoryx_megapack_installation_renderings or {}
+  return storage.factoryx_megapack_installation_renderings
+end
+
 function sales_office_market_states()
   storage.factoryx_sales_office_market_states = storage.factoryx_sales_office_market_states or {}
   return storage.factoryx_sales_office_market_states
@@ -2642,9 +2679,17 @@ local function refresh_sales_office_coverage(player)
   local objects = sales_office_coverage_renderings()[player.index]
   for _, surface in pairs(game.surfaces) do
     for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME, force = player.force}) do
+      local megapack_market = current_recipe_name(office) == MEGAPACK_SALE_RECIPE
+      local radius = megapack_market and MEGAPACK_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS
+      local fill_color = megapack_market
+        and {r = 0.10, g = 0.20, b = 0.08, a = 0.10}
+        or {r = 0.03, g = 0.16, b = 0.18, a = 0.18}
+      local edge_color = megapack_market
+        and {r = 0.42, g = 0.72, b = 0.30, a = 0.62}
+        or {r = 0.18, g = 0.62, b = 0.58, a = 0.72}
       objects[#objects + 1] = rendering.draw_circle{
-        color = {r = 0.03, g = 0.16, b = 0.18, a = 0.18},
-        radius = SALES_OFFICE_CUSTOMER_RADIUS,
+        color = fill_color,
+        radius = radius,
         width = 1,
         filled = true,
         target = office,
@@ -2653,8 +2698,8 @@ local function refresh_sales_office_coverage(player)
         render_mode = "chart"
       }
       objects[#objects + 1] = rendering.draw_circle{
-        color = {r = 0.18, g = 0.62, b = 0.58, a = 0.72},
-        radius = SALES_OFFICE_CUSTOMER_RADIUS,
+        color = edge_color,
+        radius = radius,
         width = 4,
         filled = false,
         target = office,
@@ -3073,6 +3118,7 @@ function unregister_customer_unit_number(unit_number)
   local ownership = remove_customer_vehicle_ownership(unit_number)
   local reserved_office = buyer_reserved_by_unit()[unit_number]
 
+  clear_megapack_buyer_trip(unit_number, false)
   customer_charging_commutes()[unit_number] = nil
   customer_active_commutes()[unit_number] = nil
   TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
@@ -4705,6 +4751,10 @@ function process_customer_charging_commutes()
     local ownership = customer_vehicle_owners()[unit_number]
     local entity = customer_unit_registry()[unit_number]
     if ownership and entity and entity.valid then
+      if megapack_buyer_reservations()[unit_number] then
+        schedule_customer_commute(unit_number, game.tick + 60)
+        goto continue_customer_commute
+      end
       local state = states[unit_number]
       if not state then
         state = {
@@ -4736,6 +4786,7 @@ function process_customer_charging_commutes()
         enqueue_customer_commute(unit_number)
       end
     end
+    ::continue_customer_commute::
   end
 end
 
@@ -4937,7 +4988,9 @@ function process_customer_vehicle_variant_migration(limit)
     local ownership = customer_vehicle_owners()[unit_number]
     if entity and entity.valid then
       if customer_road_rage_states()[unit_number] then
-        -- Restoration requeues the migration; replacing now would orphan rage state.
+        -- Restoration requeues migration; replacing now would orphan rage state.
+      elseif megapack_buyer_reservations()[unit_number] then
+        -- Restoration/completion requeues migration; replacing now would orphan trip state.
       elseif ownership then
         replace_customer_vehicle_entity(entity, ownership)
       else
@@ -6900,6 +6953,529 @@ function office_has_all_sale_inputs(office, recipe)
   return true
 end
 
+function customer_population_size(population)
+  if not population then return 0 end
+  local total = (population.physical or 0) + (population.virtual_unowned or 0)
+  for _, count in pairs(population.virtual_by_vehicle or {}) do
+    total = total + count
+  end
+  return math.max(0, math.floor(total))
+end
+
+function ensure_megapack_adoption_state(key, population)
+  local total = customer_population_size(population)
+  if total <= 0 then return nil end
+  local states = megapack_adoption_states()
+  local state = states[key]
+  if not state then
+    state = {
+      eligible = math.max(1, math.ceil(total * MEGAPACK_INITIAL_ADOPTION_FRACTION)),
+      installed = 0,
+      reserved = 0
+    }
+    states[key] = state
+  end
+  state.installed = math.min(total, math.max(0, state.installed or 0))
+  state.reserved = math.min(
+    math.max(0, total - state.installed),
+    math.max(0, state.reserved or 0)
+  )
+  state.eligible = math.min(
+    total,
+    math.max(state.installed + state.reserved, state.eligible or 0)
+  )
+  return state
+end
+
+function population_in_megapack_office_market(office, population)
+  return population and population.market_force_name == office.force.name
+    and population.surface_index == office.surface.index
+    and within_radius(office, {position = population.position}, MEGAPACK_SALES_RADIUS)
+end
+
+function destroy_megapack_installation_rendering(key)
+  local rendering_state = megapack_installation_renderings()[key]
+  if not rendering_state then return end
+  for _, object in pairs(rendering_state) do
+    if object and object.valid then object.destroy() end
+  end
+  megapack_installation_renderings()[key] = nil
+end
+
+function refresh_megapack_installation_rendering(key)
+  destroy_megapack_installation_rendering(key)
+  local adoption = megapack_adoption_states()[key]
+  local population = customer_settlement_populations()[key]
+  if not adoption or (adoption.installed or 0) <= 0 or not population then return end
+  local surface = game.surfaces[population.surface_index]
+  if not surface then return end
+  local position = {
+    x = population.position.x + 3.25,
+    y = population.position.y + 1.75
+  }
+  megapack_installation_renderings()[key] = {
+    rendering.draw_sprite{
+      sprite = "item/" .. MEGAPACK_NAME,
+      surface = surface,
+      target = position,
+      x_scale = 0.55,
+      y_scale = 0.55,
+      render_layer = "air-object"
+    },
+    rendering.draw_text{
+      surface = surface,
+      target = {x = position.x, y = position.y + 0.75},
+      text = tostring(adoption.installed),
+      color = {r = 0.62, g = 0.94, b = 0.64, a = 1},
+      scale = 0.75,
+      alignment = "center",
+      vertical_alignment = "top"
+    }
+  }
+end
+
+function sync_megapack_adoption_waves()
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
+    if office.valid and current_recipe_name(office) == MEGAPACK_SALE_RECIPE then
+      for key, population in pairs(customer_settlement_populations()) do
+        if population_in_megapack_office_market(office, population) then
+          ensure_megapack_adoption_state(key, population)
+        end
+      end
+    end
+  end
+  for key, state in pairs(megapack_adoption_states()) do
+    local population = customer_settlement_populations()[key]
+    if not population then
+      destroy_megapack_installation_rendering(key)
+      megapack_adoption_states()[key] = nil
+    else
+      state = ensure_megapack_adoption_state(key, population)
+      local total = customer_population_size(population)
+      if state and (state.installed or 0) > 0 and state.eligible < total then
+        state.next_referral_tick = state.next_referral_tick
+          or (game.tick + MEGAPACK_REFERRAL_WAVE_TICKS)
+        if game.tick >= state.next_referral_tick then
+          local remaining = total - state.eligible
+          state.eligible = math.min(
+            total,
+            state.eligible + math.max(1, math.ceil(remaining * MEGAPACK_REFERRAL_FRACTION))
+          )
+          state.next_referral_tick = game.tick + MEGAPACK_REFERRAL_WAVE_TICKS
+        end
+      elseif state then
+        state.next_referral_tick = nil
+      end
+    end
+  end
+end
+
+function megapack_office_status(office)
+  local status = {
+    settlements = 0,
+    population = 0,
+    eligible = 0,
+    waiting = 0,
+    reserved = 0,
+    installed = 0,
+    to_office = 0,
+    waiting_product = 0,
+    returning_home = 0,
+    next_referral_tick = nil
+  }
+  if not office or not office.valid then return status end
+  for key, population in pairs(customer_settlement_populations()) do
+    if population_in_megapack_office_market(office, population) then
+      local state = ensure_megapack_adoption_state(key, population)
+      if state then
+        status.settlements = status.settlements + 1
+        status.population = status.population + customer_population_size(population)
+        status.eligible = status.eligible + state.eligible
+        status.reserved = status.reserved + state.reserved
+        status.installed = status.installed + state.installed
+        status.waiting = status.waiting
+          + math.max(0, state.eligible - state.installed - state.reserved)
+        if state.next_referral_tick
+          and (not status.next_referral_tick
+            or state.next_referral_tick < status.next_referral_tick) then
+          status.next_referral_tick = state.next_referral_tick
+        end
+      end
+    end
+  end
+  for _, trip in pairs(megapack_buyer_trips()) do
+    if trip.force_name == office.force.name and trip.office_unit_number == office.unit_number then
+      if trip.phase == "to_office" then status.to_office = status.to_office + 1
+      elseif trip.phase == "waiting_product" then
+        status.waiting_product = status.waiting_product + 1
+      elseif trip.phase == "returning_home" then
+        status.returning_home = status.returning_home + 1
+      end
+    end
+  end
+  status.adoption_percent = status.population > 0
+    and math.floor(status.installed * 1000 / status.population + 0.5) / 10 or 0
+  return status
+end
+
+function megapack_adoption_summary(force)
+  local summary = {
+    settlements = 0,
+    population = 0,
+    eligible = 0,
+    waiting = 0,
+    reserved = 0,
+    installed = 0,
+    in_transit = 0,
+    to_office = 0,
+    waiting_product = 0,
+    returning_home = 0
+  }
+  if not force then return summary end
+  for key, state in pairs(megapack_adoption_states()) do
+    local population = customer_settlement_populations()[key]
+    if population and population.market_force_name == force.name then
+      state = ensure_megapack_adoption_state(key, population)
+      summary.settlements = summary.settlements + 1
+      summary.population = summary.population + customer_population_size(population)
+      summary.eligible = summary.eligible + state.eligible
+      summary.reserved = summary.reserved + state.reserved
+      summary.installed = summary.installed + state.installed
+      summary.waiting = summary.waiting
+        + math.max(0, state.eligible - state.installed - state.reserved)
+    end
+  end
+  for _, trip in pairs(megapack_buyer_trips()) do
+    if trip.force_name == force.name then
+      if trip.phase == "to_office" then
+        summary.to_office = summary.to_office + 1
+        summary.in_transit = summary.in_transit + 1
+      elseif trip.phase == "waiting_product" then
+        summary.waiting_product = summary.waiting_product + 1
+      elseif trip.phase == "returning_home" then
+        summary.returning_home = summary.returning_home + 1
+        summary.in_transit = summary.in_transit + 1
+      end
+    end
+  end
+  summary.adoption_percent = summary.population > 0
+    and math.floor(summary.installed * 1000 / summary.population + 0.5) / 10 or 0
+  return summary
+end
+
+function clear_megapack_buyer_trip(unit_number, resume_wandering)
+  local trips = megapack_buyer_trips()
+  local trip = trips[unit_number]
+  if not trip then return false end
+  if trip.carry_icon and trip.carry_icon.valid then trip.carry_icon.destroy() end
+  local office_reservations = megapack_office_reservations()
+  if office_reservations[trip.office_unit_number] == unit_number then
+    office_reservations[trip.office_unit_number] = nil
+  end
+  megapack_buyer_reservations()[unit_number] = nil
+  local adoption = megapack_adoption_states()[trip.settlement_key]
+  if adoption then
+    adoption.reserved = math.max(0, (adoption.reserved or 0) - 1)
+    adoption.retry_tick = game.tick + 30 * 60
+  end
+  trips[unit_number] = nil
+  local entity = customer_unit_registry()[unit_number]
+  if resume_wandering and entity and entity.valid then
+    give_customer_wander_command(entity, true)
+    enqueue_customer_variant_migration(unit_number)
+    if not customer_vehicle_owners()[unit_number] then
+      enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+    end
+  end
+  return true
+end
+
+function megapack_buyer_destination(entity, target, radius, salt)
+  local angle = ((entity.unit_number or 0) * 0.61803398875 + (salt or 0)) % (2 * math.pi)
+  local position = {
+    x = target.x + math.cos(angle) * radius,
+    y = target.y + math.sin(angle) * radius
+  }
+  return entity.surface.find_non_colliding_position(entity.name, position, 16, 0.5)
+    or position
+end
+
+function begin_megapack_buyer_trip(office, key, population, unit_number)
+  local entity = customer_unit_registry()[unit_number]
+  local adoption = ensure_megapack_adoption_state(key, population)
+  if not entity or not entity.valid or not entity.commandable or not adoption then return false end
+  local destination = megapack_buyer_destination(entity, office.position, 4.5, office.unit_number)
+  entity.commandable.set_command{
+    type = defines.command.go_to_location,
+    destination = destination,
+    distraction = defines.distraction.none,
+    radius = 1.5
+  }
+  local trip = {
+    unit_number = unit_number,
+    office = office,
+    office_unit_number = office.unit_number,
+    settlement_key = key,
+    force_name = office.force.name,
+    phase = "to_office",
+    destination = destination,
+    command_started_tick = game.tick
+  }
+  megapack_buyer_trips()[unit_number] = trip
+  megapack_buyer_reservations()[unit_number] = office.unit_number
+  megapack_office_reservations()[office.unit_number] = unit_number
+  adoption.reserved = (adoption.reserved or 0) + 1
+  return true
+end
+
+function available_megapack_representatives()
+  local by_settlement = {}
+  for unit_number, entity in pairs(customer_unit_registry()) do
+    local home = customer_home_settlements()[unit_number]
+    local commute = customer_charging_commutes()[unit_number]
+    local commute_busy = commute and (
+      commute.phase == "to_charger"
+      or commute.phase == "charging"
+      or commute.phase == "returning_home"
+    )
+    if entity and entity.valid and home and entity.force.name == CUSTOMER_FORCE_NAME
+      and not megapack_buyer_reservations()[unit_number]
+      and not buyer_reserved_by_unit()[unit_number]
+      and not customer_road_rage_states()[unit_number]
+      and not commute_busy then
+      by_settlement[home.settlement_key] = by_settlement[home.settlement_key] or {}
+      by_settlement[home.settlement_key][#by_settlement[home.settlement_key] + 1] = unit_number
+    end
+  end
+  return by_settlement
+end
+
+function reserve_megapack_buyer(office, representatives)
+  local candidates = {}
+  for key, population in pairs(customer_settlement_populations()) do
+    if population_in_megapack_office_market(office, population) then
+      local adoption = ensure_megapack_adoption_state(key, population)
+      local waiting = adoption
+        and math.max(0, adoption.eligible - adoption.installed - adoption.reserved) or 0
+      local units = representatives[key]
+      if waiting > 0 and units and #units > 0
+        and (not adoption.retry_tick or game.tick >= adoption.retry_tick) then
+        local dx = population.position.x - office.position.x
+        local dy = population.position.y - office.position.y
+        candidates[#candidates + 1] = {
+          key = key,
+          population = population,
+          distance = dx * dx + dy * dy,
+          unit_number = units[#units]
+        }
+      end
+    end
+  end
+  table.sort(candidates, function(left, right)
+    if left.distance ~= right.distance then return left.distance < right.distance end
+    return left.key < right.key
+  end)
+  local candidate = candidates[1]
+  if not candidate then return false end
+  table.remove(representatives[candidate.key])
+  return begin_megapack_buyer_trip(
+    office,
+    candidate.key,
+    candidate.population,
+    candidate.unit_number
+  )
+end
+
+function send_megapack_buyer_home(trip)
+  local entity = customer_unit_registry()[trip.unit_number]
+  local population = customer_settlement_populations()[trip.settlement_key]
+  if not entity or not entity.valid or not entity.commandable or not population
+    or entity.surface.index ~= population.surface_index then
+    return false
+  end
+  local destination = megapack_buyer_destination(
+    entity,
+    population.position,
+    8 + ((trip.unit_number * 7) % 13),
+    trip.office_unit_number
+  )
+  entity.commandable.set_command{
+    type = defines.command.go_to_location,
+    destination = destination,
+    distraction = defines.distraction.none,
+    radius = 2
+  }
+  trip.phase = "returning_home"
+  trip.destination = destination
+  trip.command_started_tick = game.tick
+  trip.carry_icon = rendering.draw_sprite{
+    sprite = "item/" .. MEGAPACK_NAME,
+    surface = entity.surface,
+    target = entity,
+    target_offset = {0, -1.6},
+    x_scale = 0.42,
+    y_scale = 0.42,
+    render_layer = "air-object"
+  }
+  return true
+end
+
+function complete_megapack_sale(office)
+  local unit_number = megapack_office_reservations()[office.unit_number]
+  local trip = unit_number and megapack_buyer_trips()[unit_number]
+  if not trip or trip.phase ~= "waiting_product" then return false end
+  megapack_office_reservations()[office.unit_number] = nil
+  office.disabled_by_script = true
+  if not send_megapack_buyer_home(trip) then
+    clear_megapack_buyer_trip(unit_number, true)
+    return false
+  end
+  return true
+end
+
+function install_megapack_at_settlement(unit_number)
+  local trip = megapack_buyer_trips()[unit_number]
+  if not trip then return false end
+  local adoption = megapack_adoption_states()[trip.settlement_key]
+  if not adoption then
+    clear_megapack_buyer_trip(unit_number, true)
+    return false
+  end
+  if trip.carry_icon and trip.carry_icon.valid then trip.carry_icon.destroy() end
+  adoption.reserved = math.max(0, (adoption.reserved or 0) - 1)
+  adoption.installed = math.min(adoption.eligible, (adoption.installed or 0) + 1)
+  adoption.retry_tick = nil
+  adoption.next_referral_tick = adoption.next_referral_tick
+    or (game.tick + MEGAPACK_REFERRAL_WAVE_TICKS)
+  megapack_buyer_reservations()[unit_number] = nil
+  megapack_buyer_trips()[unit_number] = nil
+  refresh_megapack_installation_rendering(trip.settlement_key)
+  local entity = customer_unit_registry()[unit_number]
+  if entity and entity.valid then
+    give_customer_wander_command(entity, true)
+    enqueue_customer_variant_migration(unit_number)
+    if not customer_vehicle_owners()[unit_number] then
+      enqueue_customer_buyer(unit_number, customer_home_settlements()[unit_number])
+    end
+  end
+  return true
+end
+
+function handle_megapack_buyer_command_completed(event)
+  local trip = event.unit_number and megapack_buyer_trips()[event.unit_number]
+  if not trip then return false end
+  local entity = customer_unit_registry()[event.unit_number]
+  if not entity or not entity.valid then
+    clear_megapack_buyer_trip(event.unit_number, false)
+    return true
+  end
+  local destination = trip.destination
+  local dx = destination and entity.position.x - destination.x or math.huge
+  local dy = destination and entity.position.y - destination.y or math.huge
+  if not destination or dx * dx + dy * dy > 64 then
+    clear_megapack_buyer_trip(event.unit_number, true)
+    return true
+  end
+  if trip.phase == "to_office" then
+    trip.phase = "waiting_product"
+    trip.destination = nil
+    trip.command_started_tick = nil
+    entity.commandable.set_command{
+      type = defines.command.wander,
+      distraction = defines.distraction.none,
+      radius = 0.25,
+      ticks_to_wait = 60
+    }
+    return true
+  elseif trip.phase == "returning_home" then
+    install_megapack_at_settlement(event.unit_number)
+    return true
+  end
+  return true
+end
+
+function process_megapack_buyer_trips()
+  local active = 0
+  for unit_number, trip in pairs(megapack_buyer_trips()) do
+    local entity = customer_unit_registry()[unit_number]
+    local office = trip.office
+    local invalid = not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
+      or not customer_settlement_populations()[trip.settlement_key]
+    if trip.phase == "to_office" or trip.phase == "waiting_product" then
+      invalid = invalid or not office or not office.valid
+        or current_recipe_name(office) ~= MEGAPACK_SALE_RECIPE
+    end
+    if invalid then
+      clear_megapack_buyer_trip(unit_number, true)
+    elseif (trip.phase == "to_office" or trip.phase == "returning_home")
+      and game.tick - (trip.command_started_tick or game.tick)
+        >= MEGAPACK_BUYER_PATH_TIMEOUT_TICKS then
+      clear_megapack_buyer_trip(unit_number, true)
+    else
+      active = active + 1
+    end
+  end
+  return active
+end
+
+function sync_megapack_sales_offices()
+  sync_megapack_adoption_waves()
+  local active = process_megapack_buyer_trips()
+  local representatives = available_megapack_representatives()
+  local starts = 0
+  storage.factoryx_sales_office_coverage_recipes =
+    storage.factoryx_sales_office_coverage_recipes or {}
+  local coverage_recipes = storage.factoryx_sales_office_coverage_recipes
+  local seen_offices = {}
+  for _, office in pairs(registered_factoryx_entities("sales_offices")) do
+    if office.valid and office.unit_number then
+      seen_offices[office.unit_number] = true
+      local recipe_name = current_recipe_name(office)
+      local megapack_market = recipe_name == MEGAPACK_SALE_RECIPE
+      if coverage_recipes[office.unit_number] ~= megapack_market then
+        coverage_recipes[office.unit_number] = megapack_market
+        mark_sales_office_coverage_dirty()
+      end
+      local reserved_unit = megapack_office_reservations()[office.unit_number]
+      local trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
+      if recipe_name ~= MEGAPACK_SALE_RECIPE then
+        if trip and trip.phase ~= "returning_home" then
+          clear_megapack_buyer_trip(reserved_unit, true)
+        end
+      else
+        if not trip and starts < MEGAPACK_BUYER_STARTS_PER_SECOND
+          and active + starts < MEGAPACK_BUYER_MAX_ACTIVE
+          and reserve_megapack_buyer(office, representatives) then
+          reserved_unit = megapack_office_reservations()[office.unit_number]
+          trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
+          starts = starts + 1
+        end
+        office.disabled_by_script = not trip or trip.phase ~= "waiting_product"
+        local status = megapack_office_status(office)
+        local label
+        local diode
+        if trip and trip.phase == "to_office" then
+          label, diode = "Energy buyer en route", defines.entity_status_diode.yellow
+        elseif trip and trip.phase == "waiting_product" then
+          label, diode = "Energy buyer waiting", defines.entity_status_diode.green
+        elseif status.waiting <= 0 and status.installed < status.population then
+          label, diode = "Waiting for referral wave", defines.entity_status_diode.green
+        elseif status.population > 0 and status.installed >= status.population then
+          label, diode = "Energy market fully adopted", defines.entity_status_diode.green
+        elseif status.settlements == 0 then
+          label, diode = "No customer settlements in energy market", defines.entity_status_diode.red
+        else
+          label, diode = "Waiting for an energy buyer", defines.entity_status_diode.yellow
+        end
+        pcall(function() office.custom_status = {diode = diode, label = label} end)
+      end
+    end
+  end
+  for unit_number in pairs(coverage_recipes) do
+    if not seen_offices[unit_number] then coverage_recipes[unit_number] = nil end
+  end
+end
+
 function dequeue_available_buyer(queue, office, expected_settlement_key)
   return BuyerQueues.pop_valid(queue, function(unit_number)
     local entity = customer_unit_registry()[unit_number]
@@ -6909,6 +7485,7 @@ function dequeue_available_buyer(queue, office, expected_settlement_key)
       and entity.force.name == CUSTOMER_FORCE_NAME
       and not customer_vehicle_owners()[unit_number]
       and not buyer_reserved_by_unit()[unit_number]
+      and not megapack_buyer_reservations()[unit_number]
     if available and entity.surface == office.surface then
       return true, false
     end
@@ -7289,7 +7866,9 @@ function sync_sales_office_buyers()
         local recipe_name = recipe and recipe.name
         local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
         local reservation = office_buyer_reservations()[office.unit_number]
-        if not sale then
+        if recipe_name == MEGAPACK_SALE_RECIPE then
+          clear_office_buyer_reservation(office.unit_number)
+        elseif not sale then
           clear_office_buyer_reservation(office.unit_number)
           office.disabled_by_script = false
         else
@@ -7326,12 +7905,15 @@ function sync_sales_office_buyers()
             office.disabled_by_script = not valid_reservation
           end
         end
-        update_sales_office_market_feedback(office, sales_office_buyer_status(office))
+        if recipe_name ~= MEGAPACK_SALE_RECIPE then
+          update_sales_office_market_feedback(office, sales_office_buyer_status(office))
+        end
       end
   end
   for unit_number in pairs(sales_office_market_states()) do
     if not seen[unit_number] then sales_office_market_states()[unit_number] = nil end
   end
+  sync_megapack_sales_offices()
 end
 
 function accelerate_consumer_ev_sales()
@@ -7449,7 +8031,11 @@ local function check_first_prototype_sales()
         local recipe_name = current_recipe_name(office)
         local completed_crafts = math.max(0, products - previous_products)
         if completed_crafts > 0 then
-          complete_reserved_vehicle_sale(office, recipe_name)
+          if recipe_name == MEGAPACK_SALE_RECIPE then
+            complete_megapack_sale(office)
+          else
+            complete_reserved_vehicle_sale(office, recipe_name)
+          end
           record_customer_ev_sales(office.force, recipe_name, completed_crafts)
         end
         if recipe_name == FIRST_PROTOTYPE_SALE_RECIPE then
@@ -7521,6 +8107,7 @@ local function progress_snapshot(force)
   local commutes = customer_commute_summary(force)
   local sales_gates = sync_ev_sales_recipe_gates(force, false)
   local sold = sold_customer_evs(force)
+  local megapack_adoption = megapack_adoption_summary(force)
   local premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME)
   local advanced_battery_chemistry_available = sync_advanced_battery_chemistry_gate(force, false)
   local foundry_gate = sync_foundry_power_gate(force, false)
@@ -7607,6 +8194,13 @@ local function progress_snapshot(force)
     chargers_v4 = count_entities(force, "x-ev-charging-station-v4"),
     solar_arrays = count_entities(force, HIGH_DENSITY_SOLAR_ARRAY_NAME),
     megapacks = count_entities(force, MEGAPACK_NAME),
+    megapack_energy_settlements = megapack_adoption.settlements,
+    megapack_energy_population = megapack_adoption.population,
+    megapack_believers_waiting = megapack_adoption.waiting,
+    megapack_buyers_reserved = megapack_adoption.reserved,
+    megapack_buyers_in_transit = megapack_adoption.in_transit,
+    megapacks_installed_by_customers = megapack_adoption.installed,
+    megapack_adoption_percent = megapack_adoption.adoption_percent,
     datacenters = count_entities(force, TERRESTRIAL_DATACENTER_NAME),
     ai_tokens_produced = count_item_produced(force, "x-ai-token"),
     agi_token_gate = agi.required_ai_tokens,
@@ -8342,6 +8936,36 @@ local function refresh_progress_panel(player)
         or "Terrestrial AI efficiency has reached its current ceiling. Orbital compute is required for endgame token scale."
     }
   end
+  if snapshot.energy_products_researched
+    and (snapshot.megapack_energy_settlements > 0
+      or snapshot.megapacks_installed_by_customers > 0) then
+    market_rows[#market_rows + 1] = {
+      sprite = "item/x-megapack",
+      label = "Megapack adoption",
+      value = string.format(
+        "%d / %d installed (%.1f%%)",
+        snapshot.megapacks_installed_by_customers,
+        snapshot.megapack_energy_population,
+        snapshot.megapack_adoption_percent
+      ),
+      color = snapshot.megapack_adoption_percent >= 99.9 and FACTORYX_STATE_COLORS.good
+        or FACTORYX_STATE_COLORS.warning,
+      tooltip = "Households inside the 384-tile Megapack market buy once. After the first installation, referrals make another 5% of remaining households eligible every five minutes."
+    }
+    market_rows[#market_rows + 1] = {
+      sprite = "entity/small-biter",
+      label = "Energy buyers",
+      value = string.format(
+        "%d waiting; %d reserved; %d travelling",
+        snapshot.megapack_believers_waiting,
+        snapshot.megapack_buyers_reserved,
+        snapshot.megapack_buyers_in_transit
+      ),
+      color = snapshot.megapack_believers_waiting > 0 and FACTORYX_STATE_COLORS.good
+        or FACTORYX_STATE_COLORS.neutral,
+      tooltip = "The physical biter is the Megapack reservation. Buyers walk to the Sales Office, wait for product, then carry it home before the installation is counted."
+    }
+  end
   if snapshot.planetary_grid_researched then
     market_rows[#market_rows + 1] = {
       sprite = "item/x-agi-training-dataset", label = "AGI training",
@@ -8616,9 +9240,109 @@ local function show_manufacturer_info_panel(player, entity)
   end
 
   if entity.name == SALES_OFFICE_NAME then
+    local recipe = entity.get_recipe()
+    if recipe and recipe.name == MEGAPACK_SALE_RECIPE then
+      local energy = megapack_office_status(entity)
+      local reserved_unit = megapack_office_reservations()[entity.unit_number]
+      local trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
+      local trip_text = "None"
+      local trip_color = FACTORYX_STATE_COLORS.neutral
+      if trip and trip.phase == "to_office" then
+        trip_text, trip_color = "Buyer travelling to office", FACTORYX_STATE_COLORS.warning
+      elseif trip and trip.phase == "waiting_product" then
+        trip_text, trip_color = "Buyer waiting in showroom", FACTORYX_STATE_COLORS.good
+      end
+      local next_wave = "-"
+      if energy.next_referral_tick then
+        next_wave = string.format(
+          "%d:%02d",
+          math.max(0, math.floor((energy.next_referral_tick - game.tick) / 3600)),
+          math.max(0, math.floor((energy.next_referral_tick - game.tick) / 60)) % 60
+        )
+      elseif energy.population > 0 and energy.installed >= energy.population then
+        next_wave = "Fully adopted"
+      elseif energy.installed == 0 then
+        next_wave = "Starts after first install"
+      end
+      add_factoryx_metric_table(panel, {
+        {
+          sprite = "entity/biter-spawner",
+          label = "Energy settlements",
+          value = tostring(energy.settlements),
+          color = energy.settlements > 0 and FACTORYX_STATE_COLORS.good
+            or FACTORYX_STATE_COLORS.bad,
+          tooltip = string.format(
+            "Megapack buyers may travel up to %d tiles, three times the normal EV sales radius.",
+            MEGAPACK_SALES_RADIUS
+          )
+        },
+        {
+          sprite = "entity/small-biter",
+          label = "Believers",
+          value = string.format("%d waiting; %d reserved", energy.waiting, energy.reserved),
+          color = energy.waiting > 0 and FACTORYX_STATE_COLORS.good
+            or FACTORYX_STATE_COLORS.neutral,
+          tooltip = "Believers are eligible households that have not installed a Megapack. The first 5% are seeded immediately; referrals add 5% of remaining households every five minutes after the first installation."
+        },
+        {
+          sprite = "item/x-megapack",
+          label = "Buyer trip",
+          value = trip_text,
+          color = trip_color,
+          tooltip = "The physical buyer is the reservation. The contract starts only after the buyer reaches this Sales Office."
+        },
+        {
+          sprite = "item/x-megapack",
+          label = "Installed",
+          value = string.format("%d / %d households", energy.installed, energy.population),
+          color = energy.installed > 0 and FACTORYX_STATE_COLORS.good
+            or FACTORYX_STATE_COLORS.warning,
+          tooltip = "A sale counts as installed only after the buyer carries the Megapack home. Each household buys once."
+        },
+        {
+          sprite = "item/x-dollar",
+          label = "Energy adoption",
+          value = string.format("%.1f%%", energy.adoption_percent),
+          color = energy.adoption_percent >= 99.9 and FACTORYX_STATE_COLORS.good
+            or FACTORYX_STATE_COLORS.warning
+        },
+        {
+          sprite = "item/x-ev-reservation",
+          label = "Next referral wave",
+          value = next_wave,
+          color = energy.next_referral_tick and FACTORYX_STATE_COLORS.warning
+            or FACTORYX_STATE_COLORS.neutral
+        }
+      })
+      local summary
+      local summary_color
+      if energy.settlements == 0 then
+        summary, summary_color = "No customer settlements within the 384-tile energy market.", FACTORYX_STATE_COLORS.bad
+      elseif entity.status == defines.entity_status.no_power
+        or entity.status == defines.entity_status.low_power then
+        summary, summary_color = "Restore Sales Office power.", FACTORYX_STATE_COLORS.bad
+      elseif entity.status == defines.entity_status.full_output then
+        summary, summary_color = "Clear the Dollar output.", FACTORYX_STATE_COLORS.bad
+      elseif trip and trip.phase == "to_office" then
+        summary, summary_color = "Energy buyer is travelling to the showroom.", FACTORYX_STATE_COLORS.warning
+      elseif trip and trip.phase == "waiting_product" then
+        if office_has_all_sale_inputs(entity, recipe) then
+          summary, summary_color = "Buyer present. Megapack sale active.", FACTORYX_STATE_COLORS.good
+        else
+          summary, summary_color = "Buyer present. Deliver one Megapack.", FACTORYX_STATE_COLORS.warning
+        end
+      elseif energy.installed >= energy.population and energy.population > 0 then
+        summary, summary_color = "Energy market fully adopted.", FACTORYX_STATE_COLORS.good
+      elseif energy.waiting == 0 then
+        summary, summary_color = "Waiting for the next referral wave.", FACTORYX_STATE_COLORS.neutral
+      else
+        summary, summary_color = "Waiting for a physical energy buyer.", FACTORYX_STATE_COLORS.warning
+      end
+      add_factoryx_status_strip(panel, summary, summary_color)
+      return
+    end
     local buyer_status = sales_office_buyer_status(entity)
     local market_state = classify_sales_office_market(buyer_status)
-    local recipe = entity.get_recipe()
     local sale = recipe and CUSTOMER_EV_SALE_RECIPES[recipe.name]
     local buyer_reservation = office_buyer_reservations()[entity.unit_number]
     local reserved = buyer_reservation and #buyer_reservation.buyers or 0
@@ -8944,6 +9668,41 @@ local function show_customer_settlement_info_panel(player, settlement)
   add_station_info_label(panel, string.format("Underserved vehicles: %d", local_underserved))
   add_station_info_label(panel, string.format("Active customer vehicles network-wide: %d", vehicle_summary.total))
   add_station_info_label(panel, string.format("Network vehicle capacity: %d", service.supported_ev_capacity))
+
+  if researched(force, "x-energy-products") then
+    local energy_covered = false
+    for _, office in pairs(offices) do
+      if current_recipe_name(office) == MEGAPACK_SALE_RECIPE
+        and within_radius(office, settlement, MEGAPACK_SALES_RADIUS) then
+        energy_covered = true
+        break
+      end
+    end
+    local adoption = megapack_adoption_states()[key]
+    if energy_covered then adoption = ensure_megapack_adoption_state(key, population) end
+    if adoption then
+      local waiting = math.max(
+        0,
+        (adoption.eligible or 0) - (adoption.installed or 0) - (adoption.reserved or 0)
+      )
+      add_station_info_label(panel, string.format(
+        "Megapack adoption: %d / %d households installed; %d believers waiting",
+        adoption.installed or 0,
+        settlement_population,
+        waiting
+      ))
+      add_station_info_label(panel, "Megapack energy market: " .. (
+        energy_covered and "inside 384-tile sales radius" or "outside current coverage"
+      ))
+      if adoption.next_referral_tick then
+        add_station_info_label(panel, string.format(
+          "Next energy referral wave: %d:%02d",
+          math.max(0, math.floor((adoption.next_referral_tick - game.tick) / 3600)),
+          math.max(0, math.floor((adoption.next_referral_tick - game.tick) / 60)) % 60
+        ))
+      end
+    end
+  end
 
   if assigned_station and assigned_station.valid then
     local config = station_config(assigned_station)
@@ -9356,7 +10115,11 @@ script.on_event(defines.events.on_entity_spawned, function(event)
   end
 end)
 
-script.on_event(defines.events.on_ai_command_completed, handle_customer_commute_command_completed)
+script.on_event(defines.events.on_ai_command_completed, function(event)
+  if not handle_megapack_buyer_command_completed(event) then
+    handle_customer_commute_command_completed(event)
+  end
+end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
@@ -9589,6 +10352,8 @@ for _, event_name in pairs({
         customer_growth_states()[entity.unit_number] = nil
         remove_station_support_entities(entity)
       elseif entity and entity.name == SALES_OFFICE_NAME then
+        local megapack_unit = megapack_office_reservations()[entity.unit_number]
+        if megapack_unit then clear_megapack_buyer_trip(megapack_unit, true) end
         clear_office_buyer_reservation(entity.unit_number)
         sales_office_market_states()[entity.unit_number] = nil
         robotaxi_audio_revenue_progress()[entity.unit_number] = nil
@@ -9903,6 +10668,10 @@ remote.add_interface("factoryx", {
   customer_charging_commutes = function(force_name)
     local force = game.forces[force_name or "player"]
     return force and customer_commute_summary(force) or nil
+  end,
+  megapack_adoption_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    return force and megapack_adoption_summary(force) or nil
   end,
   performance_status = function(force_name)
     local force = game.forces[force_name or "player"]

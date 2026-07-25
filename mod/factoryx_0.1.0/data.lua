@@ -1863,7 +1863,7 @@ data:extend({
   ),
   recipe("x-sell-megapack", {"x-sales"}, "x-factoryx-capital", "e[sell-megapack]",
     {{type = "item", name = "x-megapack", amount = 1}},
-    {{type = "item", name = "x-dollar", amount = 24}}, 8,
+    {{type = "item", name = "x-dollar", amount = 20}}, 30,
     {icons = sale_icon(megapack_icon)}
   ),
   recipe("x-sell-small-launch", {"x-sales"}, "x-factoryx-capital", "f[sell-small-launch]",

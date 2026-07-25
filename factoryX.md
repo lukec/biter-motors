@@ -1540,7 +1540,7 @@ Target additions:
 - This stage should teach the player that the final victory will be an energy
   infrastructure problem, not just a research problem.
 
-Approved Megapack customer-market design:
+Implemented Megapack customer market:
 
 - Megapacks are sold through Sales Offices to physical biter buyers rather than
   through an unlimited eight-second industrial conversion.
@@ -1572,6 +1572,21 @@ Approved Megapack customer-market design:
 - A later functional pass may let installed Megapacks modestly extend a
   settlement's charging-outage patience. It must not remove the need for player
   generation or charging infrastructure.
+- V1 bounds physical energy-buyer activity to 32 concurrent trips and starts at
+  most four trips per second. One visible biter can represent an aggregate
+  household sale, so adoption growth does not require one permanent mobile unit
+  per Megapack owner.
+- EV charging commutes pause while their representative is completing a
+  Megapack purchase. This prevents a due charging trip from stealing the
+  buyer's movement command after the Sales Office has begun consuming product.
+- Failed or destroyed trips return the aggregate eligibility slot after a
+  30-second settlement retry delay. Changing the office recipe or removing the
+  office also releases any buyer who has not completed the sale.
+- Installed-product visuals use one Megapack icon and count badge per
+  settlement, not one rendering per household.
+- The isolated engine smoke creates a dedicated Megapack Sales Office and
+  verifies believer seeding, the complete physical round trip, 20 Dollars in
+  the output, and one installed household.
 
 Next concrete unlock:
 
