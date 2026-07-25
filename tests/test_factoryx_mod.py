@@ -1642,9 +1642,9 @@ class FactoryXModTest(unittest.TestCase):
             'name = "x-ev-charging-station", amount = 1',
             'name = "substation", amount = 2',
             'name = "processing-unit", amount = 20',
-            'name = "x-dollar", amount = 20',
         ]:
             self.assertIn(expected, station_v2_recipe)
+        self.assertNotIn('"x-dollar"', station_v2_recipe)
         for expected in [
             'name = "x-ev-charging-station-v2", amount = 1',
             'name = "substation", amount = 4',

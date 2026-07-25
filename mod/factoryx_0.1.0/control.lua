@@ -6768,7 +6768,7 @@ local function announce_ev_charging_network_researched(force)
     return
   end
 
-  force.print("[FactoryX] EV Charging Network researched. Craft a separate V2 charger from 1 V1 charger, 2 Substations, 20 Processing Units, and 20 Dollars, then place it. V2 has 8 stalls, 96-tile customer range, and up to 1.2 MW demand.")
+  force.print("[FactoryX] EV Charging Network researched. Craft a separate V2 charger from 1 V1 charger, 2 Substations, and 20 Processing Units, then place it. V2 has 8 stalls, 96-tile customer range, and up to 1.2 MW demand.")
 end
 
 local function announce_first_premium_ev_sale(force)
@@ -8535,7 +8535,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.charging_network_researched then
     return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
   elseif snapshot.chargers_v2 == 0 then
-    return "Charging network", "Craft and place a V2 charger.", "In an Assembling Machine 2 or 3, craft it from 1 V1 charger, 2 Substations, 20 Processing Units, and 20 Dollars."
+    return "Charging network", "Craft and place a V2 charger.", "In an Assembling Machine 2 or 3, craft it from 1 V1 charger, 2 Substations, and 20 Processing Units."
   elseif not snapshot.mass_market_researched then
     return "Mass-market scale", "Research Mass-market EV Production.", "Invest 1,000 cycles through purple and yellow science plus Dollars to unlock Gigacast, Gigafactory V2, mass-market EVs, and V3 charging."
   elseif snapshot.gigafactories_v2 == 0 then

@@ -792,7 +792,9 @@ Current implementation:
 - Each active stall consumes 50 kW from the electric grid.
 - EV Charging Network unlocks V2: an 8-stall, 4x4 charging hub with a 96-tile
   customer radius. Each active V2 stall draws 150 kW, for 1.2 MW maximum.
-- V2 costs `1 V1 Charger + 2 Substations + 20 Processing Units + 20 Dollars`.
+- V2 costs `1 V1 Charger + 2 Substations + 20 Processing Units`. Its 300-cycle
+  EV Charging Network research remains capital-gated, but individual V2 sites
+  do not consume scarce Dollars needed to expand the customer market.
 - V2 uses dedicated aligned 4x4 art with eight visible stalls and heavier
   transformers.
 - Mass-market EV Production unlocks the 5x5 V3 Supercharger: 12 stalls, a

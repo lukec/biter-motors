@@ -1401,8 +1401,7 @@ data:extend({
     {
       {type = "item", name = "x-ev-charging-station", amount = 1},
       {type = "item", name = "substation", amount = 2},
-      {type = "item", name = "processing-unit", amount = 20},
-      {type = "item", name = "x-dollar", amount = 20}
+      {type = "item", name = "processing-unit", amount = 20}
     },
     {{type = "item", name = "x-ev-charging-station-v2", amount = 1}}, 30
   ),
