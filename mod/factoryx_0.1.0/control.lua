@@ -3663,6 +3663,12 @@ end
 
 function market_service_references_valid(service)
   if not service then return false end
+  if not service.assignments
+    or not service.assignment_by_settlement_key
+    or not service.operational_keys
+    or not service.prospects_by_settlement_key then
+    return false
+  end
   for _, settlement in pairs(service.candidate_settlements or {}) do
     if not settlement or not settlement.valid then return false end
   end

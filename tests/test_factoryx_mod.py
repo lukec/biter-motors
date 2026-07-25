@@ -2833,6 +2833,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('mark_factoryx_market_dirty(station.force, "invalid-assigned-settlement")', waiting)
         self.assertIn("service.assignment_by_settlement_key[key] == station", waiting)
         self.assertIn("service.prospects_by_settlement_key[key]", waiting)
+        self.assertIn("or not service.prospects_by_settlement_key then", control)
         self.assertNotIn("customer_unit_registry()", waiting)
         self.assertIn("local key = settlement and settlement.valid and", control)
         self.assertIn("if not station or not station.valid then", control)
