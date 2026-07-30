@@ -7,9 +7,8 @@
 ![Development status: Alpha](https://img.shields.io/badge/status-alpha-orange)
 
 > [!WARNING]
-> **Biter Motors is currently in alpha.** Expect active balance changes,
-> unfinished mechanics and artwork, and occasional save-breaking updates.
-> Start a new world for each major playtest build.
+> **Biter Motors is currently in alpha.** Expect balance changes, unfinished
+> mechanics and artwork, and more late-game and end-game development.
 
 **Build the company. Electrify the planet. Outgrow the sky.**
 
