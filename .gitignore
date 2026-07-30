@@ -16,4 +16,7 @@ playtests/
 .playwright-mcp/
 art/factoryx-qa/playwright-*/
 art/factoryx-qa/*.mp4
+art/blender/*/*.blend1
+art/blender/*/renders/directions/
+art/blender/*/renders/stop-directions/
 dist/
