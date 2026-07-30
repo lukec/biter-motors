@@ -186,6 +186,9 @@ Status: **next implementation turn**
 
 Status: **playtest required**
 
+- [ ] Resolve the endgame scale blocker identified in
+      `docs/economy-balance.md`: choose and implement a release target between
+      the modeled 10 GW balanced ending and 25 GW demanding ending.
 - [ ] Complete one non-sandbox campaign from a fresh crash landing to the AGI
       Model.
 - [ ] Record milestone time, profit, power, production, customer, and token

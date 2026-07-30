@@ -153,6 +153,8 @@ Additional focused validators and scale benchmarks live in `scripts/`.
   `bitermotors`, `mod/bitermotors_0.1.0`, and `bitermotors-`.
 - `ROADMAP.md` is the authoritative design and public-release roadmap.
 - `COMPATIBILITY.md` defines supported worlds, upgrades, and mod boundaries.
+- `docs/economy-balance.md` contains the reproducible progression and endgame
+  economy simulations.
 - `feature_specs/biter-motors-battery-chemistry.md` specifies the battery
   chemistry branch.
 - `art/` contains source models, master renders, and QA pages.
