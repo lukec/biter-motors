@@ -1,35 +1,44 @@
 # Biter Motors
 
-<p align="center">
-  <img src="mod/factoryx_0.1.0/thumbnail.png" width="180" alt="Biter Motors">
-</p>
+![A Biter Motors campaign growing from a first sale into planetary industry and orbital compute](docs/biter-motors-journey.jpg)
+
+<p align="center"><em>Head office expects a factory. Nauvis has other plans.</em></p>
 
 **Build the company. Electrify the planet. Outgrow the sky.**
 
 Biter Motors is a new Factorio 2.1 Space Age campaign about turning a failed
-colony mission into an industrial empire. You arrive on Nauvis with a damaged
-ship, a useful but finite cache of advanced equipment, and no sign of the
-landing party that came before you. Their plans are gone. The factory is not.
+industrial expedition into an empire.
 
-![A Biter Motors campaign growing from a first sale into planetary industry and orbital compute](docs/biter-motors-journey.jpg)
+The boss sent you to Nauvis to help finish a factory launch. The advance landing
+party was supposed to have power online, miners running, and the first
+production lines waiting for you.
 
-<p align="center"><em>A crash landing is only the first funding round.</em></p>
+They never arrived.
 
-## Astro-capitalism Starts Small
+There is no factory. No crew. No handover. Just a damaged ship, scattered
+cargo, a finite cache of equipment, and a corporate objective that somehow
+survived the crash.
 
-The opening still asks you to mine, automate, and survive, but your colony has a
-different reason to grow. Reconstruct lost industrial capabilities. Put
-recovered technology back into production. Build something the locals might
-actually want.
+The customers are not friendly.
 
-Your first customers are also the reason ordinary engineers would have built
-walls.
+Yet.
+
+## The Brief Was Wrong
+
+Recover what survived. Rebuild the industrial capabilities the landing party
+was meant to establish. Put advanced equipment back into production before
+Nauvis turns a bad launch into a write-off.
+
+The only part of the original plan still intact is the expectation of growth.
 
 ## An Unlikely Market
 
-Biter settlements can become markets instead of targets. Reach them with Sales
-Offices and powered charging infrastructure, then manufacture vehicles and
-move the physical orders, products, and profit through your factory.
+Nauvis has a population. It also has teeth.
+
+Biter settlements can become markets instead of targets, but only if you can
+reach them, power the infrastructure, and survive the introduction. Build
+something the locals might want, then move physical orders, vehicles, and
+profit through the factory you were forced to create from nothing.
 
 The relationship is useful, uneasy, and visible on the map. Customers consume
 real capacity. Settlements grow. Service failures have consequences. Worms
