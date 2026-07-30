@@ -5,7 +5,7 @@ the Roadster's high-overhead Factorio camera, weathered paint, warm industrial
 lighting, readable panel detail, and separate shadow frames.
 
 ```sh
-/opt/homebrew/bin/blender --background \
+blender --background \
   --python art/blender/premium-ev/render_premium_ev.py
 ```
 

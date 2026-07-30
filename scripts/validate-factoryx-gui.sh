@@ -2,8 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-factorio_bin="${FACTORIO_BINARY:-/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
-read_data="${FACTORIO_READ_DATA:-/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
+factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
+read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 source_save="${1:-${FACTORIO_GUI_TEST_SAVE:-}}"
 
 if [[ -z "$source_save" || ! -f "$source_save" ]]; then

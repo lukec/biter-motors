@@ -2823,7 +2823,7 @@ and mod directory. The current validated binary is Factorio 2.1.9 with Space
 Age enabled:
 
 ```sh
-"/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio" \
+"$FACTORIO_BINARY" \
   --config "$tmp/config.ini" \
   --mod-directory "$tmp/mods" \
   --dump-data
@@ -2882,7 +2882,7 @@ For runtime script changes, benchmark a disposable save long enough for the
 five-minute prospect reservation retry cycle:
 
 ```sh
-"/Users/lukec/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio" \
+"$FACTORIO_BINARY" \
   --config "$tmp/config.ini" \
   --mod-directory "$tmp/mods" \
   --benchmark "$tmp/saves/x-smoke.zip" \

@@ -12,7 +12,7 @@ into `prototype-roadster-shadow.png` for Factorio's shadow render layer.
 Run:
 
 ```sh
-/opt/homebrew/bin/blender --background \
+blender --background \
   --python art/blender/prototype-roadster/render_prototype_roadster.py
 ```
 
