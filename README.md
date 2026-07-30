@@ -4,10 +4,17 @@
 
 <p align="center"><em>Head office expects a factory. Nauvis has other plans.</em></p>
 
+![Development status: Alpha](https://img.shields.io/badge/status-alpha-orange)
+
+> [!WARNING]
+> **Biter Motors is currently in alpha.** Expect active balance changes,
+> unfinished mechanics and artwork, and occasional save-breaking updates.
+> Start a new world for each major playtest build.
+
 **Build the company. Electrify the planet. Outgrow the sky.**
 
-Biter Motors is a new Factorio 2.1 Space Age campaign about turning a failed
-industrial expedition into an empire.
+Biter Motors is an alpha Factorio 2.1 Space Age campaign about turning a
+failed industrial expedition into an empire.
 
 The boss sent you to Nauvis to help finish a factory launch. The advance landing
 party was supposed to have power online, miners running, and the first
