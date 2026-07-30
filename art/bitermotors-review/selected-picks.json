@@ -1,0 +1,143 @@
+{
+  "legend": {
+    "1": "top-left",
+    "2": "top-right",
+    "3": "bottom-left",
+    "4": "bottom-right"
+  },
+  "picks": [
+    {
+      "name": "Sales Office",
+      "prototype": "bitermotors-sales-office",
+      "option": 4,
+      "position": "bottom-right",
+      "source": "assets/sales-office.png"
+    },
+    {
+      "name": "EV Charging Station",
+      "prototype": "bitermotors-ev-charging-station",
+      "option": 4,
+      "position": "bottom-right",
+      "source": "assets/ev-charging-station.png"
+    },
+    {
+      "name": "Terrestrial Datacenter",
+      "prototype": "bitermotors-terrestrial-datacenter",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/terrestrial-datacenter.png"
+    },
+    {
+      "name": "Orbital Compute Array",
+      "prototype": "bitermotors-orbital-compute-array",
+      "option": 3,
+      "position": "bottom-left",
+      "source": "assets/orbital-compute-array.png"
+    },
+    {
+      "name": "Knowledge Synthesizer",
+      "prototype": "bitermotors-knowledge-synthesizer",
+      "option": 2,
+      "position": "top-right",
+      "source": "assets/knowledge-synthesizer.png"
+    },
+    {
+      "name": "EV Reservation",
+      "prototype": "bitermotors-ev-reservation",
+      "option": 3,
+      "position": "bottom-left",
+      "source": "assets/ev-reservation.png"
+    },
+    {
+      "name": "Gigafactory Module",
+      "prototype": "bitermotors-gigafactory-module",
+      "option": 3,
+      "position": "bottom-left",
+      "source": "assets/gigafactory-module.png"
+    },
+    {
+      "name": "AI Token",
+      "prototype": "bitermotors-ai-token",
+      "option": 4,
+      "position": "bottom-right",
+      "source": "assets/ai-token.png"
+    },
+    {
+      "name": "K1 Knowledge",
+      "prototype": "bitermotors-k1-knowledge",
+      "option": 4,
+      "position": "bottom-right",
+      "source": "assets/k1-knowledge.png"
+    },
+    {
+      "name": "Prototype Roadster",
+      "prototype": "bitermotors-prototype-roadster",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/prototype-roadster.png"
+    },
+    {
+      "name": "Premium EV",
+      "prototype": "bitermotors-premium-ev",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/premium-ev.png"
+    },
+    {
+      "name": "Mass-Market EV",
+      "prototype": "bitermotors-mass-market-ev",
+      "option": 2,
+      "position": "top-right",
+      "source": "assets/mass-market-ev.png"
+    },
+    {
+      "name": "Robotaxi Fleet",
+      "prototype": "bitermotors-robotaxi-fleet",
+      "option": 3,
+      "position": "bottom-left",
+      "source": "assets/robotaxi-fleet.png"
+    },
+    {
+      "name": "Small Launch Service",
+      "prototype": "bitermotors-small-launch-service",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/small-launch-service.png"
+    },
+    {
+      "name": "Reusable Booster",
+      "prototype": "bitermotors-reusable-booster",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/reusable-booster.png"
+    },
+    {
+      "name": "Reusable Launch Service",
+      "prototype": "bitermotors-reusable-launch-service",
+      "option": 2,
+      "position": "top-right",
+      "source": "assets/reusable-launch-service.png"
+    },
+    {
+      "name": "Satellite Bus",
+      "prototype": "bitermotors-satellite-bus",
+      "option": 3,
+      "position": "bottom-left",
+      "source": "assets/satellite-bus.png"
+    },
+    {
+      "name": "Ground Station Network",
+      "prototype": "bitermotors-ground-station-network",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/ground-station-network.png"
+    },
+    {
+      "name": "Datacenter Rack",
+      "prototype": "bitermotors-datacenter-rack",
+      "option": 1,
+      "position": "top-left",
+      "source": "assets/datacenter-rack.png"
+    }
+  ]
+}

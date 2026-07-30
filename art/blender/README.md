@@ -6,7 +6,7 @@ The Biter Motors vehicle family now has editable Blender studies and determinist
 - Prototype Roadster: red, compact, low two-seat sports car.
 - Premium EV: black, long-wheelbase grand tourer.
 - Mass-market EV: white, practical liftback.
-- Cybertruck: silver, oversized faceted pickup.
+- Megatruck: silver, oversized faceted pickup.
 - Robotaxi: gold, compact autonomous passenger pod.
 
 `vehicle_common.py` owns the shared high-overhead camera, warm industrial

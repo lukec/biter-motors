@@ -9,8 +9,8 @@ Rebuild the source renders and packed game assets with:
 
 ```sh
 blender --background --python art/blender/battery-cybertrain/render_battery_cybertrain.py
-python3 scripts/build-factoryx-battery-art.py
-python3 scripts/build-factoryx-art-qa.py
+python3 scripts/build-bitermotors-battery-art.py
+python3 scripts/build-bitermotors-art-qa.py
 ```
 
 Directional frames are reproducible and ignored. The editable `.blend`, icon

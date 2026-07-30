@@ -101,8 +101,8 @@ is there to be discovered, not itemized in this README.
 - A fresh-start landing scene and recovered equipment that skip some familiar
   burner-era repetition without skipping the work of building a real factory.
 
-Biter Motors is designed for a new world. Existing saves and compatibility
-migrations are intentionally outside the current scope.
+Biter Motors is designed for a new world. The public save and mod-compatibility
+contract is documented in [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
@@ -117,14 +117,14 @@ migrations are intentionally outside the current scope.
 Link the development checkout into the normal macOS Factorio mods directory:
 
 ```bash
-scripts/install-factoryx-mod.sh
+scripts/install-bitermotors-mod.sh
 ```
 
 To also link it into a separate headless-server mods directory:
 
 ```bash
 FACTORIO_SERVER_MODS_DIR=/path/to/server/mods \
-  scripts/install-factoryx-mod.sh
+  scripts/install-bitermotors-mod.sh
 ```
 
 Factorio processes do not hot-reload mod source. Restart the game or server
@@ -135,13 +135,13 @@ after changing player-facing mod files.
 Run the static contract suite:
 
 ```bash
-python3 -m unittest tests.test_factoryx_mod
+python3 -m unittest tests.test_bitermotors_mod
 ```
 
 Run the isolated Factorio smoke test:
 
 ```bash
-scripts/validate-factoryx-mod.sh
+scripts/validate-bitermotors-mod.sh
 ```
 
 Additional focused validators and scale benchmarks live in `scripts/`.
@@ -150,11 +150,12 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 
 - `Biter Motors` is the official player-facing title. The stable internal
   codename, Factorio mod id, package path, and prototype namespace remain
-  `factoryx`, `mod/factoryx_0.1.0`, and `x-`.
-- `factoryX.md` is the complete design and roadmap.
-- `feature_specs/factoryx_battery_chemistry_branch.md` specifies the battery
+  `bitermotors`, `mod/bitermotors_0.1.0`, and `bitermotors-`.
+- `ROADMAP.md` is the authoritative design and public-release roadmap.
+- `COMPATIBILITY.md` defines supported worlds, upgrades, and mod boundaries.
+- `feature_specs/biter-motors-battery-chemistry.md` specifies the battery
   chemistry branch.
 - `art/` contains source models, master renders, and QA pages.
-- `mod/factoryx_0.1.0/README.md` documents implemented gameplay in detail.
+- `mod/bitermotors_0.1.0/README.md` documents implemented gameplay in detail.
 
 This is a private development repository. No public license is granted.

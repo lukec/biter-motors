@@ -201,8 +201,8 @@ def build_icon(slug):
     if slug == "lfp-battery-pack": return [pack(slug, ORANGE, ORANGE_LIGHT)]
     if slug == "damaged-high-energy-battery-pack": return [pack(slug, TEAL, TEAL_LIGHT, True)]
     if slug == "damaged-lfp-battery-pack": return [pack(slug, ORANGE, ORANGE_LIGHT, True)]
-    if slug == "electric-semi-drive-charge": return cells(slug, SILVER, CYAN)
-    if slug == "semi-charging-stop": return charging_stop_icon()
+    if slug == "cybertrain-drive-charge": return cells(slug, SILVER, CYAN)
+    if slug == "cybertrain-charging-stop": return charging_stop_icon()
     raise ValueError(slug)
 
 
@@ -213,7 +213,7 @@ def render_icons():
         "cobalt-concentrate", "phosphate", "lithium-brine", "acidic-tailings",
         "high-nickel-cell", "lfp-cell", "high-energy-battery-pack", "lfp-battery-pack",
         "damaged-high-energy-battery-pack", "damaged-lfp-battery-pack",
-        "electric-semi-drive-charge", "semi-charging-stop",
+        "cybertrain-drive-charge", "cybertrain-charging-stop",
     ]
     for slug in slugs:
         clear_scene()

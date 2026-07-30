@@ -7,7 +7,7 @@ changes that policy.
 
 ## Working Method
 
-- Inspect `factoryX.md`, the relevant Lua, and existing tests before changing
+- Inspect `ROADMAP.md`, the relevant Lua, and existing tests before changing
   gameplay.
 - Prefer concrete Factorio mechanics and discoverable progression over abstract
   currencies or invisible state.
@@ -24,8 +24,8 @@ changes that policy.
 ## Verification
 
 - Run focused unit tests for each change.
-- Run `python3 -m unittest tests.test_factoryx_mod` for mod changes.
-- Run `scripts/validate-factoryx-mod.sh` after non-trivial prototype or runtime
+- Run `python3 -m unittest tests.test_bitermotors_mod` for mod changes.
+- Run `scripts/validate-bitermotors-mod.sh` after non-trivial prototype or runtime
   changes when Factorio is available.
 - Use `git diff --check` before committing.
 
