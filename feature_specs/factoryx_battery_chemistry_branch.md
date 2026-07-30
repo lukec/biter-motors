@@ -1,8 +1,8 @@
-# FactoryX Battery Chemistry Branch
+# Biter Motors Battery Chemistry Branch
 
 ## Status And Direction
 
-Implemented in FactoryX 0.1.0 and revised after the first Premium EV
+Implemented in Biter Motors 0.1.0 and revised after the first Premium EV
 playtest. The values below are the initial playtest balance rather than a
 proposal; future changes should preserve both the progression and the audited
 material-loop constraints.
@@ -50,7 +50,7 @@ Advanced Battery Chemistry, extract both minerals, refine both precursors,
 produce High-Nickel Cells, and switch the Premium EV line to High-Energy
 Battery Packs.
 
-When an older FactoryX save loads this progression, configuration migration
+When an older Biter Motors save loads this progression, configuration migration
 revokes the chemistry recipes that EV Production Line used to unlock. The
 recipes remain disabled until Advanced Battery Chemistry is researched, so old
 saves follow the same 100-vehicle Gigafactory and 250-vehicle chemistry
@@ -58,7 +58,7 @@ transitions as new saves.
 
 Premium EV production milestones use a persistent monotonic lifetime counter,
 not Factorio's resettable production-stat window directly. On first observation
-or after a statistics reset, FactoryX reconciles the lower bound from completed
+or after a statistics reset, Biter Motors reconciles the lower bound from completed
 Premium EV sales plus surviving stocked and placed vehicles. It stores the
 offset from native statistics so later production continues from the repaired
 lifetime total without recurring full-factory scans.
@@ -87,7 +87,7 @@ becomes Phosphate, and iron supplies LFP cathodes. Early nickel refining emits
 a small Cobalt Concentrate byproduct. Both initial cell routes consume that
 cobalt so choosing the Gigafactory recipe cannot jam dirty refining. Later
 clean refining and dry-electrode cells remove cobalt from the flow. Both
-natural resources must appear in map preview and be generated on new FactoryX
+natural resources must appear in map preview and be generated on new Biter Motors
 worlds. No save migration is required.
 
 New logistics items are Nickel Sulfate, Lithium Carbonate, Battery Graphite,

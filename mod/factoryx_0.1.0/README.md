@@ -1,17 +1,17 @@
-# FactoryX MVP
+# Biter Motors MVP
 
-FactoryX is a fictionalized industrial ambition content mod for Factorio 2.1 +
+Biter Motors is a fictionalized industrial ambition content mod for Factorio 2.1 +
 Space Age. This is a clean-break namespace: the mod id is `factoryx`, custom
 prototype ids use the `x-` prefix, and no compatibility aliases are retained.
-FactoryX is a Nauvis-and-Nauvis-orbit game: the other Space Age planets and
+Biter Motors is a Nauvis-and-Nauvis-orbit game: the other Space Age planets and
 their research branches are deliberately hidden.
 
-With `FactoryX accelerated start` enabled, the first player also finds a red
+With `Biter Motors accelerated start` enabled, the first player also finds a red
 wreckage chest containing 54 legendary High-density Solar Arrays, 24 legendary
 Megapacks, 40 legendary Substations, 20 legendary Roboports, and limited
 legendary construction and logistic robots. Nothing is prebuilt. The recovered
 cache enables a solar-first opening and a finite logistics network, while the
-missing technical archive leaves FactoryX replacements locked behind their
+missing technical archive leaves Biter Motors replacements locked behind their
 normal research progression.
 
 The MVP loop is intentionally physical:
@@ -58,7 +58,7 @@ The MVP loop is intentionally physical:
 22. Build Robotaxi Fleets in Gigafactory V2 and sell them without EV
     Reservations.
 23. Launch vanilla cargo rockets and establish a stationary platform over
-    Nauvis. There are no other planetary destinations in FactoryX.
+    Nauvis. There are no other planetary destinations in Biter Motors.
 
 Custom production art now includes footprint-aligned Sales Office and
 Terrestrial Datacenter masters, normalized 256 px icon sources, dedicated
@@ -98,12 +98,12 @@ no animation rendering is attached to individual customer units.
 - One science-like late output, AI Token, plus physical Planetary Grid Segments.
 - Tangible scale items: Dollar, EV Reservation, Gigafactory Module, and Gigacast.
   One Dollar represents roughly US$10,000 of investable capital in current-dollar terms.
-- FactoryX uses vanilla crafting tabs instead of adding a separate tab. EVs sit
+- Biter Motors uses vanilla crafting tabs instead of adding a separate tab. EVs sit
   in Logistics/Transport, Energy Products in Production/Energy, launch hardware
   in Production/Space, AI Tokens with science packs, and physical grid outputs
-  with FactoryX components. Three named rows
-  hold FactoryX infrastructure, components, and capital/contracts.
-- A custom steel `X`/gear emblem identifies the FactoryX Progress shortcut; the
+  with Biter Motors components. Three named rows
+  hold Biter Motors infrastructure, components, and capital/contracts.
+- A custom steel `X`/gear emblem identifies the Biter Motors Progress shortcut; the
   EV Reservation uses a minimal two-sheet approved-paperwork icon that stays
   readable on belts and in small inventory slots. Reservations use the vanilla
   Intermediate Products `raw-material` subgroup so filter selectors expose them
@@ -113,7 +113,7 @@ no animation rendering is attached to individual customer units.
   market events, and dynamic launch tracking are not implemented yet.
 
 The runtime script handles the first-customer charger milestone, the EV charging
-loop, and the MVP victory trigger. FactoryX creates a `factoryx-customers` force.
+loop, and the MVP victory trigger. Biter Motors creates a `factoryx-customers` force.
 Enemy spawners inside 128 tiles of a Sales Office become eligible customers and
 convert when a reachable powered charging stall serves them; nearby mobile
 biters and spitters follow the served settlement. Player forces are friends with
@@ -124,7 +124,7 @@ vehicle sale requires a living mobile buyer, assigns that buyer the vehicle, and
 replaces `$` with the vehicle item icon. Sales pause without enough buyers, and
 buyer selection favors the least-loaded covered settlements. Owner death removes
 the vehicle from the active fleet while preserving lifetime sales statistics.
-FactoryX does not cap or cull customer populations. Friendly non-owners use an
+Biter Motors does not cap or cull customer populations. Friendly non-owners use an
 engine-native green tint and hostile units retain their normal appearance.
 Owners become explicit baked unit prototypes across all eight biter/spitter
 forms: Roadster red, Premium black, Mass-market white, and Robotaxi gold. Future
@@ -144,7 +144,7 @@ stations stay in place, remove any hidden grid tap, and show Factorio's native
 flashing no-power alert. Logistic-network coverage is optional and never gates
 charging, power draw, or paperwork production. Holding a charger item shows
 electric coverage, hides logistics coverage, and restores the previous overlay
-settings afterward. Selecting a station also opens a small FactoryX info
+settings afterward. Selecting a station also opens a small Biter Motors info
 panel with grid status, customer settlements in charger range, nearby hostile
 spawners that are not customers yet, active stalls, power draw, reservation rate,
 active EV Sales Offices, and the next step. The first powered station that
@@ -190,7 +190,7 @@ It toggles dark teal, translucent 128-tile coverage circles in map and Remote Vi
 the current player's force. These overlays use chart-only rendering and do not
 appear over normal gameplay.
 
-The always-available `FactoryX Progress` shortcut opens a movable status window.
+The always-available `Biter Motors Progress` shortcut opens a movable status window.
 It derives one concrete next objective from live technologies, infrastructure,
 customer settlements, sold EVs, charger utilization, physical paperwork,
 sales milestones, Energy Products, datacenters, and victory state. It also shows
@@ -209,7 +209,7 @@ cancels at 3%, and aborts on no route, nearby hostiles, occupancy, disconnect,
 or a surface change. The controller is capped at 32 active vehicles and never
 scans the inactive EV fleet.
 
-Selecting or opening a Sales Office adds a FactoryX diagnostics panel with its
+Selecting or opening a Sales Office adds a Biter Motors diagnostics panel with its
 customer count, selected contract, cycle progress, exact input and output
 inventory counts, machine state, and first concrete bottleneck. Both Gigafactory
 tiers expose the same recipe diagnostics plus rated power demand and V2's
@@ -237,7 +237,7 @@ integrated supply chain.
 Both Gigafactory tiers have eight module slots. Productivity modules are
 restricted to intermediate products; finished vehicles, fleets, Solar Arrays,
 and Megapacks reject them. A curated vertical-integration category lets either
-tier manufacture circuits, Low Density Structures, and FactoryX component
+tier manufacture circuits, Low Density Structures, and Biter Motors component
 subassemblies without turning the building into an unrestricted assembler.
 Only V2 can assemble Mass-market EVs. A Mass-market EV sale consumes one EV and
 one EV Reservation, produces 1 Dollar of profit, and takes 5 seconds. The first
@@ -256,13 +256,13 @@ and a Substation; they can be placed on the grid or sold through `Sell Megapack`
 The first placed Gigafactory automatically researches base-game Logistic System.
 This deliberately bypasses Space Age's later space-science gate because the
 large terrestrial factory is the point where requester-chest logistics becomes
-part of the FactoryX production loop.
+part of the Biter Motors production loop.
 
 Existing playtest saves also get the milestone on config sync if Factorio's
 production statistics show that a Prototype Roadster was already consumed.
 The EV Charging Station recipe uses a Substation, Accumulators, and Concrete.
 The Substation already includes the power electronics, heavy conductors, and
-steel enclosure, so those raw ingredients are not repeated. FactoryX recipes
+steel enclosure, so those raw ingredients are not repeated. Biter Motors recipes
 generally use two to four distinct subsystem inputs and rely on quantities,
 power, craft time, and throughput for difficulty.
 
@@ -303,7 +303,7 @@ Current validation state, 2026-07-10:
   existing player save and verifies that the progress, Sales Office, and
   Gigafactory GUI panels are created and the runtime-unlocked Prototype
   Roadster recipe is restored. It also runs the progression-integrity repair and
-  verifies that no researched FactoryX recipe remains disabled. The rendered
+  verifies that no researched Biter Motors recipe remains disabled. The rendered
   Dollars value must match the save's lifetime Dollar output statistic.
 
 Use an isolated mod directory for engine checks so normal saves and the live mod

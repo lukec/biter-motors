@@ -1,10 +1,10 @@
-# FactoryX Design Notes
+# Biter Motors Design Notes
 
-This file tracks the current design for the Factorio mod concept we have been
-calling Factory X. The current working mod folder is
-`mod/factoryx_0.1.0`, and the in-game name is FactoryX. The internal
-mod id is `factoryx`, all custom prototype ids use the `x-` prefix, and this
-fresh-save version intentionally carries no compatibility aliases.
+This file tracks the current design for Biter Motors. **Biter Motors** is the
+official marketing and player-facing title. The internal codename and mod id
+remain `factoryx`. The current working mod folder is `mod/factoryx_0.1.0`, all
+custom prototype ids use the `x-` prefix, and this fresh-save version
+intentionally carries no compatibility aliases.
 
 The mod targets clean, non-sandbox balance runs. Development changes should be
 validated with the static contract suite and isolated Factorio engine
@@ -12,7 +12,7 @@ validators before a fresh playtest.
 
 ## One-Line Pitch
 
-Factory X is a Biter Motors industrial-ambition mod where the player bootstraps
+Biter Motors is an industrial-ambition mod where the player bootstraps
 from prototype EV sales into battery minerals, mass-market manufacturing,
 charging infrastructure, energy storage, Robotaxis, terrestrial AI compute,
 and a circular autonomous economy.
@@ -29,25 +29,25 @@ ground-station product ladders are historical material to remove.
 
 #### Nauvis-only World Model
 
-Status: implemented for new FactoryX worlds.
+Status: implemented for new Biter Motors worlds.
 
-- FactoryX is played on Nauvis and stationary platforms in Nauvis orbit. The
+- Biter Motors is played on Nauvis and stationary platforms in Nauvis orbit. The
   planet selector and space map hide Vulcanus, Fulgora, Gleba, Aquilo, the
   solar-system edge, the shattered planet, and every route to them.
-- Keep Space Age enabled because FactoryX uses its cargo rockets, orbital
+- Keep Space Age enabled because Biter Motors uses its cargo rockets, orbital
   platforms, quality system, recycler, Foundry, Big Mining Drill, and other
   deliberately relocated machinery. Hidden location prototypes remain
   internally intact for engine and mod compatibility.
 - Hide planet discovery, planetary science, thruster travel, planet-only
   descendants, briefings, and impossible achievements. Players should never
-  be invited to solve a destination that FactoryX does not support.
-- Tier-3 modules remain part of FactoryX. Their recipes use tier-2 modules,
+  be invited to solve a destination that Biter Motors does not support.
+- Tier-3 modules remain part of Biter Motors. Their recipes use tier-2 modules,
   circuits, processing units, and Dollars; their research is a costly Nauvis
   capital-scaling step.
 - Preserve useful core-Nauvis tools that Space Age normally moves off-world:
   Cliff Explosives, Coal Liquefaction, Artillery, Energy Shield MK2, and
   Personal Roboport MK2 use their terrestrial progression and materials.
-  Planet-specific upgrades and products that FactoryX does not use stay hidden.
+  Planet-specific upgrades and products that Biter Motors does not use stay hidden.
 - Epic Quality is a terrestrial-AI research. Legendary Quality requires
   orbital compute, preserving a meaningful late-game quality goal without an
   Aquilo trip.
@@ -104,7 +104,7 @@ prototype ids retain `x-electric-semi` to avoid needless code churn.
 
 Status: implemented in `0.1.0`. Unlock with `Autonomous Logistics`.
 
-- `Navigate` drives an occupied FactoryX EV to a selected destination in map or
+- `Navigate` drives an occupied Biter Motors EV to a selected destination in map or
   Remote View while the player remains seated.
 - `Summon` calls the nearest available EV among the eight most recently driven
   vehicles owned by that player. It stops about six tiles from the player and
@@ -267,7 +267,7 @@ Rules for the rest of the design:
   a recipe to its data-stage disabled state while milestone storage and
   production history survive. Recipe repair must always run; only the player
   announcement should be one-time.
-- Researched FactoryX technologies are also repaired generically from their
+- Researched Biter Motors technologies are also repaired generically from their
   declared unlock effects. The runtime exposes a progression-integrity report,
   and validation fails if a recipe has no technology/milestone owner or no
   compatible crafting machine.
@@ -329,7 +329,7 @@ The MVP already has these major loops:
     Planetary Grid Segments to the controller.
 25. Sustain roughly 1 TW for a 60-minute AGI Training Run to trigger victory.
 26. Continue after victory with larger compute, energy, and customer systems if
-    desired; AGI is the complete FactoryX victory.
+    desired; AGI is the complete Biter Motors victory.
 
 Current runtime behavior is intentionally small:
 
@@ -352,7 +352,7 @@ Current runtime behavior is intentionally small:
 - Prototype, Premium, and Mass-market EV sales consume one reservation per car.
   Megatruck sales also consume one reservation. Robotaxi fleets consume no
   reservations; they require major capital instead.
-- All five FactoryX EV products are now drivable. They temporarily reuse the
+- All five Biter Motors EV products are now drivable. They temporarily reuse the
   vanilla car body with product colors: Roadster red, Premium black,
   Mass-market white, Megatruck silver, and Robotaxi gold.
 - Each placed EV receives embedded battery equipment. Powered charger tiers
@@ -365,7 +365,7 @@ Current runtime behavior is intentionally small:
 
 ## New Game Start
 
-FactoryX has an optional startup setting, `FactoryX accelerated start`, enabled
+Biter Motors has an optional startup setting, `Biter Motors accelerated start`, enabled
 by default. It is deliberately a light start rather than a prebuilt base:
 
 - No factory is prebuilt. A red `Captain's Chest` is placed beside the first
@@ -391,8 +391,8 @@ by default. It is deliberately a light start rather than a prebuilt base:
   10 Electric Furnaces, and 10 Electric Mining Drills.
   Their corresponding technologies start researched, so normal-quality
   replacements are craftable. Normal versions of the recovered
-  base-game infrastructure are craftable immediately, while FactoryX energy
-  products still require their normal FactoryX progression.
+  base-game infrastructure are craftable immediately, while Biter Motors energy
+  products still require their normal Biter Motors progression.
 - Every mineable crash-site wreck receives a small physical salvage payout when
   it would otherwise be empty: steel from large hull sections, iron from medium
   sections, and five copper plates directly into the mining output from each
@@ -410,7 +410,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
 
 - Customer settlements are the authoritative population unit. Mobile biters
   are visible representatives, not the source of truth for market size.
-- FactoryX retains at most 128 visible mobile customers per settlement and
+- Biter Motors retains at most 128 visible mobile customers per settlement and
   2,000 across the map. Additional spawned customers are folded into their
   settlement's virtual population instead of remaining as pathfinding units.
 - Virtual customers remain real economically: they can reserve and buy EVs,
@@ -423,7 +423,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
   pathfinding or rendering work.
 - The 2,000-unit ceiling is conservative. The July 2026 synthetic benchmark
   measured about 21 ms/update for 20,000 ordinary moving biters before adding
-  meaningful FactoryX work; registered ownership added about 1.4 ms/update.
+  meaningful Biter Motors work; registered ownership added about 1.4 ms/update.
   The dominant 20,000-unit cost is Factorio's native unit simulation, although
   per-unit mod rendering and scans can compound it and remain prohibited.
 
@@ -432,7 +432,7 @@ by default. It is deliberately a light start rather than a prebuilt base:
 - Physical assets use native Factorio quality improvements. Machines gain the
   normal speed and durability benefits; solar and storage use native quality
   scaling; EVs gain vehicle durability.
-- Every two quality levels add one embedded battery to a placed FactoryX EV.
+- Every two quality levels add one embedded battery to a placed Biter Motors EV.
 - Each quality level adds 10% EV capacity per stall to a charger. Stall count,
   footprint, and coverage radius stay fixed so placement remains readable.
 - Abstract outputs do not roll quality. Dollar sales, AI Token production, and
@@ -450,9 +450,9 @@ by default. It is deliberately a light start rather than a prebuilt base:
 The implementation follows the useful architecture from the MIT-licensed
 `electric-vehicles` mod: battery equipment stores energy and a runtime
 transformer converts that energy into vehicle propulsion fuel. That mod and
-its wireless-charging companion target Factorio 0.14, so FactoryX does not take
+its wireless-charging companion target Factorio 0.14, so Biter Motors does not take
 an obsolete dependency. It implements the pattern directly against Factorio
-2.1, with FactoryX chargers supplying the grid draw.
+2.1, with Biter Motors chargers supplying the grid draw.
 
 | Vehicle | Build time | Sale time | Profit | Reservation |
 | --- | ---: | ---: | ---: | --- |
@@ -487,7 +487,7 @@ Capital currently goes into:
 
 ### Research Progression And Balance
 
-FactoryX research follows Factorio's cumulative-science convention. Major
+Biter Motors research follows Factorio's cumulative-science convention. Major
 industrial milestones retain earlier science packs instead of replacing them
 with only the newest pack. Military science is generally excluded because the
 tree is commercial, industrial, energy, and compute focused. Customer Referral
@@ -507,7 +507,7 @@ functionality.
 | Premium Audio Systems | EV Production Line | Consumer EV sales run 5% faster and Robotaxi trips return 5% more profit. Biters love Nickelback. |
 | Customer Referral Program | EV Charging Network | Powered charging-driven settlement growth runs 10% faster; uniquely consumes military science. |
 
-Research levels and their effects are visible in the FactoryX Progress panel.
+Research levels and their effects are visible in the Biter Motors Progress panel.
 
 | Technology | Cycles | Inputs per cycle | Time |
 | --- | ---: | --- | ---: |
@@ -543,7 +543,7 @@ keeps the visible build-and-train victory mechanic dominant.
 
 ### Recipe Design Rule
 
-FactoryX recipes should normally use two to four inputs. Three is a natural
+Biter Motors recipes should normally use two to four inputs. Three is a natural
 default, not a quota. Every input must represent a distinct subsystem or
 gameplay logistics stream.
 
@@ -614,7 +614,7 @@ Current simplified terrestrial recipes:
 - Gigafactory: `10 Gigafactory Modules + 2 Substations`.
 
 The Prototype Roadster deliberately uses primitive batteries and electronics.
-It cannot require FactoryX Battery Packs or Electric Drivetrains because its
+It cannot require Biter Motors Battery Packs or Electric Drivetrains because its
 first sale funds the EV Production Line technology that unlocks those parts.
 
 ### Sales Office
@@ -679,7 +679,7 @@ statistics.
 Sales Office saturation warnings are intentionally cleanup-oriented. The
 clicked panel always reports local prospect health, but amber beacons and
 persistent map alerts appear at 20% or fewer prospects only on an office whose
-entire settlement coverage is duplicated by other offices. FactoryX
+entire settlement coverage is duplicated by other offices. Biter Motors
 deterministically preserves the oldest office needed for each settlement and
 marks only later, fully redundant offices as `Surplus Sales Office`; the alert
 asks the player to deconstruct that office while keeping one local office for
@@ -703,7 +703,7 @@ technology, toggles a per-player chart overlay for every Sales Office owned by
 that player's force. The chart-only circles use a dark teal translucent fill and
 restrained outline, so they remain readable without washing out Remote View.
 
-Selecting or opening a Sales Office adds a live FactoryX diagnostics panel. It
+Selecting or opening a Sales Office adds a live Biter Motors diagnostics panel. It
 uses a compact native icon/label/value table for state, settlements, remaining
 and unassigned prospects, EV owners, powered charging capacity, underserved owners,
 and reserved buyers. It also forecasts the nearest local customer threshold as
@@ -722,11 +722,11 @@ an automatic customer penalty.
 
 ### Progress And Diagnostics
 
-- The `FactoryX Progress` shortcut uses the steel-X FactoryX emblem and is
+- The `Biter Motors Progress` shortcut uses the steel-X Biter Motors emblem and is
   available throughout the game.
 - It opens a movable screen panel that derives the current stage and next
   physical action from live force state rather than a static checklist.
-- Once EV sales begin, its compact Grid power section shows FactoryX charging
+- Once EV sales begin, its compact Grid power section shows Biter Motors charging
   demand versus delivered power, powered versus requested stalls, supported
   versus stranded EV owners, and the nearest additional sale count that will
   activate another stall. Forecasts turn yellow inside the final quarter of a
@@ -803,12 +803,12 @@ Current implementation:
 - V4 costs `1 V3 Supercharger + 4 High-density Solar Panels + 4 Megapacks +
   200 Dollars`. Its dedicated 6x6 art includes a broad solar canopy; 15 stalls
   are visible and the final row is represented beneath the canopy.
-- Selecting a station opens a small FactoryX panel that shows grid
+- Selecting a station opens a small Biter Motors panel that shows grid
   status, covered biter customer settlements, active stalls, power draw,
   reservation rate, active EV Sales Offices, and the next progression step.
 - Chargers remain passive-provider entities internally so logistic bots can
   collect reservation paperwork. Clicking one suppresses Factorio's generic
-  logistic-container panel and opens only the movable FactoryX charger
+  logistic-container panel and opens only the movable Biter Motors charger
   inspector; logistic coverage and robot counts are implementation details and
   are not shown as charger mechanics.
 - Hovering a charger temporarily removes only that charger from the logistic
@@ -860,7 +860,7 @@ Current implementation:
   capped at the charger tier's fixed stall count, never the customer count.
 - Placing or removing a charger immediately invalidates and rebuilds charging
   assignments after the entity registry changes. Buyer eligibility, stall
-  lights, open entity inspectors, and FactoryX Progress refresh in the same
+  lights, open entity inspectors, and Biter Motors Progress refresh in the same
   event; periodic service reconciliation is only a fallback for missed events.
 - A settlement that loses its stall because of overload, charger removal, or a
   power shortage stays friendly for three minutes. Anger checks then ramp from
@@ -901,7 +901,7 @@ Current limitation:
 The conceptual leap in the current economy is that someone is buying the EVs.
 The funnier and more Factorio-native answer is: the biters are the customers.
 Instead of treating biters as direct political enemies or abstract mobs,
-FactoryX can turn them into non-aggressive biter customers whose settlements
+Biter Motors can turn them into non-aggressive biter customers whose settlements
 create demand for EVs and charging infrastructure.
 
 Current research notes from Factorio 2.1.9 docs and wiki:
@@ -945,7 +945,7 @@ Current research notes from Factorio 2.1.9 docs and wiki:
 Practical mechanics available to us:
 
 - Local customer conversion:
-  - FactoryX creates a `factoryx-customers` force.
+  - Biter Motors creates a `factoryx-customers` force.
   - Normal `enemy` biters remain hostile to player forces.
   - Enemy spawners inside 128 tiles of a Sales Office become eligible customers;
     they convert only when a reachable powered charging stall can serve them.
@@ -1045,7 +1045,7 @@ Implemented v1 behavior:
   settlement capacity. Happy, fully served customers grow after four active
   stall-minutes, 25% faster than the original five-minute tuning, while
   hostile worms retain their normal randomized appearance.
-- While a player drives a FactoryX EV, powered chargers within 256 tiles show a
+- While a player drives a Biter Motors EV, powered chargers within 256 tiles show a
   private translucent green circle matching that tier's real player-vehicle
   charge radius. While energy is flowing, the EV shows a pulsing battery icon
   and live `CHARGING N%` label. These renderings are per connected player and
@@ -1053,7 +1053,7 @@ Implemented v1 behavior:
 - Player-driven EVs must park physically at the site: V1 charges within 8 tiles
   and V2 through V4 within 10 tiles. Higher tiers scale charging power and stall
   throughput rather than becoming long-range wireless chargers.
-- Entering or exiting a FactoryX EV briefly shows its battery percentage above
+- Entering or exiting a Biter Motors EV briefly shows its battery percentage above
   that vehicle for two seconds. The private player-only label is green, amber,
   or red by charge level, remains solid for one second, then fades for one
   second. It uses the same embedded-battery measurement as the live charging
@@ -1072,7 +1072,7 @@ Implemented v1 behavior:
   angry settlements, stranded EVs, spare settlement capacity, grown colonies,
   and progress toward the next colony.
 - Visual behavior:
-  - Customer spawning remains natural and FactoryX does not cap or cull mobile
+  - Customer spawning remains natural and Biter Motors does not cap or cull mobile
     populations. Friendly non-owners use eight baked green prospect prototypes
     with native hover names such as `EV prospect (friendly) - Small biter`;
     hostile units retain their normal appearance.
@@ -1101,7 +1101,7 @@ Recommended design direction:
    objects.
 3. Add biter settlements as a demand amplifier, not a required dependency for
    the first `Sell hopes and dreams` sale.
-4. Make Sales Office-covered biter customers the default FactoryX market
+4. Make Sales Office-covered biter customers the default Biter Motors market
    behavior while keeping normal biters hostile.
 5. Make settlement growth a scripted reward for serving demand, not a vanilla
    enemy-expansion side effect.
@@ -1172,7 +1172,7 @@ some are recommended renames or future mechanics.
 
 ### Terrestrial Industrial Supply Chain
 
-Before the Sales Office, FactoryX should offer a red-and-green-science
+Before the Sales Office, Biter Motors should offer a red-and-green-science
 `Industrial Supply Chain` branch. It does not produce or consume Dollars. Its
 purpose is to make the terrestrial opening materially different from ordinary
 Nauvis by moving a carefully selected set of Space Age industrial machines
@@ -1192,7 +1192,7 @@ The branch should be implemented and balanced in this order:
    dependencies. This is intentionally an early and powerful accelerator; its
    electricity draw, footprint, and reduced resource drain remain the costs.
 3. **Electric Metallurgy** makes Electric Furnaces available before plastics.
-   Because the vanilla furnace recipe uses Advanced Circuits, FactoryX must
+   Because the vanilla furnace recipe uses Advanced Circuits, Biter Motors must
    deliberately replace those with Electronic Circuits; otherwise the intended
    pre-plastics Foundry gate is impossible. Keep the rest of the furnace recipe
    recognizable and cover this global recipe change with a prototype test.
@@ -1206,7 +1206,7 @@ The branch should be implemented and balanced in this order:
    time-to-Sales-Office against the previous run before this becomes permanent.
 5. **Vehicle Recycling** research is revealed when the first Wrecked EV is
    produced. The player must then complete its red-and-green-science research
-   before the Recycler and explicit FactoryX Wrecked EV recipe unlock. This
+   before the Recycler and explicit Biter Motors Wrecked EV recipe unlock. This
    relocates the Recycler without importing Fulgoran scrap or holmium, with
    probabilistic recovery of recognizable EV ingredients. Explicit
    recipes are preferred over automatic recipe reversal so returns can be
@@ -1216,7 +1216,7 @@ The branch should be implemented and balanced in this order:
    can be automated as soon as the first wreck appears.
 6. **Tesla Weapons** relocates the Tesla Gun/Turret branch without holmium,
    electrolyte, superconductors, or electromagnetic science. Recipes should use
-   existing terrestrial and FactoryX intermediates such as Battery Packs,
+   existing terrestrial and Biter Motors intermediates such as Battery Packs,
    Processing Units, steel, accumulators, and Dollars. Tesla ammunition uses one
    high-nickel cell, two Advanced Circuits, and ten Copper Cables per ten-shot
    magazine; consuming an entire vehicle-scale Battery Pack per magazine was
@@ -1224,8 +1224,8 @@ The branch should be implemented and balanced in this order:
    branch, not part of the red-and-green bootstrap.
 7. **Mech Armor** remains future content. It must be built from an Optimus
    Humanoid Robot when that product exists, making the armor the wearable result
-   of FactoryX robotics rather than a transplanted Fulgora recipe. Its other
-   ingredients should use terrestrial FactoryX power electronics and advanced
+   of Biter Motors robotics rather than a transplanted Fulgora recipe. Its other
+   ingredients should use terrestrial Biter Motors power electronics and advanced
    materials, not holmium.
 
 Charging infrastructure participates in the circular economy. Each active
@@ -1316,7 +1316,7 @@ Gigafactory design:
   Supply Chain. It costs 500 cycles of red, green, and blue science, granting
   requester, buffer, and active-provider chests before the player begins the
   increasingly varied Biter Motors recipes.
-- FactoryX `Autonomous Logistics` remains the later AI/Robotaxi technology; it
+- Biter Motors `Autonomous Logistics` remains the later AI/Robotaxi technology; it
   is not the requester-chest unlock.
 - A Gigafactory Module is one repeatable production cell: capital, machines,
   line logistics, and factory floor. The Gigafactory is assembled from several
@@ -1333,7 +1333,7 @@ Gigafactory design:
   comparable to a rocket silo.
 - Dollars, machinery, line logistics, and concrete are embodied in the modules,
   so the Gigafactory recipe does not bill those inputs a second time.
-- Premium EVs use both advanced crafting and the FactoryX vehicle-assembly
+- Premium EVs use both advanced crafting and the Biter Motors vehicle-assembly
   category, allowing the first ten to be built slowly in AM2/AM3 machines and
   later scaled in a Gigafactory. Mass-market EVs remain Gigafactory-only.
 - Prototype Roadsters remain craftable in ordinary advanced assemblers because
@@ -1928,7 +1928,7 @@ Legacy ending removed by this redesign:
   replaces them as the controller's final operation.
 - The old victory trigger and wording were replaced by the AGI Model completion
   event.
-- No compatibility aliases are required because FactoryX is still in
+- No compatibility aliases are required because Biter Motors is still in
   fresh-save playtesting.
 
 ## New Prototypes And Artwork Needs
@@ -1998,7 +1998,7 @@ Post-review playtest replacements:
   circuitry, straps, and deep document stack were removed because they became
   visual noise at belt and inventory scale.
 - The custom steel `X` inside a gear ring with one orange furnace center is the
-  FactoryX Progress shortcut icon and compact module identity. FactoryX no
+  Biter Motors Progress shortcut icon and compact module identity. Biter Motors no
   longer creates a separate crafting-menu tab.
 
 ### Entity Artwork Alignment Rule
@@ -2022,7 +2022,7 @@ Post-review playtest replacements:
 
 ### Crafting Menu Integration
 
-FactoryX products live beside the vanilla systems they extend:
+Biter Motors products live beside the vanilla systems they extend:
 
 - Prototype, Premium, and Mass-market EVs plus Robotaxi Fleets use the vanilla
   Logistics `transport` row.
@@ -2031,8 +2031,8 @@ FactoryX products live beside the vanilla systems they extend:
 - Launch services, boosters, satellites, and ground stations use the vanilla
   Production `space-related` row.
 - AI Tokens and planetary-grid outputs use the vanilla `science-pack` row.
-- FactoryX infrastructure has a dedicated row in the vanilla Production tab.
-- FactoryX components and capital/contracts have dedicated rows in the vanilla
+- Biter Motors infrastructure has a dedicated row in the vanilla Production tab.
+- Biter Motors components and capital/contracts have dedicated rows in the vanilla
   Intermediate Products tab.
 - EV Reservations use the vanilla `raw-material` subgroup inside Intermediate
   Products so they are visible and searchable in item-filter selectors even
@@ -2145,7 +2145,7 @@ icons, and bounded working animations. Remaining work is narrower:
   red `X` or crossed-tool mark because it reads as unavailable or invalid in a
   technology tree.
 
-- `BiterMotors.png` now supplies the square FactoryX brand artwork: a 256x256
+- `BiterMotors.png` now supplies the square Biter Motors brand artwork: a 256x256
   in-game Progress shortcut icon and a 144x144 packaged-mod thumbnail. The
   source artwork remains in Downloads and is not duplicated at full resolution
   inside the mod.
@@ -2205,7 +2205,7 @@ icons, and bounded working animations. Remaining work is narrower:
   Offices, EV Charging Stations, and both Gigafactory tiers; future placeable
   infrastructure should extend the same model.
 - Roadmap: make the Prototype Roadster conversion explicitly electric. By the
-  FactoryX entry point, lubricant and Electric Engine Units are normally
+  Biter Motors entry point, lubricant and Electric Engine Units are normally
   available, so use `Car + Electric Engine Units + Batteries + Advanced
   Circuits`. The Car remains the physical chassis donor; later purpose-built
   EVs continue consuming the higher-level Electric Drivetrain intermediate.
@@ -2252,7 +2252,7 @@ charging remains the straightforward path.
 
 - `Biter Hospitality` becomes researchable after Mass-market EV Production. A
   provisional cost is 1,000 cycles using red, green, blue, purple, and yellow
-  science. It unlocks both the `Biter Diner` and a FactoryX-retuned version of
+  science. It unlocks both the `Biter Diner` and a Biter Motors-retuned version of
   the existing Space Age `fish-breeding` recipe.
 - The Biter Diner is a 12x12, stack-size-1 specialty V5-class charger with 80
   public stalls and a 224-tile customer radius. Each stall supports 50 EV
@@ -2355,7 +2355,7 @@ Implemented V1:
   research adds 25% per level to the interval between visits.
 - Initial class intervals are deliberately exaggerated and readable: Roadster
   3 minutes, Mass-market EV 5, Premium EV 6, Robotaxi 7, and Megatruck 8.
-- The charger inspector reports approaching and charging owners. FactoryX
+- The charger inspector reports approaching and charging owners. Biter Motors
   Progress reports network-wide commute activity and completed visits.
 - Still benchmark 128, 256, and 512 simultaneous commuters against the roughly
   12,000 customer units in the large save before increasing the production cap.
@@ -2364,7 +2364,7 @@ Implemented V1:
 
 Implemented for player-driven EV collisions:
 
-- Hitting a friendly mobile biter or spitter with a player-driven FactoryX EV
+- Hitting a friendly mobile biter or spitter with a player-driven Biter Motors EV
   makes that individual customer angry at the driver for 45 seconds. Up to two
   nearby customers within 12 tiles join for 30 seconds.
 - A Megatruck collision provokes a larger response: the struck customer stays
@@ -2416,7 +2416,7 @@ Implemented performance architecture:
 - Robotaxi customer allocation uses per-center spatial queries, chooses the
   nearest eligible center for overlaps, and caches the network result for five
   seconds. Inspectors and the remote status API consume the same allocation.
-- Entity inspectors and FactoryX Progress refresh expensive telemetry every
+- Entity inspectors and Biter Motors Progress refresh expensive telemetry every
   five seconds while selection/open events still render immediately.
 - Datacenter brownout checks use a rotating queue of at most 32 compute machines
   per tick, preserving sub-second response while bounding late-game work.
@@ -2583,7 +2583,7 @@ Progressively worsening construction economics:
   | 32+ | Continue geometric tiers | 2x per tier | intentionally prohibitive |
 
 - Show lifetime count, current contract, next doubling threshold, and next
-  capital cost in the construction-site inspector and FactoryX Progress panel.
+  capital cost in the construction-site inspector and Biter Motors Progress panel.
 - This rising terrestrial marginal cost is the explicit economic pressure to
   move AI-token growth into space. Orbital compute should have difficult launch
   logistics but a flatter marginal-cost curve.
@@ -2670,7 +2670,7 @@ AI-datacenter opposition dynamic:
 ### Phase 6: Achieving AGI Victory
 
 - Add a force-wide, all-surface cumulative AI Token production counter.
-- Show `current / 1,000,000,000` prominently in FactoryX Progress, with
+- Show `current / 1,000,000,000` prominently in Biter Motors Progress, with
   terrestrial and orbital contributions broken out beneath it.
 - Unlock the AGI Training Run automatically at one billion cumulative Tokens.
   The unlock must not require one billion Tokens to remain in storage.
@@ -2697,7 +2697,7 @@ AI-datacenter opposition dynamic:
 - Custom hostile enemies are not in the MVP.
 - The preferred direction is now biter customers, not real-world political
   enemies.
-- FactoryX changes local enemy behavior around Sales Offices: covered biters are
+- Biter Motors changes local enemy behavior around Sales Offices: covered biters are
   converted into the peaceful `factoryx-customers` force, while normal biters
   remain hostile elsewhere.
 - Possible future mechanics:
@@ -2750,11 +2750,11 @@ AI-datacenter opposition dynamic:
 ## Infinite Solar Scaling
 
 - `High-density Solar Productivity` is available after Energy Products. Every
-  level adds 10% native recipe productivity to FactoryX High-density Solar
+  level adds 10% native recipe productivity to Biter Motors High-density Solar
   Arrays without affecting vanilla Solar Panels or increasing the array's 300
   kW peak output.
 - `Megapack Productivity` is a parallel choice after Energy Products. Every
-  level adds 10% native recipe productivity to FactoryX Megapacks.
+  level adds 10% native recipe productivity to Biter Motors Megapacks.
 - Both consume red, green, blue, purple, and yellow science plus Dollars. Costs
   rise by 1.5x per level, starting at 750 cycles for either track.
 - Factorio caps recipe productivity at 300%. These upgrades make multi-gigawatt
@@ -2767,17 +2767,17 @@ AI-datacenter opposition dynamic:
 
 ## Terrestrial Interface Cleanup
 
-- FactoryX Progress includes a spoiler-aware `Terrestrial industry` section.
+- Biter Motors Progress includes a spoiler-aware `Terrestrial industry` section.
   It reports Industrial Supply Chain research, built Big Mining Drills, built
   Foundries, and lifetime calcite mined. Wrecked EV and Vehicle Recycling rows
   remain absent until the first wreck reveals that branch.
 - The progress body is scrollable with a bounded height so the industrial
   section does not push later market, infrastructure, and improvement metrics
   off-screen.
-- The FactoryX Progress panel uses explicit terrestrial labels rather than
+- The Biter Motors Progress panel uses explicit terrestrial labels rather than
   mixing the terrestrial economy into generic infrastructure counters.
 - AI output distinguishes Factorio's item production statistic from the
-  FactoryX milestone tracker. The latter displays current progress toward the
+  Biter Motors milestone tracker. The latter displays current progress toward the
   next Terrestrial AI Efficiency unlock instead of a second unexplained total.
 - High-density Solar Productivity and Megapack Productivity levels are visible
   beside the EV continuous-improvement tracks.
@@ -2840,7 +2840,7 @@ Current validation state, 2026-07-10:
   Prototype Roadster recipe is available without modifying the source save.
 - The same GUI check passes against the latest playtest autosave and verifies
   that 40 lifetime Dollars in Factorio's production statistics render as `40`
-  in the FactoryX Progress panel.
+  in the Biter Motors Progress panel.
 - The engine smoke test verifies a mixed V1/V2 network: 12 total stalls, one
   sold EV demand, active 150 kW V2 sinks, no duplicated V1 allocation, and
   prospect-driven reservation generation. After five minutes, unsold prospects
@@ -2851,7 +2851,7 @@ Current validation state, 2026-07-10:
   `advanced-crafting` recipe and that Assembling Machine 2 supports that
   category.
 - The engine prototype check verifies vanilla crafting-tab placement, confirms
-  every authored FactoryX recipe has a technology or milestone owner, and
+  every authored Biter Motors recipe has a technology or milestone owner, and
   confirms every recipe category has at least one compatible machine.
 - The engine smoke test completes a real three-Robotaxi, 3-second sale with no
   EV Reservation, verifies 1 Dollar in the Sales Office output, and verifies

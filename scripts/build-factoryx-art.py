@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic FactoryX icons and lightweight animation overlays."""
+"""Build deterministic Biter Motors icons and lightweight animation overlays."""
 
 from __future__ import annotations
 

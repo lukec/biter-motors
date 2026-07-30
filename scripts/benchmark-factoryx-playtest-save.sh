@@ -37,7 +37,7 @@ if not matches:
     print(text[-4000:])
     raise SystemExit("Could not parse benchmark average update time")
 average = matches[-1]
-print(f"FactoryX benchmark average update: {average:.3f} ms")
+print(f"Biter Motors benchmark average update: {average:.3f} ms")
 if threshold > 0 and average > threshold:
-    raise SystemExit(f"FactoryX benchmark exceeds {threshold:g} ms threshold: {average:.3f} ms")
+    raise SystemExit(f"Biter Motors benchmark exceeds {threshold:g} ms threshold: {average:.3f} ms")
 PY

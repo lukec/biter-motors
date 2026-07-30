@@ -1,6 +1,6 @@
-# FactoryX Blender Vehicle Family
+# Biter Motors Blender Vehicle Family
 
-The FactoryX vehicle family now has editable Blender studies and deterministic
+The Biter Motors vehicle family now has editable Blender studies and deterministic
 64-direction renders for:
 
 - Prototype Roadster: red, compact, low two-seat sports car.

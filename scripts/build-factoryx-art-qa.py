@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the static FactoryX artwork QA and review index."""
+"""Generate the static Biter Motors artwork QA and review index."""
 
 from __future__ import annotations
 
@@ -159,7 +159,7 @@ def main() -> int:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FactoryX Artwork QA</title>
+<title>Biter Motors Artwork QA</title>
 <style>
 :root{{--ink:#e9edf0;--muted:#9ca7ad;--panel:#252729;--line:#454a4d;--orange:#f69a2b;--cyan:#45d5ec;--green:#7ed987;--red:#f07167}}
 *{{box-sizing:border-box;letter-spacing:0}} body{{margin:0;background:#171819;color:var(--ink);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
@@ -183,14 +183,14 @@ main{{padding:18px clamp(16px,4vw,48px) 60px}} .grid{{display:grid;grid-template
 </style>
 </head>
 <body>
-<header class="page"><div><h1>FactoryX Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
+<header class="page"><div><h1>Biter Motors Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
 <nav class="toolbar" aria-label="Artwork filters">
   <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="vehicles">Vehicles</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
   <button id="terrain" title="Cycle entity preview terrain">Terrain</button><button id="bounds" title="Show transparent image bounds">Bounds</button><button id="copy" title="Copy review decisions">Copy review</button>
 </nav>
 <main>
 <section class="grid" id="assets">{entity_cards()}{vehicle_cards()}{icon_cards()}{animation_cards()}{technology_cards()}</section>
-<section class="math"><h2 class="section-title">Directional vehicle production math</h2><p>FactoryX vehicle and battery art now uses a deterministic Blender pipeline. Directional sprites, shadows, chemistry variants, damaged packs, and inventory icons can be reproduced locally without additional image-generation calls.</p><p>Generated masters: <a href="../factoryx-masters/final/sales-office.png">Sales Office</a>, <a href="../factoryx-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../factoryx-masters/final/agi-model.png">AGI Model</a>.</p></section>
+<section class="math"><h2 class="section-title">Directional vehicle production math</h2><p>Biter Motors vehicle and battery art now uses a deterministic Blender pipeline. Directional sprites, shadows, chemistry variants, damaged packs, and inventory icons can be reproduced locally without additional image-generation calls.</p><p>Generated masters: <a href="../factoryx-masters/final/sales-office.png">Sales Office</a>, <a href="../factoryx-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../factoryx-masters/final/agi-model.png">AGI Model</a>.</p></section>
 </main>
 <script>
 const key='factoryx-art-qa-v1';const state=JSON.parse(localStorage.getItem(key)||'{{}}');
@@ -199,7 +199,7 @@ document.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{{state[b.da
 document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.asset').forEach(x=>x.classList.toggle('hidden',b.dataset.filter!=='all'&&x.dataset.kind!==b.dataset.filter));}});
 const terrains=['terrain-grass','terrain-concrete','terrain-dark'];let terrainIndex=0;document.querySelector('#terrain').onclick=()=>{{terrainIndex=(terrainIndex+1)%terrains.length;document.querySelectorAll('.entity-stage').forEach(x=>{{terrains.forEach(t=>x.classList.remove(t));x.classList.add(terrains[terrainIndex])}})}};
 document.querySelector('#bounds').onclick=()=>document.body.classList.toggle('show-bounds');
-document.querySelector('#copy').onclick=async()=>{{const rows=[...document.querySelectorAll('.asset')].map(x=>`- ${{x.querySelector('h2').textContent}}: ${{state[x.dataset.id]||'unreviewed'}}`);await navigator.clipboard.writeText('FactoryX art QA\\n'+rows.join('\\n'));}};
+document.querySelector('#copy').onclick=async()=>{{const rows=[...document.querySelectorAll('.asset')].map(x=>`- ${{x.querySelector('h2').textContent}}: ${{state[x.dataset.id]||'unreviewed'}}`);await navigator.clipboard.writeText('Biter Motors art QA\\n'+rows.join('\\n'));}};
 renderState();
 </script>
 </body></html>"""

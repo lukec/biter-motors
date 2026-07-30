@@ -197,7 +197,7 @@ end
 
 local function recipe(name, categories, subgroup, order, ingredients, results, energy_required, extra)
   if #ingredients > 4 then
-    error("FactoryX recipe " .. name .. " has more than four ingredients")
+    error("Biter Motors recipe " .. name .. " has more than four ingredients")
   end
   local prototype = {
     type = "recipe",
@@ -2424,7 +2424,7 @@ end
 local function add_recipe_category(recipe_name, category_name)
   local prototype = data.raw.recipe[recipe_name]
   if not prototype then
-    error("FactoryX vertical integration recipe does not exist: " .. recipe_name)
+    error("Biter Motors vertical integration recipe does not exist: " .. recipe_name)
   end
   prototype.categories = prototype.categories or {prototype.category or "crafting"}
   prototype.category = nil

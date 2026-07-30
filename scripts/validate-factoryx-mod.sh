@@ -34,7 +34,7 @@ cat > "$smoke/info.json" <<'EOF_INFO'
 {
   "name": "factoryx_smoke",
   "version": "0.1.0",
-  "title": "FactoryX Smoke Test",
+  "title": "Biter Motors Smoke Test",
   "author": "Codex",
   "factorio_version": "2.1",
   "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "factoryx >= 0.1.0"]
@@ -1275,10 +1275,10 @@ for locale_section, prototype_types in prototype_locale_sections.items():
                 )
 if missing_locale:
     raise SystemExit(
-        "FactoryX prototypes have missing locale names:\n"
+        "Biter Motors prototypes have missing locale names:\n"
         + "\n".join(sorted(missing_locale))
     )
-print("FactoryX prototype locale coverage OK.")
+print("Biter Motors prototype locale coverage OK.")
 
 factoryx_badge = "__factoryx__/graphics/technology/factoryx-tech-badge.png"
 factoryx_technologies = {
@@ -1292,17 +1292,17 @@ factoryx_technologies = {
 for technology_name in factoryx_technologies:
     icon_paths = {layer.get("icon") for layer in data["technology"][technology_name].get("icons", [])}
     if factoryx_badge not in icon_paths:
-        raise SystemExit(f"{technology_name} is missing the FactoryX technology badge: {sorted(str(p) for p in icon_paths)}")
-print("FactoryX technology icon branding OK.")
+        raise SystemExit(f"{technology_name} is missing the Biter Motors technology badge: {sorted(str(p) for p in icon_paths)}")
+print("Biter Motors technology icon branding OK.")
 
 for location_name in ("vulcanus", "fulgora", "gleba", "aquilo"):
     location = data["planet"][location_name]
     if not location.get("hidden") or not location.get("hidden_in_factoriopedia"):
-        raise SystemExit(f"FactoryX non-Nauvis planet remains visible: {location_name}")
+        raise SystemExit(f"Biter Motors non-Nauvis planet remains visible: {location_name}")
 for location_name in ("solar-system-edge", "shattered-planet"):
     location = data["space-location"][location_name]
     if not location.get("hidden") or not location.get("hidden_in_factoriopedia"):
-        raise SystemExit(f"FactoryX remote space location remains visible: {location_name}")
+        raise SystemExit(f"Biter Motors remote space location remains visible: {location_name}")
 for technology_name in (
     "space-platform-thruster",
     "planet-discovery-vulcanus", "planet-discovery-fulgora",
@@ -1312,10 +1312,10 @@ for technology_name in (
 ):
     technology = data["technology"][technology_name]
     if not technology.get("hidden") or technology.get("enabled") is not False:
-        raise SystemExit(f"FactoryX planetary technology remains available: {technology_name}")
+        raise SystemExit(f"Biter Motors planetary technology remains available: {technology_name}")
 if data["planet"]["nauvis"].get("hidden"):
-    raise SystemExit("FactoryX must keep Nauvis visible")
-print("FactoryX Nauvis-only world model OK.")
+    raise SystemExit("Biter Motors must keep Nauvis visible")
+print("Biter Motors Nauvis-only world model OK.")
 
 rgb = {"automation-science-pack", "logistic-science-pack", "chemical-science-pack"}
 rgbpy = rgb | {"production-science-pack", "utility-science-pack"}
@@ -1517,7 +1517,7 @@ if calcite_control != {"frequency": 0.5, "size": 0.7, "richness": 0.8}:
     raise SystemExit(f"Nauvis calcite autoplace mismatch: {calcite_control}")
 if not data["resource"]["calcite"].get("autoplace", {}).get("probability_expression"):
     raise SystemExit("Calcite has no terrestrial autoplace probability expression")
-print("FactoryX terrestrial industrial supply chain prototypes OK.")
+print("Biter Motors terrestrial industrial supply chain prototypes OK.")
 
 ev_production_line = data["technology"]["x-premium-ev-program"]
 ev_line_unlocks = {
@@ -1559,7 +1559,7 @@ if mass_market_sale["energy_required"] != 5 or mass_market_sale["results"] != [{
 robotaxi_sale = data["recipe"]["x-sell-robotaxi-fleet"]
 if robotaxi_sale["energy_required"] != 3 or robotaxi_sale["ingredients"] != [{"type": "item", "name": "x-robotaxi-fleet", "amount": 3}] or robotaxi_sale["results"] != [{"type": "item", "name": "x-dollar", "amount": 1}]:
     raise SystemExit(f"Robotaxi sale balance mismatch: {robotaxi_sale}")
-print("FactoryX research balance and sale recipe icons OK.")
+print("Biter Motors research balance and sale recipe icons OK.")
 
 terrestrial_tech = data["technology"]["x-terrestrial-ai"]
 if set(terrestrial_tech["prerequisites"]) != {"x-capital-scaling", "x-energy-products", "processing-unit"}:
@@ -1619,7 +1619,7 @@ if "x-mass-vehicle-assembly" not in data["assembling-machine"]["x-gigafactory-v2
 print("Terrestrial AI and Robotaxi engine prototypes OK.")
 
 if "factoryx" in data.get("item-group", {}):
-    raise SystemExit("FactoryX must use vanilla crafting tabs, not a separate item group")
+    raise SystemExit("Biter Motors must use vanilla crafting tabs, not a separate item group")
 expected_subgroup_groups = {
     "x-factoryx-infrastructure": "production",
     "x-factoryx-components": "intermediate-products",
@@ -1669,7 +1669,7 @@ for recipe_name, expected_subgroup in expected_recipe_subgroups.items():
     actual_subgroup = data["recipe"][recipe_name]["subgroup"]
     if actual_subgroup != expected_subgroup:
         raise SystemExit(f"{recipe_name} recipe subgroup mismatch: {actual_subgroup}")
-print("FactoryX vanilla crafting-tab integration OK.")
+print("Biter Motors vanilla crafting-tab integration OK.")
 
 factoryx_recipes = {
     name for name in data["recipe"]
@@ -1693,7 +1693,7 @@ runtime_milestone_recipes = {
 }
 missing_unlocks = factoryx_recipes - technology_unlocks - runtime_milestone_recipes
 if missing_unlocks:
-    raise SystemExit(f"FactoryX recipes without a progression owner: {sorted(missing_unlocks)}")
+    raise SystemExit(f"Biter Motors recipes without a progression owner: {sorted(missing_unlocks)}")
 
 category_crafters = {}
 for prototype_type in ("assembling-machine", "furnace"):
@@ -1706,8 +1706,8 @@ for recipe_name in sorted(factoryx_recipes):
     if not any(category_crafters.get(category) for category in categories):
         uncraftable[recipe_name] = categories
 if uncraftable:
-    raise SystemExit(f"FactoryX recipes without a compatible machine: {uncraftable}")
-print("FactoryX progression ownership and machine compatibility OK.")
+    raise SystemExit(f"Biter Motors recipes without a compatible machine: {uncraftable}")
+print("Biter Motors progression ownership and machine compatibility OK.")
 
 prototype = data["assembling-machine"]["x-gigafactory-v2"]
 categories = set(prototype["crafting_categories"])
@@ -1816,8 +1816,8 @@ for vehicle_name in (
             raise SystemExit(f"Sales Office showroom frame offset mismatch: {sprite_name}")
 print("Sales Office active showroom animation prototypes OK.")
 if progress_shortcut["action"] != "lua" or progress_shortcut.get("toggleable"):
-    raise SystemExit(f"FactoryX Progress shortcut mismatch: {progress_shortcut}")
-print("FactoryX Progress shortcut prototype OK.")
+    raise SystemExit(f"Biter Motors Progress shortcut mismatch: {progress_shortcut}")
+print("Biter Motors Progress shortcut prototype OK.")
 if solar_array["collision_box"] != [[-1.35, -1.35], [1.35, 1.35]] or solar_array["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
     raise SystemExit(f"High-density Solar Panel 3x3 footprint mismatch: {solar_array}")
 normal_solar = data["solar-panel"]["solar-panel"]
@@ -1876,7 +1876,7 @@ for vehicle_name in (
         raise SystemExit(f"{vehicle_name} shadow direction layout mismatch: {shadow_layers[0]}")
     if vehicle.get("turret_animation") is not None or vehicle.get("light_animation") is not None:
         raise SystemExit(f"{vehicle_name} retained mismatched vanilla overlay art")
-print("FactoryX custom vehicle engine sprites OK.")
+print("Biter Motors custom vehicle engine sprites OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/factoryx-create.log 2>&1
 if grep -qE ' errored when running|Error:|Error while loading|Modifications: ' /tmp/factoryx-create.log; then
@@ -1916,26 +1916,26 @@ if not road_rage_test.get("attacking") or not road_rage_test.get("scheduled"):
 if checked.get("road_rage_units") != 0:
     raise SystemExit(f"customer road rage did not restore temporary hostile customers: {checked}")
 if not checked.get("autopilot_requested") or not checked.get("blocked_autopilot_requested"):
-    raise SystemExit(f"FactoryX EV autopilot smoke routes were not accepted: {checked}")
+    raise SystemExit(f"Biter Motors EV autopilot smoke routes were not accepted: {checked}")
 if not checked.get("roadster_autopilot_rejected"):
     raise SystemExit(f"Prototype Roadster incorrectly accepted an Autopilot route: {checked}")
 if not checked.get("autopilot_ev_created") or not checked.get("blocked_autopilot_ev_created"):
-    raise SystemExit(f"FactoryX EV autopilot smoke vehicles did not survive: {checked}")
+    raise SystemExit(f"Biter Motors EV autopilot smoke vehicles did not survive: {checked}")
 if checked.get("autopilot_distance_moved", 0) < 20:
-    raise SystemExit(f"unoccupied FactoryX EV did not physically follow its requested route: {checked}")
+    raise SystemExit(f"unoccupied Biter Motors EV did not physically follow its requested route: {checked}")
 if checked.get("autopilot_goal_distance", 999) > 3:
-    raise SystemExit(f"FactoryX EV did not stop near its requested destination: {checked}")
+    raise SystemExit(f"Biter Motors EV did not stop near its requested destination: {checked}")
 autopilot = checked.get("autopilot") or {}
 autopilot_stats = autopilot.get("stats") or {}
 if autopilot.get("active_count") != 0 or autopilot_stats.get("completed", 0) < 1:
-    raise SystemExit(f"FactoryX EV Autopilot did not complete and leave a clean active queue: {checked}")
+    raise SystemExit(f"Biter Motors EV Autopilot did not complete and leave a clean active queue: {checked}")
 blocked_reasons = autopilot_stats.get("canceled_by_reason") or {}
 if not any(reason in blocked_reasons for reason in (
     "no route found",
     "route requires destroying an obstacle",
     "EV remained stuck after three route attempts",
 )):
-    raise SystemExit(f"blocked FactoryX EV route did not abort cleanly: {checked}")
+    raise SystemExit(f"blocked Biter Motors EV route did not abort cleanly: {checked}")
 victory = next((record for record in records if record.get("status") == "victory"), None)
 growth = next((record for record in records if record.get("status") == "customer_growth"), None)
 brownout = next((record for record in records if record.get("status") == "customer_brownout"), None)
@@ -1981,7 +1981,7 @@ if commutes is None or commutes.get("commutes", {}).get("completed", 0) < 1:
 performance = commutes.get("performance", {})
 counters = performance.get("counters", {})
 if performance.get("registered_sales_offices") != 4 or performance.get("registered_stations", 0) < 3:
-    raise SystemExit(f"FactoryX entity registries missed smoke entities: {performance}")
+    raise SystemExit(f"Biter Motors entity registries missed smoke entities: {performance}")
 if performance.get("registered_robotaxi_centers") != 1:
     raise SystemExit(f"Robotaxi Service Center registry missed smoke entity: {performance}")
 if counters.get("market_snapshot_builds", 999999) > 200:
@@ -2111,7 +2111,7 @@ if not checked.get("v2_power_sinks_preferred"):
 if not checked.get("roadster_created") or checked.get("roadster_batteries") != 1:
     raise SystemExit(f"placed Roadster did not receive its short-range battery equipment item: {checked}")
 if not checked.get("roadster_started_charged"):
-    raise SystemExit(f"FactoryX EVs should leave the factory with a full starter charge: {checked}")
+    raise SystemExit(f"Biter Motors EVs should leave the factory with a full starter charge: {checked}")
 if checked.get("roadster_battery_energy", 0) <= 0 or checked.get("roadster_electric_fuel", 0) != 1:
     raise SystemExit(f"powered V2 charger did not charge the Roadster and produce electric drive fuel: {checked}")
 if not checked.get("ev_charging_station_v3_enabled"):
@@ -2186,14 +2186,14 @@ if next_charging_step.get("power_kw", 0) <= 0 or next_charging_step.get("ev_capa
     raise SystemExit(f"next charging load step omitted its power or EV capacity impact: {checked}")
 progress = checked.get("progress", {})
 if progress.get("stage") != "Prototype market validation" or progress.get("objective") != "Sell 50 Prototype Roadsters.":
-    raise SystemExit(f"FactoryX progress status did not identify the next concrete objective: {checked}")
+    raise SystemExit(f"Biter Motors progress status did not identify the next concrete objective: {checked}")
 if progress.get("snapshot", {}).get("customer_ev_fleet") != 3:
-    raise SystemExit(f"FactoryX progress snapshot did not expose live EV market state: {checked}")
+    raise SystemExit(f"Biter Motors progress snapshot did not expose live EV market state: {checked}")
 if progress.get("snapshot", {}).get("next_charging_step", {}).get("ev_owners_until") != next_charging_step.get("ev_owners_until"):
-    raise SystemExit(f"FactoryX progress forecast diverged from the shared customer market snapshot: {checked}")
+    raise SystemExit(f"Biter Motors progress forecast diverged from the shared customer market snapshot: {checked}")
 integrity = checked.get("progression_integrity", {})
 if not integrity.get("ok") or integrity.get("disabled_recipes"):
-    raise SystemExit(f"FactoryX progression integrity check failed: {checked}")
+    raise SystemExit(f"Biter Motors progression integrity check failed: {checked}")
 if checked.get("market", {}).get("charging_stall_capacity") != 12:
     raise SystemExit(f"expected mixed V1/V2 charging capacity of 12 stalls: {checked}")
 if checked.get("market", {}).get("supported_ev_capacity") != 40:
@@ -2255,4 +2255,4 @@ if not (game_finished.get("ok") and game_finished.get("value") is True):
 print("Smoke report OK:", json.dumps(checked, sort_keys=True))
 PY
 
-echo "FactoryX validation passed."
+echo "Biter Motors validation passed."

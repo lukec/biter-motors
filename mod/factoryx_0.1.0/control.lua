@@ -976,7 +976,7 @@ function count_premium_evs_produced(force)
   if not was_reconciled and total > raw and not state.announced then
     state.announced = true
     force.print(string.format(
-      "[FactoryX] Reconciled Premium EV production history: %d lifetime vehicles (%d native production-stat count).",
+      "[Biter Motors] Reconciled Premium EV production history: %d lifetime vehicles (%d native production-stat count).",
       total,
       raw
     ))
@@ -1100,7 +1100,7 @@ function sync_agi_training_unlock(force, announce)
   if unlocked and not unlocks[force.name] then
     unlocks[force.name] = true
     if announce ~= false then
-      force.print("[FactoryX] One billion cumulative AI Tokens generated. AGI Training Run is now available in the Planetary Energy Grid Controller.")
+      force.print("[Biter Motors] One billion cumulative AI Tokens generated. AGI Training Run is now available in the Planetary Energy Grid Controller.")
     end
   end
   return unlocked
@@ -1748,7 +1748,7 @@ function cancel_ev_autopilot(unit_number, reason, options)
   end
   local player = state.player_index and game.get_player(state.player_index)
   if player and options.notify ~= false and reason then
-    local prefix = options.completed and "[FactoryX] " or "[FactoryX] Autopilot canceled: "
+    local prefix = options.completed and "[Biter Motors] " or "[Biter Motors] Autopilot canceled: "
     player.print(prefix .. reason, options.completed
       and {r = 0.35, g = 1.0, b = 0.55}
       or {r = 1.0, g = 0.65, b = 0.20})
@@ -1846,33 +1846,33 @@ end
 
 function start_ev_autopilot(player, vehicle, goal, mode)
   if not player or not player.valid or not is_ev_autopilot_eligible(vehicle) then
-    if player then player.print("[FactoryX] This vehicle does not support Autopilot.") end
+    if player then player.print("[Biter Motors] This vehicle does not support Autopilot.") end
     return false
   end
   if not researched(player.force, EV_AUTOPILOT_TECH_NAME) then
-    player.print("[FactoryX] Research Autonomous Logistics to unlock EV Autopilot.")
+    player.print("[Biter Motors] Research Autonomous Logistics to unlock EV Autopilot.")
     return false
   end
   if player.surface ~= vehicle.surface then
-    player.print("[FactoryX] Vehicle and destination must be on the same surface.")
+    player.print("[Biter Motors] Vehicle and destination must be on the same surface.")
     return false
   end
   if mode == "navigate" and not player_is_vehicle_driver(player, vehicle) then
-    player.print("[FactoryX] Enter an eligible FactoryX EV before selecting Navigate.")
+    player.print("[Biter Motors] Enter an eligible Biter Motors EV before selecting Navigate.")
     return false
   end
   if mode == "summon" and (vehicle.get_driver() or vehicle.get_passenger()) then
-    player.print("[FactoryX] The selected EV is occupied.")
+    player.print("[Biter Motors] The selected EV is occupied.")
     return false
   end
   if ev_autopilot_charge_ratio(vehicle) < EvAutopilot.config.summon_start_charge then
-    player.print("[FactoryX] EV battery is below 10%; charge it before using Autopilot.")
+    player.print("[Biter Motors] EV battery is below 10%; charge it before using Autopilot.")
     return false
   end
   local runtime = ev_autopilot_runtime()
   if not runtime.active[vehicle.unit_number]
     and EvAutopilot.active_count(runtime) >= EvAutopilot.config.max_active then
-    player.print("[FactoryX] Autopilot controller is at its 32-vehicle safety limit.")
+    player.print("[Biter Motors] Autopilot controller is at its 32-vehicle safety limit.")
     return false
   end
   remember_player_ev(player, vehicle)
@@ -1908,19 +1908,19 @@ end
 function summon_recent_ev(player)
   if not player or not player.valid then return false end
   if player.vehicle then
-    player.print("[FactoryX] Exit your current vehicle before summoning another EV.")
+    player.print("[Biter Motors] Exit your current vehicle before summoning another EV.")
     return false
   end
   local vehicle, saw_low_battery = nearest_recent_ev_for_player(player)
   if not vehicle then
     player.print(saw_low_battery
-      and "[FactoryX] Recent EVs on this surface are below 10% battery."
-      or "[FactoryX] No unoccupied recent EV is available on this surface.")
+      and "[Biter Motors] Recent EVs on this surface are below 10% battery."
+      or "[Biter Motors] No unoccupied recent EV is available on this surface.")
     return false
   end
   local goal = ev_autopilot_safe_goal(vehicle, player.position, 6)
   if not goal then
-    player.print("[FactoryX] No safe parking position was found near you.")
+    player.print("[Biter Motors] No safe parking position was found near you.")
     return false
   end
   return start_ev_autopilot(player, vehicle, goal, "summon")
@@ -2070,12 +2070,12 @@ function handle_ev_autopilot_destination(event)
   if not player then return end
   local vehicle = player.vehicle
   if not is_ev_autopilot_eligible(vehicle) then
-    player.print("[FactoryX] Navigate supports Premium, Mass-market, Megatruck, and Robotaxi EVs. The Prototype Roadster has no Autopilot.")
+    player.print("[Biter Motors] Navigate supports Premium, Mass-market, Megatruck, and Robotaxi EVs. The Prototype Roadster has no Autopilot.")
     player.clear_cursor()
     return
   end
   if event.surface ~= vehicle.surface then
-    player.print("[FactoryX] Select a destination on the EV's current surface.")
+    player.print("[Biter Motors] Select a destination on the EV's current surface.")
     player.clear_cursor()
     return
   end
@@ -2083,7 +2083,7 @@ function handle_ev_autopilot_destination(event)
   local goal = ev_autopilot_safe_goal(vehicle, requested, 0)
   player.clear_cursor()
   if not goal then
-    player.print("[FactoryX] No safe stopping position was found near that destination.")
+    player.print("[Biter Motors] No safe stopping position was found near that destination.")
     return
   end
   start_ev_autopilot(player, vehicle, goal, "navigate")
@@ -3586,14 +3586,14 @@ function sync_ev_sales_recipe_gates(force, announce)
       announced[gate_name] = true
       if announce ~= false then
         force.print(string.format(
-          "[FactoryX] Market milestone reached: %d/%d qualifying EV sales. %s production is now available%s.",
+          "[Biter Motors] Market milestone reached: %d/%d qualifying EV sales. %s production is now available%s.",
           count,
           gate.threshold,
           gate.label,
           technology_ready and "" or " after its technology is researched"
         ))
         if gate_name == "premium" and technology_ready then
-          force.print("[FactoryX] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to unlock Gigafactory construction, then scale factory output to 250 vehicles to make Advanced Battery Chemistry research available.")
+          force.print("[Biter Motors] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to unlock Gigafactory construction, then scale factory output to 250 vehicles to make Advanced Battery Chemistry research available.")
         end
       end
     end
@@ -3636,7 +3636,7 @@ function sync_advanced_battery_chemistry_gate(force, announce)
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Commodity battery supply has reached its scale limit after %d Premium EVs. Advanced Battery Chemistry research is now available: develop nickel-rich cells, lithium processing, and a scalable pack architecture.",
+        "[Biter Motors] Commodity battery supply has reached its scale limit after %d Premium EVs. Advanced Battery Chemistry research is now available: develop nickel-rich cells, lithium processing, and a scalable pack architecture.",
         ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE
       ))
     end
@@ -3664,7 +3664,7 @@ function sync_gigafactory_production_gate(force, announce)
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[FactoryX] Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available; use its scale to reach 250 vehicles and unlock Advanced Battery Chemistry.",
+        "[Biter Motors] Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available; use its scale to reach 250 vehicles and unlock Advanced Battery Chemistry.",
         PREMIUM_PILOT_PRODUCTION_GATE
       ))
     end
@@ -3705,7 +3705,7 @@ function sync_foundry_power_gate(force, announce)
     and announce ~= false then
     announcements[force.name] = true
     force.print(string.format(
-      "[FactoryX] Industrial power qualified: %d High-density Solar Panels and %d Megapacks produced. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
+      "[Biter Motors] Industrial power qualified: %d High-density Solar Panels and %d Megapacks produced. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
       FOUNDRY_POWER_GATE.solar_panels,
       FOUNDRY_POWER_GATE.megapacks
     ))
@@ -5237,7 +5237,7 @@ function set_charger_placement_overlay(player, enabled)
     storage.factoryx_charger_overlay_warnings = storage.factoryx_charger_overlay_warnings or {}
     if not storage.factoryx_charger_overlay_warnings[player.index] then
       storage.factoryx_charger_overlay_warnings[player.index] = true
-      log("[FactoryX] Charger placement overlay unavailable for player "
+      log("[Biter Motors] Charger placement overlay unavailable for player "
         .. player.index .. ": " .. tostring(error_message))
     end
   end
@@ -5261,7 +5261,7 @@ function sync_charger_placement_overlay(player)
       states[player.index] = true
     end
   elseif previous then
-    -- MapViewSettings is write-only, so FactoryX can only clear the overlay it enabled.
+    -- MapViewSettings is write-only, so Biter Motors can only clear the overlay it enabled.
     set_charger_placement_overlay(player, false)
     states[player.index] = nil
   end
@@ -6053,7 +6053,7 @@ local function show_station_info_panel(player, station)
   panel.auto_center = true
   local titlebar = panel.add{type = "flow", direction = "horizontal"}
   titlebar.drag_target = panel
-  titlebar.add{type = "label", caption = "FactoryX " .. config.display_name, style = "frame_title"}
+  titlebar.add{type = "label", caption = "Biter Motors " .. config.display_name, style = "frame_title"}
   local drag = titlebar.add{type = "empty-widget", style = "draggable_space_header"}
   drag.style.horizontally_stretchable = true
   drag.style.height = 24
@@ -6729,7 +6729,7 @@ local function unlock_roadster_sales(force)
     end
   end
   if first_unlock then
-    force.print("[FactoryX] First biter customer charging site covered. Prototype Roadsters are now available for Sell hopes and dreams.")
+    force.print("[Biter Motors] First biter customer charging site covered. Prototype Roadsters are now available for Sell hopes and dreams.")
   end
 end
 
@@ -6744,7 +6744,7 @@ local function announce_first_ev_production_line_hint(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] First Dollars earned. Next: research EV Production Line to unlock EV components, Premium EV pilot production, and Sell premium product.")
+  force.print("[Biter Motors] First Dollars earned. Next: research EV Production Line to unlock EV components, Premium EV pilot production, and Sell premium product.")
 end
 
 local function announce_ev_production_line_researched(force)
@@ -6752,7 +6752,7 @@ local function announce_ev_production_line_researched(force)
     return
   end
 
-  force.print("[FactoryX] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. Build 100 commodity-battery Premium EVs to unlock Gigafactory construction.")
+  force.print("[Biter Motors] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. Build 100 commodity-battery Premium EVs to unlock Gigafactory construction.")
 end
 
 local function announce_mass_market_production_researched(force)
@@ -6760,7 +6760,7 @@ local function announce_mass_market_production_researched(force)
     return
   end
 
-  force.print("[FactoryX] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatruck Engineering requires Tank technology and 2,000 Mass-market EV sales.")
+  force.print("[Biter Motors] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatruck Engineering requires Tank technology and 2,000 Mass-market EV sales.")
 end
 
 local function announce_ev_charging_network_researched(force)
@@ -6768,7 +6768,7 @@ local function announce_ev_charging_network_researched(force)
     return
   end
 
-  force.print("[FactoryX] EV Charging Network researched. Craft a separate V2 charger from 1 V1 charger, 2 Substations, and 20 Processing Units, then place it. V2 has 8 stalls, 96-tile customer range, and up to 1.2 MW demand.")
+  force.print("[Biter Motors] EV Charging Network researched. Craft a separate V2 charger from 1 V1 charger, 2 Substations, and 20 Processing Units, then place it. V2 has 8 stalls, 96-tile customer range, and up to 1.2 MW demand.")
 end
 
 local function announce_first_premium_ev_sale(force)
@@ -6782,7 +6782,7 @@ local function announce_first_premium_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory, then use factory scale to reach 250 vehicles and unlock Advanced Battery Chemistry.")
+  force.print("[Biter Motors] Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory, then use factory scale to reach 250 vehicles and unlock Advanced Battery Chemistry.")
 end
 
 local function announce_first_mass_market_ev_sale(force)
@@ -6796,7 +6796,7 @@ local function announce_first_mass_market_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[FactoryX] Mass-market EV sales are online. Build High-density Solar Panels and Megapacks through Energy Products, then research Terrestrial AI.")
+  force.print("[Biter Motors] Mass-market EV sales are online. Build High-density Solar Panels and Megapacks through Energy Products, then research Terrestrial AI.")
 end
 
 announce_first_robotaxi_service = function(force)
@@ -6814,17 +6814,17 @@ announce_first_robotaxi_service = function(force)
   end
   local legacy_robotaxi_sale = force.recipes and force.recipes[ROBOTAXI_SALE_RECIPE]
   if legacy_robotaxi_sale then legacy_robotaxi_sale.enabled = false end
-  force.print("[FactoryX] Robotaxi service is producing recurring profit. Next: launch vanilla cargo rockets and establish orbital compute over Nauvis.")
+  force.print("[Biter Motors] Robotaxi service is producing recurring profit. Next: launch vanilla cargo rockets and establish orbital compute over Nauvis.")
 end
 
 local RESEARCH_COMPLETION_MESSAGES = {
-  ["x-sales-office"] = "[FactoryX] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
-  ["x-advanced-battery-chemistry"] = "[FactoryX] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Gigafactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
-  ["x-energy-products"] = "[FactoryX] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
-  ["x-terrestrial-ai"] = "[FactoryX] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
-  ["x-autonomous-logistics"] = "[FactoryX] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
-  ["x-orbital-compute"] = "[FactoryX] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
-  ["x-planetary-energy-grid"] = "[FactoryX] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
+  ["x-sales-office"] = "[Biter Motors] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
+  ["x-advanced-battery-chemistry"] = "[Biter Motors] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Gigafactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
+  ["x-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
+  ["x-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
+  ["x-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
+  ["x-orbital-compute"] = "[Biter Motors] Orbital Compute researched. Build Orbital Compute Arrays on space platforms and return their high-volume AI Tokens to the planet.",
+  ["x-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
 
 local function announce_research_completion(research)
@@ -6838,12 +6838,12 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["x-gigafactory-building"] = "[FactoryX] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Run the commodity-cell recipe to reach 250 Premium EVs, then switch to cell-scale packs after Advanced Battery Chemistry.",
-  ["x-gigafactory-v2"] = "[FactoryX] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
-  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[FactoryX] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
-  [MEGAPACK_NAME] = "[FactoryX] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize FactoryX loads.",
-  [TERRESTRIAL_DATACENTER_NAME] = "[FactoryX] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
-  [ROBOTAXI_SERVICE_CENTER_NAME] = "[FactoryX] Robotaxi Service Center online. Load up to 200 Robotaxis; its built-in V4 fleet charging draws 10 MW while Operate Robotaxis converts nearby customer service into recurring profit."
+  ["x-gigafactory-building"] = "[Biter Motors] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Run the commodity-cell recipe to reach 250 Premium EVs, then switch to cell-scale packs after Advanced Battery Chemistry.",
+  ["x-gigafactory-v2"] = "[Biter Motors] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
+  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[Biter Motors] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
+  [MEGAPACK_NAME] = "[Biter Motors] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize Biter Motors loads.",
+  [TERRESTRIAL_DATACENTER_NAME] = "[Biter Motors] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
+  [ROBOTAXI_SERVICE_CENTER_NAME] = "[Biter Motors] Robotaxi Service Center online. Load up to 200 Robotaxis; its built-in V4 fleet charging draws 10 MW while Operate Robotaxis converts nearby customer service into recurring profit."
 }
 
 local function announce_first_entity_placement(entity)
@@ -7021,7 +7021,7 @@ function trigger_victory(force, controller)
     position = controller and controller.valid and controller.position or nil
   }
 
-  force.print("[FactoryX] AGI achieved. The trained model is online, and humanity now has a new tool for deciding what comes next.")
+  force.print("[Biter Motors] AGI achieved. The trained model is online, and humanity now has a new tool for deciding what comes next.")
   game.set_game_state{
     game_finished = true,
     player_won = true,
@@ -8579,7 +8579,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.victory then
     return "AGI training", "Complete the AGI Training Run.", "Package 100M AI Tokens into 10,000 datasets and 10M Dollars into 1,000 allocations; add 10,000 Grid Segments and 1,000 Megapacks, then sustain 1 TW for 60 minutes."
   end
-  return "AGI achieved", "The AGI Model is online.", "FactoryX victory achieved; you may continue building."
+  return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end
 
 local function progress_stages(snapshot)
@@ -8721,7 +8721,7 @@ function add_progress_metrics(parent, rows)
       or row.color == FACTORYX_STATE_COLORS.warning and "Orange: prepare or keep progressing."
       or row.color == FACTORYX_STATE_COLORS.good and "Green: healthy or complete."
       or "Gray: informational."
-    local tooltip = (row.tooltip or (row.label .. " reports the current FactoryX state."))
+    local tooltip = (row.tooltip or (row.label .. " reports the current Biter Motors state."))
       .. "\n\n" .. status
     local icon = metrics.add{type = "sprite", sprite = row.sprite, tooltip = tooltip}
     icon.style.width = 24
@@ -8876,7 +8876,7 @@ local function refresh_progress_panel(player)
         or FACTORYX_STATE_COLORS.warning,
       tooltip = snapshot.industrial_supply_chain_researched
         and "The terrestrial industrial branch is unlocked. Its drills, furnaces, and Foundries accelerate the pre-EV factory."
-        or "Research Industrial Supply Chain next to unlock FactoryX's early terrestrial production tools."
+        or "Research Industrial Supply Chain next to unlock Biter Motors's early terrestrial production tools."
     }
   end
   if snapshot.big_mining_drill_researched then
@@ -8921,7 +8921,7 @@ local function refresh_progress_panel(player)
       color = snapshot.logistic_system_researched and FACTORYX_STATE_COLORS.good
         or FACTORYX_STATE_COLORS.warning,
       tooltip = snapshot.logistic_system_researched
-        and "Requester chests and full logistics are available for multi-ingredient FactoryX production."
+        and "Requester chests and full logistics are available for multi-ingredient Biter Motors production."
         or "Logistic System is available to research. It simplifies supplying Sales Offices and Gigafactories."
     }
   end
@@ -9032,7 +9032,7 @@ local function refresh_progress_panel(player)
       ),
       name = "factoryx_dollars_produced_value",
       color = snapshot.dollars_produced > 0 and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.neutral,
-      tooltip = "Lifetime profit generated by FactoryX businesses. One in-game Dollar represents approximately $10,000 USD of profit, not revenue."
+      tooltip = "Lifetime profit generated by Biter Motors businesses. One in-game Dollar represents approximately $10,000 USD of profit, not revenue."
     }
     market_rows[#market_rows + 1] = {
       sprite = "entity/biter-spawner", label = "Customer settlements",
@@ -9201,7 +9201,7 @@ local function refresh_progress_panel(player)
           or string.format("%d / %d AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate)),
       color = snapshot.victory and FACTORYX_STATE_COLORS.good or FACTORYX_STATE_COLORS.warning,
       tooltip = snapshot.victory
-        and "AGI training completed. FactoryX's victory condition has been achieved."
+        and "AGI training completed. Biter Motors's victory condition has been achieved."
         or (snapshot.agi_training_unlocked
           and "The AGI training run is active. Any power shortage resets this run to zero, so maintain full grid reliability."
           or "Generate the required cumulative AI Tokens to unlock the final AGI training run. Orbital compute is intended to provide the necessary scale.")
@@ -9250,7 +9250,7 @@ local function open_progress_panel(player)
   panel.auto_center = true
   local titlebar = panel.add{type = "flow", direction = "horizontal"}
   titlebar.drag_target = panel
-  titlebar.add{type = "label", caption = "FactoryX Progress", style = "frame_title"}
+  titlebar.add{type = "label", caption = "Biter Motors Progress", style = "frame_title"}
   local drag = titlebar.add{type = "empty-widget", style = "draggable_space_header"}
   drag.style.horizontally_stretchable = true
   drag.style.height = 24
@@ -9403,7 +9403,7 @@ local function show_manufacturer_info_panel(player, entity)
   local panel = player.gui.relative.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
-    caption = {"", "FactoryX ", entity.prototype.localised_name},
+    caption = {"", "Biter Motors ", entity.prototype.localised_name},
     direction = "vertical",
     anchor = factoryx_relative_anchor(entity)
   }
@@ -9817,7 +9817,7 @@ local function show_manufacturer_info_panel(player, entity)
     elseif market.kind == "committed" then
       next_step = "Waiting: every remaining prospect is reserved by a sale already in progress."
     elseif market.kind == "unavailable" then
-      next_step = "Waiting: FactoryX is refreshing this office's prospect assignments."
+      next_step = "Waiting: Biter Motors is refreshing this office's prospect assignments."
     else
       next_step = "Waiting for a prospect."
     end
@@ -9866,7 +9866,7 @@ local function show_customer_settlement_info_panel(player, settlement)
   local panel = player.gui.relative.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
-    caption = "FactoryX Customer Settlement",
+    caption = "Biter Motors Customer Settlement",
     direction = "vertical",
     anchor = {
       gui = defines.relative_gui_type.additional_entity_info_gui,
@@ -10041,12 +10041,12 @@ local function handle_station_built(entity, event)
   local hostile_settlements = count_hostile_biter_settlements_near_station(entity)
   local message
   if not powered then
-    message = "[FactoryX] " .. config.display_name .. " placed. Connect it within 18 tiles of your electric grid before it can create biter customer demand."
+    message = "[Biter Motors] " .. config.display_name .. " placed. Connect it within 18 tiles of your electric grid before it can create biter customer demand."
   elseif covered_settlements > 0 then
     local active_stalls = active_station_stalls(entity)
     unlock_roadster_sales(entity.force)
     message = string.format(
-      "[FactoryX] %s online: %d/%d stalls active from %d covered biter customer settlements. %s",
+      "[Biter Motors] %s online: %d/%d stalls active from %d covered biter customer settlements. %s",
       config.display_name,
       active_stalls,
       config.stalls,
@@ -10056,13 +10056,13 @@ local function handle_station_built(entity, event)
   else
     if hostile_settlements > 0 then
       message = string.format(
-        "[FactoryX] %s online, but %d nearby spawners are still hostile. Put a Sales Office within %d tiles to convert them into customers.",
+        "[Biter Motors] %s online, but %d nearby spawners are still hostile. Put a Sales Office within %d tiles to convert them into customers.",
         config.display_name,
         hostile_settlements,
         SALES_OFFICE_CUSTOMER_RADIUS
       )
     else
-      message = string.format("[FactoryX] %s online, but no Sales Office-converted customer settlements are within %d tiles.", config.display_name, config.customer_radius)
+      message = string.format("[Biter Motors] %s online, but no Sales Office-converted customer settlements are within %d tiles.", config.display_name, config.customer_radius)
     end
   end
   local player = event and event.player_index and game.get_player(event.player_index)
@@ -11153,7 +11153,7 @@ remote.add_interface("factoryx", {
   end
 })
 
-commands.add_command("factoryx-status", "Open or report FactoryX progression status.", function(command)
+commands.add_command("factoryx-status", "Open or report Biter Motors progression status.", function(command)
   local player = command.player_index and game.get_player(command.player_index)
   local force = player and player.force or game.forces.player
   if not force then
@@ -11169,10 +11169,10 @@ commands.add_command("factoryx-status", "Open or report FactoryX progression sta
   end
   local snapshot = progress_snapshot(force)
   local stage, objective, detail = current_progress_objective(snapshot)
-  rcon.print(string.format("[FactoryX] %s: %s %s", stage, objective, detail))
+  rcon.print(string.format("[Biter Motors] %s: %s %s", stage, objective, detail))
 end)
 
-commands.add_command("factoryx-note", "Record a timestamped FactoryX playtest note.", function(command)
+commands.add_command("factoryx-note", "Record a timestamped Biter Motors playtest note.", function(command)
   local player = command.player_index and game.get_player(command.player_index)
   local text = command.parameter and string.gsub(command.parameter, "^%s*(.-)%s*$", "%1") or ""
   if not player or text == "" then
@@ -11189,10 +11189,10 @@ commands.add_command("factoryx-note", "Record a timestamped FactoryX playtest no
     stage = stage,
     text = text
   } .. "\n", true)
-  player.print("[FactoryX] Playtest note recorded.")
+  player.print("[Biter Motors] Playtest note recorded.")
 end)
 
-commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid connections.", function(command)
+commands.add_command("factoryx-coverage", "Report Biter Motors EV charging grid connections.", function(command)
   local player = command.player_index and game.get_player(command.player_index)
   local force = player and player.force or game.forces.player
   local stations = count_entities(force, STATION_NAMES)
@@ -11202,7 +11202,7 @@ commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid conn
   local message
   if market.biter_customer_mode then
     message = string.format(
-      "[FactoryX] Biter customer market: %d customer EVs, %d prospects, %d/%d stations grid-connected, %d covered biter settlements, %d/%d active charging stalls, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
+      "[Biter Motors] Biter customer market: %d customer EVs, %d prospects, %d/%d stations grid-connected, %d covered biter settlements, %d/%d active charging stalls, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
       market.customer_ev_fleet,
       market.customer_prospects,
       market.powered_stations,
@@ -11215,7 +11215,7 @@ commands.add_command("factoryx-coverage", "Report FactoryX EV charging grid conn
     )
   else
     message = string.format(
-      "[FactoryX] EV charging capacity: %d customer EVs, %d/%d stations grid-connected, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
+      "[Biter Motors] EV charging capacity: %d customer EVs, %d/%d stations grid-connected, %d active EV Sales Offices, %.1f EV Reservations printed at chargers per minute.",
       market.customer_ev_fleet,
       market.powered_stations,
       stations,

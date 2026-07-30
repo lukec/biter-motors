@@ -42,7 +42,7 @@ local function rewrite_recipe(name, values)
   recipe.surface_conditions = nil
 end
 
--- FactoryX is a fresh-world overhaul. Move selected Space Age machines into a
+-- Biter Motors is a fresh-world overhaul. Move selected Space Age machines into a
 -- self-contained terrestrial industrial branch instead of preserving planet gates.
 data:extend({
   {
@@ -216,7 +216,7 @@ logistic_system_tech.unit = science(500, {
 }, 30)
 logistic_system_tech.enabled = true
 
--- Tier 2 modules are terrestrial FactoryX capital investments. Space Age
+-- Tier 2 modules are terrestrial Biter Motors capital investments. Space Age
 -- normally gates them on the first orbital science pack even though their
 -- recipes use only Nauvis materials.
 for _, technology_name in ipairs({
@@ -250,7 +250,7 @@ for _, technology_name in ipairs({
   end
 end
 
--- FactoryX uses tier-3 modules heavily, so replace Space Age's off-world
+-- Biter Motors uses tier-3 modules heavily, so replace Space Age's off-world
 -- ingredients and science gates with an expensive terrestrial capital step.
 for _, module_family in ipairs({"speed", "productivity", "efficiency", "quality"}) do
   local module_2 = module_family .. "-module-2"

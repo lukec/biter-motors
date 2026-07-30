@@ -8,7 +8,7 @@ local removed_locations = {
 }
 
 -- Keep Space Age's platform engine, quality system, and prototype references,
--- but present FactoryX as a Nauvis-and-Nauvis-orbit game.
+-- but present Biter Motors as a Nauvis-and-Nauvis-orbit game.
 for _, location_name in pairs(removed_locations) do
   local location = data.raw.planet[location_name]
     or data.raw["space-location"][location_name]

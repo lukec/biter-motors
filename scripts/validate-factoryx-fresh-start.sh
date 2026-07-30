@@ -22,7 +22,7 @@ cat > "$mods/mod-list.json" <<'EOF'
 {"mods":[{"name":"base","enabled":true},{"name":"space-age","enabled":true},{"name":"factoryx","enabled":true},{"name":"factoryx_fresh_start_test","enabled":true}]}
 EOF
 cat > "$helper/info.json" <<'EOF'
-{"name":"factoryx_fresh_start_test","version":"0.1.0","title":"FactoryX Fresh Start Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","factoryx >= 0.1.0"]}
+{"name":"factoryx_fresh_start_test","version":"0.1.0","title":"Biter Motors Fresh Start Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","factoryx >= 0.1.0"]}
 EOF
 cat > "$helper/control.lua" <<'EOF'
 script.on_init(function()
@@ -86,6 +86,6 @@ for name in ("boiler", "steam-engine", "offshore-pump"):
 if "FACTORYX" not in str(row["intro"]) or "Recover the scattered cargo" not in str(row["intro"]):
     raise SystemExit(f"intro mismatch: {row}")
 if row["sales_office_researched"] or row["prototype_roadster_enabled"]:
-    raise SystemExit(f"FactoryX progression started unlocked: {row}")
-print("FactoryX fresh Freeplay bootstrap OK")
+    raise SystemExit(f"Biter Motors progression started unlocked: {row}")
+print("Biter Motors fresh Freeplay bootstrap OK")
 PY

@@ -5,8 +5,34 @@ electric-vehicle company on Nauvis. Turn biter settlements into customers,
 scale batteries, charging, energy products, Robotaxis, and terrestrial AI,
 then build orbital compute and train an AGI model.
 
-The Factorio package lives at `mod/factoryx_0.1.0`. Its internal mod id remains
-`factoryx` and custom prototype ids use the `x-` prefix.
+`Biter Motors` is the official title used in-game and for the project. The
+internal codename remains `factoryx`: the Factorio package lives at
+`mod/factoryx_0.1.0`, the mod id is `factoryx`, and custom prototype ids use
+the `x-` prefix. Keeping that technical identity stable preserves room for the
+game to expand beyond vehicles and terrestrial industry.
+
+## Artwork
+
+![Biter Motors vehicle lineup](art/blender/factoryx-vehicle-production-qa.png)
+
+<p align="center"><em>Prototype Roadster, Premium EV, Mass-market EV, Megatruck, and Robotaxi.</em></p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="art/factoryx-masters/final/sales-office.png" alt="Biter Motors Sales Office artwork">
+      <br><strong>Sales Office</strong>
+    </td>
+    <td width="50%" align="center">
+      <img src="art/blender/battery-cybertrain/renders/cybertrain-master.png" alt="Biter Motors Cybertrain artwork">
+      <br><strong>Cybertrain</strong>
+    </td>
+  </tr>
+</table>
+
+![Biter Motors infrastructure artwork shown at relative in-game scale](art/factoryx-review/aligned-footprints.png)
+
+<p align="center"><em>Charging, solar, compute, and Gigafactory infrastructure at relative in-game scale.</em></p>
 
 ## Requirements
 

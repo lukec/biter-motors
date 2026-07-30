@@ -13,7 +13,7 @@ link_factoryx() {
 
   mkdir -p "$mods_dir"
   if [[ -e "$target_dir" && ! -L "$target_dir" ]]; then
-    echo "Refusing to replace non-symlink FactoryX install: $target_dir" >&2
+    echo "Refusing to replace non-symlink Biter Motors install: $target_dir" >&2
     exit 2
   fi
   ln -sfn "$source_dir" "$target_dir"
@@ -33,7 +33,7 @@ link_factoryx() {
   echo "$target_dir -> $source_dir"
 }
 
-echo "Linked FactoryX development mod:"
+echo "Linked Biter Motors development mod:"
 link_factoryx "$client_mods_dir"
 if [[ -n "$server_mods_dir" && "$server_mods_dir" != "$client_mods_dir" ]]; then
   link_factoryx "$server_mods_dir"

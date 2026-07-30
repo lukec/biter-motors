@@ -33,8 +33,8 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(f"{key}={label}", locale)
 
         validator = (ROOT / "scripts/validate-factoryx-mod.sh").read_text()
-        self.assertIn("FactoryX prototype locale coverage OK.", validator)
-        self.assertIn("FactoryX prototypes have missing locale names:", validator)
+        self.assertIn("Biter Motors prototype locale coverage OK.", validator)
+        self.assertIn("Biter Motors prototypes have missing locale names:", validator)
         self.assertIn('"electric-energy-interface"', validator)
         self.assertIn('"assembling-machine"', validator)
 
@@ -99,7 +99,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("Status: implemented in `0.1.0`.", roadmap)
         self.assertIn('"test_ev_autopilot_start"', validator)
         self.assertIn("autopilot_distance_moved", validator)
-        self.assertIn("blocked FactoryX EV route did not abort cleanly", validator)
+        self.assertIn("blocked Biter Motors EV route did not abort cleanly", validator)
 
     def test_sales_office_panel_explains_market_saturation(self):
         control = (MOD / "control.lua").read_text()
@@ -281,9 +281,12 @@ class FactoryXModTest(unittest.TestCase):
             self.assertIn(expected, data)
 
     def test_factoryx_player_facing_name(self):
+        info = json.loads((MOD / "info.json").read_text())
         locale = (MOD / "locale/en/factoryx.cfg").read_text()
         control = (MOD / "control.lua").read_text()
-        self.assertIn("factoryx=FactoryX", locale)
+        self.assertEqual(info["name"], "factoryx")
+        self.assertEqual(info["title"], "Biter Motors")
+        self.assertIn("factoryx=Biter Motors", locale)
         self.assertIn("x-sell-prototype-roadster=Sell hopes and dreams", locale)
         self.assertIn("x-sell-premium-ev=Sell premium product", locale)
         self.assertIn("x-premium-ev-program=EV Production Line", locale)
@@ -301,7 +304,7 @@ class FactoryXModTest(unittest.TestCase):
         settings = (MOD / "settings.lua").read_text()
         self.assertIn('name = "x-accelerated-start"', settings)
         self.assertIn("default_value = true", settings)
-        self.assertIn("[FactoryX]", control)
+        self.assertIn("[Biter Motors]", control)
 
     def test_infinite_continuous_improvement_research(self):
         data = (MOD / "data.lua").read_text()
@@ -850,7 +853,7 @@ class FactoryXModTest(unittest.TestCase):
         page = qa.read_text()
         self.assertTrue(qa.exists())
         self.assertEqual(manifest["paid_generation_count"], 3)
-        self.assertIn("FactoryX Artwork QA", page)
+        self.assertIn("Biter Motors Artwork QA", page)
         self.assertIn("Directional vehicle production math", page)
         self.assertIn("data-filter=\"animations\"", page)
         self.assertGreaterEqual(page.count('class="asset '), 50)
@@ -1043,7 +1046,7 @@ class FactoryXModTest(unittest.TestCase):
     def test_tier_two_modules_are_terrestrial_capital_research(self):
         updates = (MOD / "data-updates.lua").read_text()
         module_rewrite = updates[
-            updates.index("-- Tier 2 modules are terrestrial FactoryX capital investments"):
+            updates.index("-- Tier 2 modules are terrestrial Biter Motors capital investments"):
             updates.index("-- Sparse calcite")
         ]
 
@@ -1304,7 +1307,7 @@ class FactoryXModTest(unittest.TestCase):
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
-            updates.index("-- Tier 2 modules are terrestrial FactoryX capital investments")
+            updates.index("-- Tier 2 modules are terrestrial Biter Motors capital investments")
         ]
         self.assertIn('prerequisites = {"logistic-robotics", "x-industrial-supply-chain"}', logistic_rewrite)
         self.assertIn('"automation-science-pack"', logistic_rewrite)
@@ -1770,7 +1773,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn('type = "shortcut"', progress_shortcut)
         self.assertIn('action = "lua"', progress_shortcut)
         self.assertIn('__factoryx__/graphics/icons/factoryx-group.png', progress_shortcut)
-        self.assertIn("x-open-factoryx-progress=FactoryX Progress", locale)
+        self.assertIn("x-open-factoryx-progress=Biter Motors Progress", locale)
         self.assertIn('FACTORYX_PROGRESS_SHORTCUT = "x-open-factoryx-progress"', control)
         self.assertIn('PROGRESS_PANEL_NAME = "factoryx_progress_panel"', control)
         self.assertIn("progress_snapshot", control)
@@ -1855,7 +1858,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("assignment_by_settlement_key", control)
         self.assertIn("is_customer_settlement_entity", control)
         self.assertIn("show_customer_settlement_info_panel", control)
-        self.assertIn('caption = "FactoryX Customer Settlement"', control)
+        self.assertIn('caption = "Biter Motors Customer Settlement"', control)
         self.assertIn("Sales Office coverage", control)
         self.assertIn("Active vehicles at this settlement", control)
         self.assertIn("Assigned charger", control)
@@ -2004,7 +2007,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("defines.relative_gui_position.right", control)
         self.assertIn("opened_factoryx_entities()[player.index]", control)
         self.assertNotIn("player.gui.left", control)
-        self.assertIn('caption = "FactoryX " .. config.display_name', control)
+        self.assertIn('caption = "Biter Motors " .. config.display_name', control)
         self.assertIn('player.gui.screen.add{', control)
         self.assertIn('name = "factoryx_station_info_close"', control)
         self.assertIn("if is_station(opened) and player.gui.screen[STATION_INFO_PANEL_NAME] then", control)
@@ -2025,7 +2028,7 @@ class FactoryXModTest(unittest.TestCase):
         self.assertNotIn("craft Prototype Roadsters", station_guidance)
         self.assertIn("Dollar output is full", control)
         self.assertIn("EV Reservation consumption are paused", control)
-        self.assertIn("[FactoryX] %s online", control)
+        self.assertIn("[Biter Motors] %s online", control)
         self.assertIn("EV Charging Network researched. Craft a separate V2 charger", control)
         self.assertIn("script.on_nth_tick(60", control)
         self.assertIn("PROSPECT_RESERVATION_RETRY_MINUTES = 5", control)
@@ -2930,9 +2933,9 @@ class FactoryXModTest(unittest.TestCase):
         self.assertIn("underserved_chart_tags", validator)
         self.assertIn("restored charging capacity did not clear global-map tags", validator)
         self.assertIn("Custom alerts expire. Refresh persistent disruptions", control)
-        self.assertNotIn("[FactoryX] Charging disruption:", control)
-        self.assertNotIn("[FactoryX] Customer charging access restored.", control)
-        self.assertNotIn("[FactoryX] Customer settlement expanded", control)
+        self.assertNotIn("[Biter Motors] Charging disruption:", control)
+        self.assertNotIn("[Biter Motors] Customer charging access restored.", control)
+        self.assertNotIn("[Biter Motors] Customer settlement expanded", control)
 
     def test_blocked_market_spawners_get_red_dollar_markers(self):
         control = (MOD / "control.lua").read_text()

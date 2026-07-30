@@ -52,7 +52,7 @@ cat > "$helper/info.json" <<'EOF_INFO'
 {
   "name": "factoryx_gui_smoke",
   "version": "0.1.0",
-  "title": "FactoryX GUI Smoke Test",
+  "title": "Biter Motors GUI Smoke Test",
   "author": "Codex",
   "factorio_version": "2.1",
   "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "factoryx >= 0.1.0"]
@@ -211,7 +211,7 @@ script.on_event(defines.events.on_tick, function()
       player.add_custom_alert(
         office,
         {type = "item", name = "x-sales-office"},
-        "FactoryX alert API smoke test",
+        "Biter Motors alert API smoke test",
         true
       )
       player.remove_alert{entity = office, type = defines.alert_type.custom}
@@ -400,22 +400,22 @@ for field in (
     "prototype_roadster_enabled",
 ):
     if not checked.get(field):
-        raise SystemExit(f"FactoryX GUI check failed at {field}: {checked}")
+        raise SystemExit(f"Biter Motors GUI check failed at {field}: {checked}")
 for field in ("progress_has_future_robotaxi", "progress_has_future_agi"):
     if checked.get(field):
-        raise SystemExit(f"FactoryX progress panel revealed future content at {field}: {checked}")
+        raise SystemExit(f"Biter Motors progress panel revealed future content at {field}: {checked}")
 integrity = checked.get("progression_integrity", {})
 if not integrity.get("ok") or integrity.get("disabled_recipes"):
-    raise SystemExit(f"FactoryX progressed-save integrity check failed: {checked}")
+    raise SystemExit(f"Biter Motors progressed-save integrity check failed: {checked}")
 diagnostics_total = checked.get("dollar_diagnostics", {}).get("total")
 if checked.get("progress_dollars") != diagnostics_total:
-    raise SystemExit(f"FactoryX progress snapshot Dollar count mismatch: {checked}")
+    raise SystemExit(f"Biter Motors progress snapshot Dollar count mismatch: {checked}")
 represented_profit = f"${diagnostics_total * 10000:,} ({diagnostics_total} $)"
 if checked.get("progress_dollars_caption") != represented_profit:
-    raise SystemExit(f"FactoryX progress panel Dollar caption mismatch: {checked}")
+    raise SystemExit(f"Biter Motors progress panel Dollar caption mismatch: {checked}")
 if checked.get("solar_productivity_caption") not in (None, "Level 0"):
-    raise SystemExit(f"FactoryX progress panel solar productivity caption mismatch: {checked}")
+    raise SystemExit(f"Biter Motors progress panel solar productivity caption mismatch: {checked}")
 if checked.get("megapack_productivity_caption") not in (None, "Level 0"):
-    raise SystemExit(f"FactoryX progress panel Megapack productivity caption mismatch: {checked}")
-print("FactoryX GUI smoke report OK:", json.dumps(checked, sort_keys=True))
+    raise SystemExit(f"Biter Motors progress panel Megapack productivity caption mismatch: {checked}")
+print("Biter Motors GUI smoke report OK:", json.dumps(checked, sort_keys=True))
 PY

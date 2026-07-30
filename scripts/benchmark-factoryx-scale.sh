@@ -42,7 +42,7 @@ EOF_MOD_LIST
 {
   "name": "factoryx_perf_benchmark",
   "version": "0.1.0",
-  "title": "FactoryX Performance Benchmark",
+  "title": "Biter Motors Performance Benchmark",
   "author": "Codex",
   "factorio_version": "2.1",
   "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "factoryx >= 0.1.0"]

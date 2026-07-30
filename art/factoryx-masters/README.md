@@ -1,4 +1,4 @@
-# FactoryX Generated Masters
+# Biter Motors Generated Masters
 
 These three production masters were generated with the built-in image-generation
 tool, extracted from flat chroma-key backgrounds, and retained here at source

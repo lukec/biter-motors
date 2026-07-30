@@ -22,7 +22,7 @@ cat > "$mods/mod-list.json" <<'EOF'
 {"mods":[{"name":"base","enabled":true},{"name":"space-age","enabled":true},{"name":"factoryx","enabled":true},{"name":"factoryx_battery_resource_test","enabled":true}]}
 EOF
 cat > "$helper/info.json" <<'EOF'
-{"name":"factoryx_battery_resource_test","version":"0.1.0","title":"FactoryX Battery Resource Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","factoryx >= 0.1.0"]}
+{"name":"factoryx_battery_resource_test","version":"0.1.0","title":"Biter Motors Battery Resource Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","factoryx >= 0.1.0"]}
 EOF
 cat > "$helper/control.lua" <<'EOF'
 local function nearest_distance(surface, name, radius)
@@ -79,5 +79,5 @@ for resource, count_field, distance_field in (
 ):
     if row.get(count_field, 0) <= 0 or row.get(distance_field) is None:
         raise SystemExit(f"{resource} did not generate within {row['radius']} tiles: {row}")
-print("FactoryX battery resource generation OK:", json.dumps(row, sort_keys=True))
+print("Biter Motors battery resource generation OK:", json.dumps(row, sort_keys=True))
 PY

@@ -1,6 +1,6 @@
 # Prototype Roadster Blender Study
 
-This is the first FactoryX vehicle-model pipeline test. It produces a
+This is the first Biter Motors vehicle-model pipeline test. It produces a
 transparent 768 px master and 64 deterministic directional renders from one
 Blender scene.
 

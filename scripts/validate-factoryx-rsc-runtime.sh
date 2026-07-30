@@ -53,5 +53,5 @@ with RconClient("127.0.0.1", 27026, "test", timeout=10) as client:
     after = json.loads(line.removeprefix("RSC_RESULT "))
     assert len(after["rows"]) == 1, after
     assert after["helpers"] == 1, after
-    print("FactoryX RSC runtime gate OK:", json.dumps({"before": result, "after": after}, sort_keys=True))
+    print("Biter Motors RSC runtime gate OK:", json.dumps({"before": result, "after": after}, sort_keys=True))
 PY
