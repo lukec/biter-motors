@@ -33,6 +33,8 @@ The only part of the original plan still intact is the expectation of growth.
 
 ## An Unlikely Market
 
+![A dangerous first Biter Motors sales outpost converts a hostile settlement into an electric-vehicle market](docs/chapter-unlikely-market.jpg)
+
 Nauvis has a population. It also has teeth.
 
 Biter settlements can become markets instead of targets, but only if you can
@@ -45,6 +47,8 @@ real capacity. Settlements grow. Service failures have consequences. Worms
 remain unconvinced.
 
 ## Growth Has Consequences
+
+![Vehicle sales overwhelm charging capacity, electrical generation, battery production, and waste processing](docs/chapter-growth-consequences.jpg)
 
 Every successful product creates the next constraint. More customers need more
 charging. More charging needs more electricity. More electricity needs better
@@ -59,6 +63,8 @@ durability matter.
 
 ## The Factory Becomes The Product
 
+![A vast Gigafactory, Cybertrain, robot logistics, and fleet infrastructure replace the original small production line](docs/chapter-factory-product.jpg)
+
 Eventually the small production line is no longer enough. Heavy manufacturing,
 autonomous logistics, fleet services, high-density energy systems, and
 electric freight change the shape of the base. The game keeps asking the same
@@ -67,6 +73,8 @@ Factorio question at a larger scale:
 > Can you make the next order of magnitude routine?
 
 ## The Sky Becomes Real Estate
+
+![Orbital AI datacenters balance rocket logistics, high-density solar power, and radiator cooling above Nauvis](docs/chapter-orbital-compute.jpg)
 
 Terrestrial industry can create extraordinary wealth and computation, but land,
 power, cooling, and public tolerance are finite. At some point the most
