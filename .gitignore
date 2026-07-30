@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+
+# Factorio runtime output
+server-data/
+playtests/
+*.zip
+*.jsonl
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Local tooling
+.playwright-mcp/
+art/factoryx-qa/playwright-*/
+art/factoryx-qa/*.mp4
+dist/

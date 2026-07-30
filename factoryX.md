@@ -6,11 +6,9 @@ calling Factory X. The current working mod folder is
 mod id is `factoryx`, all custom prototype ids use the `x-` prefix, and this
 fresh-save version intentionally carries no compatibility aliases.
 
-The immediate implementation plan for the next clean, non-sandbox balance run
-is in [`feature_specs/factoryx_fresh_playtest.md`](feature_specs/factoryx_fresh_playtest.md).
-It specifies fresh-map gates, a mutation-free coach profile, timestamped
-production snapshots, paired timelapse frames, playtest notes, and post-run
-analysis.
+The mod targets clean, non-sandbox balance runs. Development changes should be
+validated with the static contract suite and isolated Factorio engine
+validators before a fresh playtest.
 
 ## One-Line Pitch
 

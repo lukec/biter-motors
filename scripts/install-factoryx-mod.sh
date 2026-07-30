@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source_dir="$repo_root/mod/factoryx_0.1.0"
 client_mods_dir="${FACTORIO_CLIENT_MODS_DIR:-${FACTORIO_MODS_DIR:-$HOME/Library/Application Support/factorio/mods}}"
-server_mods_dir="${FACTORIO_SERVER_MODS_DIR:-$repo_root/server-data/mods}"
+server_mods_dir="${FACTORIO_SERVER_MODS_DIR:-}"
 
 link_factoryx() {
   local mods_dir="$1"
@@ -35,6 +35,6 @@ link_factoryx() {
 
 echo "Linked FactoryX development mod:"
 link_factoryx "$client_mods_dir"
-if [[ "$server_mods_dir" != "$client_mods_dir" ]]; then
+if [[ -n "$server_mods_dir" && "$server_mods_dir" != "$client_mods_dir" ]]; then
   link_factoryx "$server_mods_dir"
 fi
