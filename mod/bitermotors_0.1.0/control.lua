@@ -1557,6 +1557,21 @@ local function count_entities(force, entity_name)
   return count
 end
 
+local function count_deployed_energy_product(force, entity_name)
+  local total = count_entities(force, entity_name)
+  local starter_count = BITERMOTORS_ENERGY_JUMPSTART_ITEMS[entity_name] or 0
+  if starter_count <= 0 then return total end
+  local starter_quality_count = 0
+  for _, surface in pairs(game.surfaces) do
+    starter_quality_count = starter_quality_count + #surface.find_entities_filtered{
+      name = entity_name,
+      force = force,
+      quality = BITERMOTORS_ENERGY_JUMPSTART_QUALITY
+    }
+  end
+  return math.max(0, total - math.min(starter_count, starter_quality_count))
+end
+
 local function station_power_sinks()
   storage.bitermotors_station_power_sinks = storage.bitermotors_station_power_sinks or {}
   return storage.bitermotors_station_power_sinks
@@ -4010,8 +4025,8 @@ function foundry_power_gate_announcements()
 end
 
 function foundry_power_gate_status(force)
-  local solar_panels = count_item_produced(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)
-  local megapacks = count_item_produced(force, MEGAPACK_NAME)
+  local solar_panels = count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)
+  local megapacks = count_deployed_energy_product(force, MEGAPACK_NAME)
   local energy_ready = researched(force, "bitermotors-energy-products") == true
   return {
     solar_panels = solar_panels,
@@ -4036,7 +4051,7 @@ function sync_foundry_power_gate(force, announce)
     and announce ~= false then
     announcements[force.name] = true
     force.print(string.format(
-      "[Biter Motors] Industrial power qualified: %d High-density Solar Panels and %d Megapacks produced. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
+      "[Biter Motors] Industrial power qualified: %d player-built High-density Solar Panels and %d Megapacks deployed. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
       FOUNDRY_POWER_GATE.solar_panels,
       FOUNDRY_POWER_GATE.megapacks
     ))
@@ -9603,7 +9618,7 @@ local function refresh_progress_panel(player)
       color = BITERMOTORS_STATE_COLORS.warning,
       tooltip = gate.qualified
         and "New Energy Products manufacturing has demonstrated a 5 MW solar industrial block. Research Metallurgical Scaling to unlock Foundries."
-        or "Produce 25 new High-density Solar Panels and 5 new Megapacks. Starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
+        or "Deploy 25 player-built High-density Solar Panels and 5 player-built Megapacks. Legendary starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
     }
   end
   if snapshot.logistic_system_available or snapshot.logistic_system_researched then

@@ -1572,8 +1572,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("solar_panels = 25", control)
         self.assertIn("megapacks = 5", control)
         self.assertIn("function foundry_power_gate_status(force)", control)
-        self.assertIn("count_item_produced(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)", control)
-        self.assertIn("count_item_produced(force, MEGAPACK_NAME)", control)
+        self.assertIn("count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)", control)
+        self.assertIn("count_deployed_energy_product(force, MEGAPACK_NAME)", control)
+        self.assertIn("quality = BITERMOTORS_ENERGY_JUMPSTART_QUALITY", control)
+        self.assertIn("total - math.min(starter_count, starter_quality_count)", control)
         self.assertIn("technology.enabled = technology.researched or gate.qualified", control)
         self.assertIn('label = "Industrial power qualification"', control)
 
