@@ -172,8 +172,6 @@ script.on_init(function()
   remote.call("bitermotors", "progress_status", force.name)
   storage.advanced_battery_chemistry_enabled_at_250 = chemistry.enabled
   chemistry.researched = true
-  production_statistics.set_output_count(SOLAR_ARRAY, 25)
-  production_statistics.set_output_count(MEGAPACK, 5)
 
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
@@ -216,6 +214,12 @@ script.on_init(function()
   local gigafactory_economics_test = create_named(surface, GIGAFACTORY, {80, 80}, force)
   local solar_array = create_named(surface, SOLAR_ARRAY, {60, 24}, force)
   local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
+  for index = 2, 25 do
+    create_named(surface, SOLAR_ARRAY, {60 + ((index - 1) % 8) * 4, 32 + math.floor((index - 1) / 8) * 4}, force)
+  end
+  for index = 2, 5 do
+    create_named(surface, MEGAPACK, {64 + (index - 1) * 4, 48}, force)
+  end
   local power_source = create_named(surface, POWER_SOURCE, {1, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)
   surface.request_to_generate_chunks({350, 100}, 3)

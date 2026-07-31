@@ -1557,7 +1557,7 @@ local function count_entities(force, entity_name)
   return count
 end
 
-local function count_deployed_energy_product(force, entity_name)
+function count_deployed_energy_product(force, entity_name)
   local total = count_entities(force, entity_name)
   local starter_count = BITERMOTORS_ENERGY_JUMPSTART_ITEMS[entity_name] or 0
   if starter_count <= 0 then return total end
