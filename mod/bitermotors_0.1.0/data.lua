@@ -1024,7 +1024,7 @@ ev_charging_station_v2.max_health = 500
 ev_charging_station_v2.collision_box = {{-1.9, -1.9}, {1.9, 1.9}}
 ev_charging_station_v2.selection_box = {{-2, -2}, {2, 2}}
 ev_charging_station_v2.robot_door.animation = generated_entity_picture("ev-charging-station-v2", nil, 0.26)
-ev_charging_station_v2.radius_visualisation_specification = customer_radius_visualisation(96)
+ev_charging_station_v2.radius_visualisation_specification = customer_radius_visualisation(128)
 
 local ev_charging_station_v3 = copied_reservation_output_site(
   "substation",
@@ -1036,7 +1036,7 @@ ev_charging_station_v3.max_health = 750
 ev_charging_station_v3.collision_box = {{-2.4, -2.4}, {2.4, 2.4}}
 ev_charging_station_v3.selection_box = {{-2.5, -2.5}, {2.5, 2.5}}
 ev_charging_station_v3.robot_door.animation = generated_entity_picture("ev-charging-station-v3", nil, 0.35)
-ev_charging_station_v3.radius_visualisation_specification = customer_radius_visualisation(128)
+ev_charging_station_v3.radius_visualisation_specification = customer_radius_visualisation(192)
 
 local ev_charging_station_v4 = copied_reservation_output_site(
   "substation",
@@ -1048,7 +1048,7 @@ ev_charging_station_v4.max_health = 1000
 ev_charging_station_v4.collision_box = {{-2.9, -2.9}, {2.9, 2.9}}
 ev_charging_station_v4.selection_box = {{-3, -3}, {3, 3}}
 ev_charging_station_v4.robot_door.animation = generated_entity_picture("ev-charging-station-v4", nil, 0.38)
-ev_charging_station_v4.radius_visualisation_specification = customer_radius_visualisation(160)
+ev_charging_station_v4.radius_visualisation_specification = customer_radius_visualisation(256)
 
 local gigafactory = copied_assembler(
   "assembling-machine-2",
@@ -2115,7 +2115,7 @@ data:extend({
       unlock("bitermotors-sell-mass-market-ev"),
       unlock("bitermotors-ev-charging-station-v3")
     },
-    1000,
+    600,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2149,7 +2149,7 @@ data:extend({
     {
       unlock("bitermotors-ev-charging-station-v2")
     },
-    300,
+    150,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2188,7 +2188,7 @@ data:extend({
       unlock("bitermotors-terrestrial-datacenter"),
       unlock("bitermotors-terrestrial-ai-token")
     },
-    1000,
+    750,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2208,7 +2208,7 @@ data:extend({
       unlock("bitermotors-high-density-space-solar-panel"),
       unlock("bitermotors-orbital-ai-token")
     },
-    2000,
+    1500,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2293,7 +2293,7 @@ data:extend({
       unlock("bitermotors-operate-robotaxis"),
       unlock("bitermotors-sell-robotaxi-fleet")
     },
-    1000,
+    750,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},

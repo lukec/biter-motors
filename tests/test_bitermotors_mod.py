@@ -107,14 +107,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('return "Surplus Sales Office", BITERMOTORS_STATE_COLORS.warning', control)
         self.assertIn('return "Waiting for market growth", BITERMOTORS_STATE_COLORS.neutral', control)
         self.assertIn('label = "Prospects"', control)
-        self.assertIn('"%d remaining; %d reserved"', control)
-        self.assertIn('"%d remaining; %d need charging"', control)
-        self.assertIn('"%d remaining; %d unassigned"', control)
+        self.assertIn('"%d new + %d returning; %d need charging"', control)
+        self.assertIn('"%d new + %d returning"', control)
         self.assertIn('return "Prospects reserved", BITERMOTORS_STATE_COLORS.neutral', control)
         self.assertIn('return "Prospects need charging", BITERMOTORS_STATE_COLORS.bad', control)
         self.assertIn('"Surplus office - %d prospects remain"', control)
         self.assertIn("SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20", control)
-        self.assertIn("Reserved prospects belong to a sale already in progress.", control)
+        self.assertIn("Reserved prospects belong to sales already in progress.", control)
         self.assertIn("Overlapping Sales Offices share one prospect pool.", control)
         self.assertNotIn("free prospects", control.lower())
         self.assertNotIn("%d left; %d free", control)
@@ -610,8 +609,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("dequeue_rehomed_buyer(office, pool.key)", control)
         eligible = control[control.index("function eligible_customer_buyers"):
                            control.index("function sales_office_buyer_status")]
-        self.assertIn("dequeue_available_buyer(pool.queue, office, pool.key)", eligible)
-        self.assertIn("population.virtual_unowned", eligible)
+        self.assertIn("dequeue_available_buyer(pool.queue, office, pool.key, sale.item)", eligible)
+        self.assertIn("customer_virtual_purchase_capacity(population, sale.item)", eligible)
 
     def test_ev_drivers_see_charge_zones_and_live_charging_indicator(self):
         control = (MOD / "control.lua").read_text()
@@ -1101,7 +1100,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('{"bitermotors-capital-scaling", "bitermotors-energy-products", "processing-unit"}', terrestrial_tech)
         self.assertNotIn("bitermotors-satellite-constellation", terrestrial_tech)
         self.assertNotIn("space-science-pack", terrestrial_tech)
-        self.assertIn("    1000,", terrestrial_tech)
+        self.assertIn("    750,", terrestrial_tech)
         for ingredient in [
             "automation-science-pack",
             "logistic-science-pack",
@@ -1464,9 +1463,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("copied_electric_pole", charging_entity)
         self.assertIn("radius_visualisation_specification", charging_entity)
         self.assertIn("customer_radius_visualisation(64)", charging_entity)
-        self.assertIn("customer_radius_visualisation(96)", charging_entity)
         self.assertIn("customer_radius_visualisation(128)", charging_entity)
-        self.assertIn("customer_radius_visualisation(160)", charging_entity)
+        self.assertIn("customer_radius_visualisation(192)", charging_entity)
+        self.assertIn("customer_radius_visualisation(256)", charging_entity)
         self.assertIn('collision_box = {{-1.9, -1.9}, {1.9, 1.9}}', charging_entity)
         self.assertIn('collision_box = {{-2.4, -2.4}, {2.4, 2.4}}', charging_entity)
         self.assertIn('collision_box = {{-2.9, -2.9}, {2.9, 2.9}}', charging_entity)
@@ -1941,9 +1940,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("power_per_stall_kw = 150", control)
         self.assertIn("power_per_stall_kw = 250", control)
         self.assertIn("power_per_stall_kw = 500", control)
-        self.assertIn("customer_radius = 96", control)
         self.assertIn("customer_radius = 128", control)
-        self.assertIn("customer_radius = 160", control)
+        self.assertIn("customer_radius = 192", control)
+        self.assertIn("customer_radius = 256", control)
         self.assertIn('power_sink_name = "bitermotors-ev-charging-v2-power-sink"', control)
         self.assertIn('power_sink_name = "bitermotors-ev-charging-v3-power-sink"', control)
         self.assertIn('power_sink_name = "bitermotors-ev-charging-v4-power-sink"', control)
@@ -2020,7 +2019,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors_reservation_print_progress", control)
         self.assertIn("station_reservation_rate_per_minute", control)
         self.assertIn('label = "Prospects"', control)
-        self.assertIn("Each unsold prospect files one EV Reservation", control)
+        self.assertIn("New and returning prospects file one EV Reservation", control)
         self.assertIn("station_reservation_inventory", control)
         self.assertIn("generate_station_reservations", control)
         self.assertIn("top_up_station_reservations", control)
@@ -2132,7 +2131,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('unlock("bitermotors-robotaxi-service-center")', data)
         self.assertIn('unlock("bitermotors-operate-robotaxis")', data)
         self.assertIn("ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5", control)
-        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100", control)
+        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
         self.assertIn("ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60", control)
         self.assertIn("function process_robotaxi_service_centers", control)
         self.assertIn("function ensure_robotaxi_service_power", control)
@@ -2154,7 +2153,58 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("robotaxi_service_status = function", control)
         self.assertIn("Premium Audio increases trip revenue", control)
         self.assertIn("legacy_robotaxi_sale.enabled = false", control)
+        self.assertIn("invalidate_robotaxi_customer_allocations(entity.force)", control)
         self.assertIn("bitermotors-robotaxi-service-center=Robotaxi Service Center", locale)
+
+    def test_easier_campaign_economy_is_consistent_in_runtime_and_prototypes(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/bitermotors.cfg").read_text()
+
+        expected_counts = {
+            "bitermotors-ev-charging-network": 150,
+            "bitermotors-capital-scaling": 600,
+            "bitermotors-terrestrial-ai": 750,
+            "bitermotors-autonomous-logistics": 750,
+            "bitermotors-orbital-compute": 1500,
+        }
+        technology_offsets = sorted(
+            (data.index(f'tech("{name}"'), name, count)
+            for name, count in expected_counts.items()
+        )
+        for index, (start, name, count) in enumerate(technology_offsets):
+            end = technology_offsets[index + 1][0] if index + 1 < len(technology_offsets) else len(data)
+            self.assertIn(f"    {count},", data[start:end], name)
+
+        self.assertIn("customer_radius = 128", control)
+        self.assertIn("customer_radius = 192", control)
+        self.assertIn("customer_radius = 256", control)
+        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
+        self.assertIn("Invests 150 cycles", locale)
+        self.assertIn("Invests 600 cycles", locale)
+
+    def test_customers_can_replace_each_consumer_vehicle_generation_once(self):
+        control = (MOD / "control.lua").read_text()
+        aggregates = (MOD / "runtime" / "customer_aggregates.lua").read_text()
+
+        self.assertIn("CUSTOMER_VEHICLE_REPLACEMENT_ORDER", control)
+        for vehicle in [
+            "bitermotors-prototype-roadster",
+            "bitermotors-premium-ev",
+            "bitermotors-mass-market-ev",
+            "bitermotors-megatruck",
+        ]:
+            self.assertIn(f'"{vehicle}"', control)
+        self.assertIn("ownership.purchases", control)
+        self.assertIn("customer_can_purchase_vehicle(unit_number, sale.item)", control)
+        self.assertIn("record_customer_population_purchase(", control)
+        self.assertIn("replace_virtual_customer_vehicle(", control)
+        self.assertIn("CUSTOMER_REPLACEMENT_WRECK_FRACTION = 0.05", control)
+        self.assertIn("CustomerAggregates.replace_virtual", aggregates)
+        self.assertIn("ensure_customer_purchase_histories()", control)
+        self.assertIn("does not add another charging burden", control)
+        self.assertIn("test_virtual_customer_replacement = function()", control)
+        self.assertIn("prior_population = home and previous[home.settlement_key]", control)
 
     def test_battery_chemistry_branch_is_physical_and_productive_where_safe(self):
         data = (MOD / "data.lua").read_text()
@@ -2551,7 +2601,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("process_customer_growth(force)", control)
         self.assertIn("assignment.powered_stalls or 0", control)
         self.assertIn("spare_stalls > 0", control)
-        self.assertIn("service.stranded_evs == 0", control)
+        self.assertNotIn("service.stranded_evs == 0", control)
+        self.assertIn("(assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)", control)
+        self.assertIn("CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS = 15 * 60 * 60", control)
+        self.assertIn("CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER = 3", control)
         self.assertIn("grow_customer_settlement(station, state)", control)
         self.assertIn("local service = customer_service_for_force(force)", control)
         self.assertIn("assignment and assignment.requested_stalls or 0", control)
@@ -2978,7 +3031,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("if settlement and settlement.valid then", waiting)
         self.assertIn('mark_bitermotors_market_dirty(station.force, "invalid-assigned-settlement")', waiting)
         self.assertIn("service.assignment_by_settlement_key[key] == station", waiting)
-        self.assertIn("service.prospects_by_settlement_key[key]", waiting)
+        self.assertIn("customer_population_available_purchase_accounts(", waiting)
         self.assertIn("or not service.prospects_by_settlement_key then", control)
         self.assertNotIn("customer_unit_registry()", waiting)
         self.assertIn("local key = settlement and settlement.valid and", control)

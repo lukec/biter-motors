@@ -46,7 +46,7 @@ much more efficiently than one-Dollar EV sales.
 
 Each living customer can buy one of each consumer vehicle generation over the
 campaign: Prototype Roadster, Premium EV, Mass-market EV, Megatruck. A replacement purchase changes the customer's active
-vehicle and can create one Wrecked EV, so a developed settlement can keep
+vehicle and has about a 5% chance to create a Wrecked EV, so a developed settlement can keep
 producing demand without requiring a new biter for every sale. Robotaxi fleet
 service is recurring revenue and is not part of this consumer replacement
 count.
@@ -176,8 +176,8 @@ millions of HD panels.
 
 These times assume every office or service center is continuously saturated.
 Customer growth, reservations, production, transport, and power shortages all
-increase elapsed playtime. The simulator's Robotaxi rate is the approved target
-model; the live mod runtime is intentionally outside this simulator-only turn.
+increase elapsed playtime. The simulator and live mod share the approved
+Robotaxi target rate.
 
 ## Recommendation
 

@@ -48,6 +48,22 @@ function CustomerAggregates.add_virtual(storage, ownership, count)
   return true
 end
 
+function CustomerAggregates.replace_virtual(storage, market_force_name, old_vehicle, new_vehicle, count)
+  count = math.max(0, count or 0)
+  if count == 0 or not market_force_name or not new_vehicle then return false end
+  local aggregate = CustomerAggregates.summary(storage, market_force_name)
+  if old_vehicle then
+    aggregate.by_vehicle[old_vehicle] = math.max(
+      0,
+      (aggregate.by_vehicle[old_vehicle] or 0) - count
+    )
+  else
+    aggregate.total = aggregate.total + count
+  end
+  aggregate.by_vehicle[new_vehicle] = (aggregate.by_vehicle[new_vehicle] or 0) + count
+  return true
+end
+
 function CustomerAggregates.rebuild(storage, owners, units, populations)
   storage.bitermotors_customer_vehicle_aggregates = {}
   for unit_number, ownership in pairs(owners) do

@@ -883,6 +883,8 @@ script.on_nth_tick(3780, function()
   local progress = remote.call("bitermotors", "progress_status", "player")
   local progression_integrity = remote.call("bitermotors", "progression_integrity", "player")
   local vehicle_ownership = remote.call("bitermotors", "customer_vehicle_ownership", "player")
+  local virtual_customer_replacement =
+    remote.call("bitermotors", "test_virtual_customer_replacement")
   local sales_office_status = remote.call("bitermotors", "sales_office_status", "player")
   local charger_allocator = remote.call("bitermotors", "test_charger_allocator")
   local sales_office_market = remote.call("bitermotors", "test_sales_office_market")
@@ -1051,6 +1053,7 @@ script.on_nth_tick(3780, function()
     progress = progress,
     progression_integrity = progression_integrity,
     vehicle_ownership = vehicle_ownership,
+    virtual_customer_replacement = virtual_customer_replacement,
     charger_allocator = charger_allocator,
     sales_office_market = sales_office_market,
     maximum_settlement_capacity = maximum_settlement_capacity,
@@ -1348,12 +1351,12 @@ expected_research = {
     "bitermotors-sales-office": (75, 20, {"automation-science-pack", "logistic-science-pack", "chemical-science-pack"}),
     "bitermotors-premium-ev-program": (250, 30, rgb | {"bitermotors-dollar"}),
     "bitermotors-advanced-battery-chemistry": (300, 30, rgb | {"bitermotors-dollar"}),
-    "bitermotors-ev-charging-network": (300, 30, rgb | {"bitermotors-dollar"}),
+    "bitermotors-ev-charging-network": (150, 30, rgb | {"bitermotors-dollar"}),
     "bitermotors-energy-products": (200, 30, rgb | {"bitermotors-dollar"}),
-    "bitermotors-capital-scaling": (1000, 60, rgbpy | {"bitermotors-dollar"}),
-    "bitermotors-terrestrial-ai": (1000, 60, rgbpy | {"bitermotors-dollar"}),
-    "bitermotors-autonomous-logistics": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-compute": (2000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-capital-scaling": (600, 60, rgbpy | {"bitermotors-dollar"}),
+    "bitermotors-terrestrial-ai": (750, 60, rgbpy | {"bitermotors-dollar"}),
+    "bitermotors-autonomous-logistics": (750, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-compute": (1500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-orbital-cluster-training": (1000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-grid-scale-energy": (1500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-hyperscale-training": (3000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
@@ -2118,6 +2121,23 @@ if performance.get("active_commutes", 999999) > 512:
     raise SystemExit(f"active commute cap was exceeded: {performance}")
 if checked.get("vehicle_ownership", {}).get("registered_buyers", 0) <= 5:
     raise SystemExit(f"naturally spawned customer units were not registered: {checked}")
+replacement = checked.get("virtual_customer_replacement") or {}
+if (
+    replacement.get("first_sale") is not True
+    or replacement.get("first_replacement") is not False
+    or replacement.get("second_sale") is not True
+    or replacement.get("second_replacement") is not True
+    or replacement.get("duplicate_sale") is not False
+    or replacement.get("active_vehicles") != 1
+    or replacement.get("roadsters") != 0
+    or replacement.get("premium_evs") != 1
+    or replacement.get("roadster_purchases") != 1
+    or replacement.get("premium_purchases") != 1
+):
+    raise SystemExit(
+        f"virtual customer replacement did not preserve one active EV and one purchase per model: "
+        f"{replacement}"
+    )
 if checked.get("prospect_units", 0) <= 0:
     raise SystemExit(f"friendly unowned customers did not migrate to prospect prototypes: {checked}")
 if not checked.get("cybertrain_created") or not checked.get("cybertrain_stop_created"):

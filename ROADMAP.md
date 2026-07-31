@@ -101,8 +101,9 @@ sales:
   giving a full center approximately a `3-4` hour capex payback at saturation.
 
 The simulator and economy report are the source of truth for these balance
-assumptions until the corresponding runtime values are validated in a fresh
-Factorio campaign.
+assumptions. The corresponding runtime values and replacement invariants pass
+isolated Factorio smoke tests; fresh-campaign playtesting remains the tuning
+gate.
 
 ### Vehicles And Manufacturing
 
