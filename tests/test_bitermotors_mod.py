@@ -2841,12 +2841,14 @@ class BiterMotorsModTest(unittest.TestCase):
         refresh_start = control.index("function refresh_bitermotors_infrastructure_change")
         refresh_end = control.index("local function sync_biter_customer_diplomacy", refresh_start)
         refresh = control[refresh_start:refresh_end]
-        self.assertIn("sync_customer_settlements()", refresh)
+        self.assertNotIn("sync_customer_settlements()", refresh)
         self.assertIn("sync_sales_office_buyers()", refresh)
         self.assertIn("update_charger_stall_visuals(true)", refresh)
         self.assertIn("refresh_progress_panel(player)", refresh)
         removed = control[built_end:control.index("script.on_nth_tick(1", built_end)]
         self.assertIn("refresh_bitermotors_infrastructure_change(entity)", removed)
+        self.assertIn('mark_bitermotors_market_dirty(entity.force, "infrastructure-removed")', removed)
+        self.assertNotIn('mark_bitermotors_market_dirty(entity.force, "entity-removed")', removed)
 
     def test_bitermotors_scale_benchmark_and_runtime_modules_exist(self):
         timing_wheel = (MOD / "runtime/timing_wheel.lua").read_text()

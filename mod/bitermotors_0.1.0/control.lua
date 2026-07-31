@@ -10751,8 +10751,10 @@ function refresh_bitermotors_infrastructure_change(entity)
   if entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
     invalidate_robotaxi_customer_allocations(entity.force)
   end
-  mark_bitermotors_market_dirty(entity.force, "infrastructure-changed")
-  sync_customer_settlements()
+  -- The build/remove handlers invalidate the market before reaching here.
+  -- Keep this path bounded: the scheduled diplomacy pass performs the global
+  -- customer conversion scan, while capacity, reservations, visuals, and UI
+  -- update immediately from the freshly invalidated market snapshot.
   sync_sales_office_buyers()
   update_charger_stall_visuals(true)
   for _, player in pairs(entity.force.connected_players) do
@@ -11212,6 +11214,8 @@ for _, event_name in pairs({
 	      local entity = event.entity
 	      local removed_customer_settlement =
 	        entity and entity.valid and BITER_SETTLEMENT_NAMES[entity.name] or false
+      local removed_customer_unit = entity and entity.valid and entity.unit_number
+        and customer_unit_registry()[entity.unit_number] ~= nil or false
 	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
@@ -11230,7 +11234,7 @@ for _, event_name in pairs({
           end
         end
       end
-      if entity and entity.valid and entity.unit_number and customer_unit_registry()[entity.unit_number] then
+      if removed_customer_unit then
         destroy_customer_marker(entity)
         unregister_customer_unit(entity)
       end
@@ -11270,8 +11274,8 @@ for _, event_name in pairs({
             mark_bitermotors_market_dirty(force, "settlement-removed")
           end
         end
-      elseif entity and entity.valid then
-        mark_bitermotors_market_dirty(entity.force, "entity-removed")
+      elseif refresh_infrastructure then
+        mark_bitermotors_market_dirty(entity.force, "infrastructure-removed")
       end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
