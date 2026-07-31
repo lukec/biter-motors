@@ -94,12 +94,14 @@ local GIGAFACTORY_CONFIGS = {
     display_name = "Orbital Datacenter Core",
     power = "250 MW",
     default_product = "Orbital AI Tokens",
-    recipe_prompt = "Next: place eight Orbital Radiator Panels per core, supply 100 Dollars per cycle, and select orbital AI Token production."
+    recipe_prompt = "Next: place eight Orbital Radiator Panels per core, supply 1 Dollar per cycle, and select the best unlocked orbital AI recipe."
   }
 }
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "bitermotors-high-density-solar-array"
 local HIGH_DENSITY_SOLAR_BATCH_RECIPE = "bitermotors-high-density-solar-array-batch"
+TANDEM_SOLAR_ARRAY_NAME = "bitermotors-tandem-solar-array"
 local MEGAPACK_NAME = "bitermotors-megapack"
+GRID_MEGAPACK_NAME = "bitermotors-grid-megapack"
 MEGAPACK_SALE_RECIPE = "bitermotors-sell-megapack"
 local TERRESTRIAL_DATACENTER_NAME = "bitermotors-terrestrial-datacenter"
 ROBOTAXI_SERVICE_CENTER_NAME = "bitermotors-robotaxi-service-center"
@@ -273,6 +275,29 @@ CUSTOMER_COMMUTE_INTERVALS = {
   ["bitermotors-robotaxi-fleet"] = 7 * 60 * 60
 }
 AI_EFFICIENCY_THRESHOLDS = {1000, 10000, 100000, 1000000, 10000000, 100000000}
+ORBITAL_AI_MILESTONES = {
+  {
+    threshold = 1000000,
+    technology = "bitermotors-orbital-cluster-training",
+    message = "[Biter Motors] One million cumulative orbital AI Tokens generated. Cluster Training research is now available."
+  },
+  {
+    threshold = 10000000,
+    technology = "bitermotors-grid-scale-energy",
+    message = "[Biter Motors] Ten million cumulative orbital AI Tokens generated. Grid-scale Energy research is now available."
+  },
+  {
+    threshold = 100000000,
+    technology = "bitermotors-hyperscale-training",
+    message = "[Biter Motors] One hundred million cumulative orbital AI Tokens generated. Hyperscale Training research is now available."
+  }
+}
+ORBITAL_AI_RECIPE_TOKENS = {
+  ["bitermotors-orbital-ai-token"] = 10000,
+  ["bitermotors-orbital-ai-token-cluster"] = 25000,
+  ["bitermotors-orbital-ai-token-grid-scale"] = 50000,
+  ["bitermotors-orbital-ai-token-hyperscale"] = 100000
+}
 AI_EFFICIENCY_TRACKS = {
   terrestrial = {
     entity = "bitermotors-terrestrial-datacenter",
@@ -285,7 +310,8 @@ AI_EFFICIENCY_TRACKS = {
     entity = ORBITAL_DATACENTER_CORE_NAME,
     technology = "bitermotors-orbital-compute",
     recipe = "bitermotors-orbital-ai-token",
-    technology_prefix = "bitermotors-orbital-ai-efficiency-",
+    milestones = ORBITAL_AI_MILESTONES,
+    tokens_by_recipe = ORBITAL_AI_RECIPE_TOKENS,
     tokens_per_cycle = 10000
   }
 }
@@ -1228,6 +1254,16 @@ function ai_efficiency_progress()
 end
 
 function researched_ai_efficiency_level(force, config)
+  if config.milestones then
+    local level = 0
+    for candidate, milestone in ipairs(config.milestones) do
+      local technology = force.technologies[milestone.technology]
+      if technology and technology.researched then
+        level = candidate
+      end
+    end
+    return level
+  end
   local level = 0
   for candidate = 1, #AI_EFFICIENCY_THRESHOLDS do
     local technology = force.technologies[config.technology_prefix .. candidate]
@@ -1246,24 +1282,64 @@ function ai_efficiency_track_status(force, track_name)
   local force_progress = ai_efficiency_progress()[force.index] or {}
   local track = force_progress[track_name] or {generated = 0}
   local level = researched_ai_efficiency_level(force, config)
+  local tokens_per_cycle = config.tokens_per_cycle * (1 + level * 0.1)
+  local next_threshold = AI_EFFICIENCY_THRESHOLDS[level + 1]
+  local maximum_level = #AI_EFFICIENCY_THRESHOLDS
+  local productivity_bonus = level * 0.1
+  if config.milestones then
+    local recipe_names = {
+      config.recipe,
+      "bitermotors-orbital-ai-token-cluster",
+      "bitermotors-orbital-ai-token-grid-scale",
+      "bitermotors-orbital-ai-token-hyperscale"
+    }
+    tokens_per_cycle = config.tokens_by_recipe[recipe_names[level + 1]]
+    next_threshold = config.milestones[level + 1] and config.milestones[level + 1].threshold
+    maximum_level = #config.milestones
+    productivity_bonus = 0
+  end
   return {
     generated = math.floor(track.generated or 0),
     researched_level = level,
-    productivity_bonus = level * 0.1,
-    tokens_per_cycle = config.tokens_per_cycle * (1 + level * 0.1),
-    next_threshold = AI_EFFICIENCY_THRESHOLDS[level + 1],
-    maximum_level = #AI_EFFICIENCY_THRESHOLDS
+    productivity_bonus = productivity_bonus,
+    tokens_per_cycle = tokens_per_cycle,
+    next_threshold = next_threshold,
+    maximum_level = maximum_level,
+    milestone_mode = config.milestones ~= nil
   }
 end
 
 function update_ai_efficiency_unlocks(force, track_name, track)
   local config = AI_EFFICIENCY_TRACKS[track_name]
-  for level, threshold in pairs(AI_EFFICIENCY_THRESHOLDS) do
-    local technology = force.technologies[config.technology_prefix .. level]
-    if technology and not technology.researched then
-      technology.enabled = track.generated >= threshold
+  if config.milestones then
+    for _, milestone in ipairs(config.milestones) do
+      local technology = force.technologies[milestone.technology]
+      if technology and not technology.researched then
+        local unlocked = track.generated >= milestone.threshold
+        if unlocked and not technology.enabled then
+          force.print(milestone.message)
+        end
+        technology.enabled = unlocked
+      end
+    end
+  else
+    for level, threshold in pairs(AI_EFFICIENCY_THRESHOLDS) do
+      local technology = force.technologies[config.technology_prefix .. level]
+      if technology and not technology.researched then
+        technology.enabled = track.generated >= threshold
+      end
     end
   end
+end
+
+function ai_tokens_per_completed_cycle(machine, config)
+  if not config.tokens_by_recipe then
+    return config.tokens_per_cycle
+  end
+  local ok, recipe = pcall(function()
+    return machine.get_recipe()
+  end)
+  return ok and recipe and config.tokens_by_recipe[recipe.name] or config.tokens_per_cycle
 end
 
 function track_ai_efficiency_progress()
@@ -1308,16 +1384,18 @@ function track_ai_efficiency_progress()
               local previous = track.machines[machine.unit_number]
               if previous ~= nil and finished > previous then
                 local completed_cycles = finished - previous
-                local bonus_progress = (track.bonus_progress[machine.unit_number] or 0)
-                  + completed_cycles * level * 0.1
-                local bonus_cycles = math.floor(bonus_progress + 0.000001)
-                track.bonus_progress[machine.unit_number] = bonus_progress - bonus_cycles
-                local bonus_tokens = bonus_cycles * config.tokens_per_cycle
-                track.pending_bonus[machine.unit_number] =
-                  (track.pending_bonus[machine.unit_number] or 0) + bonus_tokens
-                track.pending_bonus_total = (track.pending_bonus_total or 0) + bonus_tokens
-                track.generated = track.generated
-                  + completed_cycles * config.tokens_per_cycle
+                local tokens_per_cycle = ai_tokens_per_completed_cycle(machine, config)
+                if config.technology_prefix then
+                  local bonus_progress = (track.bonus_progress[machine.unit_number] or 0)
+                    + completed_cycles * level * 0.1
+                  local bonus_cycles = math.floor(bonus_progress + 0.000001)
+                  track.bonus_progress[machine.unit_number] = bonus_progress - bonus_cycles
+                  local bonus_tokens = bonus_cycles * tokens_per_cycle
+                  track.pending_bonus[machine.unit_number] =
+                    (track.pending_bonus[machine.unit_number] or 0) + bonus_tokens
+                  track.pending_bonus_total = (track.pending_bonus_total or 0) + bonus_tokens
+                end
+                track.generated = track.generated + completed_cycles * tokens_per_cycle
               end
               track.machines[machine.unit_number] = finished
             end
@@ -6940,7 +7018,10 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
   ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
   ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Launch Datacenter Cores, eight Radiator Panels per core, and enough Space Solar to sustain 250 MW each. Return the physical AI Tokens to Nauvis.",
-  ["bitermotors-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 1 TW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
+  ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 25,000 AI Tokens per Dollar.",
+  ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Megapacks into 1 GJ Grid Megapacks; orbital batches now yield 50,000 Tokens per Dollar.",
+  ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 100,000 AI Tokens per Dollar. Planetary Energy Grid research is available.",
+  ["bitermotors-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 10 GW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
 
 local function announce_research_completion(research)
@@ -8475,6 +8556,9 @@ local function progress_snapshot(force)
     terrestrial_ai_researched = researched(force, "bitermotors-terrestrial-ai"),
     autonomous_logistics_researched = researched(force, "bitermotors-autonomous-logistics"),
     orbital_compute_researched = researched(force, "bitermotors-orbital-compute"),
+    orbital_cluster_researched = researched(force, "bitermotors-orbital-cluster-training"),
+    grid_scale_energy_researched = researched(force, "bitermotors-grid-scale-energy"),
+    hyperscale_training_researched = researched(force, "bitermotors-hyperscale-training"),
     planetary_grid_researched = researched(force, "bitermotors-planetary-energy-grid"),
     first_sale_complete = first_sale_complete,
     premium_sale_complete = premium_sale_complete,
@@ -8534,7 +8618,9 @@ local function progress_snapshot(force)
     chargers_v3 = count_entities(force, "bitermotors-ev-charging-station-v3"),
     chargers_v4 = count_entities(force, "bitermotors-ev-charging-station-v4"),
     solar_arrays = count_entities(force, HIGH_DENSITY_SOLAR_ARRAY_NAME),
+    tandem_solar_arrays = count_entities(force, TANDEM_SOLAR_ARRAY_NAME),
     megapacks = count_entities(force, MEGAPACK_NAME),
+    grid_megapacks = count_entities(force, GRID_MEGAPACK_NAME),
     megapack_energy_settlements = megapack_adoption.settlements,
     megapack_energy_population = megapack_adoption.population,
     megapack_believers_waiting = megapack_adoption.waiting,
@@ -8696,7 +8782,7 @@ local function current_progress_objective(snapshot)
   elseif snapshot.orbital_datacenter_cores == 0 then
     return "Orbital AI", "Launch and place an Orbital Datacenter Core.", "Each 6x6 core draws 250 MW and produces physical AI Tokens. Cargo pods must return those tokens to Nauvis."
   elseif snapshot.high_density_space_solar_panels == 0 then
-    return "Orbital power", "Launch High-density Space Solar Panels.", "Each panel supplies 50 MW in orbit. A core needs five panels at full output before platform overhead."
+    return "Orbital power", "Launch High-density Space Solar Panels.", "Each panel produces 150 MW over Nauvis after the orbital solar bonus. Two cover one 250 MW core before platform overhead."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Orbital cooling", "Install eight Orbital Radiator Panels per Datacenter Core.", string.format(
       "Cooling online: %d / %d cores. Radiators installed: %d / %d. Any undercooled core scraps its active token batch.",
@@ -8706,15 +8792,40 @@ local function current_progress_objective(snapshot)
       snapshot.required_orbital_radiator_panels
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Run the first orbital AI batch.", "Supply 100 Dollars to a powered, cooled core. It produces 10,000 physical AI Tokens every 30 seconds; return them to Nauvis by cargo pod."
+    return "Orbital AI", "Run the first orbital AI batch.", "Supply 1 Dollar to a powered, cooled core. It produces 10,000 physical AI Tokens every 30 seconds; return them to Nauvis by cargo pod."
+  elseif snapshot.orbital_ai_tokens_generated < 1000000 then
+    return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
+      "Orbital output: %d / 1,000,000. The base recipe produces 10,000 Tokens per Dollar.",
+      snapshot.orbital_ai_tokens_generated
+    )
+  elseif not snapshot.orbital_cluster_researched then
+    return "Orbital scale", "Research Cluster Training.", "Invest 5,000 Dollars plus science to raise each orbital batch from 10,000 to 25,000 AI Tokens."
+  elseif snapshot.orbital_ai_tokens_generated < 10000000 then
+    return "Orbital scale", "Generate ten million cumulative orbital AI Tokens.", string.format(
+      "Orbital output: %d / 10,000,000. Cluster Training produces 25,000 Tokens per Dollar.",
+      snapshot.orbital_ai_tokens_generated
+    )
+  elseif not snapshot.grid_scale_energy_researched then
+    return "Grid-scale energy", "Research Grid-scale Energy.", "Invest 15,000 Dollars plus science to unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Megapacks, and 50,000-token orbital batches."
+  elseif snapshot.tandem_solar_arrays == 0 then
+    return "Grid-scale energy", "Upgrade an HD panel into a Tandem Solar Array.", "Each 3 MW array replaces ten HD panels of generation in the same footprint and is required to make a 10 GW grid practical."
+  elseif snapshot.grid_megapacks == 0 then
+    return "Grid-scale energy", "Upgrade a Megapack into a Grid Megapack.", "Each Grid Megapack stores 1 GJ and can charge or discharge at 50 MW."
+  elseif snapshot.orbital_ai_tokens_generated < 100000000 then
+    return "Hyperscale AI", "Generate 100 million cumulative orbital AI Tokens.", string.format(
+      "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens per Dollar.",
+      snapshot.orbital_ai_tokens_generated
+    )
+  elseif not snapshot.hyperscale_training_researched then
+    return "Hyperscale AI", "Research Hyperscale Training.", "Invest 30,000 Dollars plus science to unlock 100,000-token orbital batches and Planetary Energy Grid research."
   elseif not snapshot.planetary_grid_researched then
-    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles through space science plus AI Tokens and Dollars; prepare a reliable 1 TW terrestrial supply."
+    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles through space science plus AI Tokens; prepare a reliable 10 GW terrestrial supply."
   elseif snapshot.grid_controllers == 0 then
-    return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 1 TW training facility. Any low-power condition scraps the entire active training run."
+    return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 10 GW training facility. Any low-power condition scraps the entire active training run."
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Tokens.", "Terrestrial compute can begin the climb, but orbital compute is required to reach this scale. Tokens already spent still count."
   elseif not snapshot.victory then
-    return "AGI training", "Complete the AGI Training Run.", "Package 1B AI Tokens into 100,000 datasets and 10M Dollars into 1,000 allocations; add 1,000 Megapacks and 10,000 Processing Units, then sustain 1 TW for 60 minutes."
+    return "AGI training", "Complete the AGI Training Run.", "Package 1B AI Tokens into 20,000 datasets and 50,000 Dollars into 100 allocations; add 100 Grid Megapacks and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
   end
   return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end
@@ -8761,6 +8872,9 @@ function progress_objective_icon(stage)
     ["Autonomy"] = "item/bitermotors-robotaxi-fleet",
     ["Autonomy market scale"] = "item/bitermotors-robotaxi-fleet",
     ["Orbital AI"] = "item/bitermotors-orbital-datacenter-core",
+    ["Orbital scale"] = "item/bitermotors-ai-token",
+    ["Grid-scale energy"] = "item/bitermotors-tandem-solar-array",
+    ["Hyperscale AI"] = "item/bitermotors-orbital-datacenter-core",
     ["Orbital power"] = "item/bitermotors-high-density-space-solar-panel",
     ["Orbital cooling"] = "item/bitermotors-orbital-radiator-panel",
     ["Planetary grid"] = "item/bitermotors-planetary-grid-controller",
@@ -8809,6 +8923,15 @@ function current_progress_measure(snapshot)
     and snapshot.orbital_datacenter_cores > 0
     and snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Cooled orbital cores", snapshot.cooled_orbital_datacenter_cores, snapshot.orbital_datacenter_cores
+  end
+  if snapshot.orbital_compute_researched and snapshot.orbital_ai_tokens_generated < 1000000 then
+    return "Orbital AI Tokens", snapshot.orbital_ai_tokens_generated, 1000000
+  end
+  if snapshot.orbital_cluster_researched and snapshot.orbital_ai_tokens_generated < 10000000 then
+    return "Orbital AI Tokens", snapshot.orbital_ai_tokens_generated, 10000000
+  end
+  if snapshot.grid_scale_energy_researched and snapshot.orbital_ai_tokens_generated < 100000000 then
+    return "Orbital AI Tokens", snapshot.orbital_ai_tokens_generated, 100000000
   end
   if snapshot.planetary_grid_researched and not snapshot.agi_training_unlocked then
     return "Cumulative AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate
@@ -9335,6 +9458,18 @@ local function refresh_progress_panel(player)
       color = snapshot.orbital_radiator_panels >= snapshot.required_orbital_radiator_panels
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
       tooltip = "Eight Orbital Radiator Panels provide cooling capacity for one Datacenter Core on the same platform."
+    }
+    market_rows[#market_rows + 1] = {
+      sprite = "item/bitermotors-ai-token",
+      label = "Orbital AI scale",
+      value = snapshot.orbital_ai_next_threshold
+        and string.format("%d / %d", snapshot.orbital_ai_tokens_generated, snapshot.orbital_ai_next_threshold)
+        or string.format("%d; hyperscale ready", snapshot.orbital_ai_tokens_generated),
+      color = snapshot.orbital_ai_next_threshold
+        and BITERMOTORS_STATE_COLORS.warning or BITERMOTORS_STATE_COLORS.good,
+      tooltip = snapshot.orbital_ai_next_threshold
+        and "Cumulative orbital output enables a capital-and-science research milestone at 1M, 10M, and 100M Tokens. Each milestone unlocks a more efficient recipe."
+        or "All three orbital production milestones are available. Use the 100,000-token recipe to scale toward the one-billion-token AGI run."
     }
   end
   if snapshot.energy_products_researched
@@ -9940,12 +10075,21 @@ local function show_manufacturer_info_panel(player, entity)
     elseif entity.name == ORBITAL_DATACENTER_CORE_NAME then
       local status = ai_efficiency_track_status(entity.force, "orbital")
       local cooling = orbital_cooling_status(entity.force)
-      add_station_info_label(panel, "Capital burn: 100 Dollars per 30-second cycle")
+      local selected_recipe = current_recipe_name(entity)
+      local selected_output = ORBITAL_AI_RECIPE_TOKENS[selected_recipe] or status.tokens_per_cycle
+      add_station_info_label(panel, "Capital burn: 1 Dollar per 30-second cycle")
       add_station_info_label(panel, string.format(
         "AI output: %g Tokens/cycle (%g/minute at full power)",
-        status.tokens_per_cycle,
-        status.tokens_per_cycle * 2
+        selected_output,
+        selected_output * 2
       ))
+      add_station_info_label(panel, status.next_threshold
+        and string.format(
+          "Orbital scale: %d / %d cumulative Tokens toward the next research milestone",
+          status.generated,
+          status.next_threshold
+        )
+        or string.format("Orbital scale: %d cumulative Tokens; hyperscale recipe unlocked", status.generated))
       add_station_info_label(panel, string.format(
         "Cooling: %d / %d cores online; %d / %d Radiator Panels",
         cooling.cooled_cores,

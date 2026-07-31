@@ -2094,15 +2094,21 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn(", 1000000, {weight = 1})", token_line)
         self.assertIn("ai_efficiency_thresholds = {1000, 10000, 100000, 1000000, 10000000, 100000000}", data)
         self.assertIn('+10% AI Tokens per cycle', data)
-        self.assertIn('recipe = "bitermotors-terrestrial-ai-token"', data)
-        self.assertIn('recipe = "bitermotors-orbital-ai-token"', data)
+        self.assertIn('recipe("bitermotors-terrestrial-ai-token"', data)
+        self.assertNotIn("bitermotors-orbital-ai-efficiency-", data)
+        self.assertIn('ORBITAL_AI_MILESTONES = {', control)
+        self.assertIn('threshold = 1000000,\n    technology = "bitermotors-orbital-cluster-training"', control)
+        self.assertIn('threshold = 10000000,\n    technology = "bitermotors-grid-scale-energy"', control)
+        self.assertIn('threshold = 100000000,\n    technology = "bitermotors-hyperscale-training"', control)
+        self.assertIn('["bitermotors-orbital-ai-token-hyperscale"] = 100000', control)
         self.assertIn("terrestrial_datacenter.module_slots = 0", data)
         self.assertIn('terrestrial_datacenter.allowed_effects = {"consumption", "speed", "pollution", "quality"}', data)
         self.assertIn("math.floor(threshold / 10)", data)
         self.assertIn("track_ai_efficiency_progress()", control)
         self.assertIn("ai_efficiency_status", control)
         self.assertIn("function ai_efficiency_track_status", control)
-        self.assertIn("tokens_per_cycle = config.tokens_per_cycle * (1 + level * 0.1)", control)
+        self.assertIn("function ai_tokens_per_completed_cycle", control)
+        self.assertIn("if config.milestones then", control)
         self.assertIn("local bonus_cycles = math.floor(bonus_progress + 0.000001)", control)
         self.assertIn('name = "bitermotors-ai-token"', control)
         self.assertIn("Capital burn: 20 Dollars per 30-second cycle", control)
@@ -2389,8 +2395,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("### AGI Victory", roadmap)
         self.assertIn("1,000,000,000 cumulative AI Tokens", roadmap)
         self.assertIn("20,000 AGI Training Datasets", roadmap)
-        self.assertIn("1,000 Capital Allocations", roadmap)
-        self.assertIn("Sustain the controller's 1 TW draw for 60 minutes", roadmap)
+        self.assertIn("100 Capital Allocations", roadmap)
+        self.assertIn("Sustain the controller's 10 GW draw for 60 minutes", roadmap)
         self.assertIn("physical AGI Model triggers victory", roadmap)
         self.assertNotIn("Kardashev", roadmap)
 
@@ -2578,12 +2584,16 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('bitermotors-kardashev-type-1', data)
         self.assertNotIn('bitermotors-planetary-grid-charge', data)
         controller = data[data.index('"bitermotors-planetary-grid-controller"'):data.index('planetary_grid_controller.energy_source')]
-        self.assertIn('"1TW"', controller)
+        self.assertIn('"10GW"', controller)
         charge_recipe = data[data.index('recipe("bitermotors-agi-training-run"'):data.index('add_lab_input("lab", "bitermotors-dollar")')]
-        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 1000', 'name = "bitermotors-megapack", amount = 1000', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '3600']:
+        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-megapack", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '3600']:
             self.assertIn(expected, charge_recipe)
         self.assertIn('name = "bitermotors-ai-token", amount = 50000', data)
-        self.assertIn('name = "bitermotors-dollar", amount = 10000', data)
+        capital_recipe = data[
+            data.index('recipe("bitermotors-package-capital-allocation"'):
+            data.index('recipe("bitermotors-agi-training-run"')
+        ]
+        self.assertIn('name = "bitermotors-dollar", amount = 500', capital_recipe)
         for embodied_input in [
             '"bitermotors-planetary-grid-segment"',
             '"space-science-pack"',
@@ -2597,6 +2607,46 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('statistics.set_output_count(', control)
         self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
+
+    def test_late_grid_energy_upgrades_and_orbital_milestones(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+
+        solar = data[data.index("local high_density_solar_array ="):data.index("local megapack =")]
+        self.assertIn('high_density_solar_array.production = "300kW"', solar)
+        self.assertIn('high_density_solar_array.next_upgrade = "bitermotors-tandem-solar-array"', solar)
+        self.assertIn('tandem_solar_array.production = "3MW"', solar)
+
+        storage = data[data.index("local megapack ="):data.index("local terrestrial_datacenter =")]
+        self.assertIn('megapack.energy_source.buffer_capacity = "100MJ"', storage)
+        self.assertIn('megapack.next_upgrade = "bitermotors-grid-megapack"', storage)
+        self.assertIn('grid_megapack.energy_source.buffer_capacity = "1GJ"', storage)
+        self.assertIn('grid_megapack.energy_source.input_flow_limit = "50MW"', storage)
+        self.assertIn('grid_megapack.energy_source.output_flow_limit = "50MW"', storage)
+
+        for recipe_name, output in [
+            ("bitermotors-orbital-ai-token", 10000),
+            ("bitermotors-orbital-ai-token-cluster", 25000),
+            ("bitermotors-orbital-ai-token-grid-scale", 50000),
+        ]:
+            start = data.index(f'recipe("{recipe_name}"')
+            end = data.find('\n  recipe("', start + 1)
+            block = data[start:end]
+            self.assertIn('name = "bitermotors-dollar", amount = 1', block)
+            self.assertIn(f'name = "bitermotors-ai-token", amount = {output}', block)
+        hyperscale_start = data.index('recipe("bitermotors-orbital-ai-token-hyperscale"')
+        hyperscale_end = data.find('\n  recipe("', hyperscale_start + 1)
+        hyperscale = data[hyperscale_start:hyperscale_end]
+        self.assertEqual(
+            2,
+            hyperscale.count('name = "bitermotors-ai-token", amount = 50000'),
+        )
+
+        self.assertIn('technology = "bitermotors-orbital-cluster-training"', control)
+        self.assertIn("local unlocked = track.generated >= milestone.threshold", control)
+        self.assertIn("technology.enabled = unlocked", control)
+        self.assertIn('unlock("bitermotors-tandem-solar-array")', data)
+        self.assertIn('unlock("bitermotors-grid-megapack")', data)
 
     def test_bitermotors_compute_runs_reset_when_underpowered(self):
         control = (MOD / "control.lua").read_text()

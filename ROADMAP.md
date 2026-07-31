@@ -49,7 +49,7 @@ The campaign grows through:
 6. Gigafactories, Robotaxis, autonomous logistics, and Cybertrains.
 7. Terrestrial AI funded by ongoing profit.
 8. Physical orbital AI infrastructure.
-9. A one-terawatt terrestrial AGI training run.
+9. A 10-gigawatt terrestrial AGI training run.
 
 The commercial launch-service, booster-sales, satellite-bus, ground-station,
 and Planetary Grid Segment branches are removed. Space is a compute location,
@@ -116,7 +116,7 @@ platforms.
 - **Orbital Datacenter Core**
   - Space-only 6x6 compute machine.
   - Draws 250 MW while operating.
-  - Consumes 100 Dollars per 30-second batch.
+  - Consumes 1 Dollar per 30-second batch.
   - Produces 10,000 physical AI Tokens per batch.
 - **Orbital Radiator Panel**
   - Space-only cooling infrastructure.
@@ -129,26 +129,39 @@ Every orbital training batch resets to zero on low power or inadequate cooling.
 AI Tokens must physically return to Nauvis by cargo pod. Space does not beam
 energy to the planet.
 
+Cumulative orbital output opens three explicit scale projects:
+
+- **1M Tokens: Cluster Training**
+  - Costs 5,000 Dollars plus science.
+  - Unlocks 25,000-token orbital batches.
+- **10M Tokens: Grid-scale Energy**
+  - Costs 15,000 Dollars plus science.
+  - Unlocks 50,000-token batches, 3 MW Tandem Solar Arrays, and 1 GJ Grid
+    Megapacks as upgrades for the terrestrial energy products.
+- **100M Tokens: Hyperscale Training**
+  - Costs 30,000 Dollars plus science.
+  - Unlocks 100,000-token batches and the final Planetary Energy Grid research.
+
 ### AGI Victory
 
 The final progression contract is:
 
 1. Produce 1,000,000,000 cumulative AI Tokens.
 2. Package Tokens in 50,000-token AGI Training Datasets.
-3. Package Dollars in 10,000-Dollar Capital Allocations.
+3. Package Dollars in 500-Dollar Capital Allocations.
 4. Build a Planetary Energy Grid Controller.
 5. Supply:
    - 20,000 AGI Training Datasets
-   - 1,000 Capital Allocations
-   - 1,000 Megapacks
+   - 100 Capital Allocations
+   - 100 Grid Megapacks
    - 10,000 Processing Units
-6. Sustain the controller's 1 TW draw for 60 minutes.
+6. Sustain the controller's 10 GW draw for 60 minutes.
 7. Any low-power condition scraps the current run.
 8. Producing one physical AGI Model triggers victory and continued play remains
    available.
 
 The cumulative gate makes orbital scaling practically necessary. The physical
-recipe and uninterrupted one-terawatt run ensure that the terrestrial factory,
+recipe and uninterrupted 10-gigawatt run ensure that the terrestrial factory,
 capital loop, and power grid remain part of the finale.
 
 ## Public Alpha Gates

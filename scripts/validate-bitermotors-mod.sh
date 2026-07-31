@@ -1354,7 +1354,10 @@ expected_research = {
     "bitermotors-terrestrial-ai": (1000, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-autonomous-logistics": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-orbital-compute": (2000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-planetary-energy-grid": (2500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-cluster-training": (1000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-grid-scale-energy": (1500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-hyperscale-training": (3000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-planetary-energy-grid": (2500, 60, rgbpys | {"bitermotors-ai-token"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -1363,6 +1366,18 @@ for technology_name, (count, time, ingredients) in expected_research.items():
         raise SystemExit(
             f"{technology_name} research mismatch: count={unit['count']} time={unit['time']} "
             f"ingredients={sorted(actual_ingredients)}"
+        )
+for technology_name, expected_dollars_per_cycle in {
+    "bitermotors-orbital-cluster-training": 5,
+    "bitermotors-grid-scale-energy": 10,
+    "bitermotors-hyperscale-training": 10,
+}.items():
+    ingredients = {
+        row[0]: row[1] for row in data["technology"][technology_name]["unit"]["ingredients"]
+    }
+    if ingredients.get("bitermotors-dollar") != expected_dollars_per_cycle:
+        raise SystemExit(
+            f"{technology_name} capital cost mismatch: {ingredients.get('bitermotors-dollar')}"
         )
 
 module_two_counts = {
@@ -1408,19 +1423,40 @@ if not agi_gate or "bitermotors-package-agi-training-dataset" not in {
     if effect.get("type") == "unlock-recipe"
 }:
     raise SystemExit("Final AGI technology must unlock the physical training inputs")
+if set(agi_gate.get("prerequisites", [])) != {
+    "bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power",
+}:
+    raise SystemExit(f"Planetary Grid prerequisites mismatch: {agi_gate.get('prerequisites')}")
 agi_recipe = data["recipe"]["bitermotors-agi-training-run"]
 agi_ingredients = {row["name"]: row["amount"] for row in agi_recipe["ingredients"]}
 agi_results = {row["name"]: row["amount"] for row in agi_recipe["results"]}
 if agi_ingredients != {
     "bitermotors-agi-training-dataset": 20000,
-    "bitermotors-capital-allocation": 1000,
-    "bitermotors-megapack": 1000,
+    "bitermotors-capital-allocation": 100,
+    "bitermotors-grid-megapack": 100,
     "processing-unit": 10000,
 } or agi_results != {"bitermotors-agi-model": 1}:
     raise SystemExit(f"Final AGI Training Run recipe mismatch: {agi_recipe}")
 dataset_recipe = data["recipe"]["bitermotors-package-agi-training-dataset"]
 if {row["name"]: row["amount"] for row in dataset_recipe["ingredients"]} != {"bitermotors-ai-token": 50000}:
     raise SystemExit(f"AGI training dataset must consume physical AI Tokens: {dataset_recipe}")
+capital_recipe = data["recipe"]["bitermotors-package-capital-allocation"]
+if {row["name"]: row["amount"] for row in capital_recipe["ingredients"]} != {"bitermotors-dollar": 500}:
+    raise SystemExit(f"Capital Allocation must package 500 Dollars: {capital_recipe}")
+controller = data["assembling-machine"]["bitermotors-planetary-grid-controller"]
+if controller["energy_usage"] != "10GW":
+    raise SystemExit(f"Planetary Grid Controller must draw 10 GW: {controller['energy_usage']}")
+controller_recipe = data["recipe"]["bitermotors-planetary-grid-controller"]
+controller_ingredients = {
+    row["name"]: row["amount"] for row in controller_recipe["ingredients"]
+}
+if controller_ingredients != {
+    "bitermotors-gigafactory-module": 100,
+    "bitermotors-grid-megapack": 10,
+    "substation": 100,
+    "bitermotors-dollar": 10000,
+}:
+    raise SystemExit(f"Planetary Grid Controller recipe mismatch: {controller_recipe}")
 
 expected_terrestrial_recipes = {
     "electric-furnace": {"steel-plate": 10, "electronic-circuit": 10, "stone-brick": 10},
@@ -1627,6 +1663,19 @@ if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max
 space_solar = data["solar-panel"]["bitermotors-high-density-space-solar-panel"]
 if space_solar["production"] != "50MW" or space_solar.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit(f"Space Solar Panel power or surface restriction mismatch: {space_solar}")
+hd_solar = data["solar-panel"]["bitermotors-high-density-solar-array"]
+tandem_solar = data["solar-panel"]["bitermotors-tandem-solar-array"]
+if hd_solar.get("next_upgrade") != "bitermotors-tandem-solar-array" or tandem_solar["production"] != "3MW":
+    raise SystemExit("Tandem Solar Array must be a 3 MW direct HD-panel upgrade")
+megapack = data["accumulator"]["bitermotors-megapack"]
+grid_megapack = data["accumulator"]["bitermotors-grid-megapack"]
+if (
+    megapack.get("next_upgrade") != "bitermotors-grid-megapack"
+    or grid_megapack["energy_source"]["buffer_capacity"] != "1GJ"
+    or grid_megapack["energy_source"]["input_flow_limit"] != "50MW"
+    or grid_megapack["energy_source"]["output_flow_limit"] != "50MW"
+):
+    raise SystemExit("Grid Megapack must be a 1 GJ, 50 MW direct Megapack upgrade")
 
 token_recipe = data["recipe"]["bitermotors-terrestrial-ai-token"]
 if token_recipe.get("ingredients") != [{"type": "item", "name": "bitermotors-dollar", "amount": 20}] or token_recipe["energy_required"] != 30:
@@ -1637,7 +1686,7 @@ if not any(result.get("name") == "bitermotors-ai-token" and result.get("amount")
 orbital_token_recipe = data["recipe"]["bitermotors-orbital-ai-token"]
 orbital_token_ingredients = {row["name"]: row["amount"] for row in orbital_token_recipe["ingredients"]}
 orbital_token_results = {row["name"]: row["amount"] for row in orbital_token_recipe["results"]}
-if orbital_token_ingredients != {"bitermotors-dollar": 100} or orbital_token_results != {"bitermotors-ai-token": 10000}:
+if orbital_token_ingredients != {"bitermotors-dollar": 1} or orbital_token_results != {"bitermotors-ai-token": 10000}:
     raise SystemExit(f"Orbital AI Token recipe mismatch: {orbital_token_recipe}")
 if orbital_token_recipe.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital AI Token production must be space-only")
@@ -1647,11 +1696,30 @@ if data["item"]["bitermotors-ai-token"].get("weight") != 1:
     raise SystemExit("one million AI Tokens must fit within a one-ton rocket payload")
 if data["item"]["bitermotors-ai-token"]["stack_size"] < 1000000:
     raise SystemExit("AI Tokens must remain highly stackable for orbital cargo logistics")
-for track in ("terrestrial", "orbital"):
-    for level in range(1, 7):
-        technology = data["technology"][f"bitermotors-{track}-ai-efficiency-{level}"]
-        if technology.get("enabled") is not False:
-            raise SystemExit(f"AI efficiency milestone must start runtime-gated: {track} {level}")
+for level in range(1, 7):
+    technology = data["technology"][f"bitermotors-terrestrial-ai-efficiency-{level}"]
+    if technology.get("enabled") is not False:
+        raise SystemExit(f"Terrestrial AI efficiency milestone must start runtime-gated: {level}")
+for recipe_name, expected_tokens in {
+    "bitermotors-orbital-ai-token-cluster": 25000,
+    "bitermotors-orbital-ai-token-grid-scale": 50000,
+    "bitermotors-orbital-ai-token-hyperscale": 100000,
+}.items():
+    recipe = data["recipe"][recipe_name]
+    ingredients = {row["name"]: row["amount"] for row in recipe["ingredients"]}
+    tokens = sum(
+        row["amount"] for row in recipe["results"]
+        if row["name"] == "bitermotors-ai-token"
+    )
+    if ingredients != {"bitermotors-dollar": 1} or tokens != expected_tokens:
+        raise SystemExit(f"Orbital milestone recipe mismatch: {recipe_name} {recipe}")
+for technology_name in (
+    "bitermotors-orbital-cluster-training",
+    "bitermotors-grid-scale-energy",
+    "bitermotors-hyperscale-training",
+):
+    if data["technology"][technology_name].get("enabled") is not False:
+        raise SystemExit(f"Orbital milestone must start runtime-gated: {technology_name}")
 for base_name in (
     "small-biter", "medium-biter", "big-biter", "behemoth-biter",
     "small-spitter", "medium-spitter", "big-spitter", "behemoth-spitter",

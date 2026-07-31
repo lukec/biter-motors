@@ -587,7 +587,17 @@ local high_density_solar_array_icon = layered_icon64(
   "__base__/graphics/icons/processing-unit.png",
   {r = 0.65, g = 0.9, b = 1.0, a = 1.0}
 )
+local tandem_solar_array_icon = layered_icon64(
+  "__base__/graphics/icons/solar-panel.png",
+  "__base__/graphics/icons/productivity-module-3.png",
+  {r = 0.55, g = 1.0, b = 0.78, a = 1.0}
+)
 local megapack_icon = generated_icon("megapack")
+local grid_megapack_icon = layered_icon64(
+  "__bitermotors__/graphics/icons/megapack.png",
+  "__base__/graphics/icons/processing-unit.png",
+  {r = 0.62, g = 0.92, b = 1.0, a = 1.0}
+)
 local robotaxi_service_center_icon = generated_icon("robotaxi-service-center")
 local megatruck_icon = generated_icon("megatruck")
 
@@ -954,7 +964,9 @@ data:extend({
   item("bitermotors-gigafactory-building", gigafactory_icon, "bitermotors-infrastructure", "f[gigafactory]", 1, {place_result = "bitermotors-gigafactory-building"}),
   item("bitermotors-gigafactory-v2", gigafactory_v2_icon, "bitermotors-infrastructure", "g[gigafactory-v2]", 1, {place_result = "bitermotors-gigafactory-v2"}),
   item("bitermotors-high-density-solar-array", high_density_solar_array_icon, "energy", "bitermotors-a[high-density-solar-array]", 10, {place_result = "bitermotors-high-density-solar-array"}),
+  item("bitermotors-tandem-solar-array", tandem_solar_array_icon, "energy", "bitermotors-a2[tandem-solar-array]", 10, {place_result = "bitermotors-tandem-solar-array"}),
   item("bitermotors-megapack", megapack_icon, "energy", "bitermotors-b[megapack]", 10, {place_result = "bitermotors-megapack"}),
+  item("bitermotors-grid-megapack", grid_megapack_icon, "energy", "bitermotors-b2[grid-megapack]", 10, {place_result = "bitermotors-grid-megapack"}),
   item("bitermotors-terrestrial-datacenter", datacenter_icon, "bitermotors-infrastructure", "f[terrestrial-datacenter]", 1, {place_result = "bitermotors-terrestrial-datacenter"}),
   item("bitermotors-robotaxi-service-center", robotaxi_service_center_icon, "bitermotors-infrastructure", "g[robotaxi-service-center]", 1, {place_result = "bitermotors-robotaxi-service-center"}),
   item("bitermotors-cybertrain", generated_icon("cybertrain"), "transport", "bitermotors-f[cybertrain]", 5, {place_result = "bitermotors-cybertrain"}),
@@ -1089,12 +1101,20 @@ local high_density_solar_array = copied_energy_entity(
 high_density_solar_array.max_health = 500
 high_density_solar_array.production = "300kW"
 high_density_solar_array.fast_replaceable_group = "solar-panel"
+high_density_solar_array.next_upgrade = "bitermotors-tandem-solar-array"
 high_density_solar_array.collision_box = {{-1.35, -1.35}, {1.35, 1.35}}
 high_density_solar_array.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
 high_density_solar_array.picture = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].picture)
 high_density_solar_array.overlay = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].overlay)
 data.raw["solar-panel"]["solar-panel"].fast_replaceable_group = "solar-panel"
 data.raw["solar-panel"]["solar-panel"].next_upgrade = "bitermotors-high-density-solar-array"
+
+local tandem_solar_array = table.deepcopy(high_density_solar_array)
+tandem_solar_array.name = "bitermotors-tandem-solar-array"
+tandem_solar_array.icons = tandem_solar_array_icon
+tandem_solar_array.minable = {mining_time = 0.2, result = "bitermotors-tandem-solar-array"}
+tandem_solar_array.production = "3MW"
+tandem_solar_array.next_upgrade = nil
 
 local megapack = copied_energy_entity(
   "accumulator",
@@ -1107,10 +1127,21 @@ megapack.max_health = 600
 megapack.energy_source.buffer_capacity = "100MJ"
 megapack.energy_source.input_flow_limit = "5MW"
 megapack.energy_source.output_flow_limit = "5MW"
+megapack.fast_replaceable_group = "bitermotors-megapack"
+megapack.next_upgrade = "bitermotors-grid-megapack"
 megapack.chargable_graphics = {
   picture = generated_entity_picture("megapack", nil, 0.14)
 }
 megapack.water_reflection = nil
+
+local grid_megapack = table.deepcopy(megapack)
+grid_megapack.name = "bitermotors-grid-megapack"
+grid_megapack.icons = grid_megapack_icon
+grid_megapack.minable = {mining_time = 0.2, result = "bitermotors-grid-megapack"}
+grid_megapack.energy_source.buffer_capacity = "1GJ"
+grid_megapack.energy_source.input_flow_limit = "50MW"
+grid_megapack.energy_source.output_flow_limit = "50MW"
+grid_megapack.next_upgrade = nil
 
 local terrestrial_datacenter = copied_assembler(
   "assembling-machine-2",
@@ -1335,7 +1366,7 @@ local planetary_grid_controller = copied_assembler(
   planetary_grid_controller_icon,
   "bitermotors-planetary-grid-controller",
   {"bitermotors-planetary-grid"},
-  "1TW",
+  "10GW",
   1
 )
 planetary_grid_controller.energy_source.emissions_per_minute = nil
@@ -1404,7 +1435,9 @@ data:extend({
   gigafactory,
   gigafactory_v2,
   high_density_solar_array,
+  tandem_solar_array,
   megapack,
+  grid_megapack,
   terrestrial_datacenter,
   robotaxi_service_center,
   robotaxi_service_power,
@@ -1718,6 +1751,16 @@ data:extend({
       localised_name = {"recipe-name.bitermotors-high-density-solar-array-batch"}
     }
   ),
+  recipe("bitermotors-tandem-solar-array", {"advanced-crafting", "bitermotors-energy-products-batch"}, "energy", "bitermotors-a3[tandem-solar-array]",
+    {
+      {type = "item", name = "bitermotors-high-density-solar-array", amount = 1},
+      {type = "item", name = "processing-unit", amount = 10},
+      {type = "item", name = "low-density-structure", amount = 10},
+      {type = "item", name = "bitermotors-dollar", amount = 1}
+    },
+    {{type = "item", name = "bitermotors-tandem-solar-array", amount = 1}}, 10,
+    {allow_productivity = false}
+  ),
   recipe("bitermotors-megapack", {"bitermotors-energy-products"}, "energy", "bitermotors-b[megapack]",
     {
       {type = "item", name = "bitermotors-lfp-battery-pack", amount = 12},
@@ -1725,6 +1768,16 @@ data:extend({
       {type = "item", name = "substation", amount = 1}
     },
     {{type = "item", name = "bitermotors-megapack", amount = 1}}, 8
+  ),
+  recipe("bitermotors-grid-megapack", {"advanced-crafting", "bitermotors-energy-products"}, "energy", "bitermotors-b2[grid-megapack]",
+    {
+      {type = "item", name = "bitermotors-megapack", amount = 1},
+      {type = "item", name = "bitermotors-lfp-battery-pack", amount = 24},
+      {type = "item", name = "processing-unit", amount = 20},
+      {type = "item", name = "bitermotors-dollar", amount = 5}
+    },
+    {{type = "item", name = "bitermotors-grid-megapack", amount = 1}}, 20,
+    {allow_productivity = false}
   ),
   recipe("bitermotors-autonomy-computer", {"advanced-crafting"}, "bitermotors-components", "e[autonomy-computer]",
     {
@@ -1840,7 +1893,7 @@ data:extend({
   recipe("bitermotors-planetary-grid-controller", {"advanced-crafting"}, "bitermotors-infrastructure", "h[planetary-grid-controller]",
     {
       {type = "item", name = "bitermotors-gigafactory-module", amount = 100},
-      {type = "item", name = "bitermotors-megapack", amount = 100},
+      {type = "item", name = "bitermotors-grid-megapack", amount = 10},
       {type = "item", name = "substation", amount = 100},
       {type = "item", name = "bitermotors-dollar", amount = 10000}
     },
@@ -1895,9 +1948,53 @@ data:extend({
     {{type = "item", name = "bitermotors-ai-token", amount = 20}}, 30
   ),
   recipe("bitermotors-orbital-ai-token", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d[orbital-ai-token]",
-    {{type = "item", name = "bitermotors-dollar", amount = 100}},
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
     {{type = "item", name = "bitermotors-ai-token", amount = 10000}}, 30,
     {
+      main_product = "bitermotors-ai-token",
+      surface_conditions = {
+        {
+          property = "gravity",
+          min = 0,
+          max = 0
+        }
+      }
+    }
+  ),
+  recipe("bitermotors-orbital-ai-token-cluster", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d2[orbital-ai-token-cluster]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {{type = "item", name = "bitermotors-ai-token", amount = 25000}}, 30,
+    {
+      surface_conditions = {
+        {
+          property = "gravity",
+          min = 0,
+          max = 0
+        }
+      }
+    }
+  ),
+  recipe("bitermotors-orbital-ai-token-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d3[orbital-ai-token-grid-scale]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {{type = "item", name = "bitermotors-ai-token", amount = 50000}}, 30,
+    {
+      surface_conditions = {
+        {
+          property = "gravity",
+          min = 0,
+          max = 0
+        }
+      }
+    }
+  ),
+  recipe("bitermotors-orbital-ai-token-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d4[orbital-ai-token-hyperscale]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {
+      {type = "item", name = "bitermotors-ai-token", amount = 50000},
+      {type = "item", name = "bitermotors-ai-token", amount = 50000}
+    }, 30,
+    {
+      main_product = "bitermotors-ai-token",
       surface_conditions = {
         {
           property = "gravity",
@@ -1913,15 +2010,15 @@ data:extend({
     {allow_productivity = false, allow_quality = false}
   ),
   recipe("bitermotors-package-capital-allocation", {"bitermotors-planetary-grid"}, "bitermotors-capital", "b[capital-allocation]",
-    {{type = "item", name = "bitermotors-dollar", amount = 10000}},
+    {{type = "item", name = "bitermotors-dollar", amount = 500}},
     {{type = "item", name = "bitermotors-capital-allocation", amount = 1}}, 1,
     {allow_productivity = false, allow_quality = false}
   ),
   recipe("bitermotors-agi-training-run", {"bitermotors-planetary-grid"}, "science-pack", "i[agi-training-run]",
     {
       {type = "item", name = "bitermotors-agi-training-dataset", amount = 20000},
-      {type = "item", name = "bitermotors-capital-allocation", amount = 1000},
-      {type = "item", name = "bitermotors-megapack", amount = 1000},
+      {type = "item", name = "bitermotors-capital-allocation", amount = 100},
+      {type = "item", name = "bitermotors-grid-megapack", amount = 100},
       {type = "item", name = "processing-unit", amount = 10000}
     },
     {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 3600,
@@ -2124,6 +2221,68 @@ data:extend({
     },
     60
   ),
+  tech("bitermotors-orbital-cluster-training",
+    "__base__/graphics/technology/space-science-pack.png",
+    {"bitermotors-orbital-compute"},
+    {
+      unlock("bitermotors-orbital-ai-token-cluster")
+    },
+    1000,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"production-science-pack", 1},
+      {"utility-science-pack", 1},
+      {"space-science-pack", 1},
+      {"bitermotors-ai-token", 1},
+      {"bitermotors-dollar", 5}
+    },
+    60,
+    {enabled = false}
+  ),
+  tech("bitermotors-grid-scale-energy",
+    "__base__/graphics/technology/solar-energy.png",
+    {"bitermotors-orbital-cluster-training"},
+    {
+      unlock("bitermotors-orbital-ai-token-grid-scale"),
+      unlock("bitermotors-tandem-solar-array"),
+      unlock("bitermotors-grid-megapack")
+    },
+    1500,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"production-science-pack", 1},
+      {"utility-science-pack", 1},
+      {"space-science-pack", 1},
+      {"bitermotors-ai-token", 1},
+      {"bitermotors-dollar", 10}
+    },
+    60,
+    {enabled = false}
+  ),
+  tech("bitermotors-hyperscale-training",
+    "__base__/graphics/technology/processing-unit.png",
+    {"bitermotors-grid-scale-energy"},
+    {
+      unlock("bitermotors-orbital-ai-token-hyperscale")
+    },
+    3000,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"production-science-pack", 1},
+      {"utility-science-pack", 1},
+      {"space-science-pack", 1},
+      {"bitermotors-ai-token", 1},
+      {"bitermotors-dollar", 10}
+    },
+    60,
+    {enabled = false}
+  ),
   tech("bitermotors-autonomous-logistics",
     "__bitermotors__/graphics/icons/robotaxi-service-center.png",
     {"bitermotors-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"},
@@ -2148,7 +2307,7 @@ data:extend({
   ),
   tech("bitermotors-planetary-energy-grid",
     "__bitermotors__/graphics/icons/planetary-grid-controller.png",
-    {"bitermotors-orbital-compute", "bitermotors-autonomous-logistics", "nuclear-power"},
+    {"bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power"},
     {
       unlock("bitermotors-planetary-grid-controller"),
       unlock("bitermotors-package-agi-training-dataset"),
@@ -2162,8 +2321,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"space-science-pack", 1},
-      {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 1}
+      {"bitermotors-ai-token", 1}
     },
     60
   )
@@ -2274,7 +2432,8 @@ data:extend({
     {"bitermotors-energy-products"},
     {
       {type = "change-recipe-productivity", recipe = "bitermotors-high-density-solar-array", change = 0.1},
-      {type = "change-recipe-productivity", recipe = "bitermotors-high-density-solar-array-batch", change = 0.1}
+      {type = "change-recipe-productivity", recipe = "bitermotors-high-density-solar-array-batch", change = 0.1},
+      {type = "change-recipe-productivity", recipe = "bitermotors-tandem-solar-array", change = 0.1}
     },
     "750*1.5^(L-1)",
     {
@@ -2291,7 +2450,10 @@ data:extend({
     "bitermotors-megapack-productivity",
     "__base__/graphics/technology/electric-energy-acumulators.png",
     {"bitermotors-energy-products"},
-    {{type = "change-recipe-productivity", recipe = "bitermotors-megapack", change = 0.1}},
+    {
+      {type = "change-recipe-productivity", recipe = "bitermotors-megapack", change = 0.1},
+      {type = "change-recipe-productivity", recipe = "bitermotors-grid-megapack", change = 0.1}
+    },
     "750*1.5^(L-1)",
     {
       {"automation-science-pack", 1},
@@ -2314,48 +2476,27 @@ local terrestrial_efficiency_science = {
   {"utility-science-pack", 1},
   {"bitermotors-dollar", 1}
 }
-local orbital_efficiency_science = table.deepcopy(terrestrial_efficiency_science)
-table.insert(orbital_efficiency_science, 6, {"space-science-pack", 1})
 
 for level, threshold in pairs(ai_efficiency_thresholds) do
-  for _, track in pairs({
-    {
-      slug = "terrestrial",
-      label = "Terrestrial AI Efficiency",
-      recipe = "bitermotors-terrestrial-ai-token",
-      prerequisite = level == 1 and "bitermotors-terrestrial-ai" or "bitermotors-terrestrial-ai-efficiency-" .. (level - 1),
-      icon = "__base__/graphics/technology/processing-unit.png",
-      science = terrestrial_efficiency_science
-    },
-    {
-      slug = "orbital",
-      label = "Orbital AI Efficiency",
-      recipe = "bitermotors-orbital-ai-token",
-      prerequisite = level == 1 and "bitermotors-orbital-compute" or "bitermotors-orbital-ai-efficiency-" .. (level - 1),
-      icon = "__base__/graphics/technology/space-science-pack.png",
-      science = orbital_efficiency_science
-    }
-  }) do
-    local name = "bitermotors-" .. track.slug .. "-ai-efficiency-" .. level
-    local prototype = tech(
-      name,
-      track.icon,
-      {track.prerequisite},
-      {{type = "nothing", effect_description = {"", "+10% AI Tokens per cycle"}}},
-      math.floor(threshold / 10),
-      track.science,
-      30
-    )
-    prototype.enabled = false
-    prototype.localised_name = {"", track.label, " ", tostring(level)}
-    prototype.localised_description = {
-      "",
-      "Unlocked after this track generates ",
-      tostring(threshold),
-      " AI Tokens. Research adds 10% output without increasing Dollars or power per cycle."
-    }
-    data:extend({prototype})
-  end
+  local name = "bitermotors-terrestrial-ai-efficiency-" .. level
+  local prototype = tech(
+    name,
+    "__base__/graphics/technology/processing-unit.png",
+    {level == 1 and "bitermotors-terrestrial-ai" or "bitermotors-terrestrial-ai-efficiency-" .. (level - 1)},
+    {{type = "nothing", effect_description = {"", "+10% AI Tokens per cycle"}}},
+    math.floor(threshold / 10),
+    terrestrial_efficiency_science,
+    30
+  )
+  prototype.enabled = false
+  prototype.localised_name = {"", "Terrestrial AI Efficiency ", tostring(level)}
+  prototype.localised_description = {
+    "",
+    "Unlocked after terrestrial compute generates ",
+    tostring(threshold),
+    " AI Tokens. Research adds 10% output without increasing Dollars or power per cycle."
+  }
+  data:extend({prototype})
 end
 
 local function add_recipe_category(recipe_name, category_name)
@@ -2396,7 +2537,9 @@ for _, recipe_name in pairs({
   "bitermotors-megatruck",
   "bitermotors-high-density-solar-array",
   "bitermotors-high-density-solar-array-batch",
+  "bitermotors-tandem-solar-array",
   "bitermotors-megapack",
+  "bitermotors-grid-megapack",
   "bitermotors-robotaxi-fleet"
 }) do
   data.raw.recipe[recipe_name].allow_productivity = false
@@ -2411,6 +2554,9 @@ for _, recipe_name in pairs({
   "bitermotors-sell-robotaxi-fleet",
   "bitermotors-terrestrial-ai-token",
   "bitermotors-orbital-ai-token",
+  "bitermotors-orbital-ai-token-cluster",
+  "bitermotors-orbital-ai-token-grid-scale",
+  "bitermotors-orbital-ai-token-hyperscale",
   "bitermotors-package-agi-training-dataset",
   "bitermotors-package-capital-allocation",
   "bitermotors-agi-training-run"

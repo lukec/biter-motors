@@ -22,7 +22,7 @@ The retired private-development namespace is not retained as an alias.
 10. Add Robotaxi service, autonomous logistics, and Cybertrain freight.
 11. Fund Terrestrial Datacenters with continuous power and Dollars.
 12. Launch physical orbital AI infrastructure and return AI Tokens to Nauvis.
-13. Sustain a one-terawatt final training run to produce an AGI Model.
+13. Sustain a 10-gigawatt final training run to produce an AGI Model.
 
 ## Customer Contract
 
@@ -74,19 +74,24 @@ Orbital AI Infrastructure unlocks:
 - Orbital Radiator Panels, with eight required per core.
 - 50 MW High-density Space Solar Panels.
 
-A cooled core consumes 100 Dollars and produces 10,000 physical AI Tokens every
-30 seconds. Low power or insufficient cooling resets the active batch. Tokens
-must return to Nauvis by cargo pod.
+A cooled core consumes 1 Dollar and initially produces 10,000 physical AI
+Tokens every 30 seconds. Cumulative orbital output unlocks capital-and-science
+projects at 1M, 10M, and 100M Tokens, raising batches to 25,000, 50,000, and
+100,000 Tokens. Low power or insufficient cooling resets the active batch.
+Tokens must return to Nauvis by cargo pod.
+
+The 10M milestone also unlocks direct upgrades from 300 kW HD panels to 3 MW
+Tandem Solar Arrays, and from 100 MJ Megapacks to 1 GJ Grid Megapacks.
 
 Producing 1,000,000,000 cumulative AI Tokens unlocks the final training recipe.
 The Planetary Energy Grid Controller consumes:
 
 - 20,000 AGI Training Datasets, each packaging 50,000 AI Tokens
-- 1,000 Capital Allocations, each packaging 10,000 Dollars
-- 1,000 Megapacks
+- 100 Capital Allocations, each packaging 500 Dollars
+- 100 Grid Megapacks
 - 10,000 Processing Units
 
-The controller must sustain 1 TW for 60 uninterrupted minutes. Low power resets
+The controller must sustain 10 GW for 60 uninterrupted minutes. Low power resets
 the run. Producing one physical AGI Model wins the campaign.
 
 ## Interface

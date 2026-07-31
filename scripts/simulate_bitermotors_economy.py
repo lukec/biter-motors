@@ -81,19 +81,37 @@ PROGRESSION = (
         "Orbital Compute",
         4_000,
         "Rocket and orbital prerequisites",
-        "2,000 terrestrial tokens plus 2,000 Dollars of research.",
+        "2,000 terrestrial tokens plus the orbital science path.",
+    ),
+    ProgressionStage(
+        "Cluster Training",
+        5_000,
+        "1,000,000 cumulative orbital tokens",
+        "Research unlocks 25,000-token orbital batches.",
+    ),
+    ProgressionStage(
+        "Grid-scale Energy",
+        15_000,
+        "10,000,000 cumulative orbital tokens",
+        "Research unlocks 50,000-token batches and the late power assets.",
+    ),
+    ProgressionStage(
+        "Hyperscale Training",
+        30_000,
+        "100,000,000 cumulative orbital tokens",
+        "Research unlocks 100,000-token orbital batches.",
     ),
     ProgressionStage(
         "Planetary Grid",
-        2_525,
-        "Orbital Compute and Autonomous Logistics",
-        "2,500 Dollars of research plus about 25 Dollars for 2,500 orbital tokens.",
+        0,
+        "Hyperscale Training, Autonomous Logistics, and nuclear power",
+        "Science and AI Tokens only; Planetary Grid no longer consumes Dollars.",
     ),
     ProgressionStage(
         "Grid Controller",
-        11_000,
+        11_050,
         "Planetary Grid researched",
-        "10,000 Dollars directly plus 100 Gigafactory Modules worth 1,000 Dollars.",
+        "10,000 Dollars, 100 capital-funded Gigafactory Modules, and the 5-Dollar upgrades for 10 Grid Megapacks.",
     ),
 )
 
@@ -102,8 +120,6 @@ PROGRESSION = (
 class Balance:
     name: str
     ai_target: float
-    orbital_tokens_per_cycle: float
-    orbital_dollars_per_cycle: float
     final_capital_dollars: float
     final_power_watts: float
     robotaxi_vehicle_minutes_per_dollar: float
@@ -111,54 +127,59 @@ class Balance:
 
 
 CURRENT = Balance(
-    name="Current alpha",
+    name="Approved rebalance",
     ai_target=1_000_000_000,
-    orbital_tokens_per_cycle=10_000,
-    orbital_dollars_per_cycle=100,
-    final_capital_dollars=10_000_000,
-    final_power_watts=1_000_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=100,
+    final_capital_dollars=50_000,
+    final_power_watts=10_000_000_000,
+    robotaxi_vehicle_minutes_per_dollar=5,
     solar_productivity=0,
 )
 
 RELEASE_CANDIDATE = Balance(
-    name="Balanced release",
+    name="Higher-power sensitivity",
     ai_target=1_000_000_000,
-    orbital_tokens_per_cycle=10_000,
-    orbital_dollars_per_cycle=1,
-    final_capital_dollars=100_000,
-    final_power_watts=10_000_000_000,
+    final_capital_dollars=50_000,
+    final_power_watts=12_000_000_000,
     robotaxi_vehicle_minutes_per_dollar=5,
     solar_productivity=0.40,
 )
 
 DEMANDING_RELEASE = Balance(
-    name="Demanding release",
+    name="Higher-power and capital sensitivity",
     ai_target=1_000_000_000,
-    orbital_tokens_per_cycle=10_000,
-    orbital_dollars_per_cycle=2,
-    final_capital_dollars=250_000,
-    final_power_watts=25_000_000_000,
+    final_capital_dollars=60_000,
+    final_power_watts=12_000_000_000,
     robotaxi_vehicle_minutes_per_dollar=10,
     solar_productivity=0.40,
 )
 
-AI_EFFICIENCY_THRESHOLDS = (1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000)
-AI_EFFICIENCY_RESEARCH_DOLLARS = tuple(value / 10 for value in AI_EFFICIENCY_THRESHOLDS)
+ORBITAL_AI_MILESTONES = (
+    (1_000_000, 10_000, 1, 5_000),
+    (10_000_000, 25_000, 1, 15_000),
+    (100_000_000, 50_000, 1, 30_000),
+    (1_000_000_000, 100_000, 1, 0),
+)
 
 HD_SOLAR_PEAK_WATTS = 300_000
+TANDEM_SOLAR_PEAK_WATTS = 3_000_000
 NAUVIS_SOLAR_AVERAGE_FRACTION = 0.70
 HD_SOLAR_BATCH_INPUT_DOLLARS = 3
 HD_SOLAR_BATCH_OUTPUT = 4
 MEGAPACK_CAPACITY_JOULES = 100_000_000
+GRID_MEGAPACK_CAPACITY_JOULES = 1_000_000_000
 MEGAPACK_SALE_DOLLARS = 20
 BASE_SOLAR_PANEL_PEAK_WATTS = 60_000
 BASE_ACCUMULATOR_CAPACITY_JOULES = 5_000_000
 BASE_ACCUMULATORS_PER_PANEL = 0.84
 
-GRID_CONTROLLER_CONSUMED_MEGAPACKS = 100
-FINAL_RUN_CONSUMED_MEGAPACKS = 1_000
+GRID_CONTROLLER_CONSUMED_MEGAPACKS = 10
+FINAL_RUN_CONSUMED_MEGAPACKS = 100
 CONSUMED_MEGAPACKS = GRID_CONTROLLER_CONSUMED_MEGAPACKS + FINAL_RUN_CONSUMED_MEGAPACKS
+FINAL_RUN_GRID_MEGAPACK_RECIPE_DOLLARS = FINAL_RUN_CONSUMED_MEGAPACKS * 5
+FINAL_CAPITAL_ALLOCATIONS = 100
+CAPITAL_ALLOCATION_DOLLARS = 500
+FINAL_DATASETS = 20_000
+FINAL_PROCESSING_UNITS = 10_000
 RECOMMENDED_PROGRESSION_CONSTRUCTION_DOLLARS = 275
 PRE_ENDGAME_DOLLARS = (
     sum(stage.incremental_dollars for stage in PROGRESSION)
@@ -181,12 +202,12 @@ RADIATORS_PER_CORE = 8
 
 @dataclass(frozen=True)
 class AiPlan:
-    efficiency_level: int
-    efficiency_research_dollars: float
+    milestone_level: int
+    milestone_research_dollars: float
     operating_dollars: float
     total_dollars: float
-    final_multiplier: float
     one_core_hours: float
+    dollars_by_band: tuple[float, ...]
 
 
 @dataclass(frozen=True)
@@ -199,6 +220,11 @@ class PowerPlan:
     megapack_opportunity_dollars: float
     panel_tiles: int
     megapack_tiles: int
+    tandem_arrays: int
+    grid_megapacks: int
+    tandem_recipe_dollars: float
+    grid_megapack_recipe_dollars: float
+    grid_megapack_upgrade_opportunity_dollars: float
 
 
 @dataclass(frozen=True)
@@ -218,89 +244,84 @@ class CampaignPlan:
 
 
 def ai_plan(balance: Balance, max_efficiency_level: int) -> AiPlan:
-    """Model sequential AI-efficiency unlocks and research."""
-    if not 0 <= max_efficiency_level <= len(AI_EFFICIENCY_THRESHOLDS):
-        raise ValueError("invalid AI efficiency level")
+    """Model the four cumulative-token orbital production bands."""
+    if not 0 <= max_efficiency_level <= len(ORBITAL_AI_MILESTONES) - 1:
+        raise ValueError("invalid orbital AI milestone level")
 
     generated = 0.0
     operating_dollars = 0.0
     research_dollars = 0.0
-    level = 0
-
-    for threshold, research_cost in zip(
-        AI_EFFICIENCY_THRESHOLDS[:max_efficiency_level],
-        AI_EFFICIENCY_RESEARCH_DOLLARS[:max_efficiency_level],
+    dollars_by_band: list[float] = []
+    for index, (threshold, _tokens, band_dollars, research_cost) in enumerate(
+        ORBITAL_AI_MILESTONES
     ):
+        if index > max_efficiency_level:
+            break
         segment_target = min(float(threshold), balance.ai_target)
-        if segment_target > generated:
-            tokens_per_dollar = (
-                balance.orbital_tokens_per_cycle * (1 + level * 0.10)
-                / balance.orbital_dollars_per_cycle
-            )
-            operating_dollars += (segment_target - generated) / tokens_per_dollar
-            generated = segment_target
+        segment_dollars = max(0.0, segment_target - generated) / _tokens * band_dollars
+        dollars_by_band.append(segment_dollars)
+        operating_dollars += segment_dollars
+        generated = segment_target
         if generated < threshold:
             break
         research_dollars += research_cost
-        level += 1
 
+    milestone_level = min(max_efficiency_level, len(dollars_by_band) - 1)
     if generated < balance.ai_target:
-        tokens_per_dollar = (
-            balance.orbital_tokens_per_cycle * (1 + level * 0.10)
-            / balance.orbital_dollars_per_cycle
-        )
-        operating_dollars += (balance.ai_target - generated) / tokens_per_dollar
+        threshold, tokens, band_dollars, _ = ORBITAL_AI_MILESTONES[milestone_level]
+        segment_dollars = (balance.ai_target - generated) / tokens * band_dollars
+        dollars_by_band.append(segment_dollars)
+        operating_dollars += segment_dollars
 
-    tokens_per_hour = balance.orbital_tokens_per_cycle * (1 + level * 0.10) * 120
+    one_core_hours = 0.0
+    previous = 0
+    for threshold, tokens, _band_dollars, _research_cost in ORBITAL_AI_MILESTONES:
+        target = min(balance.ai_target, threshold)
+        if target <= previous:
+            break
+        one_core_hours += (target - previous) / tokens / 120
+        previous = target
+        if previous >= balance.ai_target:
+            break
     return AiPlan(
-        efficiency_level=level,
-        efficiency_research_dollars=research_dollars,
+        milestone_level=milestone_level,
+        milestone_research_dollars=research_dollars,
         operating_dollars=operating_dollars,
         total_dollars=research_dollars + operating_dollars,
-        final_multiplier=1 + level * 0.10,
-        one_core_hours=balance.ai_target / tokens_per_hour,
+        one_core_hours=one_core_hours,
+        dollars_by_band=tuple(dollars_by_band),
     )
 
 
 def optimal_ai_plan(balance: Balance) -> AiPlan:
-    return min(
-        (ai_plan(balance, level) for level in range(len(AI_EFFICIENCY_THRESHOLDS) + 1)),
-        key=lambda plan: plan.total_dollars,
-    )
+    # The higher bands are cumulative-token unlocks, not optional efficiency
+    # research. A 1B-token campaign must reach the final band.
+    return ai_plan(balance, len(ORBITAL_AI_MILESTONES) - 1)
 
 
 def power_plan(balance: Balance) -> PowerPlan:
-    average_panel_watts = HD_SOLAR_PEAK_WATTS * NAUVIS_SOLAR_AVERAGE_FRACTION
+    average_panel_watts = TANDEM_SOLAR_PEAK_WATTS * NAUVIS_SOLAR_AVERAGE_FRACTION
     panels = math.ceil(balance.final_power_watts / average_panel_watts)
-
-    megapacks_per_panel = (
-        BASE_ACCUMULATORS_PER_PANEL
-        * (HD_SOLAR_PEAK_WATTS / BASE_SOLAR_PANEL_PEAK_WATTS)
-        * (BASE_ACCUMULATOR_CAPACITY_JOULES / MEGAPACK_CAPACITY_JOULES)
-    )
-    megapacks = math.ceil(panels * megapacks_per_panel)
-    batch_dollars_per_panel = HD_SOLAR_BATCH_INPUT_DOLLARS / HD_SOLAR_BATCH_OUTPUT
-    standard_dollars_per_panel = 1 / (1 + balance.solar_productivity)
-    use_productive_standard_recipe = standard_dollars_per_panel < batch_dollars_per_panel
-    panel_recipe_dollars = panels * min(
-        batch_dollars_per_panel,
-        standard_dollars_per_panel,
-    )
+    megapacks = math.ceil(panels * TANDEM_SOLAR_PEAK_WATTS * 70 / GRID_MEGAPACK_CAPACITY_JOULES)
+    tandem_recipe_dollars = panels * 1
+    grid_megapack_recipe_dollars = megapacks * 5
+    grid_megapack_upgrade_opportunity_dollars = megapacks * MEGAPACK_SALE_DOLLARS
     productivity_levels = round(balance.solar_productivity / 0.10)
-    solar_research_dollars = 0.0
-    if use_productive_standard_recipe:
-        solar_research_dollars = sum(
-            750 * 1.5**level for level in range(productivity_levels)
-        )
+    solar_research_dollars = sum(750 * 1.5**level for level in range(productivity_levels))
     return PowerPlan(
         watts=balance.final_power_watts,
         panels=panels,
         megapacks=megapacks,
-        panel_recipe_dollars=panel_recipe_dollars,
+        panel_recipe_dollars=tandem_recipe_dollars,
         solar_research_dollars=solar_research_dollars,
         megapack_opportunity_dollars=megapacks * MEGAPACK_SALE_DOLLARS,
         panel_tiles=panels * 9,
         megapack_tiles=megapacks * 4,
+        tandem_arrays=panels,
+        grid_megapacks=megapacks,
+        tandem_recipe_dollars=tandem_recipe_dollars,
+        grid_megapack_recipe_dollars=grid_megapack_recipe_dollars,
+        grid_megapack_upgrade_opportunity_dollars=grid_megapack_upgrade_opportunity_dollars,
     )
 
 
@@ -317,9 +338,12 @@ def campaign_plan(balance: Balance) -> CampaignPlan:
     consumed_megapack_opportunity = CONSUMED_MEGAPACKS * MEGAPACK_SALE_DOLLARS
     direct_dollars = (
         PRE_ENDGAME_DOLLARS
-        + ai.total_dollars
+        # The 50,000 milestone-research Dollars are already in PROGRESSION.
+        + ai.operating_dollars
         + balance.final_capital_dollars
-        + power.panel_recipe_dollars
+        + power.tandem_recipe_dollars
+        + power.grid_megapack_recipe_dollars
+        + FINAL_RUN_GRID_MEGAPACK_RECIPE_DOLLARS
         + power.solar_research_dollars
         + orbital_panel_dollars
     )
@@ -340,7 +364,7 @@ def campaign_plan(balance: Balance) -> CampaignPlan:
         direct_dollars=direct_dollars,
         economic_burden_dollars=economic_burden,
         megapacks_sold_to_fund_direct_cost=megapacks_sold,
-        megapacks_manufactured=megapacks_sold + power.megapacks + CONSUMED_MEGAPACKS,
+        megapacks_manufactured=megapacks_sold + power.grid_megapacks + CONSUMED_MEGAPACKS,
         mass_market_ev_equivalent=economic_burden / SALES["mass_market"].dollars,
     )
 
@@ -415,8 +439,8 @@ def campaign_markdown(plans: Iterable[CampaignPlan]) -> str:
     ]
     rows = (
         ("Final grid", lambda p: fmt_power(p.power.watts)),
-        ("Optimal orbital AI efficiency", lambda p: f"Level {p.ai.efficiency_level}"),
-        ("AI operating + efficiency Dollars", lambda p: fmt(p.ai.total_dollars)),
+        ("Orbital AI milestone band", lambda p: f"Band {p.ai.milestone_level + 1} of 4"),
+        ("AI operating + milestone research Dollars", lambda p: fmt(p.ai.total_dollars)),
         ("One-core AI time", lambda p: f"{fmt(p.ai.one_core_hours, 1)} hours"),
         ("Cores for a 10-hour AI build", lambda p: fmt(cores_for_ai_hours(p.ai, 10))),
         (
@@ -433,11 +457,12 @@ def campaign_markdown(plans: Iterable[CampaignPlan]) -> str:
         ),
         ("Mandatory path + transition construction", lambda p: fmt(p.pre_endgame_dollars)),
         ("Final capital Dollars", lambda p: fmt(p.final_capital_dollars)),
-        ("HD solar panels", lambda p: fmt(p.power.panels)),
-        ("Grid Megapacks", lambda p: fmt(p.power.megapacks)),
-        ("HD-panel recipe Dollars", lambda p: fmt(p.power.panel_recipe_dollars)),
+        ("Tandem Solar Arrays", lambda p: fmt(p.power.tandem_arrays)),
+        ("Grid Megapacks", lambda p: fmt(p.power.grid_megapacks)),
+        ("Tandem recipe Dollars", lambda p: fmt(p.power.tandem_recipe_dollars)),
+        ("Grid Megapack recipe Dollars", lambda p: fmt(p.power.grid_megapack_recipe_dollars)),
         ("Solar productivity research Dollars", lambda p: fmt(p.power.solar_research_dollars)),
-        ("HD panels embedded in orbital solar", lambda p: fmt(p.orbital_panel_dollars)),
+        ("Orbital solar recipe Dollars", lambda p: fmt(p.orbital_panel_dollars)),
         (
             "Unsold Megapack opportunity cost",
             lambda p: fmt(
@@ -502,13 +527,13 @@ def construction_markdown() -> str:
         ),
         (
             "Planetary Grid Controller",
-            "11,000 direct / 13,000 effective",
-            "10,000 direct, 100 Gigafactory Modules, and 100 unsold Megapacks",
+            "11,050 direct / 11,250 effective",
+            "10,000 direct, 100 capital-funded Gigafactory Modules, and 10 Grid Megapack upgrades",
         ),
         (
-            "AGI recipe Megapacks",
-            "20,000 effective",
-            "1,000 unsold Megapacks, separate from grid storage",
+            "AGI final-run storage",
+            "500 direct / 2,500 effective",
+            "100 Grid Megapacks, separate from the 1,001-grid-asset target",
         ),
     )
     lines = [
@@ -521,15 +546,18 @@ def construction_markdown() -> str:
 
 def practical_progression_markdown() -> str:
     mixed_rows = (
-        ("Premium EV", "125 Roadsters", 250, 250, 0),
-        ("Energy Products", "500 Premium EVs", 500, 500, 0),
-        ("Mass-market + Giga V2 + solar gate", "79 Megapacks", 1_580, 1_575, 5),
-        ("Robotaxi", "4,375 Mass-market EVs", 4_375, 3_000, 1_380),
-        ("Orbital Compute", "131 Megapacks", 2_620, 4_000, 0),
-        ("Planetary Grid + controller", "677 Megapacks", 13_540, 13_525, 15),
+        ("Premium EV", "50 Roadsters sold", 250, 250, 0),
+        ("Energy Products", "250 Premium EVs produced", 500, 500, 0),
+        ("Mass-market EV", "250 Premium EVs sold", 1_300, 1_300, 0),
+        ("Robotaxi", "5,000 cumulative consumer sales", 3_000, 3_000, 0),
+        ("Orbital Compute", "Orbital prerequisites", 4_000, 4_000, 0),
+        ("Orbital milestone research", "1M / 10M / 100M tokens", 50_000, 50_000, 0),
+        ("Planetary Grid", "Hyperscale and science", 0, 0, 0),
+        ("Grid Controller", "10 Grid Megapacks and modules", 11_050, 11_050, 0),
+        ("Final capital package", "100 allocations", 50_000, 50_000, 0),
     )
     lines = [
-        "| Milestone funded | Products sold in this step | Profit raised | Spend | Cash after |",
+        "| Milestone | Requirement | Illustrative capital raised | Spend | Cash after |",
         "|---|---:|---:|---:|---:|",
     ]
     lines.extend(
@@ -544,9 +572,9 @@ def report() -> str:
     plans = tuple(campaign_plan(balance) for balance in balances)
     return f"""# Biter Motors Economy Simulation
 
-This is a strategic lower-bound model of the current alpha economy and two
-release-candidate rebalances. It models current recipe profits, required Dollars,
-AI efficiency, final power, and solar storage. It excludes raw ore throughput,
+This is a strategic lower-bound model of the approved late-game rebalance and
+two sensitivity cases. It models current recipe profits, required Dollars,
+cumulative orbital AI bands, final power, and solar storage. It excludes raw ore throughput,
 customer-acquisition delay, quality, modules, and factory build time, so real
 playtime will be longer.
 
@@ -569,14 +597,11 @@ sales can fund later research much more efficiently than one-Dollar EV sales.
 
 {practical_progression_markdown()}
 
-This path reaches a built Planetary Grid Controller with **5,000 consumer EVs
-sold plus 887 Megapacks sold**. It deliberately uses the required consumer sales
-to fund Robotaxi research before leaning on Megapacks again. Building the
-controller also retains 100 additional Megapacks rather than selling them. An
-EV-only path needs approximately **125 Roadsters, 2,075 Premium EVs, and 20,525
-Mass-market EVs**, or 22,725 total consumer-vehicle sales. Neither path includes
-the final AI run, final capital package, optional branches, or raw science-pack
-costs.
+This terrestrial path still uses the required consumer sales to open Robotaxi
+and orbital play, then uses Megapack sales as the scalable capital source. The
+late path adds three explicit orbital research bills of 5,000, 15,000, and
+30,000 Dollars. It excludes raw ore throughput, customer acquisition, quality,
+modules, and factory build time, so real playtime will be longer.
 
 Recommended construction around the mass-market transition adds about 275
 Dollars: 100 for Gigafactory V1, 150 more for V2, and 25 for the solar-panel
@@ -597,26 +622,26 @@ improvement research is intentionally excluded.
 
 {campaign_markdown(plans)}
 
-The current alpha's 1 TW solar-only grid is approximately
+The approved 10 GW grid is approximately
 {fmt(plans[0].power.panel_tiles + plans[0].power.megapack_tiles)} occupied tiles
-before substations, access, and factory logistics. Its installed Megapacks also
-represent {fmt(plans[0].power.megapack_opportunity_dollars)} Dollars of products
-that cannot be sold. This makes the effective ending closer to
-{fmt(plans[0].economic_burden_dollars)} Dollars than the visible 10-million-Dollar
-capital package suggests.
+before substations, access, and factory logistics: {fmt(plans[0].power.tandem_arrays)}
+Tandem Solar Arrays and {fmt(plans[0].power.grid_megapacks)} Grid Megapacks. The
+Grid Megapacks also represent {fmt(plans[0].power.grid_megapack_upgrade_opportunity_dollars)}
+Dollars of normal Megapacks that were upgraded rather than sold.
 
-Both release scenarios keep the 1-billion-token objective while changing four
+The approved design keeps the 1-billion-token objective while changing four
 pressure points:
 
-- orbital compute consumes 1-2 Dollars rather than 100 per 10,000-token cycle;
-- final packaged capital falls from 10,000,000 to 100,000-250,000 Dollars;
-- the final sustained grid falls from 1 TW to 10-25 GW;
-- Robotaxi service pays 1 Dollar per 5-10 vehicle-minutes rather than per 100.
+- orbital compute costs 1 Dollar per 30-second batch at every band;
+- output rises from 10,000 to 25,000, 50,000, and 100,000 tokens at 1M, 10M,
+  100M, and 1B cumulative tokens;
+- final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
+- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks.
 
-At 10 GW the ending still asks for about {fmt(plans[1].power.panels)} HD panels
-and {fmt(plans[1].power.megapacks)} Megapacks. That is roughly 200 times the
-47 MW peak grid observed in the prior late-terrestrial playtest, so it remains
-a major factory-scale objective.
+At 10 GW the ending asks for about {fmt(plans[0].power.tandem_arrays)} Tandem
+Arrays and {fmt(plans[0].power.grid_megapacks)} Grid Megapacks. That is still a
+major factory-scale objective, but it is thousands of late assets rather than
+millions of HD panels.
 
 ## Nominal Funding Time
 
@@ -630,25 +655,24 @@ increase elapsed playtime.
 
 The terrestrial sequence is in the right order of magnitude: hundreds of early
 sales, thousands of mass-market sales, then a 5,000-customer Robotaxi gate. The
-release blocker is the endgame multiplier. The current ending turns that
-thousand-sale economy into a 20-to-40-million-Dollar economy and requires
-millions of placed power entities.
+approved late game turns the 1-billion-token objective into a staged capital
+and power campaign without requiring millions of placed power entities.
 
-The two release simulations bound the effective ending at roughly
+The approved case and sensitivities bound the effective ending at roughly
 {fmt(plans[1].economic_burden_dollars)}-{fmt(plans[2].economic_burden_dollars)}
-Dollars. Start with the balanced case because every omitted system makes real
-play slower. That target is about 20,000-25,000 Megapack-equivalent products, or
-400,000-500,000 one-Dollar EV sales before mixing in Robotaxi income. Ten
-well-utilized, rebalanced Robotaxi Service Centers could repay their fleet and
-contribute the direct endgame capital in about 20 hours, making
+Dollars. The approved case is about {fmt(plans[0].economic_burden_dollars)}
+Dollars, or roughly {fmt(plans[0].megapacks_sold_to_fund_direct_cost)} Megapack
+sales before Robotaxi income. Ten well-utilized Robotaxi Service Centers can
+meaningfully offset this capital burden, making
 customer-network scale useful without making it mandatory.
 
-## Release Issues Found
+## Physical Token Caveat
 
-The progress interface currently says to package 1 billion AI Tokens into
-100,000 datasets. The recipe actually consumes 50,000 tokens per dataset and
-20,000 datasets, which correctly equals 1 billion. The interface text is stale
-and should say 20,000.
+The one-billion milestone is cumulative production, while the final recipe
+physically consumes 20,000 datasets of 50,000 Tokens each. Tokens spent on
+research must therefore be replaced before the final run can be loaded. The
+additional requirement is small relative to one billion, but the logistics are
+deliberately physical.
 
 ## Model Sources
 
@@ -700,19 +724,33 @@ def validate_source_snapshot() -> list[str]:
             "}}, 30,",
         ),
         "bitermotors-orbital-ai-token": (
-            'name = "bitermotors-dollar", amount = 100',
+            'name = "bitermotors-dollar", amount = 1',
             'name = "bitermotors-ai-token", amount = 10000',
         ),
+        "bitermotors-orbital-ai-token-cluster": (
+            'name = "bitermotors-dollar", amount = 1',
+            'name = "bitermotors-ai-token", amount = 25000',
+        ),
+        "bitermotors-orbital-ai-token-grid-scale": (
+            'name = "bitermotors-dollar", amount = 1',
+            'name = "bitermotors-ai-token", amount = 50000',
+        ),
+        "bitermotors-orbital-ai-token-hyperscale": (
+            'name = "bitermotors-dollar", amount = 1',
+            'name = "bitermotors-ai-token", amount = 50000',
+        ),
         "bitermotors-package-capital-allocation": (
-            'name = "bitermotors-dollar", amount = 10000',
+            'name = "bitermotors-dollar", amount = 500',
             'name = "bitermotors-capital-allocation", amount = 1',
         ),
         "bitermotors-planetary-grid-controller": (
-            'name = "bitermotors-megapack", amount = 100',
+            'name = "bitermotors-grid-megapack", amount = 10',
             'name = "bitermotors-dollar", amount = 10000',
         ),
         "bitermotors-agi-training-run": (
-            'name = "bitermotors-megapack", amount = 1000',
+            'name = "bitermotors-grid-megapack", amount = 100',
+            'name = "bitermotors-agi-training-dataset", amount = 20000',
+            'name = "bitermotors-capital-allocation", amount = 100',
             'name = "processing-unit", amount = 10000',
         ),
     }
@@ -729,7 +767,12 @@ def validate_source_snapshot() -> list[str]:
         '  planetary_grid_controller_icon,\n'
         '  "bitermotors-planetary-grid-controller",\n'
         '  {"bitermotors-planetary-grid"},\n'
-        '  "1TW"',
+        '  "10GW"',
+        'tandem_solar_array.production = "3MW"',
+        'grid_megapack.energy_source.buffer_capacity = "1GJ"',
+        'grid_megapack.energy_source.input_flow_limit = "50MW"',
+        'threshold = 1000000,\n    technology = "bitermotors-orbital-cluster-training"',
+        '["bitermotors-orbital-ai-token-hyperscale"] = 100000',
         'high_density_space_solar_panel.production = "50MW"',
         '"750*1.5^(L-1)"',
         "ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100",
