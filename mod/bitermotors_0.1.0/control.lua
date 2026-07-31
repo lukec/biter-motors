@@ -256,7 +256,7 @@ CUSTOMER_REPLACEMENT_WRECK_FRACTION = 0.05
 local CUSTOMER_VISIBLE_GLOBAL_LIMIT = 2000
 local CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT = 128
 CUSTOMER_LIFECYCLE_VERSION = 2
-local CUSTOMER_MARKET_CACHE_TICKS = 120
+local CUSTOMER_MARKET_CACHE_TICKS = 3600
 CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
@@ -3515,7 +3515,6 @@ function register_customer_unit(entity, settlement, market_force)
   if not benchmark and (customer_visible_count() >= CUSTOMER_VISIBLE_GLOBAL_LIMIT
     or population.physical >= CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT) then
     population.virtual_unowned = (population.virtual_unowned or 0) + 1
-    mark_bitermotors_market_dirty(market_force, "customer-virtualized")
     entity.destroy()
     return false
   end
@@ -4206,9 +4205,30 @@ end
 customer_service_for_force = function(force, advance_mood)
   local generation = bitermotors_market_generation()[force.index] or 0
   local cached = bitermotors_market_cache()[force.index]
-  if not advance_mood and cached and game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS
+  if cached and game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS
     and cached.generation == generation then
     if market_service_references_valid(cached.service) then
+      if advance_mood then
+        local service = cached.service
+        service.served_keys = {}
+        service.served_settlements = {}
+        service.angry_keys = {}
+        for _, settlement in pairs(service.candidate_settlements or {}) do
+          local key = settlement_key(settlement.surface, settlement)
+          local friendly, angry = settlement_friendly_after_service_check(
+            force,
+            key,
+            service.operational_keys[key] == true,
+            true
+          )
+          if friendly then
+            service.served_keys[key] = true
+            service.served_settlements[#service.served_settlements + 1] = settlement
+          elseif angry then
+            service.angry_keys[key] = true
+          end
+        end
+      end
       storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
       storage.bitermotors_perf_counters.market_snapshot_cache_hits =
         (storage.bitermotors_perf_counters.market_snapshot_cache_hits or 0) + 1
@@ -4328,10 +4348,12 @@ customer_service_for_force = function(force, advance_mood)
       end
     end
     if #spec.candidates > 0 then
-      service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
-      service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
-      service.supported_ev_capacity = service.supported_ev_capacity
-        + assignment.powered_stalls * config.evs_per_stall
+      if #(assignment.settlements or {}) > 0 then
+        service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
+        service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
+        service.supported_ev_capacity = service.supported_ev_capacity
+          + assignment.powered_stalls * config.evs_per_stall
+      end
     end
     service.assignments[spec.key] = assignment
   end
@@ -4392,6 +4414,61 @@ customer_service_for_force = function(force, advance_mood)
     generation = generation,
     service = service
   }
+  return service
+end
+
+function refresh_customer_service_power_capacity(force, service)
+  if not force or not service then return service end
+  service.powered_capacity_by_settlement_key = {}
+  service.operational_keys = {}
+  service.accessible_stall_capacity = 0
+  service.powered_stall_capacity = 0
+  service.supported_ev_capacity = 0
+  service.stranded_evs = 0
+  service.underserved_settlements = 0
+
+  for _, assignment in pairs(service.assignments or {}) do
+    local station = assignment.station
+    local config = station and station.valid and station_config(station)
+    if config then
+      assignment.powered_stalls = powered_station_stalls(
+        station,
+        assignment.requested_stalls
+      )
+      local powered_remaining = assignment.powered_stalls
+      for _, settlement in pairs(assignment.settlements or {}) do
+        local key = settlement_key(settlement.surface, settlement)
+        if assignment.requested_settlement_keys[key] and powered_remaining > 0 then
+          service.powered_capacity_by_settlement_key[key] =
+            (service.powered_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
+          powered_remaining = powered_remaining - 1
+        end
+      end
+      service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
+      service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
+      service.supported_ev_capacity = service.supported_ev_capacity
+        + assignment.powered_stalls * config.evs_per_stall
+    end
+  end
+
+  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(force)
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    local key = settlement_key(settlement.surface, settlement)
+    local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
+    local assigned_capacity = service.capacity_by_settlement_key[key] or 0
+    local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
+    if (vehicle_count == 0 and assigned_capacity > 0)
+      or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
+      service.operational_keys[key] = true
+    end
+    if vehicle_count > powered_capacity then
+      service.stranded_evs = service.stranded_evs + (vehicle_count - powered_capacity)
+      service.underserved_settlements = service.underserved_settlements + 1
+    end
+  end
+  service.average_evs_per_stall = service.powered_stall_capacity > 0 and math.floor(
+    service.supported_ev_capacity / service.powered_stall_capacity + 0.5
+  ) or 0
   return service
 end
 
@@ -11308,6 +11385,16 @@ script.on_event(defines.events.on_object_destroyed, function(event)
   end
 end)
 
+script.on_event(defines.events.on_biter_base_built, function(event)
+  local entity = event.entity
+  if not entity or not entity.valid or not BITER_SETTLEMENT_NAMES[entity.name] then return end
+  for _, force in pairs(game.forces) do
+    if player_market_force(force) then
+      mark_bitermotors_market_dirty(force, "settlement-built")
+    end
+  end
+end)
+
 
 script.on_nth_tick(1, function()
   reset_underpowered_compute_progress()
@@ -11371,6 +11458,7 @@ script.on_nth_tick(60, function()
   end
   for force_index in pairs(allocations_by_force) do
     local force = game.forces[force_index]
+    refresh_customer_service_power_capacity(force, services_by_force[force_index])
     generate_station_reservations(force, services_by_force[force_index])
   end
   process_customer_charging_commutes()

@@ -2773,7 +2773,16 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function bitermotors_entity_registries", control)
         self.assertIn("function rebuild_bitermotors_entity_registries", control)
         self.assertIn("function bitermotors_market_cache", control)
-        self.assertIn("local CUSTOMER_MARKET_CACHE_TICKS = 120", control)
+        self.assertIn("local CUSTOMER_MARKET_CACHE_TICKS = 3600", control)
+        self.assertIn("function refresh_customer_service_power_capacity", control)
+        self.assertIn("refresh_customer_service_power_capacity(force, services_by_force[force_index])", control)
+        self.assertIn("script.on_event(defines.events.on_biter_base_built", control)
+        self.assertIn('mark_bitermotors_market_dirty(force, "settlement-built")', control)
+        virtualized = control[
+            control.index("if not benchmark and (customer_visible_count()"):
+            control.index("customer_unit_registry()[entity.unit_number] = entity")
+        ]
+        self.assertNotIn('mark_bitermotors_market_dirty(market_force, "customer-virtualized")', virtualized)
         self.assertIn("game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS", control)
         self.assertIn("market_snapshot_cache_hits", control)
         self.assertIn("market_snapshot_builds", control)

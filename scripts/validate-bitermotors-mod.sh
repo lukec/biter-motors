@@ -641,6 +641,9 @@ script.on_nth_tick(3300, function()
     {36, -20},
     game.forces.enemy
   )
+  if settlement then
+    script.raise_event(defines.events.on_biter_base_built, {entity = settlement})
+  end
   storage.invalid_cache_spawner_unit_number = settlement and settlement.unit_number or -1
 end)
 
