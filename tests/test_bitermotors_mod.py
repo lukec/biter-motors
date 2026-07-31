@@ -2783,6 +2783,8 @@ class BiterMotorsModTest(unittest.TestCase):
             control.index("customer_unit_registry()[entity.unit_number] = entity")
         ]
         self.assertNotIn('mark_bitermotors_market_dirty(market_force, "customer-virtualized")', virtualized)
+        self.assertIn("BUYER_QUEUE_SELF_REPAIR_TICKS = 10 * 60", control)
+        self.assertIn("storage.bitermotors_last_buyer_queue_self_repair_tick = game.tick", control)
         self.assertIn("game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS", control)
         self.assertIn("market_snapshot_cache_hits", control)
         self.assertIn("market_snapshot_builds", control)

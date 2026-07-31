@@ -70,6 +70,7 @@ local SALES_OFFICE_NAME = "bitermotors-sales-office"
 SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20
 SALES_OFFICE_LOW_PROSPECT_MINIMUM = 5
 SALES_OFFICE_RESERVATION_RECONCILE_TICKS = 10 * 60
+BUYER_QUEUE_SELF_REPAIR_TICKS = 10 * 60
 local LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"
 local GIGAFACTORY_CONFIGS = {
   ["bitermotors-gigafactory-building"] = {
@@ -8561,9 +8562,14 @@ end
 function reserve_office_buyers(office, recipe_name, sale)
   clear_office_buyer_reservation(office.unit_number)
   local buyers = eligible_customer_buyers(office, sale)
+  local self_repair_ready = not storage.bitermotors_last_buyer_queue_self_repair_tick
+    or game.tick - storage.bitermotors_last_buyer_queue_self_repair_tick
+      >= BUYER_QUEUE_SELF_REPAIR_TICKS
   if #buyers < sale.vehicles
+    and self_repair_ready
     and sales_office_buyer_status(office).available >= sale.vehicles then
     rebuild_customer_buyer_queues()
+    storage.bitermotors_last_buyer_queue_self_repair_tick = game.tick
     buyers = eligible_customer_buyers(office, sale)
     storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
     storage.bitermotors_perf_counters.buyer_queue_self_repairs =
