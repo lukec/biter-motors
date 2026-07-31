@@ -23,30 +23,61 @@ One in-game Dollar represents `$10,000` USD of profit.
 | Milestone | Incremental Dollars | Cumulative | Physical gate | Practical funding lower bound |
 |---|---:|---:|---|---|
 | Premium EV | 250 | 250 | 50 Roadsters sold | 125 Roadsters fund the research, so capital dominates the 50-sale gate. |
-| Energy Products | 500 | 750 | 250 Premium EVs produced before battery research appears | 500 Premium EV sales fund Advanced Battery Chemistry and Energy Products. |
-| Mass-market EV | 1,300 | 2,050 | 250 Premium EVs sold | 1,300 Premium EVs, or 65 Megapack sales after Energy Products unlocks. |
-| Robotaxi | 3,000 | 5,050 | 5,000 cumulative consumer EVs sold | Terrestrial AI research, 1,000 terrestrial tokens, and Autonomous Logistics. |
-| Orbital Compute | 4,000 | 9,050 | Rocket and orbital prerequisites | 2,000 terrestrial tokens plus the orbital science path. |
-| Cluster Training | 5,000 | 14,050 | 1,000,000 cumulative orbital tokens | Research unlocks 25,000-token orbital batches. |
-| Grid-scale Energy | 15,000 | 29,050 | 10,000,000 cumulative orbital tokens | Research unlocks 50,000-token batches and the late power assets. |
-| Hyperscale Training | 30,000 | 59,050 | 100,000,000 cumulative orbital tokens | Research unlocks 100,000-token orbital batches. |
-| Planetary Grid | 0 | 59,050 | Hyperscale Training, Autonomous Logistics, and nuclear power | Science and AI Tokens only; Planetary Grid no longer consumes Dollars. |
-| Grid Controller | 11,050 | 70,100 | Planetary Grid researched | 10,000 Dollars, 100 capital-funded Gigafactory Modules, and the 5-Dollar upgrades for 10 Grid Megapacks. |
+| Advanced Battery Chemistry | 300 | 550 | Premium EV production and the battery branch | 300 Dollars funds the first chemistry upgrade without requiring a Megapack economy. |
+| Energy Products | 200 | 750 | Advanced Battery Chemistry | 200 Dollars opens the Megapack branch before large-scale EV expansion. |
+| V2 Charging Network | 150 | 900 | Premium EV program and powered V1 charging | The cheaper V2 path lets the player reach distant colonies without hoarding research capital. |
+| Capital Scaling | 600 | 1,500 | 250 Premium EVs sold | 600 Dollars opens the Gigafactory V2 and mass-market production path. |
+| Terrestrial AI | 750 | 2,250 | Capital Scaling and Energy Products | 750 Dollars funds terrestrial compute without making the first datacenter a dead end. |
+| Autonomous Logistics | 750 | 3,000 | Terrestrial AI and logistics science | 750 Dollars unlocks Robotaxi service and the V4 charging tier. |
+| Orbital Compute | 1,500 | 4,500 | 5,000 cumulative consumer EV sales and rocket prerequisites | 1,500 Dollars funds the orbital transition; the 5,000-sale gate remains unchanged. |
+| Cluster Training | 5,000 | 9,500 | 1,000,000 cumulative orbital tokens | Research unlocks 25,000-token orbital batches. |
+| Grid-scale Energy | 15,000 | 24,500 | 10,000,000 cumulative orbital tokens | Research unlocks 50,000-token batches and the late power assets. |
+| Hyperscale Training | 30,000 | 54,500 | 100,000,000 cumulative orbital tokens | Research unlocks 100,000-token orbital batches. |
+| Planetary Grid | 0 | 54,500 | Hyperscale Training, Autonomous Logistics, and nuclear power | Science and AI Tokens only; Planetary Grid no longer consumes Dollars. |
+| Grid Controller | 11,050 | 65,550 | Planetary Grid researched | 10,000 Dollars, 100 capital-funded Gigafactory Modules, and the 5-Dollar upgrades for 10 Grid Megapacks. |
 
-The physical sales gates remain important, but capital is already the tighter
-gate at Premium EV: the 50 required Roadsters produce only 100 of the 250
-Dollars needed for research. Once Energy Products unlocks, 20-Dollar Megapack
-sales can fund later research much more efficiently than one-Dollar EV sales.
+The physical sales gates remain important, but the early capital curve is now
+deliberately forgiving: the first terrestrial research sequence totals 4,500
+Dollars through Orbital Compute, excluding optional branches and construction.
+Once Energy Products unlocks, 20-Dollar Megapack sales can fund later research
+much more efficiently than one-Dollar EV sales.
+
+## Customer Network Assumptions
+
+Each living customer can buy one of each consumer vehicle generation over the
+campaign: Prototype Roadster, Premium EV, Mass-market EV, Megatruck. A replacement purchase changes the customer's active
+vehicle and can create one Wrecked EV, so a developed settlement can keep
+producing demand without requiring a new biter for every sale. Robotaxi fleet
+service is recurring revenue and is not part of this consumer replacement
+count.
+
+- Purchase opportunities per represented customer: 4
+- Replacement purchases: one per consumer vehicle generation
+- 5,000 consumer-sale Robotaxi gate: unchanged
+- Organic represented-population cap: 3x each settlement's starting representation
+- Organic prospect interval: one represented prospect about every 15 minutes while locally served
+- Growth suspension: affected settlement only; other settlements continue growing
+- V1/V2/V3/V4 charger radii: 64 / 128 / 192 / 256 tiles
+
+The model treats represented populations as aggregate settlement state. It does
+not require one Lua unit per simulated customer, and it does not make distant
+colonies mandatory once the player has developed a bounded network of local
+settlements.
+
 
 ### Practical Mixed-Sales Path
 
 | Milestone | Requirement | Illustrative capital raised | Spend | Cash after |
 |---|---:|---:|---:|---:|
 | Premium EV | 50 Roadsters sold | 250 | 250 | 0 |
-| Energy Products | 250 Premium EVs produced | 500 | 500 | 0 |
-| Mass-market EV | 250 Premium EVs sold | 1,300 | 1,300 | 0 |
-| Robotaxi | 5,000 cumulative consumer sales | 3,000 | 3,000 | 0 |
-| Orbital Compute | Orbital prerequisites | 4,000 | 4,000 | 0 |
+| Advanced Battery Chemistry | Premium EV production | 300 | 300 | 0 |
+| Energy Products | Advanced Battery Chemistry | 200 | 200 | 0 |
+| V2 Charging Network | Powered V1 charging | 150 | 150 | 0 |
+| Capital Scaling | 250 Premium EVs sold | 600 | 600 | 0 |
+| Terrestrial AI | Capital Scaling and Energy Products | 750 | 750 | 0 |
+| Autonomous Logistics | Terrestrial AI and logistics science | 750 | 750 | 0 |
+| Robotaxi | 5,000 cumulative consumer sales | 0 | 0 | 0 |
+| Orbital Compute | Rocket and orbital prerequisites | 1,500 | 1,500 | 0 |
 | Orbital milestone research | 1M / 10M / 100M tokens | 50,000 | 50,000 | 0 |
 | Planetary Grid | Hyperscale and science | 0 | 0 | 0 |
 | Grid Controller | 10 Grid Megapacks and modules | 11,050 | 11,050 | 0 |
@@ -62,8 +93,9 @@ Recommended construction around the mass-market transition adds about 275
 Dollars: 100 for Gigafactory V1, 150 more for V2, and 25 for the solar-panel
 production gate. A fully stocked Robotaxi Service Center costs about
 20,479 Dollars, serves 1,000
-customers, and currently earns only 2,400
-Dollars/hour.
+customers, earns 6,000 Dollars/hour at
+the target rate, and pays back its full center-and-fleet capex in about
+3.4 hours before other operating costs.
 
 Optional finite branches add 1,250 Dollars: 250 for Megatruck Engineering, 250
 for Battery Material Recovery, and 750 for Cybertrain Logistics. Infinite
@@ -93,7 +125,7 @@ improvement research is intentionally excluded.
 | Orbital compute power for that build | 2.5 GW | 2.5 GW | 2.5 GW |
 | Orbital solar panels for that build | 17 | 17 | 17 |
 | Orbital radiators for that build | 80 | 80 | 80 |
-| Mandatory path + transition construction | 70,375 | 70,375 | 70,375 |
+| Mandatory path + transition construction | 65,825 | 65,825 | 65,825 |
 | Final capital Dollars | 50,000 | 50,000 | 60,000 |
 | Tandem Solar Arrays | 4,762 | 5,715 | 5,715 |
 | Grid Megapacks | 1,001 | 1,201 | 1,201 |
@@ -102,11 +134,11 @@ improvement research is intentionally excluded.
 | Solar productivity research Dollars | 0 | 6,094 | 6,094 |
 | Orbital solar recipe Dollars | 51 | 49 | 49 |
 | Unsold Megapack opportunity cost | 22,220 | 26,220 | 26,220 |
-| Direct Dollars required | 141,953 | 149,997 | 159,997 |
-| Total economic burden | 164,173 | 176,217 | 186,217 |
-| Megapacks sold to fund direct Dollars | 7,098 | 7,500 | 8,000 |
-| Total Megapacks manufactured | 8,209 | 8,811 | 9,311 |
-| One-Dollar EV equivalent | 164,173 | 176,217 | 186,217 |
+| Direct Dollars required | 137,403 | 145,447 | 155,447 |
+| Total economic burden | 159,623 | 171,667 | 181,667 |
+| Megapacks sold to fund direct Dollars | 6,870 | 7,272 | 7,772 |
+| Total Megapacks manufactured | 7,981 | 8,583 | 9,083 |
+| One-Dollar EV equivalent | 159,623 | 171,667 | 181,667 |
 
 The approved 10 GW grid is approximately
 46,862 occupied tiles
@@ -122,7 +154,9 @@ pressure points:
 - output rises from 10,000 to 25,000, 50,000, and 100,000 tokens at 1M, 10M,
   100M, and 1B cumulative tokens;
 - final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
-- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks.
+- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks;
+- Robotaxi service earns 1 Dollar per 2 allocated vehicle-minutes, targeting a
+  roughly 3-4 hour full-center capex payback.
 
 At 10 GW the ending asks for about 4,762 Tandem
 Arrays and 1,001 Grid Megapacks. That is still a
@@ -133,16 +167,17 @@ millions of HD panels.
 
 | Funding system | Approved rebalance | Higher-power sensitivity | Higher-power and capital sensitivity |
 |---|---:|---:|---:|
-| 10 saturated Megapack Sales Offices | 5.9 h | 6.2 h | 6.7 h |
-| 25 saturated Megapack Sales Offices | 2.4 h | 2.5 h | 2.7 h |
-| 100 saturated Megapack Sales Offices | 0.6 h | 0.6 h | 0.7 h |
-| 10 full Robotaxi Service Centers, net of fleet capex | 14.4 h | 14.8 h | 30.4 h |
-| 50 full Robotaxi Service Centers, net of fleet capex | 9.7 h | 9.8 h | 19.7 h |
-| 100 full Robotaxi Service Centers, net of fleet capex | 9.1 h | 9.2 h | 18.4 h |
+| 10 saturated Megapack Sales Offices | 5.7 h | 6.1 h | 6.5 h |
+| 25 saturated Megapack Sales Offices | 2.3 h | 2.4 h | 2.6 h |
+| 100 saturated Megapack Sales Offices | 0.6 h | 0.6 h | 0.6 h |
+| 10 full Robotaxi Service Centers, net of fleet capex | 5.7 h | 5.8 h | 12.0 h |
+| 50 full Robotaxi Service Centers, net of fleet capex | 3.9 h | 3.9 h | 7.9 h |
+| 100 full Robotaxi Service Centers, net of fleet capex | 3.6 h | 3.7 h | 7.3 h |
 
 These times assume every office or service center is continuously saturated.
 Customer growth, reservations, production, transport, and power shortages all
-increase elapsed playtime.
+increase elapsed playtime. The simulator's Robotaxi rate is the approved target
+model; the live mod runtime is intentionally outside this simulator-only turn.
 
 ## Recommendation
 
@@ -152,9 +187,9 @@ approved late game turns the 1-billion-token objective into a staged capital
 and power campaign without requiring millions of placed power entities.
 
 The approved case and sensitivities bound the effective ending at roughly
-176,217-186,217
-Dollars. The approved case is about 164,173
-Dollars, or roughly 7,098 Megapack
+171,667-181,667
+Dollars. The approved case is about 159,623
+Dollars, or roughly 6,870 Megapack
 sales before Robotaxi income. Ten well-utilized Robotaxi Service Centers can
 meaningfully offset this capital burden, making
 customer-network scale useful without making it mandatory.

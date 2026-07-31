@@ -60,28 +60,46 @@ PROGRESSION = (
         "125 Roadsters fund the research, so capital dominates the 50-sale gate.",
     ),
     ProgressionStage(
+        "Advanced Battery Chemistry",
+        300,
+        "Premium EV production and the battery branch",
+        "300 Dollars funds the first chemistry upgrade without requiring a Megapack economy.",
+    ),
+    ProgressionStage(
         "Energy Products",
-        500,
-        "250 Premium EVs produced before battery research appears",
-        "500 Premium EV sales fund Advanced Battery Chemistry and Energy Products.",
+        200,
+        "Advanced Battery Chemistry",
+        "200 Dollars opens the Megapack branch before large-scale EV expansion.",
     ),
     ProgressionStage(
-        "Mass-market EV",
-        1_300,
+        "V2 Charging Network",
+        150,
+        "Premium EV program and powered V1 charging",
+        "The cheaper V2 path lets the player reach distant colonies without hoarding research capital.",
+    ),
+    ProgressionStage(
+        "Capital Scaling",
+        600,
         "250 Premium EVs sold",
-        "1,300 Premium EVs, or 65 Megapack sales after Energy Products unlocks.",
+        "600 Dollars opens the Gigafactory V2 and mass-market production path.",
     ),
     ProgressionStage(
-        "Robotaxi",
-        3_000,
-        "5,000 cumulative consumer EVs sold",
-        "Terrestrial AI research, 1,000 terrestrial tokens, and Autonomous Logistics.",
+        "Terrestrial AI",
+        750,
+        "Capital Scaling and Energy Products",
+        "750 Dollars funds terrestrial compute without making the first datacenter a dead end.",
+    ),
+    ProgressionStage(
+        "Autonomous Logistics",
+        750,
+        "Terrestrial AI and logistics science",
+        "750 Dollars unlocks Robotaxi service and the V4 charging tier.",
     ),
     ProgressionStage(
         "Orbital Compute",
-        4_000,
-        "Rocket and orbital prerequisites",
-        "2,000 terrestrial tokens plus the orbital science path.",
+        1_500,
+        "5,000 cumulative consumer EV sales and rocket prerequisites",
+        "1,500 Dollars funds the orbital transition; the 5,000-sale gate remains unchanged.",
     ),
     ProgressionStage(
         "Cluster Training",
@@ -131,7 +149,7 @@ CURRENT = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=50_000,
     final_power_watts=10_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=5,
+    robotaxi_vehicle_minutes_per_dollar=2,
     solar_productivity=0,
 )
 
@@ -140,7 +158,7 @@ RELEASE_CANDIDATE = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=50_000,
     final_power_watts=12_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=5,
+    robotaxi_vehicle_minutes_per_dollar=2,
     solar_productivity=0.40,
 )
 
@@ -149,7 +167,7 @@ DEMANDING_RELEASE = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=60_000,
     final_power_watts=12_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=10,
+    robotaxi_vehicle_minutes_per_dollar=4,
     solar_productivity=0.40,
 )
 
@@ -198,6 +216,37 @@ ORBITAL_CORE_WATTS = 250_000_000
 ORBITAL_PANEL_PEAK_WATTS = 50_000_000
 NAUVIS_ORBIT_SOLAR_MULTIPLIER = 3
 RADIATORS_PER_CORE = 8
+
+CONSUMER_REPLACEMENT_MODELS = (
+    "Prototype Roadster",
+    "Premium EV",
+    "Mass-market EV",
+    "Megatruck",
+)
+ORGANIC_PROSPECT_CAP_MULTIPLIER = 3
+ORGANIC_PROSPECT_INTERVAL_MINUTES = 15
+GROWTH_SUSPENSION_SCOPE = "affected settlement only"
+CHARGER_RADII = (64, 128, 192, 256)
+
+
+@dataclass(frozen=True)
+class MarketPlan:
+    replacement_models: tuple[str, ...]
+    purchases_per_customer: int
+    organic_cap_multiplier: int
+    organic_prospect_interval_minutes: int
+    growth_suspension_scope: str
+    charger_radii: tuple[int, ...]
+
+
+MARKET = MarketPlan(
+    replacement_models=CONSUMER_REPLACEMENT_MODELS,
+    purchases_per_customer=len(CONSUMER_REPLACEMENT_MODELS),
+    organic_cap_multiplier=ORGANIC_PROSPECT_CAP_MULTIPLIER,
+    organic_prospect_interval_minutes=ORGANIC_PROSPECT_INTERVAL_MINUTES,
+    growth_suspension_scope=GROWTH_SUSPENSION_SCOPE,
+    charger_radii=CHARGER_RADII,
+)
 
 
 @dataclass(frozen=True)
@@ -381,6 +430,25 @@ def robotaxi_hours_to_net(balance: Balance, centers: int, target_dollars: float)
     return (target_dollars + capex) / robotaxi_revenue_per_hour(balance, centers)
 
 
+def robotaxi_payback_hours(balance: Balance) -> float:
+    """Return the full-center capex payback at the target allocation rate."""
+    return ROBOTAXI_CENTER_CAPEX / robotaxi_revenue_per_hour(balance, 1)
+
+
+def replacement_purchase_capacity(customers: int) -> int:
+    """Count one possible purchase for each consumer model per customer."""
+    if customers < 0:
+        raise ValueError("customers must be non-negative")
+    return customers * MARKET.purchases_per_customer
+
+
+def organic_prospect_cap(initial_represented_population: int) -> int:
+    """Bound represented local growth without spawning unbounded visible units."""
+    if initial_represented_population < 0:
+        raise ValueError("initial represented population must be non-negative")
+    return initial_represented_population * MARKET.organic_cap_multiplier
+
+
 def cores_for_ai_hours(plan: AiPlan, target_hours: float) -> int:
     return math.ceil(plan.one_core_hours / target_hours)
 
@@ -429,6 +497,33 @@ def sale_markdown() -> str:
             f"{fmt(sale.dollars_per_hour)} Dollars/hour |"
         )
     return "\n".join(lines)
+
+
+def market_markdown() -> str:
+    models = ", ".join(MARKET.replacement_models)
+    radii = " / ".join(str(radius) for radius in MARKET.charger_radii)
+    return f"""## Customer Network Assumptions
+
+Each living customer can buy one of each consumer vehicle generation over the
+campaign: {models}. A replacement purchase changes the customer's active
+vehicle and can create one Wrecked EV, so a developed settlement can keep
+producing demand without requiring a new biter for every sale. Robotaxi fleet
+service is recurring revenue and is not part of this consumer replacement
+count.
+
+- Purchase opportunities per represented customer: {MARKET.purchases_per_customer}
+- Replacement purchases: one per consumer vehicle generation
+- 5,000 consumer-sale Robotaxi gate: unchanged
+- Organic represented-population cap: {MARKET.organic_cap_multiplier}x each settlement's starting representation
+- Organic prospect interval: one represented prospect about every {MARKET.organic_prospect_interval_minutes} minutes while locally served
+- Growth suspension: {MARKET.growth_suspension_scope}; other settlements continue growing
+- V1/V2/V3/V4 charger radii: {radii} tiles
+
+The model treats represented populations as aggregate settlement state. It does
+not require one Lua unit per simulated customer, and it does not make distant
+colonies mandatory once the player has developed a bounded network of local
+settlements.
+"""
 
 
 def campaign_markdown(plans: Iterable[CampaignPlan]) -> str:
@@ -547,10 +642,14 @@ def construction_markdown() -> str:
 def practical_progression_markdown() -> str:
     mixed_rows = (
         ("Premium EV", "50 Roadsters sold", 250, 250, 0),
-        ("Energy Products", "250 Premium EVs produced", 500, 500, 0),
-        ("Mass-market EV", "250 Premium EVs sold", 1_300, 1_300, 0),
-        ("Robotaxi", "5,000 cumulative consumer sales", 3_000, 3_000, 0),
-        ("Orbital Compute", "Orbital prerequisites", 4_000, 4_000, 0),
+        ("Advanced Battery Chemistry", "Premium EV production", 300, 300, 0),
+        ("Energy Products", "Advanced Battery Chemistry", 200, 200, 0),
+        ("V2 Charging Network", "Powered V1 charging", 150, 150, 0),
+        ("Capital Scaling", "250 Premium EVs sold", 600, 600, 0),
+        ("Terrestrial AI", "Capital Scaling and Energy Products", 750, 750, 0),
+        ("Autonomous Logistics", "Terrestrial AI and logistics science", 750, 750, 0),
+        ("Robotaxi", "5,000 cumulative consumer sales", 0, 0, 0),
+        ("Orbital Compute", "Rocket and orbital prerequisites", 1_500, 1_500, 0),
         ("Orbital milestone research", "1M / 10M / 100M tokens", 50_000, 50_000, 0),
         ("Planetary Grid", "Hyperscale and science", 0, 0, 0),
         ("Grid Controller", "10 Grid Megapacks and modules", 11_050, 11_050, 0),
@@ -588,10 +687,13 @@ One in-game Dollar represents `${DOLLAR_USD:,}` USD of profit.
 
 {progression_markdown()}
 
-The physical sales gates remain important, but capital is already the tighter
-gate at Premium EV: the 50 required Roadsters produce only 100 of the 250
-Dollars needed for research. Once Energy Products unlocks, 20-Dollar Megapack
-sales can fund later research much more efficiently than one-Dollar EV sales.
+The physical sales gates remain important, but the early capital curve is now
+deliberately forgiving: the first terrestrial research sequence totals 4,500
+Dollars through Orbital Compute, excluding optional branches and construction.
+Once Energy Products unlocks, 20-Dollar Megapack sales can fund later research
+much more efficiently than one-Dollar EV sales.
+
+{market_markdown()}
 
 ### Practical Mixed-Sales Path
 
@@ -607,8 +709,9 @@ Recommended construction around the mass-market transition adds about 275
 Dollars: 100 for Gigafactory V1, 150 more for V2, and 25 for the solar-panel
 production gate. A fully stocked Robotaxi Service Center costs about
 {fmt(ROBOTAXI_CENTER_CAPEX)} Dollars, serves {fmt(ROBOTAXI_FLEETS_PER_CENTER * ROBOTAXI_CUSTOMERS_PER_FLEET)}
-customers, and currently earns only {fmt(robotaxi_revenue_per_hour(CURRENT, 1))}
-Dollars/hour.
+customers, earns {fmt(robotaxi_revenue_per_hour(CURRENT, 1))} Dollars/hour at
+the target rate, and pays back its full center-and-fleet capex in about
+{fmt(robotaxi_payback_hours(CURRENT), 1)} hours before other operating costs.
 
 Optional finite branches add 1,250 Dollars: 250 for Megatruck Engineering, 250
 for Battery Material Recovery, and 750 for Cybertrain Logistics. Infinite
@@ -636,7 +739,9 @@ pressure points:
 - output rises from 10,000 to 25,000, 50,000, and 100,000 tokens at 1M, 10M,
   100M, and 1B cumulative tokens;
 - final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
-- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks.
+- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks;
+- Robotaxi service earns 1 Dollar per 2 allocated vehicle-minutes, targeting a
+  roughly 3-4 hour full-center capex payback.
 
 At 10 GW the ending asks for about {fmt(plans[0].power.tandem_arrays)} Tandem
 Arrays and {fmt(plans[0].power.grid_megapacks)} Grid Megapacks. That is still a
@@ -649,7 +754,8 @@ millions of HD panels.
 
 These times assume every office or service center is continuously saturated.
 Customer growth, reservations, production, transport, and power shortages all
-increase elapsed playtime.
+increase elapsed playtime. The simulator's Robotaxi rate is the approved target
+model; the live mod runtime is intentionally outside this simulator-only turn.
 
 ## Recommendation
 
@@ -775,7 +881,7 @@ def validate_source_snapshot() -> list[str]:
         '["bitermotors-orbital-ai-token-hyperscale"] = 100000',
         'high_density_space_solar_panel.production = "50MW"',
         '"750*1.5^(L-1)"',
-        "ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 100",
+        "ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2",
         "ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5",
     )
     combined = data + "\n" + control

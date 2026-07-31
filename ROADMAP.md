@@ -78,6 +78,32 @@ not a second simulated company.
   populations remain visible without requiring one Lua object per simulated
   customer.
 
+### Approved Easier-Balance Target
+
+The next balance slice keeps the same products, profits, `5,000` consumer-sale
+Robotaxi gate, `1B` cumulative AI Token objective, and final AGI endgame. It
+reduces the capital squeeze and lets developed settlements support continued
+sales:
+
+- Research Dollar costs target: V2 Charging Network `150`, Capital Scaling
+  `600`, Terrestrial AI `750`, Autonomous Logistics `750`, and Orbital Compute
+  `1,500`.
+- Sale profits remain unchanged: Roadster `2`, Premium EV `1`, Mass-market EV
+  `1`, Megatruck `2`, and Megapack `20` Dollars.
+- Customers may make one replacement purchase for each consumer generation:
+  Roadster, Premium EV, Mass-market EV, and Megatruck. The active vehicle is
+  replaced rather than creating an unbounded sale loop.
+- Organic represented prospects grow locally at a bounded rate, with a cap of
+  three times each settlement's starting representation. A shortage suspends
+  only the affected settlement; healthy settlements continue growing.
+- Charger radii target `64 / 128 / 192 / 256` tiles for V1 through V4.
+- Robotaxi Service Centers target `1 Dollar per 2 allocated vehicle-minutes`,
+  giving a full center approximately a `3-4` hour capex payback at saturation.
+
+The simulator and economy report are the source of truth for these balance
+assumptions until the corresponding runtime values are validated in a fresh
+Factorio campaign.
+
 ### Vehicles And Manufacturing
 
 - Prototype Roadster, Premium EV, Mass-market EV, Megatruck, and Robotaxi.

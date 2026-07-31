@@ -54,15 +54,66 @@ class EconomySimulationTests(unittest.TestCase):
     def test_robotaxi_revenue_uses_recurring_vehicle_minutes(self):
         current = economy.robotaxi_revenue_per_hour(economy.CURRENT, 1)
         demanding = economy.robotaxi_revenue_per_hour(economy.DEMANDING_RELEASE, 1)
-        self.assertEqual(2_400, current)
-        self.assertEqual(1_200, demanding)
+        self.assertEqual(6_000, current)
+        self.assertEqual(3_000, demanding)
+        self.assertAlmostEqual(3.4131666667, economy.robotaxi_payback_hours(economy.CURRENT), places=6)
+
+    def test_easier_terrestrial_progression_uses_approved_dollar_costs(self):
+        self.assertEqual(
+            [
+                250,
+                300,
+                200,
+                150,
+                600,
+                750,
+                750,
+                1_500,
+                5_000,
+                15_000,
+                30_000,
+                0,
+                11_050,
+            ],
+            [stage.incremental_dollars for stage in economy.PROGRESSION],
+        )
+
+    def test_customer_replacements_and_bounded_local_growth(self):
+        self.assertEqual(4, economy.MARKET.purchases_per_customer)
+        self.assertEqual(4_000, economy.replacement_purchase_capacity(1_000))
+        self.assertEqual(3_000, economy.organic_prospect_cap(1_000))
+        self.assertEqual(15, economy.MARKET.organic_prospect_interval_minutes)
+        self.assertEqual("affected settlement only", economy.MARKET.growth_suspension_scope)
+        self.assertEqual((64, 128, 192, 256), economy.MARKET.charger_radii)
+
+    def test_customer_capacity_rejects_negative_population(self):
+        with self.assertRaises(ValueError):
+            economy.replacement_purchase_capacity(-1)
+        with self.assertRaises(ValueError):
+            economy.organic_prospect_cap(-1)
+
+    def test_report_generation_includes_easier_balance_contract(self):
+        report = economy.report()
+        for fragment in (
+            "| V2 Charging Network | 150 |",
+            "| Capital Scaling | 600 |",
+            "| Terrestrial AI | 750 |",
+            "| Autonomous Logistics | 750 |",
+            "| Orbital Compute | 1,500 |",
+            "1 Dollar per 2 allocated vehicle-minutes",
+            "Each living customer can buy one of each consumer vehicle generation",
+            "affected settlement only",
+            "64 / 128 / 192 / 256",
+            "5,000 consumer-sale Robotaxi gate: unchanged",
+        ):
+            self.assertIn(fragment, report)
 
     def test_campaign_counts_rebalanced_controller_and_final_megapacks(self):
         plan = economy.campaign_plan(economy.CURRENT)
-        self.assertEqual(70_375, plan.pre_endgame_dollars)
+        self.assertEqual(65_825, plan.pre_endgame_dollars)
         self.assertEqual(2_200, plan.consumed_megapack_opportunity_dollars)
-        self.assertEqual(141_953, plan.direct_dollars)
-        self.assertEqual(164_173, plan.economic_burden_dollars)
+        self.assertEqual(137_403, plan.direct_dollars)
+        self.assertEqual(159_623, plan.economic_burden_dollars)
 
 
 if __name__ == "__main__":
