@@ -2312,6 +2312,21 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors-cell-scale-lfp=LFP cells (Gigafactory)", locale)
         self.assertIn("one four-cell batch fills one High-energy Battery Pack", locale)
         self.assertIn("same dirty-refining precursors and cobalt", locale)
+        self.assertIn("bitermotors-lithium-extraction=Dirty lithium extraction", locale)
+        self.assertIn("bitermotors-phosphate-extraction=Dirty phosphate extraction", locale)
+        for product_slug in ["nickel-sulfate", "lithium-carbonate", "phosphate"]:
+            self.assertIn(
+                f'battery_refining_recipe_icon("{product_slug}", false)',
+                data,
+            )
+            self.assertIn(
+                f'battery_refining_recipe_icon("{product_slug}", true)',
+                data,
+            )
+        self.assertIn('icon = "__bitermotors__/graphics/icons/acidic-tailings.png"', data)
+        self.assertIn('icon = "__base__/graphics/icons/efficiency-module-3.png"', data)
+        self.assertIn("Legacy process: produces 4 Nickel Sulfate", locale)
+        self.assertIn("Improved process: produces 5 Nickel Sulfate", locale)
         item_art_slugs = [
             "nickel-ore", "nickel-sulfate", "lithium-carbonate", "battery-graphite",
             "cobalt-concentrate", "phosphate",

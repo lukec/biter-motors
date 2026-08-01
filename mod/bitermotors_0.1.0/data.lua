@@ -49,6 +49,28 @@ local function generated_icon(slug)
   }
 end
 
+local function battery_refining_recipe_icon(product_slug, clean_process)
+  local icons = generated_icon(product_slug)
+  if clean_process then
+    table.insert(icons, {
+      icon = "__base__/graphics/icons/efficiency-module-3.png",
+      icon_size = 64,
+      scale = 0.42,
+      shift = {8, 8}
+    })
+  else
+    icons[1].tint = {r = 0.92, g = 0.72, b = 0.52, a = 1}
+    table.insert(icons, {
+      icon = "__bitermotors__/graphics/icons/acidic-tailings.png",
+      icon_size = 256,
+      scale = 0.42,
+      shift = {8, 8},
+      tint = {r = 1, g = 0.58, b = 0.30, a = 1}
+    })
+  end
+  return icons
+end
+
 local function sale_icon(product_icons)
   local icons = table.deepcopy(product_icons)
   table.insert(icons, {
@@ -1540,7 +1562,11 @@ data:extend({
       {type = "item", name = "bitermotors-nickel-sulfate", amount = 4},
       {type = "item", name = "bitermotors-cobalt-concentrate", amount = 1},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 200}
-    }, 10, {allow_productivity = true, main_product = "bitermotors-nickel-sulfate"}
+    }, 10, {
+      allow_productivity = true,
+      main_product = "bitermotors-nickel-sulfate",
+      icons = battery_refining_recipe_icon("nickel-sulfate", false)
+    }
   ),
   recipe("bitermotors-lithium-extraction", {"chemistry"}, "bitermotors-components", "a-b[lithium]",
     {
@@ -1550,7 +1576,11 @@ data:extend({
     {
       {type = "item", name = "bitermotors-lithium-carbonate", amount = 4},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 100}
-    }, 10, {allow_productivity = true, main_product = "bitermotors-lithium-carbonate"}
+    }, 10, {
+      allow_productivity = true,
+      main_product = "bitermotors-lithium-carbonate",
+      icons = battery_refining_recipe_icon("lithium-carbonate", false)
+    }
   ),
   recipe("bitermotors-battery-graphite", {"chemistry"}, "bitermotors-components", "a-c[graphite]",
     {{type = "item", name = "coal", amount = 5}},
@@ -1565,7 +1595,11 @@ data:extend({
     {
       {type = "item", name = "bitermotors-phosphate", amount = 4},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 100}
-    }, 8, {allow_productivity = true, main_product = "bitermotors-phosphate"}
+    }, 8, {
+      allow_productivity = true,
+      main_product = "bitermotors-phosphate",
+      icons = battery_refining_recipe_icon("phosphate", false)
+    }
   ),
   recipe("bitermotors-tailings-neutralization", {"chemistry"}, "bitermotors-components", "a-e[tailings]",
     {
@@ -1639,7 +1673,11 @@ data:extend({
     {
       {type = "item", name = "bitermotors-nickel-sulfate", amount = 5},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 50}
-    }, 8, {allow_productivity = true, main_product = "bitermotors-nickel-sulfate"}
+    }, 8, {
+      allow_productivity = true,
+      main_product = "bitermotors-nickel-sulfate",
+      icons = battery_refining_recipe_icon("nickel-sulfate", true)
+    }
   ),
   recipe("bitermotors-clean-lithium-extraction", {"chemistry"}, "bitermotors-components", "e-b[clean-lithium]",
     {
@@ -1649,7 +1687,11 @@ data:extend({
     {
       {type = "item", name = "bitermotors-lithium-carbonate", amount = 5},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 25}
-    }, 8, {allow_productivity = true, main_product = "bitermotors-lithium-carbonate"}
+    }, 8, {
+      allow_productivity = true,
+      main_product = "bitermotors-lithium-carbonate",
+      icons = battery_refining_recipe_icon("lithium-carbonate", true)
+    }
   ),
   recipe("bitermotors-clean-phosphate-extraction", {"chemistry"}, "bitermotors-components", "e-c[clean-phosphate]",
     {
@@ -1659,7 +1701,11 @@ data:extend({
     {
       {type = "item", name = "bitermotors-phosphate", amount = 5},
       {type = "fluid", name = "bitermotors-acidic-tailings", amount = 25}
-    }, 6, {allow_productivity = true, main_product = "bitermotors-phosphate"}
+    }, 6, {
+      allow_productivity = true,
+      main_product = "bitermotors-phosphate",
+      icons = battery_refining_recipe_icon("phosphate", true)
+    }
   ),
   recipe("bitermotors-dry-high-nickel-cell", {"bitermotors-vertical-integration"}, "bitermotors-components", "e-d[dry-high-nickel]",
     {
