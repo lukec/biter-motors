@@ -2316,17 +2316,21 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors-phosphate-extraction=Dirty phosphate extraction", locale)
         for product_slug in ["nickel-sulfate", "lithium-carbonate", "phosphate"]:
             self.assertIn(
-                f'battery_refining_recipe_icon("{product_slug}", false)',
+                f'battery_process_recipe_icon("{product_slug}", false)',
                 data,
             )
             self.assertIn(
-                f'battery_refining_recipe_icon("{product_slug}", true)',
+                f'battery_process_recipe_icon("{product_slug}", true)',
                 data,
             )
         self.assertIn('icon = "__bitermotors__/graphics/icons/acidic-tailings.png"', data)
         self.assertIn('icon = "__base__/graphics/icons/efficiency-module-3.png"', data)
         self.assertIn("Legacy process: produces 4 Nickel Sulfate", locale)
         self.assertIn("Improved process: produces 5 Nickel Sulfate", locale)
+        self.assertIn('battery_process_recipe_icon("high-nickel-cell", true)', data)
+        self.assertIn('battery_process_recipe_icon("lfp-cell", true)', data)
+        self.assertIn("legacy cell recipes still require cobalt", locale)
+        self.assertIn("Pair it with Clean nickel refining", locale)
         item_art_slugs = [
             "nickel-ore", "nickel-sulfate", "lithium-carbonate", "battery-graphite",
             "cobalt-concentrate", "phosphate",
