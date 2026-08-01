@@ -1727,15 +1727,21 @@ class BiterMotorsModTest(unittest.TestCase):
             "MEGAPACK_BUYER_MAX_ACTIVE = 32",
             "MEGAPACK_BUYER_STARTS_PER_SECOND = 4",
             "function sync_megapack_adoption_waves()",
+            "function ensure_megapack_buyer_icon(",
             "function begin_megapack_buyer_trip(",
+            "function hold_megapack_buyer_at_showroom(",
             "function complete_megapack_buyer_arrival(",
             "function send_megapack_buyer_home(",
             "function install_megapack_at_settlement(",
             "function handle_megapack_buyer_command_completed(",
             "function sync_megapack_sales_offices()",
             'sprite = "item/" .. MEGAPACK_NAME',
+            'trip.phase == "waiting_product"',
+            "trip.showroom_position",
         ]:
             self.assertIn(contract, control)
+        self.assertIn("if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end", control)
+        self.assertIn("return hold_megapack_buyer_at_showroom(trip, entity)", control)
         self.assertIn(
             "if not handle_megapack_buyer_command_completed(event) then",
             control,

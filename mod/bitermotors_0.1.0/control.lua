@@ -7911,6 +7911,7 @@ function clear_megapack_buyer_trip(unit_number, resume_wandering)
   local trips = megapack_buyer_trips()
   local trip = trips[unit_number]
   if not trip then return false end
+  if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end
   if trip.carry_icon and trip.carry_icon.valid then trip.carry_icon.destroy() end
   local office_reservations = megapack_office_reservations()
   if office_reservations[trip.office_unit_number] == unit_number then
@@ -7944,6 +7945,19 @@ function megapack_buyer_destination(entity, target, radius, salt)
     or position
 end
 
+function ensure_megapack_buyer_icon(trip, entity)
+  if not entity or not entity.valid or (trip.buyer_icon and trip.buyer_icon.valid) then return end
+  trip.buyer_icon = rendering.draw_sprite{
+    sprite = "item/" .. MEGAPACK_NAME,
+    surface = entity.surface,
+    target = entity,
+    target_offset = {0, -1.6},
+    x_scale = 0.32,
+    y_scale = 0.32,
+    render_layer = "air-object"
+  }
+end
+
 function begin_megapack_buyer_trip(office, key, population, unit_number)
   local entity = customer_unit_registry()[unit_number]
   local adoption = ensure_megapack_adoption_state(key, population)
@@ -7963,8 +7977,10 @@ function begin_megapack_buyer_trip(office, key, population, unit_number)
     force_name = office.force.name,
     phase = "to_office",
     destination = destination,
+    showroom_position = destination,
     command_started_tick = game.tick
   }
+  ensure_megapack_buyer_icon(trip, entity)
   megapack_buyer_trips()[unit_number] = trip
   megapack_buyer_reservations()[unit_number] = office.unit_number
   megapack_office_reservations()[office.unit_number] = unit_number
@@ -8052,6 +8068,8 @@ function send_megapack_buyer_home(trip)
   trip.phase = "returning_home"
   trip.destination = destination
   trip.command_started_tick = game.tick
+  if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end
+  trip.buyer_icon = nil
   trip.carry_icon = rendering.draw_sprite{
     sprite = "item/" .. MEGAPACK_NAME,
     surface = entity.surface,
@@ -8061,6 +8079,39 @@ function send_megapack_buyer_home(trip)
     y_scale = 0.42,
     render_layer = "air-object"
   }
+  return true
+end
+
+function hold_megapack_buyer_at_showroom(trip, entity)
+  local office = trip.office
+  if not office or not office.valid or not entity or not entity.valid or not entity.commandable then
+    return false
+  end
+  local target = trip.showroom_position or megapack_buyer_destination(
+    entity,
+    office.position,
+    4.5,
+    office.unit_number
+  )
+  trip.showroom_position = target
+  local dx = entity.position.x - target.x
+  local dy = entity.position.y - target.y
+  if dx * dx + dy * dy > 9 then
+    entity.commandable.set_command{
+      type = defines.command.go_to_location,
+      destination = target,
+      distraction = defines.distraction.none,
+      radius = 1.25
+    }
+  else
+    entity.commandable.set_command{
+      type = defines.command.wander,
+      distraction = defines.distraction.none,
+      radius = 0.25,
+      ticks_to_wait = 10 * 60
+    }
+  end
+  trip.command_started_tick = game.tick
   return true
 end
 
@@ -8115,15 +8166,9 @@ function complete_megapack_buyer_arrival(unit_number)
 
   if trip.phase == "to_office" then
     trip.phase = "waiting_product"
+    trip.showroom_position = trip.showroom_position or trip.destination
     trip.destination = nil
-    trip.command_started_tick = nil
-    entity.commandable.set_command{
-      type = defines.command.wander,
-      distraction = defines.distraction.none,
-      radius = 0.25,
-      ticks_to_wait = 60
-    }
-    return true
+    return hold_megapack_buyer_at_showroom(trip, entity)
   elseif trip.phase == "returning_home" then
     install_megapack_at_settlement(unit_number)
     return true
@@ -8137,6 +8182,12 @@ function handle_megapack_buyer_command_completed(event)
   local entity = customer_unit_registry()[event.unit_number]
   if not entity or not entity.valid then
     clear_megapack_buyer_trip(event.unit_number, false)
+    return true
+  end
+  if trip.phase == "waiting_product" then
+    if not hold_megapack_buyer_at_showroom(trip, entity) then
+      clear_megapack_buyer_trip(event.unit_number, true)
+    end
     return true
   end
   if not complete_megapack_buyer_arrival(event.unit_number) then
@@ -8156,8 +8207,19 @@ function process_megapack_buyer_trips()
       invalid = invalid or not office or not office.valid
         or current_recipe_name(office) ~= MEGAPACK_SALE_RECIPE
     end
+    if not invalid and (trip.phase == "to_office" or trip.phase == "waiting_product") then
+      ensure_megapack_buyer_icon(trip, entity)
+    end
     if invalid then
       clear_megapack_buyer_trip(unit_number, true)
+    elseif trip.phase == "waiting_product" then
+      local showroom_position = trip.showroom_position
+      local dx = showroom_position and entity.position.x - showroom_position.x or math.huge
+      local dy = showroom_position and entity.position.y - showroom_position.y or math.huge
+      if dx * dx + dy * dy > 16 then
+        hold_megapack_buyer_at_showroom(trip, entity)
+      end
+      active = active + 1
     elseif (trip.phase == "to_office" or trip.phase == "returning_home")
       and complete_megapack_buyer_arrival(unit_number) then
       if megapack_buyer_trips()[unit_number] then active = active + 1 end
