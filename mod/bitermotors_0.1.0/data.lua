@@ -1733,8 +1733,7 @@ data:extend({
     {
       {type = "item", name = "solar-panel", amount = 1},
       {type = "item", name = "processing-unit", amount = 2},
-      {type = "item", name = "low-density-structure", amount = 2},
-      {type = "item", name = "bitermotors-dollar", amount = 1}
+      {type = "item", name = "low-density-structure", amount = 2}
     },
     {{type = "item", name = "bitermotors-high-density-solar-array", amount = 1}}, 12
   ),
@@ -1742,8 +1741,7 @@ data:extend({
     {
       {type = "item", name = "solar-panel", amount = 4},
       {type = "item", name = "processing-unit", amount = 6},
-      {type = "item", name = "low-density-structure", amount = 6},
-      {type = "item", name = "bitermotors-dollar", amount = 3}
+      {type = "item", name = "low-density-structure", amount = 6}
     },
     {{type = "item", name = "bitermotors-high-density-solar-array", amount = 4}}, 30,
     {
@@ -1755,8 +1753,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-high-density-solar-array", amount = 1},
       {type = "item", name = "processing-unit", amount = 10},
-      {type = "item", name = "low-density-structure", amount = 10},
-      {type = "item", name = "bitermotors-dollar", amount = 1}
+      {type = "item", name = "low-density-structure", amount = 10}
     },
     {{type = "item", name = "bitermotors-tandem-solar-array", amount = 1}}, 10,
     {allow_productivity = false}

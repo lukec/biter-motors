@@ -1976,11 +1976,11 @@ if data["item"]["bitermotors-high-density-solar-array"]["stack_size"] != 10:
     raise SystemExit("High-density Solar Panel stack size must remain below the normal panel stack size")
 solar_recipe = data["recipe"]["bitermotors-high-density-solar-array"]
 solar_ingredients = {row["name"]: row["amount"] for row in solar_recipe["ingredients"]}
-if solar_recipe["categories"] != ["advanced-crafting"] or solar_ingredients != {"solar-panel": 1, "processing-unit": 2, "low-density-structure": 2, "bitermotors-dollar": 1}:
+if solar_recipe["categories"] != ["advanced-crafting"] or solar_ingredients != {"solar-panel": 1, "processing-unit": 2, "low-density-structure": 2}:
     raise SystemExit(f"High-density Solar Panel standard recipe mismatch: {solar_recipe}")
 solar_batch = data["recipe"]["bitermotors-high-density-solar-array-batch"]
 batch_ingredients = {row["name"]: row["amount"] for row in solar_batch["ingredients"]}
-if solar_batch["categories"] != ["bitermotors-energy-products-batch"] or batch_ingredients != {"solar-panel": 4, "processing-unit": 6, "low-density-structure": 6, "bitermotors-dollar": 3}:
+if solar_batch["categories"] != ["bitermotors-energy-products-batch"] or batch_ingredients != {"solar-panel": 4, "processing-unit": 6, "low-density-structure": 6}:
     raise SystemExit(f"High-density Solar Panel batch recipe mismatch: {solar_batch}")
 energy = megapack["energy_source"]
 if energy["buffer_capacity"] != "100MJ" or energy["input_flow_limit"] != "5MW" or energy["output_flow_limit"] != "5MW":
