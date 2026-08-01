@@ -4778,6 +4778,19 @@ function create_ev_driver_overlay(player, vehicle)
     visible = false
   }
   state.objects[#state.objects + 1] = state.charge_icon
+  state.charge_text = rendering.draw_text{
+    text = "BATTERY 0%",
+    surface = vehicle.surface,
+    target = vehicle,
+    target_offset = {0, -2.75},
+    color = {r = 0.38, g = 1.0, b = 0.48, a = 1},
+    alignment = "center",
+    scale = 0.9,
+    render_layer = "air-object",
+    players = {player},
+    visible = false
+  }
+  state.objects[#state.objects + 1] = state.charge_text
   ev_driver_overlay_states()[player.index] = state
   return state
 end
@@ -4803,10 +4816,24 @@ function refresh_ev_driver_overlays()
         state = create_ev_driver_overlay(player, vehicle)
       end
       local charging = game.tick - (activity[vehicle.unit_number] or -1000) <= 75
+      local stationary = math.abs(vehicle.speed or 0) <= 0.005
       local pulse = 0.48 + (math.floor(game.tick / 10) % 2) * 0.14
       state.charge_icon.visible = charging
       state.charge_icon.x_scale = pulse
       state.charge_icon.y_scale = pulse
+      state.charge_text.visible = charging and stationary
+      if charging and stationary then
+        local energy, capacity = vehicle_total_charge_energy(vehicle)
+        local percent = capacity > 0 and math.floor(energy * 100 / capacity + 0.5) or 0
+        state.charge_text.text = string.format("BATTERY %d%%", percent)
+        if percent <= 20 then
+          state.charge_text.color = {r = 1.0, g = 0.25, b = 0.18, a = 1}
+        elseif percent <= 50 then
+          state.charge_text.color = {r = 1.0, g = 0.72, b = 0.18, a = 1}
+        else
+          state.charge_text.color = {r = 0.38, g = 1.0, b = 0.48, a = 1}
+        end
+      end
     end
   end
   for player_index in pairs(ev_driver_overlay_states()) do
