@@ -23,13 +23,19 @@ Every development day should close at least one public-release gap:
 - Player-facing name: **Biter Motors**
 - Factorio mod id: `bitermotors`
 - Prototype prefix: `bitermotors-`
-- Package source: `mod/bitermotors_0.1.0`
+- Package source: `mod/bitermotors_0.1.1`
 - Supported world: Nauvis and stationary platforms in Nauvis orbit
 - Required expansion: Space Age
 - Current status: alpha
 
 `FactoryX`, `factoryx`, and the `x-` prototype prefix are retired. They are not
 aliases, product names, or public compatibility contracts.
+
+Player-facing terminology and internal identifiers use the same Biter Motors
+vocabulary: **Biterfactory**, **Bitertaxi**, **Grid Battery**, **Structural
+Casting**, and **Self-driving**. The private alpha save is rewritten during the
+0.1.1 namespace migration; release builds do not retain legacy prototype or
+runtime identifiers.
 
 ## Campaign Vision
 
@@ -45,8 +51,8 @@ The campaign grows through:
 2. Prototype EV sales and physical reservations.
 3. Premium and mass-market manufacturing.
 4. Charging networks, customer growth, and grid pressure.
-5. Battery minerals, waste, recycling, solar, and Megapacks.
-6. Gigafactories, Robotaxis, autonomous logistics, and Cybertrains.
+5. Battery minerals, waste, recycling, solar, and Grid Batteries.
+6. Biterfactories, Bitertaxis, autonomous logistics, and Cybertrains.
 7. Terrestrial AI funded by ongoing profit.
 8. Physical orbital AI infrastructure.
 9. A 10-gigawatt terrestrial AGI training run.
@@ -81,7 +87,7 @@ not a second simulated company.
 ### Approved Easier-Balance Target
 
 The next balance slice keeps the same products, profits, `5,000` consumer-sale
-Robotaxi gate, `1B` cumulative AI Token objective, and final AGI endgame. It
+Bitertaxi gate, `1B` cumulative AI Token objective, and final AGI endgame. It
 reduces the capital squeeze and lets developed settlements support continued
 sales:
 
@@ -89,7 +95,7 @@ sales:
   `600`, Terrestrial AI `750`, Autonomous Logistics `750`, and Orbital Compute
   `1,500`.
 - Sale profits remain unchanged: Roadster `2`, Premium EV `1`, Mass-market EV
-  `1`, Megatruck `2`, and Megapack `20` Dollars.
+  `1`, Megatruck `2`, and Grid Battery `20` Dollars.
 - Customers may make one replacement purchase for each consumer generation:
   Roadster, Premium EV, Mass-market EV, and Megatruck. The active vehicle is
   replaced rather than creating an unbounded sale loop.
@@ -97,7 +103,7 @@ sales:
   three times each settlement's starting representation. A shortage suspends
   only the affected settlement; healthy settlements continue growing.
 - Charger radii target `64 / 128 / 192 / 256` tiles for V1 through V4.
-- Robotaxi Service Centers target `1 Dollar per 2 allocated vehicle-minutes`,
+- Bitertaxi Depots target `1 Dollar per 2 allocated vehicle-minutes`,
   giving a full center approximately a `3-4` hour capex payback at saturation.
 
 The simulator and economy report are the source of truth for these balance
@@ -107,22 +113,22 @@ gate.
 
 ### Vehicles And Manufacturing
 
-- Prototype Roadster, Premium EV, Mass-market EV, Megatruck, and Robotaxi.
+- Prototype Roadster, Premium EV, Mass-market EV, Megatruck, and Bitertaxi.
 - Drivable battery simulation, nearby charging, range, braking, collision
-  behavior, Autopilot, and Summon.
-- Gigafactory V1 and the fast-replaceable V2 upgrade.
-- Robotaxi Service Centers turn fleet utilization into recurring profit.
+  behavior, Self-driving, and Summon.
+- Biterfactory V1 and the fast-replaceable V2 upgrade.
+- Bitertaxi Depots turn fleet utilization into recurring profit.
 - Cybertrain provides extreme-speed battery-electric rail freight with
   acceleration draw, regenerative braking, reserve crawl, and station charging.
 
 ### Energy And Batteries
 
 - Upgradeable 300 kW High-density Solar Panels.
-- 100 MJ, 5 MW Megapacks.
+- 100 MJ, 5 MW Grid Batteries.
 - Nickel, lithium, high-nickel, and LFP supply chains.
 - Dirty early refining, cleaner later recipes, and 90% battery-cell recovery.
 - Infinite improvements for charging, range, audio, referrals, solar output,
-  and Megapack output.
+  and Grid Battery output.
 
 ### Terrestrial AI
 
@@ -164,7 +170,7 @@ Cumulative orbital output opens three explicit scale projects:
 - **10M Tokens: Grid-scale Energy**
   - Costs 15,000 Dollars plus science.
   - Unlocks 50,000-token batches, 3 MW Tandem Solar Arrays, and 1 GJ Grid
-    Megapacks as upgrades for the terrestrial energy products.
+    Grid Batteries as upgrades for the terrestrial energy products.
 - **100M Tokens: Hyperscale Training**
   - Costs 30,000 Dollars plus science.
   - Unlocks 100,000-token batches and the final Planetary Energy Grid research.
@@ -180,7 +186,7 @@ The final progression contract is:
 5. Supply:
    - 20,000 AGI Training Datasets
    - 100 Capital Allocations
-   - 100 Grid Megapacks
+   - 100 Grid Battery Arrays
    - 10,000 Processing Units
 6. Sustain the controller's 10 GW draw for 60 minutes.
 7. Any low-power condition scraps the current run.
@@ -274,7 +280,7 @@ Status: **functional, not final**
 - [ ] Build a separate, physically plausible showcase save for repeatable media
       capture. Review each staged scene with Luke before recording.
 - [ ] Capture spoiler-light native gameplay screenshots and short loops for EV
-      driving and charging, the biter customer economy, and Gigafactory scale.
+      driving and charging, the biter customer economy, and Biterfactory scale.
 - [ ] Verify final media readability at GitHub desktop and mobile widths.
 
 ### Gate 6: Compatibility Contract
@@ -329,7 +335,7 @@ These are candidates only after the release gates above:
 
 - Biter Diner with fish breeding and high-capacity destination charging.
 - Megatruck customer art and additional vehicle polish.
-- Humanoid-robot manufacturing and a Gigafactory V3.
+- Humanoid Robot manufacturing and a Biterfactory V3.
 - Hyperscale terrestrial datacenters with escalating capital costs and
   settlement opposition.
 - Solar-roof modules for compatible factories.

@@ -1,6 +1,6 @@
-local EvAutopilot = {}
+local EvSelfDriving = {}
 
-EvAutopilot.config = {
+EvSelfDriving.config = {
   max_active = 32,
   updates_per_tick = 16,
   recent_vehicle_limit = 8,
@@ -12,17 +12,17 @@ EvAutopilot.config = {
   summon_start_charge = 0.10,
   cancel_charge = 0.03,
   summon_stop_distance = 1.5,
-  navigate_stop_distance = 1.5
+  route_stop_distance = 1.5
 }
 
-EvAutopilot.eligible_names = {
+EvSelfDriving.eligible_names = {
   ["bitermotors-premium-ev"] = true,
   ["bitermotors-mass-market-ev"] = true,
   ["bitermotors-megatruck"] = true,
-  ["bitermotors-robotaxi-fleet"] = true
+  ["bitermotors-bitertaxi-fleet"] = true
 }
 
-function EvAutopilot.ensure(runtime)
+function EvSelfDriving.ensure(runtime)
   runtime = runtime or {}
   runtime.active = runtime.active or {}
   runtime.order = runtime.order or {}
@@ -39,25 +39,25 @@ function EvAutopilot.ensure(runtime)
   return runtime
 end
 
-function EvAutopilot.is_eligible_name(name)
-  return EvAutopilot.eligible_names[name] == true
+function EvSelfDriving.is_eligible_name(name)
+  return EvSelfDriving.eligible_names[name] == true
 end
 
-function EvAutopilot.distance_squared(left, right)
+function EvSelfDriving.distance_squared(left, right)
   local dx = left.x - right.x
   local dy = left.y - right.y
   return dx * dx + dy * dy
 end
 
-function EvAutopilot.area_center(area)
+function EvSelfDriving.area_center(area)
   return {
     x = (area.left_top.x + area.right_bottom.x) / 2,
     y = (area.left_top.y + area.right_bottom.y) / 2
   }
 end
 
-function EvAutopilot.remember_vehicle(runtime, player_index, unit_number)
-  runtime = EvAutopilot.ensure(runtime)
+function EvSelfDriving.remember_vehicle(runtime, player_index, unit_number)
+  runtime = EvSelfDriving.ensure(runtime)
   local previous_owner = runtime.owner_by_vehicle[unit_number]
   if previous_owner and previous_owner ~= player_index then
     local previous = runtime.recent_by_player[previous_owner] or {}
@@ -70,14 +70,14 @@ function EvAutopilot.remember_vehicle(runtime, player_index, unit_number)
     if recent[index] == unit_number then table.remove(recent, index) end
   end
   table.insert(recent, 1, unit_number)
-  while #recent > EvAutopilot.config.recent_vehicle_limit do table.remove(recent) end
+  while #recent > EvSelfDriving.config.recent_vehicle_limit do table.remove(recent) end
   runtime.recent_by_player[player_index] = recent
   runtime.owner_by_vehicle[unit_number] = player_index
   return recent
 end
 
-function EvAutopilot.forget_vehicle(runtime, unit_number)
-  runtime = EvAutopilot.ensure(runtime)
+function EvSelfDriving.forget_vehicle(runtime, unit_number)
+  runtime = EvSelfDriving.ensure(runtime)
   local owner = runtime.owner_by_vehicle[unit_number]
   runtime.owner_by_vehicle[unit_number] = nil
   if owner then
@@ -88,16 +88,16 @@ function EvAutopilot.forget_vehicle(runtime, unit_number)
   end
 end
 
-function EvAutopilot.track_active(runtime, unit_number)
-  runtime = EvAutopilot.ensure(runtime)
+function EvSelfDriving.track_active(runtime, unit_number)
+  runtime = EvSelfDriving.ensure(runtime)
   for _, existing in pairs(runtime.order) do
     if existing == unit_number then return end
   end
   runtime.order[#runtime.order + 1] = unit_number
 end
 
-function EvAutopilot.next_active(runtime)
-  runtime = EvAutopilot.ensure(runtime)
+function EvSelfDriving.next_active(runtime)
+  runtime = EvSelfDriving.ensure(runtime)
   if #runtime.order == 0 then return nil end
   local attempts = #runtime.order
   while attempts > 0 do
@@ -112,30 +112,30 @@ function EvAutopilot.next_active(runtime)
   return nil
 end
 
-function EvAutopilot.active_count(runtime)
+function EvSelfDriving.active_count(runtime)
   local count = 0
-  for _ in pairs(EvAutopilot.ensure(runtime).active) do count = count + 1 end
+  for _ in pairs(EvSelfDriving.ensure(runtime).active) do count = count + 1 end
   return count
 end
 
-function EvAutopilot.target_orientation(position, target)
+function EvSelfDriving.target_orientation(position, target)
   local orientation = math.atan2(target.x - position.x, position.y - target.y)
     / (2 * math.pi)
   if orientation < 0 then orientation = orientation + 1 end
   return orientation
 end
 
-function EvAutopilot.orientation_delta(current, target)
+function EvSelfDriving.orientation_delta(current, target)
   local delta = target - current
   if delta > 0.5 then delta = delta - 1 end
   if delta < -0.5 then delta = delta + 1 end
   return delta
 end
 
-function EvAutopilot.drive_decision(vehicle, waypoint, final_waypoint, stop_distance)
-  local distance = math.sqrt(EvAutopilot.distance_squared(vehicle.position, waypoint))
-  local target = EvAutopilot.target_orientation(vehicle.position, waypoint)
-  local delta = EvAutopilot.orientation_delta(vehicle.orientation, target)
+function EvSelfDriving.drive_decision(vehicle, waypoint, final_waypoint, stop_distance)
+  local distance = math.sqrt(EvSelfDriving.distance_squared(vehicle.position, waypoint))
+  local target = EvSelfDriving.target_orientation(vehicle.position, waypoint)
+  local delta = EvSelfDriving.orientation_delta(vehicle.orientation, target)
   local speed = math.abs(vehicle.speed or 0)
   local turn = math.abs(delta)
   local desired_speed = 0.28
@@ -180,4 +180,4 @@ function EvAutopilot.drive_decision(vehicle, waypoint, final_waypoint, stop_dist
   }
 end
 
-return EvAutopilot
+return EvSelfDriving

@@ -39,24 +39,24 @@ class EconomySimulationTests(unittest.TestCase):
         plan = economy.power_plan(economy.CURRENT)
         self.assertEqual(10_000_000_000, plan.watts)
         self.assertEqual(4_762, plan.tandem_arrays)
-        self.assertEqual(1_001, plan.grid_megapacks)
+        self.assertEqual(1_001, plan.grid_battery_arrays)
         self.assertEqual(3_000_000, economy.TANDEM_SOLAR_PEAK_WATTS)
-        self.assertEqual(1_000_000_000, economy.GRID_MEGAPACK_CAPACITY_JOULES)
+        self.assertEqual(1_000_000_000, economy.GRID_BATTERY_ARRAY_CAPACITY_JOULES)
 
     def test_higher_power_sensitivity_scales_assets(self):
         plan = economy.power_plan(economy.RELEASE_CANDIDATE)
         self.assertEqual(5_715, plan.tandem_arrays)
-        self.assertEqual(1_201, plan.grid_megapacks)
+        self.assertEqual(1_201, plan.grid_battery_arrays)
         self.assertEqual(5_715, plan.tandem_recipe_dollars)
-        self.assertEqual(6_005, plan.grid_megapack_recipe_dollars)
+        self.assertEqual(6_005, plan.grid_battery_array_recipe_dollars)
         self.assertAlmostEqual(6_093.75, plan.solar_research_dollars, places=2)
 
-    def test_robotaxi_revenue_uses_recurring_vehicle_minutes(self):
-        current = economy.robotaxi_revenue_per_hour(economy.CURRENT, 1)
-        demanding = economy.robotaxi_revenue_per_hour(economy.DEMANDING_RELEASE, 1)
+    def test_bitertaxi_revenue_uses_recurring_vehicle_minutes(self):
+        current = economy.bitertaxi_revenue_per_hour(economy.CURRENT, 1)
+        demanding = economy.bitertaxi_revenue_per_hour(economy.DEMANDING_RELEASE, 1)
         self.assertEqual(6_000, current)
         self.assertEqual(3_000, demanding)
-        self.assertAlmostEqual(3.4131666667, economy.robotaxi_payback_hours(economy.CURRENT), places=6)
+        self.assertAlmostEqual(3.4131666667, economy.bitertaxi_payback_hours(economy.CURRENT), places=6)
 
     def test_easier_terrestrial_progression_uses_approved_dollar_costs(self):
         self.assertEqual(
@@ -104,14 +104,14 @@ class EconomySimulationTests(unittest.TestCase):
             "Each living customer can buy one of each consumer vehicle generation",
             "affected settlement only",
             "64 / 128 / 192 / 256",
-            "5,000 consumer-sale Robotaxi gate: unchanged",
+            "5,000 consumer-sale Bitertaxi gate: unchanged",
         ):
             self.assertIn(fragment, report)
 
-    def test_campaign_counts_rebalanced_controller_and_final_megapacks(self):
+    def test_campaign_counts_rebalanced_controller_and_final_grid_batteries(self):
         plan = economy.campaign_plan(economy.CURRENT)
         self.assertEqual(65_825, plan.pre_endgame_dollars)
-        self.assertEqual(2_200, plan.consumed_megapack_opportunity_dollars)
+        self.assertEqual(2_200, plan.consumed_grid_battery_opportunity_dollars)
         self.assertEqual(137_403, plan.direct_dollars)
         self.assertEqual(159_623, plan.economic_burden_dollars)
 

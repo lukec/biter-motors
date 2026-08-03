@@ -10,7 +10,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MOD_GRAPHICS = ROOT / "mod/bitermotors_0.1.0/graphics"
+MOD_GRAPHICS = ROOT / "mod/bitermotors_0.1.1/graphics"
 ICON_DIR = MOD_GRAPHICS / "icons"
 ANIMATION_DIR = MOD_GRAPHICS / "animation"
 TECHNOLOGY_DIR = MOD_GRAPHICS / "technology"
@@ -25,7 +25,7 @@ VEHICLE_ICON_NAMES = {
     "premium-ev",
     "mass-market-ev",
     "megatruck",
-    "robotaxi-fleet",
+    "bitertaxi-fleet",
 }
 
 ENTITY_ICON_SOURCES = {
@@ -34,10 +34,10 @@ ENTITY_ICON_SOURCES = {
     "ev-charging-station-v2": "ev-charging-station-v2/ev-charging-station-v2.png",
     "ev-charging-station-v3": "ev-charging-station-v3/ev-charging-station-v3.png",
     "ev-charging-station-v4": "ev-charging-station-v4/ev-charging-station-v4.png",
-    "gigafactory": "gigafactory/gigafactory.png",
-    "megapack": "megapack/megapack.png",
+    "biterfactory": "biterfactory/biterfactory.png",
+    "grid-battery": "grid-battery/grid-battery.png",
     "terrestrial-datacenter": "terrestrial-datacenter/terrestrial-datacenter.png",
-    "robotaxi-service-center": "robotaxi-service-center/robotaxi-service-center.png",
+    "bitertaxi-depot": "bitertaxi-depot/bitertaxi-depot.png",
     "orbital-compute-array": "orbital-compute-array/orbital-compute-array.png",
     "planetary-grid-controller": "planetary-grid-controller/planetary-grid-controller.png",
 }
@@ -288,7 +288,7 @@ def animation_sheet(name: str, width: int, height: int, painter) -> None:
         sheet.alpha_composite(frame, (frame_index * width, 0))
     ANIMATION_DIR.mkdir(parents=True, exist_ok=True)
     sheet.save(ANIMATION_DIR / f"{name}.png", optimize=True)
-    if name == "robotaxi-dispatch-lights":
+    if name == "bitertaxi-dispatch-lights":
         for frame_index in range(frame_count):
             left = frame_index * width
             sheet.crop((left, 0, left + width, height)).save(
@@ -384,7 +384,7 @@ def paint_factory_fan(
     glow(draw, center, 4, accent, 230)
 
 
-def paint_gigafactory_v1_activity(frame: Image.Image, index: int, count: int) -> None:
+def paint_biterfactory_v1_activity(frame: Image.Image, index: int, count: int) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     phase = index / count * math.tau
     paint_factory_fan(draw, (62, 22), phase, (52, 192, 224))
@@ -421,13 +421,13 @@ def paint_gigafactory_v1_activity(frame: Image.Image, index: int, count: int) ->
             glow(draw, (x, y), 4, (45, 202, 234), alpha)
 
 
-def paint_gigafactory_v2_activity(frame: Image.Image, index: int, count: int) -> None:
+def paint_biterfactory_v2_activity(frame: Image.Image, index: int, count: int) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     phase = index / count * math.tau
     for fan_index, center in enumerate(((203, 21), (309, 21))):
         paint_factory_fan(draw, center, phase * 1.7 + fan_index * math.pi / 4, (82, 224, 255))
 
-    # Twin gigacasting cells pulse independently while shuttle tables move
+    # Twin structural_casting cells pulse independently while shuttle tables move
     # completed castings toward the lower transfer line.
     for cell_index, cx in enumerate((142, 400)):
         cell_phase = phase + cell_index * math.pi
@@ -454,7 +454,7 @@ def paint_gigafactory_v2_activity(frame: Image.Image, index: int, count: int) ->
         glow(draw, (x, 493), 4, (79, 224, 255), 245 if distance == 0 else 80 if distance in (1, 11) else 28)
 
 
-def paint_gigafactory_loading_lights(frame: Image.Image, index: int, count: int) -> None:
+def paint_biterfactory_loading_lights(frame: Image.Image, index: int, count: int) -> None:
     draw = ImageDraw.Draw(frame, "RGBA")
     for bay_start in (0, 211, 434):
         for light_index in range(6):
@@ -510,11 +510,11 @@ def build_animations() -> None:
             f"charger-stall-{state}", 32, 32,
             lambda frame, index, count, state=state: paint_charger_stall_light(frame, index, count, state),
         )
-    animation_sheet("gigafactory-v1-activity", 512, 512, paint_gigafactory_v1_activity)
-    animation_sheet("gigafactory-v2-activity", 512, 512, paint_gigafactory_v2_activity)
-    animation_sheet("gigafactory-loading-lights", 512, 128, paint_gigafactory_loading_lights)
+    animation_sheet("biterfactory-v1-activity", 512, 512, paint_biterfactory_v1_activity)
+    animation_sheet("biterfactory-v2-activity", 512, 512, paint_biterfactory_v2_activity)
+    animation_sheet("biterfactory-loading-lights", 512, 128, paint_biterfactory_loading_lights)
     animation_sheet("datacenter-cooling-fans", 128, 64, paint_fans)
-    animation_sheet("robotaxi-dispatch-lights", 128, 64, paint_dispatch_lights)
+    animation_sheet("bitertaxi-dispatch-lights", 128, 64, paint_dispatch_lights)
     animation_sheet("grid-charge-stages", 128, 128, paint_grid_charge)
 
 
@@ -542,9 +542,9 @@ def build_technology_icon(name: str, primary_name: str, secondary_name: str | No
 def build_technology_icons() -> None:
     build_technology_icon("sales-office", "sales-office.png", None, (255, 156, 40))
     build_technology_icon("ev-charging-network", "ev-charging-station-v2.png", None, (64, 218, 255))
-    build_technology_icon("gigafactory", "gigafactory.png", "gigafactory-module.png", (255, 156, 40))
+    build_technology_icon("biterfactory", "biterfactory.png", "biterfactory-module.png", (255, 156, 40))
     build_technology_icon("terrestrial-ai", "terrestrial-datacenter.png", "ai-token.png", (64, 196, 255))
-    build_technology_icon("autonomous-logistics", "robotaxi-service-center.png", "robotaxi-fleet.png", (255, 194, 48))
+    build_technology_icon("autonomous-logistics", "bitertaxi-depot.png", "bitertaxi-fleet.png", (255, 194, 48))
     build_technology_icon("planetary-energy-grid", "planetary-grid-controller.png", "planetary-grid-segment.png", (68, 224, 255))
     build_technology_icon("achieving-agi", "agi-model.png", "ai-token.png", (255, 184, 48))
 

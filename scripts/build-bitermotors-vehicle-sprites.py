@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "art" / "blender"
-MOD = ROOT / "mod" / "bitermotors_0.1.0"
+MOD = ROOT / "mod" / "bitermotors_0.1.1"
 ENTITY_OUTPUT = MOD / "graphics" / "entity" / "vehicles"
 ICON_OUTPUT = MOD / "graphics" / "icons"
 
@@ -15,7 +15,7 @@ VEHICLES = {
     "premium-ev": ("premium-ev", "premium-ev", "premium-ev"),
     "mass-market-ev": ("mass-market-ev", "mass-market-ev", "mass-market-ev"),
     "megatruck": ("megatruck", "megatruck", "megatruck"),
-    "robotaxi-fleet": ("robotaxi", "robotaxi", "robotaxi"),
+    "bitertaxi-fleet": ("bitertaxi", "bitertaxi", "bitertaxi"),
 }
 
 FRAME_SIZE = 192

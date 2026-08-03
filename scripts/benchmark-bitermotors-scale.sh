@@ -10,7 +10,7 @@ results="${BITERMOTORS_BENCHMARK_RESULTS:-/tmp/bitermotors-20k-results.csv}"
 register_owners="${BITERMOTORS_BENCHMARK_REGISTER_OWNERS:-1}"
 read -r -a caps <<<"${BITERMOTORS_BENCHMARK_CAPS:-0 128 256 512}"
 
-printf 'units,registered_owners,moving_cap,ticks,avg_ms,min_ms,max_ms,movers,moved_units,completed_commands,queued_commutes,active_commutes,market_builds,robotaxi_builds\n' >"$results"
+printf 'units,registered_owners,moving_cap,ticks,avg_ms,min_ms,max_ms,movers,moved_units,completed_commands,queued_commutes,active_commutes,market_builds,bitertaxi_builds\n' >"$results"
 
 for cap in "${caps[@]}"; do
   tmp="$(mktemp -d "/tmp/bitermotors-scale-${cap}.XXXXXX")"
@@ -19,7 +19,7 @@ for cap in "${caps[@]}"; do
   save="$tmp/saves/bitermotors-scale.zip"
   report="$tmp/script-output/bitermotors-scale.jsonl"
   mkdir -p "$mods" "$bench" "$tmp/saves" "$tmp/script-output"
-  ln -sfn "$repo_root/mod/bitermotors_0.1.0" "$mods/bitermotors_0.1.0"
+  ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
 
   cat >"$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -41,7 +41,7 @@ EOF_MOD_LIST
   cat >"$bench/info.json" <<'EOF_INFO'
 {
   "name": "bitermotors_perf_benchmark",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "title": "Biter Motors Performance Benchmark",
   "author": "Codex",
   "factorio_version": "2.1",
@@ -187,7 +187,7 @@ row = [
     performance.get("queued_commutes", 0),
     performance.get("active_commutes", 0),
     counters.get("market_snapshot_builds", 0),
-    counters.get("robotaxi_allocation_builds", 0),
+    counters.get("bitertaxi_allocation_builds", 0),
 ]
 with Path(sys.argv[3]).open("a") as handle:
     handle.write(",".join(map(str, row)) + "\n")

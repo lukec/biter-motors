@@ -437,5 +437,5 @@ nauvis.map_gen_settings.autoplace_controls["bitermotors-lithium-brine"] = {frequ
 nauvis.map_gen_settings.autoplace_settings.entity.settings["bitermotors-nickel-ore"] = {}
 nauvis.map_gen_settings.autoplace_settings.entity.settings["bitermotors-lithium-brine"] = {}
 
--- Mech Armor stays locked to Fulgora until the future Optimus product exists.
+-- Mech Armor stays locked to Fulgora until the future Humanoid Robot product exists.
 -- Do not adapt its recipe early or introduce a temporary holmium-free shortcut.

@@ -31,28 +31,25 @@ Yet.
 
 ## Why Play Biter Motors?
 
-- **Drive five electric vehicles.** The Prototype Roadster, Premium EV,
-  Mass-market EV, Megatruck, and Robotaxi each trade speed, range, braking,
-  durability, and battery capacity differently. Advanced models can Navigate
-  and Summon themselves. The Cybertrain brings the same idea to rail.
-- **Sell cars to biters.** Prospects, reservations, vehicles, and Dollars are
-  physical parts of the factory. Successful sales assign products to real
-  customers instead of incrementing an invisible market counter.
-- **Build markets without making Nauvis safe.** Charging coverage and service
-  keep settlements cooperative. Neglect has local consequences, and worms never
-  signed the customer agreement.
-- **Scale from pilot line to Gigafactory.** Product generations force real
-  retooling, larger machines, vertical integration, and much higher throughput.
-- **Own the battery and energy stack.** Mine strategic minerals, choose dirty or
-  clean refining, recycle cells, deploy dense solar and Megapacks, and discover
-  that commercial success can outrun the grid.
-- **Automate the next order of magnitude.** Robotaxi fleets, electric freight,
-  terrestrial compute, and a focused Nauvis-orbit endgame keep opening larger
-  factory problems.
+- **Drive super fast EVs!** Launch a twitchy Roadster, hammer through the wilds
+  in a Megatruck, dispatch a Bitertaxi, or let Self-driving bring your latest EV
+  back to you. They are products, transportation, and occasionally weapons.
+- **Kill biters... or make them your customers!** Put reservations and cars on
+  belts, collect Dollars on the other side, and watch actual biter customers
+  drive away with what you sold them.
+- **Scale up and rebuild!** Today's clever pilot line is tomorrow's bottleneck.
+  Tear it apart, build a Biterfactory, integrate the supply chain, and do it all
+  again at a much less reasonable scale.
+- **New battery chemistries!** Find nickel and lithium, choose dirty or clean
+  refining, deal with the waste, recycle old cells, and keep an increasingly
+  power-hungry planet charged.
+- **Build compute for the future!** Fund datacenters with vehicle profits,
+  electrify the grid, launch industrial compute into orbit, and find out how
+  much factory it takes to train the final model.
 
 ## From A Real Playtest
 
-![A live Biter Motors factory floor with Gigafactory V2 production blocks, belts, bots, and supporting industry](docs/gameplay-gigafactory-floor.jpg)
+![A live Biter Motors factory floor with Biterfactory V2 production blocks, belts, bots, and supporting industry](docs/gameplay-biterfactory-floor.jpg)
 
 *Unretouched alpha gameplay from a live campaign save. The illustrated chapter
 art below sets the tone; this is what the factory floor actually looks like.*
@@ -97,7 +94,7 @@ durability matter.
 
 ## The Factory Becomes The Product
 
-![A vast Gigafactory, Cybertrain, robot logistics, and fleet infrastructure replace the original small production line](docs/chapter-factory-product.jpg)
+![A vast Biterfactory, Cybertrain, robot logistics, and fleet infrastructure replace the original small production line](docs/chapter-factory-product.jpg)
 
 Eventually the small production line is no longer enough. Heavy manufacturing,
 autonomous logistics, fleet services, high-density energy systems, and
@@ -167,7 +164,7 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 
 - `Biter Motors` is the official player-facing title. The stable internal
   codename, Factorio mod id, package path, and prototype namespace remain
-  `bitermotors`, `mod/bitermotors_0.1.0`, and `bitermotors-`.
+  `bitermotors`, `mod/bitermotors_0.1.1`, and `bitermotors-`.
 - `ROADMAP.md` is the authoritative design and public-release roadmap.
 - `COMPATIBILITY.md` defines supported worlds, upgrades, and mod boundaries.
 - `docs/economy-balance.md` contains the reproducible progression and endgame
@@ -177,6 +174,6 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 - `feature_specs/biter-motors-battery-chemistry.md` specifies the battery
   chemistry branch.
 - `art/` contains source models, master renders, and QA pages.
-- `mod/bitermotors_0.1.0/README.md` documents implemented gameplay in detail.
+- `mod/bitermotors_0.1.1/README.md` documents implemented gameplay in detail.
 
 This is a private development repository. No public license is granted.

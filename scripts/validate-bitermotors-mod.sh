@@ -6,12 +6,12 @@ factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamap
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 tmp="$(mktemp -d /tmp/bitermotors-validate.XXXXXX)"
 mods="$tmp/mods"
-smoke="$mods/bitermotors_smoke_0.1.0"
+smoke="$mods/bitermotors_smoke_0.1.1"
 save="$tmp/saves/bitermotors-smoke.zip"
 report="$tmp/script-output/bitermotors-smoke.jsonl"
 
 mkdir -p "$mods" "$smoke" "$tmp/script-output" "$tmp/saves"
-ln -sfn "$repo_root/mod/bitermotors_0.1.0" "$mods/bitermotors_0.1.0"
+ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
 
 cat > "$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -33,7 +33,7 @@ EOF_MOD_LIST
 cat > "$smoke/info.json" <<'EOF_INFO'
 {
   "name": "bitermotors_smoke",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "title": "Biter Motors Smoke Test",
   "author": "Codex",
   "factorio_version": "2.1",
@@ -84,22 +84,22 @@ local FIRST_SALE_RECIPE = "bitermotors-sell-prototype-roadster"
 local PROTOTYPE_ROADSTER = "bitermotors-prototype-roadster"
 local PREMIUM_EV = "bitermotors-premium-ev"
 local RESERVATION_SALES_RECIPE = "bitermotors-sell-mass-market-ev"
-local ROBOTAXI_SALE_RECIPE = "bitermotors-sell-robotaxi-fleet"
-local ROBOTAXI_FLEET = "bitermotors-robotaxi-fleet"
-local ROBOTAXI_SERVICE_CENTER = "bitermotors-robotaxi-service-center"
+local BITERTAXI_SALE_RECIPE = "bitermotors-sell-bitertaxi-fleet"
+local BITERTAXI_FLEET = "bitermotors-bitertaxi-fleet"
+local BITERTAXI_DEPOT = "bitermotors-bitertaxi-depot"
 local ORBITAL_CORE = "bitermotors-orbital-datacenter-core"
 local ORBITAL_RADIATOR = "bitermotors-orbital-radiator-panel"
 local SPACE_SOLAR = "bitermotors-high-density-space-solar-panel"
-local GIGAFACTORY = "bitermotors-gigafactory-building"
-local GIGAFACTORY_V2 = "bitermotors-gigafactory-v2"
-local GIGAFACTORY_RECIPE = "bitermotors-gigafactory-building"
-local GIGAFACTORY_MODULE_RECIPE = "bitermotors-gigafactory-module"
+local BITERFACTORY = "bitermotors-biterfactory-building"
+local BITERFACTORY_V2 = "bitermotors-biterfactory-v2"
+local BITERFACTORY_RECIPE = "bitermotors-biterfactory-building"
+local BITERFACTORY_MODULE_RECIPE = "bitermotors-biterfactory-module"
 local PREMIUM_EV_RECIPE = "bitermotors-premium-ev"
 local PREMIUM_EV_ECONOMICS_RECIPE = "bitermotors-smoke-premium-ev-economics"
 local MASS_MARKET_EV_RECIPE = "bitermotors-mass-market-ev"
 local SOLAR_ARRAY = "bitermotors-high-density-solar-array"
-local MEGAPACK = "bitermotors-megapack"
-local MEGAPACK_SALE_RECIPE = "bitermotors-sell-megapack"
+local GRID_BATTERY = "bitermotors-grid-battery"
+local GRID_BATTERY_SALE_RECIPE = "bitermotors-sell-grid-battery"
 local BITER_SPAWNER = "biter-spawner"
 local SMALL_BITER = "small-biter"
 local GUN_TURRET = "gun-turret"
@@ -175,24 +175,24 @@ script.on_init(function()
 
   local milestone_office = create_named(surface, SALES_OFFICE, {-12, 0}, force)
   local reservation_office = create_named(surface, SALES_OFFICE, {-8, 0}, force)
-  local robotaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
-  local megapack_office = create_named(surface, SALES_OFFICE, {8, -10}, force)
-  local megapack_office_pole = create_named(surface, POWER_POLE, {8, -3}, force)
-  local robotaxi_center = create_named(surface, ROBOTAXI_SERVICE_CENTER, {200, -100}, force)
-  local robotaxi_power_tiles = {}
-  local robotaxi_x = robotaxi_center and robotaxi_center.position.x or 200
-  local robotaxi_y = robotaxi_center and robotaxi_center.position.y or -100
-  for x = robotaxi_x - 2, robotaxi_x + 2 do
-    for y = robotaxi_y + 6, robotaxi_y + 13 do
-      robotaxi_power_tiles[#robotaxi_power_tiles + 1] = {name = "landfill", position = {x, y}}
+  local bitertaxi_office = create_named(surface, SALES_OFFICE, {-8, -12}, force)
+  local grid_battery_office = create_named(surface, SALES_OFFICE, {8, -10}, force)
+  local grid_battery_office_pole = create_named(surface, POWER_POLE, {8, -3}, force)
+  local bitertaxi_center = create_named(surface, BITERTAXI_DEPOT, {200, -100}, force)
+  local bitertaxi_power_tiles = {}
+  local bitertaxi_x = bitertaxi_center and bitertaxi_center.position.x or 200
+  local bitertaxi_y = bitertaxi_center and bitertaxi_center.position.y or -100
+  for x = bitertaxi_x - 2, bitertaxi_x + 2 do
+    for y = bitertaxi_y + 6, bitertaxi_y + 13 do
+      bitertaxi_power_tiles[#bitertaxi_power_tiles + 1] = {name = "landfill", position = {x, y}}
     end
   end
-  surface.set_tiles(robotaxi_power_tiles)
-  local robotaxi_substation = surface.create_entity{
-    name = "substation", position = {robotaxi_x, robotaxi_y + 8}, force = force
+  surface.set_tiles(bitertaxi_power_tiles)
+  local bitertaxi_substation = surface.create_entity{
+    name = "substation", position = {bitertaxi_x, bitertaxi_y + 8}, force = force
   }
-  local robotaxi_power = surface.create_entity{
-    name = POWER_SOURCE, position = {robotaxi_x, robotaxi_y + 12}, force = force
+  local bitertaxi_power = surface.create_entity{
+    name = POWER_SOURCE, position = {bitertaxi_x, bitertaxi_y + 12}, force = force
   }
   local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
@@ -209,47 +209,47 @@ script.on_init(function()
   local hostile_worm = create_named(surface, WORM, {180, 100}, game.forces.enemy)
   local legacy_customer_worm = create_named(surface, WORM, {190, 100}, game.forces[CUSTOMER_FORCE])
   local controller = create_named(surface, CONTROLLER, {24, -24}, force)
-  local gigafactory = create_named(surface, GIGAFACTORY, {24, 24}, force)
-  local gigafactory_v2 = create_named(surface, GIGAFACTORY_V2, {40, 24}, force)
-  local gigafactory_economics_test = create_named(surface, GIGAFACTORY, {80, 80}, force)
+  local biterfactory = create_named(surface, BITERFACTORY, {24, 24}, force)
+  local biterfactory_v2 = create_named(surface, BITERFACTORY_V2, {40, 24}, force)
+  local biterfactory_economics_test = create_named(surface, BITERFACTORY, {80, 80}, force)
   local solar_array = create_named(surface, SOLAR_ARRAY, {60, 24}, force)
-  local megapack = create_named(surface, MEGAPACK, {64, 24}, force)
+  local grid_battery = create_named(surface, GRID_BATTERY, {64, 24}, force)
   for index = 2, 25 do
     create_named(surface, SOLAR_ARRAY, {60 + ((index - 1) % 8) * 4, 32 + math.floor((index - 1) / 8) * 4}, force)
   end
   for index = 2, 5 do
-    create_named(surface, MEGAPACK, {64 + (index - 1) * 4, 48}, force)
+    create_named(surface, GRID_BATTERY, {64 + (index - 1) * 4, 48}, force)
   end
   local power_source = create_named(surface, POWER_SOURCE, {1, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)
   surface.request_to_generate_chunks({350, 100}, 3)
   surface.force_generate_chunk_requests()
-  local autopilot_tiles = {}
+  local self_driving_tiles = {}
   for x = 280, 420 do
     for y = 80, 120 do
-      autopilot_tiles[#autopilot_tiles + 1] = {name = "landfill", position = {x, y}}
+      self_driving_tiles[#self_driving_tiles + 1] = {name = "landfill", position = {x, y}}
     end
   end
-  surface.set_tiles(autopilot_tiles)
+  surface.set_tiles(self_driving_tiles)
   for _, existing_entity in pairs(surface.find_entities_filtered{
     area = {{280, 80}, {420, 120}}
   }) do
     existing_entity.destroy()
   end
-  local autopilot_ev = surface.create_entity{
+  local self_driving_ev = surface.create_entity{
     name = PREMIUM_EV,
     position = {300, 100},
     orientation = 0.25,
     force = force
   }
-  local blocked_autopilot_ev = surface.create_entity{
+  local blocked_self_driving_ev = surface.create_entity{
     name = PREMIUM_EV,
     position = {380, 100},
     orientation = 0.25,
     force = force
   }
-  if autopilot_ev then autopilot_ev.destructible = false end
-  if blocked_autopilot_ev then blocked_autopilot_ev.destructible = false end
+  if self_driving_ev then self_driving_ev.destructible = false end
+  if blocked_self_driving_ev then blocked_self_driving_ev.destructible = false end
   for index, count in pairs({41, 41, 40}) do
     local premium_history_chest =
       create_named(surface, "steel-chest", {258 + index * 2, 100}, force)
@@ -305,20 +305,20 @@ script.on_init(function()
     datacenter_power.power_usage = 0
     datacenter_power.output_flow_limit = 100000000
   end
-  if robotaxi_power then
-    robotaxi_power.electric_interface_mode = defines.electric_interface_mode.primary_output
-    robotaxi_power.power_production = 20000000
-    robotaxi_power.power_usage = 0
-    robotaxi_power.output_flow_limit = 20000000
+  if bitertaxi_power then
+    bitertaxi_power.electric_interface_mode = defines.electric_interface_mode.primary_output
+    bitertaxi_power.power_production = 20000000
+    bitertaxi_power.power_usage = 0
+    bitertaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not robotaxi_office or not megapack_office or not megapack_office_pole or not robotaxi_center or not robotaxi_substation or not robotaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not gigafactory or not gigafactory_v2 or not gigafactory_economics_test or not solar_array or not megapack or not power_source or not roadster or not autopilot_ev or not blocked_autopilot_ev or not datacenter or not datacenter_pole or not datacenter_power then
-    write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, gigafactory = gigafactory ~= nil, gigafactory_v2 = gigafactory_v2 ~= nil, solar_array = solar_array ~= nil, megapack = megapack ~= nil}
+  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not datacenter or not datacenter_pole or not datacenter_power then
+    write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, biterfactory = biterfactory ~= nil, biterfactory_v2 = biterfactory_v2 ~= nil, solar_array = solar_array ~= nil, grid_battery = grid_battery ~= nil}
     return
   end
 
   for _, entity in pairs({
-    milestone_office, reservation_office, robotaxi_office, megapack_office,
-    station, station_v2, robotaxi_center, roadster, autopilot_ev, blocked_autopilot_ev
+    milestone_office, reservation_office, bitertaxi_office, grid_battery_office,
+    station, station_v2, bitertaxi_center, roadster, self_driving_ev, blocked_self_driving_ev
   }) do
     script.raise_script_built{entity = entity}
   end
@@ -350,32 +350,32 @@ script.on_init(function()
   storage.outer_customer_spawner_unit_number = outer_customer_spawner.unit_number
   storage.outer_customer_biter_unit_number = outer_customer_biter.unit_number
   storage.outer_customer_biter_converted = outer_customer_biter.force.name == CUSTOMER_FORCE
-  storage.v4_recipe_enabled_before_robotaxi_sale = force.recipes[STATION_V4].enabled
+  storage.v4_recipe_enabled_before_bitertaxi_sale = force.recipes[STATION_V4].enabled
 
   pcall(function() milestone_office.set_recipe(FIRST_SALE_RECIPE) end)
   pcall(function() reservation_office.set_recipe(RESERVATION_SALES_RECIPE) end)
-  pcall(function() robotaxi_office.set_recipe(ROBOTAXI_SALE_RECIPE) end)
-  pcall(function() megapack_office.set_recipe(MEGAPACK_SALE_RECIPE) end)
-  local megapack_sale_input = megapack_office.get_inventory(input_inventory_id())
-  storage.megapack_sale_input = megapack_sale_input
-    and megapack_sale_input.insert{name = MEGAPACK, count = 1} or 0
-  local robotaxi_input = robotaxi_office.get_inventory(input_inventory_id())
-  local inserted_robotaxi_fleet = robotaxi_input and robotaxi_input.insert{name = ROBOTAXI_FLEET, count = 3} or 0
-  local robotaxi_center_inventory = robotaxi_center.get_inventory(defines.inventory.chest)
-  if robotaxi_center_inventory then robotaxi_center_inventory.insert{name = ROBOTAXI_FLEET, count = 20} end
+  pcall(function() bitertaxi_office.set_recipe(BITERTAXI_SALE_RECIPE) end)
+  pcall(function() grid_battery_office.set_recipe(GRID_BATTERY_SALE_RECIPE) end)
+  local grid_battery_sale_input = grid_battery_office.get_inventory(input_inventory_id())
+  storage.grid_battery_sale_input = grid_battery_sale_input
+    and grid_battery_sale_input.insert{name = GRID_BATTERY, count = 1} or 0
+  local bitertaxi_input = bitertaxi_office.get_inventory(input_inventory_id())
+  local inserted_bitertaxi_fleet = bitertaxi_input and bitertaxi_input.insert{name = BITERTAXI_FLEET, count = 3} or 0
+  local bitertaxi_center_inventory = bitertaxi_center.get_inventory(defines.inventory.chest)
+  if bitertaxi_center_inventory then bitertaxi_center_inventory.insert{name = BITERTAXI_FLEET, count = 20} end
   local token_statistics = force.get_item_production_statistics(surface)
   token_statistics.set_output_count("bitermotors-ai-token", 1000000000)
   storage.agi_training_status = remote.call("bitermotors", "agi_training_status", "player")
   pcall(function() controller.set_recipe(AGI_RECIPE) end)
-  pcall(function() gigafactory.set_recipe(PREMIUM_EV_RECIPE) end)
-  pcall(function() gigafactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
-  pcall(function() gigafactory_economics_test.set_recipe(PREMIUM_EV_ECONOMICS_RECIPE) end)
-  local economics_input = gigafactory_economics_test.get_inventory(input_inventory_id())
-  storage.gigafactory_economics_cars_inserted = economics_input.insert{name = "car", count = 1}
+  pcall(function() biterfactory.set_recipe(PREMIUM_EV_RECIPE) end)
+  pcall(function() biterfactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
+  pcall(function() biterfactory_economics_test.set_recipe(PREMIUM_EV_ECONOMICS_RECIPE) end)
+  local economics_input = biterfactory_economics_test.get_inventory(input_inventory_id())
+  storage.biterfactory_economics_cars_inserted = economics_input.insert{name = "car", count = 1}
   economics_input.insert{name = "bitermotors-high-energy-battery-pack", count = 16}
   economics_input.insert{name = "bitermotors-electric-drivetrain", count = 4}
   economics_input.insert{name = "advanced-circuit", count = 20}
-  storage.gigafactory_economics_test = gigafactory_economics_test
+  storage.biterfactory_economics_test = biterfactory_economics_test
   for level = 1, 5 do
     local efficiency_technology = force.technologies["bitermotors-terrestrial-ai-efficiency-" .. level]
     efficiency_technology.enabled = true
@@ -385,25 +385,25 @@ script.on_init(function()
   pcall(function() datacenter.set_recipe(TERRESTRIAL_AI_RECIPE) end)
   local datacenter_input = datacenter.get_inventory(input_inventory_id())
   storage.datacenter_dollars_inserted = datacenter_input and datacenter_input.insert{name = DOLLAR, count = 100} or 0
-  local gigafactory_modules = gigafactory.get_inventory(defines.inventory.crafter_modules)
-  local gigafactory_v2_modules = gigafactory_v2.get_inventory(defines.inventory.crafter_modules)
-  storage.gigafactory_modules_inserted = gigafactory_modules
-    and gigafactory_modules.insert{name = "speed-module", count = 8} or 0
-  storage.gigafactory_v2_modules_inserted = gigafactory_v2_modules
-    and gigafactory_v2_modules.insert{name = "speed-module", count = 8} or 0
-  if gigafactory_v2_modules then
-    gigafactory_v2_modules.clear()
-    storage.final_productivity_modules_inserted = gigafactory_v2_modules.insert{
+  local biterfactory_modules = biterfactory.get_inventory(defines.inventory.crafter_modules)
+  local biterfactory_v2_modules = biterfactory_v2.get_inventory(defines.inventory.crafter_modules)
+  storage.biterfactory_modules_inserted = biterfactory_modules
+    and biterfactory_modules.insert{name = "speed-module", count = 8} or 0
+  storage.biterfactory_v2_modules_inserted = biterfactory_v2_modules
+    and biterfactory_v2_modules.insert{name = "speed-module", count = 8} or 0
+  if biterfactory_v2_modules then
+    biterfactory_v2_modules.clear()
+    storage.final_productivity_modules_inserted = biterfactory_v2_modules.insert{
       name = "productivity-module",
       count = 8
     }
-    pcall(function() gigafactory_v2.set_recipe("bitermotors-electric-drivetrain") end)
-    storage.intermediate_productivity_modules_inserted = gigafactory_v2_modules.insert{
+    pcall(function() biterfactory_v2.set_recipe("bitermotors-electric-drivetrain") end)
+    storage.intermediate_productivity_modules_inserted = biterfactory_v2_modules.insert{
       name = "productivity-module",
       count = 8
     }
-    gigafactory_v2_modules.clear()
-    pcall(function() gigafactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
+    biterfactory_v2_modules.clear()
+    pcall(function() biterfactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
   end
   local event_unpowered_station = create_named(surface, STATION, {80, 0}, force)
   local event_unpowered_station_created = event_unpowered_station ~= nil
@@ -426,7 +426,7 @@ script.on_init(function()
   if station_v4 then
     script.raise_event(defines.events.script_raised_built, {entity = station_v4})
   end
-  script.raise_event(defines.events.script_raised_built, {entity = gigafactory})
+  script.raise_event(defines.events.script_raised_built, {entity = biterfactory})
   script.raise_event(defines.events.script_raised_built, {entity = controller})
   script.raise_event(defines.events.script_raised_built, {entity = datacenter})
   script.raise_event(defines.events.script_raised_built, {entity = roadster})
@@ -434,27 +434,27 @@ script.on_init(function()
   local office_output = milestone_office.get_inventory(output_inventory_id())
   local inserted_sale_dollar = office_output and office_output.insert{name = DOLLAR, count = 1} or 0
   storage.reservation_office_unit_number = reservation_office.unit_number
-  storage.robotaxi_office_unit_number = robotaxi_office.unit_number
-  storage.megapack_office_unit_number = megapack_office.unit_number
-  storage.robotaxi_office = robotaxi_office
-  storage.megapack_office = megapack_office
+  storage.bitertaxi_office_unit_number = bitertaxi_office.unit_number
+  storage.grid_battery_office_unit_number = grid_battery_office.unit_number
+  storage.bitertaxi_office = bitertaxi_office
+  storage.grid_battery_office = grid_battery_office
   storage.station_v2_unit_number = station_v2.unit_number
   storage.controller_unit_number = controller.unit_number
-  storage.gigafactory_unit_number = gigafactory.unit_number
-  storage.gigafactory_v2_unit_number = gigafactory_v2.unit_number
+  storage.biterfactory_unit_number = biterfactory.unit_number
+  storage.biterfactory_v2_unit_number = biterfactory_v2.unit_number
   storage.solar_array_unit_number = solar_array.unit_number
-  storage.megapack_unit_number = megapack.unit_number
+  storage.grid_battery_unit_number = grid_battery.unit_number
   storage.power_source_unit_number = power_source.unit_number
   storage.roadster_unit_number = roadster.unit_number
-  storage.autopilot_ev_unit_number = autopilot_ev.unit_number
-  storage.autopilot_ev_initial_position = {
-    x = autopilot_ev.position.x,
-    y = autopilot_ev.position.y
+  storage.self_driving_ev_unit_number = self_driving_ev.unit_number
+  storage.self_driving_ev_initial_position = {
+    x = self_driving_ev.position.x,
+    y = self_driving_ev.position.y
   }
-  storage.autopilot_ev_goal = {x = 340, y = 100}
-  storage.blocked_autopilot_ev_unit_number = blocked_autopilot_ev.unit_number
-  storage.autopilot_ev = autopilot_ev
-  storage.blocked_autopilot_ev = blocked_autopilot_ev
+  storage.self_driving_ev_goal = {x = 340, y = 100}
+  storage.blocked_self_driving_ev_unit_number = blocked_self_driving_ev.unit_number
+  storage.self_driving_ev = self_driving_ev
+  storage.blocked_self_driving_ev = blocked_self_driving_ev
   storage.roadster = roadster
   storage.datacenter_unit_number = datacenter.unit_number
   storage.datacenter_power_unit_number = datacenter_power.unit_number
@@ -479,8 +479,8 @@ script.on_init(function()
     station_v4_unit_number = storage.station_v4_unit_number,
     milestone_office_unit_number = milestone_office.unit_number,
     reservation_office_unit_number = reservation_office.unit_number,
-    robotaxi_office_unit_number = robotaxi_office.unit_number,
-    inserted_robotaxi_fleet = inserted_robotaxi_fleet,
+    bitertaxi_office_unit_number = bitertaxi_office.unit_number,
+    inserted_bitertaxi_fleet = inserted_bitertaxi_fleet,
     commanded_biter_converted = storage.commanded_biter_converted,
     customer_attack_command_cleared = storage.customer_attack_command_cleared,
     player_customer_friend = storage.player_customer_friend,
@@ -492,34 +492,34 @@ script.on_init(function()
     hostile_worm_unit_number = hostile_worm.unit_number,
     legacy_customer_worm_unit_number = legacy_customer_worm.unit_number,
     controller_unit_number = controller.unit_number,
-    gigafactory_unit_number = gigafactory.unit_number,
-    gigafactory_v2_unit_number = gigafactory_v2.unit_number,
+    biterfactory_unit_number = biterfactory.unit_number,
+    biterfactory_v2_unit_number = biterfactory_v2.unit_number,
     solar_array_unit_number = storage.solar_array_unit_number,
-    megapack_unit_number = megapack.unit_number
+    grid_battery_unit_number = grid_battery.unit_number
   }
 end)
 
 script.on_nth_tick(15, function()
-  if storage.autopilot_requested ~= nil then return end
-  storage.autopilot_requested = remote.call(
+  if storage.self_driving_requested ~= nil then return end
+  storage.self_driving_requested = remote.call(
     "bitermotors",
-    "test_ev_autopilot_start",
+    "test_ev_self_driving_start",
     nil,
-    storage.autopilot_ev.unit_number,
-    storage.autopilot_ev_goal,
+    storage.self_driving_ev.unit_number,
+    storage.self_driving_ev_goal,
     "summon"
   )
-  storage.blocked_autopilot_requested = remote.call(
+  storage.blocked_self_driving_requested = remote.call(
     "bitermotors",
-    "test_ev_autopilot_start",
+    "test_ev_self_driving_start",
     nil,
-    storage.blocked_autopilot_ev.unit_number,
+    storage.blocked_self_driving_ev.unit_number,
     {x = 400, y = 100},
     "summon"
   )
-  storage.roadster_autopilot_rejected = not remote.call(
+  storage.roadster_self_driving_rejected = not remote.call(
     "bitermotors",
-    "test_ev_autopilot_start",
+    "test_ev_self_driving_start",
     nil,
     storage.roadster.unit_number,
     {x = 20, y = -6},
@@ -531,28 +531,28 @@ script.on_event(defines.events.on_tick, function()
   if game.tick_paused then
     game.tick_paused = false
   end
-  local office = storage.robotaxi_office
+  local office = storage.bitertaxi_office
   if office and office.valid then
     office.energy = 100000000
   end
-  local megapack_office = storage.megapack_office
-  if megapack_office and megapack_office.valid then
-    megapack_office.energy = 100000000
+  local grid_battery_office = storage.grid_battery_office
+  if grid_battery_office and grid_battery_office.valid then
+    grid_battery_office.energy = 100000000
   end
-  local economics_test = storage.gigafactory_economics_test
+  local economics_test = storage.biterfactory_economics_test
   if economics_test and economics_test.valid then
     economics_test.energy = 1000000000
     local economics_output = economics_test.get_inventory(output_inventory_id())
     local completed = economics_output.get_item_count("bitermotors-premium-ev")
     if completed > 0 then
-      storage.gigafactory_economics_outputs =
-        (storage.gigafactory_economics_outputs or 0) + completed
+      storage.biterfactory_economics_outputs =
+        (storage.biterfactory_economics_outputs or 0) + completed
       economics_output.clear()
     end
-    if (storage.gigafactory_economics_cars_inserted or 0) < 2 then
+    if (storage.biterfactory_economics_cars_inserted or 0) < 2 then
       local economics_input = economics_test.get_inventory(input_inventory_id())
-      storage.gigafactory_economics_cars_inserted =
-        (storage.gigafactory_economics_cars_inserted or 0)
+      storage.biterfactory_economics_cars_inserted =
+        (storage.biterfactory_economics_cars_inserted or 0)
         + economics_input.insert{name = "car", count = 1}
     end
   end
@@ -836,8 +836,8 @@ script.on_nth_tick(3780, function()
     return
   end
   local office = find_unit(surface, SALES_OFFICE, storage.reservation_office_unit_number)
-  local robotaxi_office = find_unit(surface, SALES_OFFICE, storage.robotaxi_office_unit_number)
-  local megapack_office = find_unit(surface, SALES_OFFICE, storage.megapack_office_unit_number)
+  local bitertaxi_office = find_unit(surface, SALES_OFFICE, storage.bitertaxi_office_unit_number)
+  local grid_battery_office = find_unit(surface, SALES_OFFICE, storage.grid_battery_office_unit_number)
   local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
   local controller = find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local biter_spawner = find_unit(surface, BITER_SPAWNER, storage.biter_spawner_unit_number)
@@ -850,16 +850,16 @@ script.on_nth_tick(3780, function()
   local direct_unpowered_station = find_unit(surface, STATION, storage.direct_unpowered_station_unit_number)
   local station_v3 = find_unit(surface, STATION_V3, storage.station_v3_unit_number)
   local station_v4 = find_unit(surface, STATION_V4, storage.station_v4_unit_number)
-  local gigafactory = find_unit(surface, GIGAFACTORY, storage.gigafactory_unit_number)
-  local gigafactory_v2 = find_unit(surface, GIGAFACTORY_V2, storage.gigafactory_v2_unit_number)
-  local gigafactory_economics_test = storage.gigafactory_economics_test
+  local biterfactory = find_unit(surface, BITERFACTORY, storage.biterfactory_unit_number)
+  local biterfactory_v2 = find_unit(surface, BITERFACTORY_V2, storage.biterfactory_v2_unit_number)
+  local biterfactory_economics_test = storage.biterfactory_economics_test
   local solar_array = find_unit(surface, SOLAR_ARRAY, storage.solar_array_unit_number)
   local roadster = find_unit(surface, PROTOTYPE_ROADSTER, storage.roadster_unit_number)
-  local autopilot_ev = find_unit(surface, PREMIUM_EV, storage.autopilot_ev_unit_number)
-  local blocked_autopilot_ev = find_unit(
+  local self_driving_ev = find_unit(surface, PREMIUM_EV, storage.self_driving_ev_unit_number)
+  local blocked_self_driving_ev = find_unit(
     surface,
     PREMIUM_EV,
-    storage.blocked_autopilot_ev_unit_number
+    storage.blocked_self_driving_ev_unit_number
   )
   local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
   local station_output = station_v2 and station_v2.get_inventory(defines.inventory.chest)
@@ -870,21 +870,21 @@ script.on_nth_tick(3780, function()
   local station_v4_recipe = game.forces.player.recipes["bitermotors-ev-charging-station-v4"]
   local first_sale_recipe = game.forces.player.recipes["bitermotors-sell-prototype-roadster"]
   local roadster_recipe = game.forces.player.recipes["bitermotors-prototype-roadster"]
-  local gigafactory_item_recipe = game.forces.player.recipes[GIGAFACTORY_RECIPE]
-  local gigafactory_module_recipe = game.forces.player.recipes[GIGAFACTORY_MODULE_RECIPE]
+  local biterfactory_item_recipe = game.forces.player.recipes[BITERFACTORY_RECIPE]
+  local biterfactory_module_recipe = game.forces.player.recipes[BITERFACTORY_MODULE_RECIPE]
   local premium_ev_recipe = game.forces.player.recipes[PREMIUM_EV_RECIPE]
-  local gigacast_recipe = game.forces.player.recipes["bitermotors-gigacast"]
-  local gigafactory_v2_recipe = game.forces.player.recipes[GIGAFACTORY_V2]
+  local structural_casting_recipe = game.forces.player.recipes["bitermotors-structural-casting"]
+  local biterfactory_v2_recipe = game.forces.player.recipes[BITERFACTORY_V2]
   local mass_market_ev_recipe = game.forces.player.recipes[MASS_MARKET_EV_RECIPE]
   local solar_array_recipe = game.forces.player.recipes[SOLAR_ARRAY]
-  local megapack_recipe = game.forces.player.recipes[MEGAPACK]
-  local sell_megapack_recipe = game.forces.player.recipes["bitermotors-sell-megapack"]
-  local selected_gigafactory_recipe = gigafactory and gigafactory.get_recipe()
-  local selected_gigafactory_v2_recipe = gigafactory_v2 and gigafactory_v2.get_recipe()
+  local grid_battery_recipe = game.forces.player.recipes[GRID_BATTERY]
+  local sell_grid_battery_recipe = game.forces.player.recipes["bitermotors-sell-grid-battery"]
+  local selected_biterfactory_recipe = biterfactory and biterfactory.get_recipe()
+  local selected_biterfactory_v2_recipe = biterfactory_v2 and biterfactory_v2.get_recipe()
   local selected_reservation_office_recipe = office and office.get_recipe()
-  local robotaxi_output = robotaxi_office and robotaxi_office.get_inventory(output_inventory_id())
-  local megapack_sale_output = megapack_office
-    and megapack_office.get_inventory(output_inventory_id())
+  local bitertaxi_output = bitertaxi_office and bitertaxi_office.get_inventory(output_inventory_id())
+  local grid_battery_sale_output = grid_battery_office
+    and grid_battery_office.get_inventory(output_inventory_id())
   local logistic_system_technology = game.forces.player.technologies["logistic-system"]
   local market = remote.call("bitermotors", "refresh_biter_customer_market", "player")
   local progress = remote.call("bitermotors", "progress_status", "player")
@@ -913,8 +913,8 @@ script.on_nth_tick(3780, function()
   local cybertrain_reserve_test = cybertrains[1] and remote.call(
     "bitermotors", "test_cybertrain_reserve", cybertrains[1].unit_number, 0, 0.5
   ) or false
-  local robotaxi_services = remote.call("bitermotors", "robotaxi_service_status", "player")
-  local megapack_adoption = remote.call("bitermotors", "megapack_adoption_status", "player")
+  local bitertaxi_depots = remote.call("bitermotors", "bitertaxi_depot_status", "player")
+  local grid_battery_adoption = remote.call("bitermotors", "grid_battery_adoption_status", "player")
   local grid_connections = #surface.find_entities_filtered{name = GRID_CONNECTION, force = game.forces.player}
   local logistic_roboports = #surface.find_entities_filtered{type = "roboport", force = game.forces.player}
   local power_sinks = #surface.find_entities_filtered{name = POWER_SINK, force = game.forces.player}
@@ -949,19 +949,19 @@ script.on_nth_tick(3780, function()
   end
   local roadster_fuel = roadster and roadster.burner
     and roadster.burner.inventory.get_item_count("bitermotors-electric-drive-charge") or 0
-  local autopilot_distance_moved = 0
-  local autopilot_goal_distance = -1
-  if autopilot_ev and storage.autopilot_ev_initial_position then
-    local moved_x = autopilot_ev.position.x - storage.autopilot_ev_initial_position.x
-    local moved_y = autopilot_ev.position.y - storage.autopilot_ev_initial_position.y
-    autopilot_distance_moved = math.sqrt(moved_x * moved_x + moved_y * moved_y)
-    local goal_x = autopilot_ev.position.x - storage.autopilot_ev_goal.x
-    local goal_y = autopilot_ev.position.y - storage.autopilot_ev_goal.y
-    autopilot_goal_distance = math.sqrt(goal_x * goal_x + goal_y * goal_y)
+  local self_driving_distance_moved = 0
+  local self_driving_goal_distance = -1
+  if self_driving_ev and storage.self_driving_ev_initial_position then
+    local moved_x = self_driving_ev.position.x - storage.self_driving_ev_initial_position.x
+    local moved_y = self_driving_ev.position.y - storage.self_driving_ev_initial_position.y
+    self_driving_distance_moved = math.sqrt(moved_x * moved_x + moved_y * moved_y)
+    local goal_x = self_driving_ev.position.x - storage.self_driving_ev_goal.x
+    local goal_y = self_driving_ev.position.y - storage.self_driving_ev_goal.y
+    self_driving_goal_distance = math.sqrt(goal_x * goal_x + goal_y * goal_y)
   end
-  local autopilot_status = remote.call("bitermotors", "ev_autopilot_status", 1)
-  local economics_output = gigafactory_economics_test and gigafactory_economics_test.valid
-    and gigafactory_economics_test.get_inventory(output_inventory_id())
+  local self_driving_status = remote.call("bitermotors", "ev_self_driving_status", 1)
+  local economics_output = biterfactory_economics_test and biterfactory_economics_test.valid
+    and biterfactory_economics_test.get_inventory(output_inventory_id())
   if commanded_biter and storage.commanded_biter_initial_position then
     local dx = commanded_biter.position.x - storage.commanded_biter_initial_position.x
     local dy = commanded_biter.position.y - storage.commanded_biter_initial_position.y
@@ -976,11 +976,11 @@ script.on_nth_tick(3780, function()
     cybertrain_stop_created = storage.cybertrain_stop_created,
     cybertrain_status = cybertrains,
     cybertrain_reserve_test = cybertrain_reserve_test,
-    robotaxi_service_status = robotaxi_services,
-    megapack_adoption = megapack_adoption,
-    megapack_sale_input = storage.megapack_sale_input,
-    megapack_sale_dollars = megapack_sale_output
-      and megapack_sale_output.get_item_count(DOLLAR) or 0,
+    bitertaxi_depot_status = bitertaxi_depots,
+    grid_battery_adoption = grid_battery_adoption,
+    grid_battery_sale_input = storage.grid_battery_sale_input,
+    grid_battery_sale_dollars = grid_battery_sale_output
+      and grid_battery_sale_output.get_item_count(DOLLAR) or 0,
     prospect_units = prospect_units,
     ev_charging_station_enabled = station_recipe and station_recipe.enabled,
     ev_charging_station_v2_created = find_unit(surface, STATION_V2, storage.station_v2_unit_number) ~= nil,
@@ -989,36 +989,36 @@ script.on_nth_tick(3780, function()
     ev_charging_station_v4_enabled = station_v4_recipe and station_v4_recipe.enabled,
     first_sale_recipe_enabled = first_sale_recipe and first_sale_recipe.enabled,
     prototype_roadster_enabled = roadster_recipe and roadster_recipe.enabled,
-    gigafactory_created = gigafactory ~= nil,
+    biterfactory_created = biterfactory ~= nil,
     foundry_enabled_before_qualification = storage.foundry_enabled_before_qualification,
     foundry_enabled_after_qualification = storage.foundry_enabled_after_qualification,
     foundry_researched_after_qualification = game.forces.player.technologies.foundry.researched,
     advanced_battery_chemistry_enabled_at_100 = storage.advanced_battery_chemistry_enabled_at_100,
     advanced_battery_chemistry_enabled_at_250 = storage.advanced_battery_chemistry_enabled_at_250,
     premium_ev_history_after_reset = storage.premium_ev_history_after_reset,
-    gigafactory_recipe_enabled = gigafactory_item_recipe and gigafactory_item_recipe.enabled,
-    gigafactory_module_recipe_enabled = gigafactory_module_recipe and gigafactory_module_recipe.enabled,
+    biterfactory_recipe_enabled = biterfactory_item_recipe and biterfactory_item_recipe.enabled,
+    biterfactory_module_recipe_enabled = biterfactory_module_recipe and biterfactory_module_recipe.enabled,
     premium_ev_recipe_enabled = premium_ev_recipe and premium_ev_recipe.enabled,
-    gigacast_recipe_enabled = gigacast_recipe and gigacast_recipe.enabled,
-    gigafactory_v2_created = gigafactory_v2 ~= nil,
-    gigafactory_v2_recipe_enabled = gigafactory_v2_recipe and gigafactory_v2_recipe.enabled,
+    structural_casting_recipe_enabled = structural_casting_recipe and structural_casting_recipe.enabled,
+    biterfactory_v2_created = biterfactory_v2 ~= nil,
+    biterfactory_v2_recipe_enabled = biterfactory_v2_recipe and biterfactory_v2_recipe.enabled,
     mass_market_ev_recipe_enabled = mass_market_ev_recipe and mass_market_ev_recipe.enabled,
     solar_array_created = solar_array ~= nil,
     solar_array_recipe_enabled = solar_array_recipe and solar_array_recipe.enabled,
-    megapack_created = find_unit(surface, MEGAPACK, storage.megapack_unit_number) ~= nil,
-    megapack_recipe_enabled = megapack_recipe and megapack_recipe.enabled,
-    sell_megapack_recipe_enabled = sell_megapack_recipe and sell_megapack_recipe.enabled,
-    gigafactory_selected_recipe = selected_gigafactory_recipe and selected_gigafactory_recipe.name,
-    gigafactory_v2_selected_recipe = selected_gigafactory_v2_recipe and selected_gigafactory_v2_recipe.name,
-    gigafactory_v1_two_input_output = economics_output
-      and (storage.gigafactory_economics_outputs or 0)
+    grid_battery_created = find_unit(surface, GRID_BATTERY, storage.grid_battery_unit_number) ~= nil,
+    grid_battery_recipe_enabled = grid_battery_recipe and grid_battery_recipe.enabled,
+    sell_grid_battery_recipe_enabled = sell_grid_battery_recipe and sell_grid_battery_recipe.enabled,
+    biterfactory_selected_recipe = selected_biterfactory_recipe and selected_biterfactory_recipe.name,
+    biterfactory_v2_selected_recipe = selected_biterfactory_v2_recipe and selected_biterfactory_v2_recipe.name,
+    biterfactory_v1_two_input_output = economics_output
+      and (storage.biterfactory_economics_outputs or 0)
         + economics_output.get_item_count("bitermotors-premium-ev") or -1,
-    gigafactory_modules_inserted = storage.gigafactory_modules_inserted,
-    gigafactory_v2_modules_inserted = storage.gigafactory_v2_modules_inserted,
+    biterfactory_modules_inserted = storage.biterfactory_modules_inserted,
+    biterfactory_v2_modules_inserted = storage.biterfactory_v2_modules_inserted,
     final_productivity_modules_inserted = storage.final_productivity_modules_inserted,
     intermediate_productivity_modules_inserted = storage.intermediate_productivity_modules_inserted,
     reservation_office_selected_recipe = selected_reservation_office_recipe and selected_reservation_office_recipe.name,
-    robotaxi_dollars_produced = robotaxi_output and robotaxi_output.get_item_count(DOLLAR) or 0,
+    bitertaxi_dollars_produced = bitertaxi_output and bitertaxi_output.get_item_count(DOLLAR) or 0,
     logistic_system_available_before_sales = logistic_system_technology and logistic_system_technology.enabled,
     logistic_system_requires_manual_research = logistic_system_technology
       and not logistic_system_technology.researched,
@@ -1034,14 +1034,14 @@ script.on_nth_tick(3780, function()
     roadster_batteries = roadster_batteries,
     roadster_battery_energy = roadster_battery_energy,
     roadster_electric_fuel = roadster_fuel,
-    autopilot_requested = storage.autopilot_requested,
-    blocked_autopilot_requested = storage.blocked_autopilot_requested,
-    roadster_autopilot_rejected = storage.roadster_autopilot_rejected,
-    autopilot_ev_created = autopilot_ev ~= nil,
-    blocked_autopilot_ev_created = blocked_autopilot_ev ~= nil,
-    autopilot_distance_moved = autopilot_distance_moved,
-    autopilot_goal_distance = autopilot_goal_distance,
-    autopilot = autopilot_status,
+    self_driving_requested = storage.self_driving_requested,
+    blocked_self_driving_requested = storage.blocked_self_driving_requested,
+    roadster_self_driving_rejected = storage.roadster_self_driving_rejected,
+    self_driving_ev_created = self_driving_ev ~= nil,
+    blocked_self_driving_ev_created = blocked_self_driving_ev ~= nil,
+    self_driving_distance_moved = self_driving_distance_moved,
+    self_driving_goal_distance = self_driving_goal_distance,
+    self_driving = self_driving_status,
     terrestrial_datacenter_created = datacenter ~= nil,
     terrestrial_datacenter_dollars_remaining = datacenter_input and datacenter_input.get_item_count(DOLLAR) or -1,
     terrestrial_datacenter_tokens = datacenter_output and datacenter_output.get_item_count("bitermotors-ai-token") or -1,
@@ -1078,7 +1078,7 @@ script.on_nth_tick(3780, function()
     outer_customer_biter_converted = storage.outer_customer_biter_converted
       and ((outer_customer_biter and outer_customer_biter.force.name == CUSTOMER_FORCE)
         or (vehicle_ownership and vehicle_ownership.active == 3)),
-    v4_recipe_enabled_before_robotaxi_sale = storage.v4_recipe_enabled_before_robotaxi_sale,
+    v4_recipe_enabled_before_bitertaxi_sale = storage.v4_recipe_enabled_before_bitertaxi_sale,
     player_customer_friend = storage.player_customer_friend,
     customer_player_friend = storage.customer_player_friend,
     player_enemy_cease_fire = game.forces.player.get_cease_fire(game.forces.enemy),
@@ -1164,19 +1164,19 @@ script.on_nth_tick(17000, function()
   if game.tick < 17000 then return end
   local surface = game.get_surface(storage.surface_index or 1)
   local office = surface
-    and find_unit(surface, SALES_OFFICE, storage.megapack_office_unit_number)
+    and find_unit(surface, SALES_OFFICE, storage.grid_battery_office_unit_number)
   local output = office and office.get_inventory(output_inventory_id())
   local input = office and office.get_inventory(input_inventory_id())
   write_report{
     tick = game.tick,
-    status = "megapack_sale",
+    status = "grid_battery_sale",
     dollars = output and output.get_item_count(DOLLAR) or 0,
-    megapacks = input and input.get_item_count(MEGAPACK) or 0,
+    grid_batteries = input and input.get_item_count(GRID_BATTERY) or 0,
     disabled = office and office.disabled_by_script,
     entity_status = office and office.status,
     crafting_progress = office and office.crafting_progress,
     products_finished = office and office.products_finished,
-    adoption = remote.call("bitermotors", "megapack_adoption_status", "player")
+    adoption = remote.call("bitermotors", "grid_battery_adoption_status", "player")
   }
 end)
 
@@ -1192,7 +1192,7 @@ EOF_LUA
 
 echo "Validation temp dir: $tmp"
 python3 -m unittest tests.test_bitermotors_mod
-python3 - "$repo_root/mod/bitermotors_0.1.0/data.lua" "$read_data" "$repo_root/mod/bitermotors_0.1.0" <<'PY'
+python3 - "$repo_root/mod/bitermotors_0.1.1/data.lua" "$read_data" "$repo_root/mod/bitermotors_0.1.1" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -1211,7 +1211,7 @@ if missing:
     raise SystemExit("missing graphics references:\n" + "\n".join(missing))
 print("Graphics references OK.")
 PY
-python3 - "$repo_root/mod/bitermotors_0.1.0/control.lua" <<'PY'
+python3 - "$repo_root/mod/bitermotors_0.1.1/control.lua" <<'PY'
 import sys
 from pathlib import Path
 
@@ -1234,7 +1234,7 @@ if grep -qE ' Error |Error while loading|Modifications: ' /tmp/bitermotors-dump-
 fi
 python3 - \
   "$tmp/script-output/data-raw-dump.json" \
-  "$repo_root/mod/bitermotors_0.1.0/locale/en/bitermotors.cfg" <<'PY'
+  "$repo_root/mod/bitermotors_0.1.1/locale/en/bitermotors.cfg" <<'PY'
 import json
 import math
 import sys
@@ -1443,7 +1443,7 @@ agi_results = {row["name"]: row["amount"] for row in agi_recipe["results"]}
 if agi_ingredients != {
     "bitermotors-agi-training-dataset": 20000,
     "bitermotors-capital-allocation": 100,
-    "bitermotors-grid-megapack": 100,
+    "bitermotors-grid-battery-array": 100,
     "processing-unit": 10000,
 } or agi_results != {"bitermotors-agi-model": 1}:
     raise SystemExit(f"Final AGI Training Run recipe mismatch: {agi_recipe}")
@@ -1461,8 +1461,8 @@ controller_ingredients = {
     row["name"]: row["amount"] for row in controller_recipe["ingredients"]
 }
 if controller_ingredients != {
-    "bitermotors-gigafactory-module": 100,
-    "bitermotors-grid-megapack": 10,
+    "bitermotors-biterfactory-module": 100,
+    "bitermotors-grid-battery-array": 10,
     "substation": 100,
     "bitermotors-dollar": 10000,
 }:
@@ -1532,7 +1532,7 @@ if cell_scale_inputs != {
     "bitermotors-cobalt-concentrate": 1,
 }:
     raise SystemExit(
-        "Gigafactory high-nickel cells must consume dirty refining's cobalt: "
+        "Biterfactory high-nickel cells must consume dirty refining's cobalt: "
         f"{cell_scale_high_nickel}"
     )
 
@@ -1611,7 +1611,7 @@ energy_product_unlocks = {
     effect["recipe"] for effect in data["technology"]["bitermotors-energy-products"].get("effects", [])
     if effect.get("type") == "unlock-recipe"
 }
-for runtime_recipe in ("bitermotors-gigafactory-module", "bitermotors-gigafactory-building"):
+for runtime_recipe in ("bitermotors-biterfactory-module", "bitermotors-biterfactory-building"):
     if runtime_recipe in ev_line_unlocks or runtime_recipe in energy_product_unlocks:
         raise SystemExit(f"{runtime_recipe} must be owned by the 100-Premium-EV runtime milestone")
 
@@ -1619,8 +1619,8 @@ sale_recipe_products = {
     "bitermotors-sell-prototype-roadster": "prototype-roadster.png",
     "bitermotors-sell-premium-ev": "premium-ev.png",
     "bitermotors-sell-mass-market-ev": "mass-market-ev.png",
-    "bitermotors-sell-megapack": "megapack.png",
-    "bitermotors-sell-robotaxi-fleet": "robotaxi-fleet.png",
+    "bitermotors-sell-grid-battery": "grid-battery.png",
+    "bitermotors-sell-bitertaxi-fleet": "bitertaxi-fleet.png",
 }
 for recipe_name, product_icon in sale_recipe_products.items():
     icon_paths = [layer["icon"] for layer in data["recipe"][recipe_name].get("icons", [])]
@@ -1637,9 +1637,9 @@ if premium_sale["energy_required"] != 30 or premium_sale["results"] != [{"type":
     raise SystemExit(f"Premium EV sale balance mismatch: {premium_sale}")
 if mass_market_sale["energy_required"] != 5 or mass_market_sale["results"] != [{"type": "item", "name": "bitermotors-dollar", "amount": 1}]:
     raise SystemExit(f"Mass-market EV sale balance mismatch: {mass_market_sale}")
-robotaxi_sale = data["recipe"]["bitermotors-sell-robotaxi-fleet"]
-if robotaxi_sale["energy_required"] != 3 or robotaxi_sale["ingredients"] != [{"type": "item", "name": "bitermotors-robotaxi-fleet", "amount": 3}] or robotaxi_sale["results"] != [{"type": "item", "name": "bitermotors-dollar", "amount": 1}]:
-    raise SystemExit(f"Robotaxi sale balance mismatch: {robotaxi_sale}")
+bitertaxi_sale = data["recipe"]["bitermotors-sell-bitertaxi-fleet"]
+if bitertaxi_sale["energy_required"] != 3 or bitertaxi_sale["ingredients"] != [{"type": "item", "name": "bitermotors-bitertaxi-fleet", "amount": 3}] or bitertaxi_sale["results"] != [{"type": "item", "name": "bitermotors-dollar", "amount": 1}]:
+    raise SystemExit(f"Bitertaxi sale balance mismatch: {bitertaxi_sale}")
 print("Biter Motors research balance and sale recipe icons OK.")
 
 terrestrial_tech = data["technology"]["bitermotors-terrestrial-ai"]
@@ -1677,15 +1677,15 @@ hd_solar = data["solar-panel"]["bitermotors-high-density-solar-array"]
 tandem_solar = data["solar-panel"]["bitermotors-tandem-solar-array"]
 if hd_solar.get("next_upgrade") != "bitermotors-tandem-solar-array" or tandem_solar["production"] != "3MW":
     raise SystemExit("Tandem Solar Array must be a 3 MW direct HD-panel upgrade")
-megapack = data["accumulator"]["bitermotors-megapack"]
-grid_megapack = data["accumulator"]["bitermotors-grid-megapack"]
+grid_battery = data["accumulator"]["bitermotors-grid-battery"]
+grid_battery_array = data["accumulator"]["bitermotors-grid-battery-array"]
 if (
-    megapack.get("next_upgrade") != "bitermotors-grid-megapack"
-    or grid_megapack["energy_source"]["buffer_capacity"] != "1GJ"
-    or grid_megapack["energy_source"]["input_flow_limit"] != "50MW"
-    or grid_megapack["energy_source"]["output_flow_limit"] != "50MW"
+    grid_battery.get("next_upgrade") != "bitermotors-grid-battery-array"
+    or grid_battery_array["energy_source"]["buffer_capacity"] != "1GJ"
+    or grid_battery_array["energy_source"]["input_flow_limit"] != "50MW"
+    or grid_battery_array["energy_source"]["output_flow_limit"] != "50MW"
 ):
-    raise SystemExit("Grid Megapack must be a 1 GJ, 50 MW direct Megapack upgrade")
+    raise SystemExit("Grid Battery Array must be a 1 GJ, 50 MW direct Grid Battery upgrade")
 
 token_recipe = data["recipe"]["bitermotors-terrestrial-ai-token"]
 if token_recipe.get("ingredients") != [{"type": "item", "name": "bitermotors-dollar", "amount": 20}] or token_recipe["energy_required"] != 30:
@@ -1734,18 +1734,18 @@ for base_name in (
     "small-biter", "medium-biter", "big-biter", "behemoth-biter",
     "small-spitter", "medium-spitter", "big-spitter", "behemoth-spitter",
 ):
-    for class_name in ("roadster", "premium", "mass-market", "robotaxi"):
+    for class_name in ("roadster", "premium", "mass-market", "bitertaxi"):
         if f"bitermotors-{base_name}-{class_name}" not in data["unit"]:
             raise SystemExit(f"missing baked customer vehicle unit: {base_name} {class_name}")
 datacenter = data["assembling-machine"]["bitermotors-terrestrial-datacenter"]
 if datacenter["energy_usage"] != "8MW" or "bitermotors-datacenter" not in datacenter["crafting_categories"]:
     raise SystemExit(f"Terrestrial Datacenter prototype mismatch: {datacenter}")
-robotaxi_recipe = data["recipe"]["bitermotors-robotaxi-fleet"]
-if robotaxi_recipe["categories"] != ["bitermotors-mass-vehicle-assembly"]:
-    raise SystemExit(f"Robotaxi Fleet must be built in Gigafactory V2: {robotaxi_recipe['categories']}")
-if "bitermotors-mass-vehicle-assembly" not in data["assembling-machine"]["bitermotors-gigafactory-v2"]["crafting_categories"]:
-    raise SystemExit("Gigafactory V2 cannot build Robotaxi Fleets")
-print("Terrestrial AI and Robotaxi engine prototypes OK.")
+bitertaxi_recipe = data["recipe"]["bitermotors-bitertaxi-fleet"]
+if bitertaxi_recipe["categories"] != ["bitermotors-mass-vehicle-assembly"]:
+    raise SystemExit(f"Bitertaxi Fleet must be built in Biterfactory V2: {bitertaxi_recipe['categories']}")
+if "bitermotors-mass-vehicle-assembly" not in data["assembling-machine"]["bitermotors-biterfactory-v2"]["crafting_categories"]:
+    raise SystemExit("Biterfactory V2 cannot build Bitertaxi Fleets")
+print("Terrestrial AI and Bitertaxi engine prototypes OK.")
 
 if "bitermotors" in data.get("item-group", {}):
     raise SystemExit("Biter Motors must use vanilla crafting tabs, not a separate item group")
@@ -1821,8 +1821,8 @@ for technology_name, technology in data["technology"].items():
 runtime_milestone_recipes = {
     "bitermotors-prototype-roadster",
     "bitermotors-ev-charging-station-v4",
-    "bitermotors-gigafactory-module",
-    "bitermotors-gigafactory-building",
+    "bitermotors-biterfactory-module",
+    "bitermotors-biterfactory-building",
     "bitermotors-high-density-solar-array-batch",
     "bitermotors-cell-scale-high-nickel",
     "bitermotors-agi-training-run",
@@ -1845,59 +1845,59 @@ if uncraftable:
     raise SystemExit(f"Biter Motors recipes without a compatible machine: {uncraftable}")
 print("Biter Motors progression ownership and machine compatibility OK.")
 
-prototype = data["assembling-machine"]["bitermotors-gigafactory-v2"]
+prototype = data["assembling-machine"]["bitermotors-biterfactory-v2"]
 categories = set(prototype["crafting_categories"])
 productivity = prototype["effect_receiver"]["base_effect"]["productivity"]
 if prototype["energy_usage"] != "30MW":
-    raise SystemExit(f"Gigafactory V2 engine power draw mismatch: {prototype['energy_usage']}")
+    raise SystemExit(f"Biterfactory V2 engine power draw mismatch: {prototype['energy_usage']}")
 if categories != {"advanced-crafting", "bitermotors-vehicle-assembly", "bitermotors-mass-vehicle-assembly", "bitermotors-energy-products", "bitermotors-energy-products-batch", "bitermotors-vertical-integration"}:
-    raise SystemExit(f"Gigafactory V2 engine categories mismatch: {sorted(categories)}")
+    raise SystemExit(f"Biterfactory V2 engine categories mismatch: {sorted(categories)}")
 if prototype["crafting_speed"] != 8:
-    raise SystemExit(f"Gigafactory V2 engine crafting speed mismatch: {prototype['crafting_speed']}")
+    raise SystemExit(f"Biterfactory V2 engine crafting speed mismatch: {prototype['crafting_speed']}")
 if productivity != 1.5:
-    raise SystemExit(f"Gigafactory V2 engine productivity mismatch: {productivity}")
-v1_prototype = data["assembling-machine"]["bitermotors-gigafactory-building"]
+    raise SystemExit(f"Biterfactory V2 engine productivity mismatch: {productivity}")
+v1_prototype = data["assembling-machine"]["bitermotors-biterfactory-building"]
 v1_productivity = v1_prototype["effect_receiver"]["base_effect"]["productivity"]
 if v1_prototype["crafting_speed"] != 4:
-    raise SystemExit(f"Gigafactory V1 engine crafting speed mismatch: {v1_prototype['crafting_speed']}")
+    raise SystemExit(f"Biterfactory V1 engine crafting speed mismatch: {v1_prototype['crafting_speed']}")
 if v1_productivity != 0.5:
-    raise SystemExit(f"Gigafactory V1 engine productivity mismatch: {v1_productivity}")
-if v1_prototype.get("fast_replaceable_group") != "bitermotors-gigafactory" or prototype.get("fast_replaceable_group") != "bitermotors-gigafactory":
-    raise SystemExit("Gigafactory tiers do not share a fast-replace group")
-if v1_prototype.get("next_upgrade") != "bitermotors-gigafactory-v2":
-    raise SystemExit(f"Gigafactory V1 next upgrade mismatch: {v1_prototype.get('next_upgrade')}")
-for gigafactory_name in ("bitermotors-gigafactory-building", "bitermotors-gigafactory-v2"):
-    gigafactory_prototype = data["assembling-machine"][gigafactory_name]
-    if gigafactory_prototype["module_slots"] != 8:
-        raise SystemExit(f"{gigafactory_name} module slot mismatch: {gigafactory_prototype['module_slots']}")
-    if "productivity" not in gigafactory_prototype["allowed_effects"]:
-        raise SystemExit(f"{gigafactory_name} does not allow productivity modules")
-    if "advanced-crafting" not in gigafactory_prototype["crafting_categories"]:
-        raise SystemExit(f"{gigafactory_name} cannot manufacture Gigafactory recipes")
-    working_visualisations = gigafactory_prototype["graphics_set"].get("working_visualisations", [])
+    raise SystemExit(f"Biterfactory V1 engine productivity mismatch: {v1_productivity}")
+if v1_prototype.get("fast_replaceable_group") != "bitermotors-biterfactory" or prototype.get("fast_replaceable_group") != "bitermotors-biterfactory":
+    raise SystemExit("Biterfactory tiers do not share a fast-replace group")
+if v1_prototype.get("next_upgrade") != "bitermotors-biterfactory-v2":
+    raise SystemExit(f"Biterfactory V1 next upgrade mismatch: {v1_prototype.get('next_upgrade')}")
+for biterfactory_name in ("bitermotors-biterfactory-building", "bitermotors-biterfactory-v2"):
+    biterfactory_prototype = data["assembling-machine"][biterfactory_name]
+    if biterfactory_prototype["module_slots"] != 8:
+        raise SystemExit(f"{biterfactory_name} module slot mismatch: {biterfactory_prototype['module_slots']}")
+    if "productivity" not in biterfactory_prototype["allowed_effects"]:
+        raise SystemExit(f"{biterfactory_name} does not allow productivity modules")
+    if "advanced-crafting" not in biterfactory_prototype["crafting_categories"]:
+        raise SystemExit(f"{biterfactory_name} cannot manufacture Biterfactory recipes")
+    working_visualisations = biterfactory_prototype["graphics_set"].get("working_visualisations", [])
     animation_files = {
         visualisation["animation"]["filename"] for visualisation in working_visualisations
     }
-    activity_slug = "gigafactory-v2-activity" if gigafactory_name == "bitermotors-gigafactory-v2" else "gigafactory-v1-activity"
+    activity_slug = "biterfactory-v2-activity" if biterfactory_name == "bitermotors-biterfactory-v2" else "biterfactory-v1-activity"
     expected_animation_files = {
         f"__bitermotors__/graphics/animation/{activity_slug}.png",
-        "__bitermotors__/graphics/animation/gigafactory-loading-lights.png",
+        "__bitermotors__/graphics/animation/biterfactory-loading-lights.png",
     }
     if animation_files != expected_animation_files:
-        raise SystemExit(f"{gigafactory_name} working animations mismatch: {sorted(animation_files)}")
+        raise SystemExit(f"{biterfactory_name} working animations mismatch: {sorted(animation_files)}")
 vertical_intermediates = {
     "copper-cable", "electronic-circuit", "advanced-circuit", "low-density-structure",
-    "bitermotors-gigafactory-module", "bitermotors-gigacast", "bitermotors-electric-drivetrain",
+    "bitermotors-biterfactory-module", "bitermotors-structural-casting", "bitermotors-electric-drivetrain",
     "bitermotors-autonomy-computer", "bitermotors-datacenter-rack",
 }
 for recipe_name in vertical_intermediates:
     recipe = data["recipe"][recipe_name]
     if "bitermotors-vertical-integration" not in recipe["categories"] or recipe.get("allow_productivity") is not True:
         raise SystemExit(f"{recipe_name} is not a productive vertically integrated intermediate")
-for recipe_name in ("bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-high-density-solar-array", "bitermotors-high-density-solar-array-batch", "bitermotors-megapack", "bitermotors-robotaxi-fleet"):
+for recipe_name in ("bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-high-density-solar-array", "bitermotors-high-density-solar-array-batch", "bitermotors-grid-battery", "bitermotors-bitertaxi-fleet"):
     if data["recipe"][recipe_name].get("allow_productivity") is not False:
         raise SystemExit(f"{recipe_name} incorrectly allows productivity modules")
-print("Gigafactory economic ladder engine prototypes OK.")
+print("Biterfactory economic ladder engine prototypes OK.")
 
 chargers = {
     "V2": (
@@ -1922,7 +1922,7 @@ chargers = {
 shortcut = data["shortcut"]["bitermotors-toggle-sales-office-coverage"]
 progress_shortcut = data["shortcut"]["bitermotors-open-progress"]
 solar_array = data["solar-panel"]["bitermotors-high-density-solar-array"]
-megapack = data["accumulator"]["bitermotors-megapack"]
+grid_battery = data["accumulator"]["bitermotors-grid-battery"]
 assembling_machine_2 = data["assembling-machine"]["assembling-machine-2"]
 prototype_roadster = data["recipe"]["bitermotors-prototype-roadster"]
 for tier, (charger, sink, selection_box, stall_power) in chargers.items():
@@ -1982,9 +1982,9 @@ solar_batch = data["recipe"]["bitermotors-high-density-solar-array-batch"]
 batch_ingredients = {row["name"]: row["amount"] for row in solar_batch["ingredients"]}
 if solar_batch["categories"] != ["bitermotors-energy-products-batch"] or batch_ingredients != {"solar-panel": 4, "processing-unit": 6, "low-density-structure": 6}:
     raise SystemExit(f"High-density Solar Panel batch recipe mismatch: {solar_batch}")
-energy = megapack["energy_source"]
+energy = grid_battery["energy_source"]
 if energy["buffer_capacity"] != "100MJ" or energy["input_flow_limit"] != "5MW" or energy["output_flow_limit"] != "5MW":
-    raise SystemExit(f"Megapack energy source mismatch: {energy}")
+    raise SystemExit(f"Grid Battery energy source mismatch: {energy}")
 print("Energy Products engine prototypes OK.")
 if prototype_roadster["categories"] != ["advanced-crafting"]:
     raise SystemExit(f"Prototype Roadster recipe category mismatch: {prototype_roadster}")
@@ -1993,7 +1993,7 @@ if "advanced-crafting" not in assembling_machine_2["crafting_categories"]:
 print("Prototype Roadster AM2 compatibility OK.")
 for vehicle_name in (
     "bitermotors-prototype-roadster", "bitermotors-premium-ev", "bitermotors-mass-market-ev",
-    "bitermotors-megatruck", "bitermotors-robotaxi-fleet",
+    "bitermotors-megatruck", "bitermotors-bitertaxi-fleet",
 ):
     vehicle = data["car"][vehicle_name]
     layers = vehicle["animation"]["layers"]
@@ -2038,8 +2038,8 @@ from pathlib import Path
 report = Path(sys.argv[1])
 records = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
 checked = next((record for record in records if record.get("status") == "checked"), None)
-megapack_sale = next(
-    (record for record in records if record.get("status") == "megapack_sale"),
+grid_battery_sale = next(
+    (record for record in records if record.get("status") == "grid_battery_sale"),
     None,
 )
 if checked is None:
@@ -2051,21 +2051,21 @@ if not road_rage_test.get("attacking") or not road_rage_test.get("scheduled"):
     raise SystemExit(f"customer road rage did not issue and schedule a bounded attack: {checked}")
 if checked.get("road_rage_units") != 0:
     raise SystemExit(f"customer road rage did not restore temporary hostile customers: {checked}")
-if not checked.get("autopilot_requested") or not checked.get("blocked_autopilot_requested"):
-    raise SystemExit(f"Biter Motors EV autopilot smoke routes were not accepted: {checked}")
-if not checked.get("roadster_autopilot_rejected"):
-    raise SystemExit(f"Prototype Roadster incorrectly accepted an Autopilot route: {checked}")
-if not checked.get("autopilot_ev_created") or not checked.get("blocked_autopilot_ev_created"):
-    raise SystemExit(f"Biter Motors EV autopilot smoke vehicles did not survive: {checked}")
-if checked.get("autopilot_distance_moved", 0) < 20:
+if not checked.get("self_driving_requested") or not checked.get("blocked_self_driving_requested"):
+    raise SystemExit(f"Biter Motors EV self_driving smoke routes were not accepted: {checked}")
+if not checked.get("roadster_self_driving_rejected"):
+    raise SystemExit(f"Prototype Roadster incorrectly accepted an Self-driving route: {checked}")
+if not checked.get("self_driving_ev_created") or not checked.get("blocked_self_driving_ev_created"):
+    raise SystemExit(f"Biter Motors EV self_driving smoke vehicles did not survive: {checked}")
+if checked.get("self_driving_distance_moved", 0) < 20:
     raise SystemExit(f"unoccupied Biter Motors EV did not physically follow its requested route: {checked}")
-if checked.get("autopilot_goal_distance", 999) > 3:
+if checked.get("self_driving_goal_distance", 999) > 3:
     raise SystemExit(f"Biter Motors EV did not stop near its requested destination: {checked}")
-autopilot = checked.get("autopilot") or {}
-autopilot_stats = autopilot.get("stats") or {}
-if autopilot.get("active_count") != 0 or autopilot_stats.get("completed", 0) < 1:
-    raise SystemExit(f"Biter Motors EV Autopilot did not complete and leave a clean active queue: {checked}")
-blocked_reasons = autopilot_stats.get("canceled_by_reason") or {}
+self_driving = checked.get("self_driving") or {}
+self_driving_stats = self_driving.get("stats") or {}
+if self_driving.get("active_count") != 0 or self_driving_stats.get("completed", 0) < 1:
+    raise SystemExit(f"Biter Motors EV Self-driving did not complete and leave a clean active queue: {checked}")
+blocked_reasons = self_driving_stats.get("canceled_by_reason") or {}
 if not any(reason in blocked_reasons for reason in (
     "no route found",
     "route requires destroying an obstacle",
@@ -2118,12 +2118,12 @@ performance = commutes.get("performance", {})
 counters = performance.get("counters", {})
 if performance.get("registered_sales_offices") != 4 or performance.get("registered_stations", 0) < 3:
     raise SystemExit(f"Biter Motors entity registries missed smoke entities: {performance}")
-if performance.get("registered_robotaxi_centers") != 1:
-    raise SystemExit(f"Robotaxi Service Center registry missed smoke entity: {performance}")
+if performance.get("registered_bitertaxi_depots") != 1:
+    raise SystemExit(f"Bitertaxi Depot registry missed smoke entity: {performance}")
 if counters.get("market_snapshot_builds", 999999) > 200:
     raise SystemExit(f"market snapshots were rebuilt too often: {performance}")
-if counters.get("robotaxi_allocation_builds", 999999) > 30:
-    raise SystemExit(f"Robotaxi allocations were rebuilt too often: {performance}")
+if counters.get("bitertaxi_allocation_builds", 999999) > 30:
+    raise SystemExit(f"Bitertaxi allocations were rebuilt too often: {performance}")
 if performance.get("active_commutes", 999999) > 512:
     raise SystemExit(f"active commute cap was exceeded: {performance}")
 if checked.get("vehicle_ownership", {}).get("registered_buyers", 0) <= 5:
@@ -2157,11 +2157,11 @@ if not reserve_test.get("reserve_mode") or not reserve_test.get("has_drive_permi
     raise SystemExit(f"depleted Cybertrain did not retain reserve propulsion: {checked}")
 if reserve_test.get("speed", 999) > reserve_test.get("speed_limit", 0):
     raise SystemExit(f"depleted Cybertrain exceeded reserve speed: {checked}")
-robotaxi_status = checked.get("robotaxi_service_status") or []
-if len(robotaxi_status) != 1 or robotaxi_status[0].get("completed_rides", 0) <= 0:
-    raise SystemExit(f"Robotaxi service did not accumulate automatic safety-learning rides: {checked}")
-if robotaxi_status[0].get("safety_risk_reduction", 0) <= 0:
-    raise SystemExit(f"Robotaxi cumulative rides did not reduce retirement risk: {checked}")
+bitertaxi_status = checked.get("bitertaxi_depot_status") or []
+if len(bitertaxi_status) != 1 or bitertaxi_status[0].get("completed_rides", 0) <= 0:
+    raise SystemExit(f"Bitertaxi service did not accumulate automatic safety-learning rides: {checked}")
+if bitertaxi_status[0].get("safety_risk_reduction", 0) <= 0:
+    raise SystemExit(f"Bitertaxi cumulative rides did not reduce retirement risk: {checked}")
 if not checked.get("event_unpowered_station_survived"):
     raise SystemExit(f"unpowered EV Charging Station placed by build event did not stay in place: {checked}")
 if not checked.get("direct_unpowered_station_survived"):
@@ -2174,8 +2174,8 @@ if not checked.get("first_sale_recipe_enabled"):
     raise SystemExit(f"Sell hopes and dreams was not enabled as the first Sales Office recipe: {checked}")
 if not checked.get("prototype_roadster_enabled"):
     raise SystemExit(f"Prototype Roadster was not enabled by the first covered biter charging station: {checked}")
-if not checked.get("gigafactory_created"):
-    raise SystemExit(f"Gigafactory entity was not created: {checked}")
+if not checked.get("biterfactory_created"):
+    raise SystemExit(f"Biterfactory entity was not created: {checked}")
 if checked.get("foundry_enabled_before_qualification"):
     raise SystemExit(f"Metallurgical Scaling was available before its power-production milestone: {checked}")
 if not checked.get("foundry_enabled_after_qualification"):
@@ -2193,53 +2193,53 @@ if premium_history.get("raw") != 0 or premium_history.get("reset_count", 0) < 1:
     raise SystemExit(f"Premium EV lifetime history did not survive a native statistics reset: {checked}")
 if premium_history.get("last_proven_floor") != 280:
     raise SystemExit(f"Premium EV lifetime history recorded the wrong proven floor: {checked}")
-if not checked.get("gigafactory_recipe_enabled"):
-    raise SystemExit(f"The 100-vehicle Premium EV pilot did not unlock the Gigafactory recipe: {checked}")
+if not checked.get("biterfactory_recipe_enabled"):
+    raise SystemExit(f"The 100-vehicle Premium EV pilot did not unlock the Biterfactory recipe: {checked}")
 if not checked.get("logistic_system_available_before_sales"):
     raise SystemExit(f"Terrestrial industry did not expose Logistic System research: {checked}")
 if not checked.get("logistic_system_requires_manual_research"):
-    raise SystemExit(f"Gigafactory placement silently researched Logistic System: {checked}")
-if not checked.get("gigafactory_module_recipe_enabled"):
-    raise SystemExit(f"EV Production Line did not unlock Gigafactory Modules: {checked}")
+    raise SystemExit(f"Biterfactory placement silently researched Logistic System: {checked}")
+if not checked.get("biterfactory_module_recipe_enabled"):
+    raise SystemExit(f"EV Production Line did not unlock Biterfactory Modules: {checked}")
 if checked.get("premium_ev_recipe_enabled"):
     raise SystemExit(f"Premium EV recipe bypassed its 50-Roadster sales gate: {checked}")
-if checked.get("gigafactory_selected_recipe") != "bitermotors-premium-ev":
-    raise SystemExit(f"Gigafactory could not select the Premium EV recipe: {checked}")
-if checked.get("gigafactory_v1_two_input_output") != 3:
-    raise SystemExit(f"Gigafactory V1 did not turn two Premium EV input sets into three outputs: {checked}")
-if not checked.get("gigacast_recipe_enabled"):
-    raise SystemExit(f"Mass-market EV Production did not unlock Gigacast: {checked}")
-if not checked.get("gigafactory_v2_created") or not checked.get("gigafactory_v2_recipe_enabled"):
-    raise SystemExit(f"Mass-market EV Production did not unlock a placeable Gigafactory V2: {checked}")
+if checked.get("biterfactory_selected_recipe") != "bitermotors-premium-ev":
+    raise SystemExit(f"Biterfactory could not select the Premium EV recipe: {checked}")
+if checked.get("biterfactory_v1_two_input_output") != 3:
+    raise SystemExit(f"Biterfactory V1 did not turn two Premium EV input sets into three outputs: {checked}")
+if not checked.get("structural_casting_recipe_enabled"):
+    raise SystemExit(f"Mass-market EV Production did not unlock Structural Casting: {checked}")
+if not checked.get("biterfactory_v2_created") or not checked.get("biterfactory_v2_recipe_enabled"):
+    raise SystemExit(f"Mass-market EV Production did not unlock a placeable Biterfactory V2: {checked}")
 if checked.get("mass_market_ev_recipe_enabled"):
     raise SystemExit(f"Mass-market EV recipe bypassed its 250-Premium sales gate: {checked}")
-if checked.get("gigafactory_v2_selected_recipe") != "bitermotors-mass-market-ev":
-    raise SystemExit(f"Gigafactory V2 could not select the Mass-market EV recipe: {checked}")
-if checked.get("gigafactory_modules_inserted") != 8:
-    raise SystemExit(f"Gigafactory did not accept eight modules: {checked}")
-if checked.get("gigafactory_v2_modules_inserted") != 8:
-    raise SystemExit(f"Gigafactory V2 did not accept eight speed modules: {checked}")
+if checked.get("biterfactory_v2_selected_recipe") != "bitermotors-mass-market-ev":
+    raise SystemExit(f"Biterfactory V2 could not select the Mass-market EV recipe: {checked}")
+if checked.get("biterfactory_modules_inserted") != 8:
+    raise SystemExit(f"Biterfactory did not accept eight modules: {checked}")
+if checked.get("biterfactory_v2_modules_inserted") != 8:
+    raise SystemExit(f"Biterfactory V2 did not accept eight speed modules: {checked}")
 if checked.get("final_productivity_modules_inserted") != 0:
     raise SystemExit(f"Mass-market EV incorrectly accepted productivity modules: {checked}")
 if checked.get("intermediate_productivity_modules_inserted") != 8:
     raise SystemExit(f"Electric Drivetrain did not accept eight productivity modules: {checked}")
-if checked.get("robotaxi_dollars_produced", 0) < 1:
-    raise SystemExit(f"Robotaxi Fleet sale did not complete without an EV Reservation: {checked}")
+if checked.get("bitertaxi_dollars_produced", 0) < 1:
+    raise SystemExit(f"Bitertaxi Fleet sale did not complete without an EV Reservation: {checked}")
 if not checked.get("solar_array_created") or not checked.get("solar_array_recipe_enabled"):
     raise SystemExit(f"Energy Products did not unlock a placeable High-density Solar Array: {checked}")
-if not checked.get("megapack_created") or not checked.get("megapack_recipe_enabled"):
-    raise SystemExit(f"Energy Products did not unlock a placeable Megapack: {checked}")
-if not checked.get("sell_megapack_recipe_enabled"):
-    raise SystemExit(f"Energy Products did not unlock Sell Megapack: {checked}")
-if checked.get("megapack_sale_input") != 1:
-    raise SystemExit(f"Megapack Sales Office did not accept its physical product: {checked}")
-megapack_adoption = checked.get("megapack_adoption") or {}
-if megapack_adoption.get("settlements", 0) < 1 or megapack_adoption.get("eligible", 0) < 1:
-    raise SystemExit(f"Megapack social adoption did not seed energy believers: {checked}")
-if megapack_sale is None or megapack_sale.get("dollars", 0) < 20:
-    raise SystemExit(f"Physical Megapack buyer did not complete a 20 Dollar sale: {megapack_sale}")
-if (megapack_sale.get("adoption") or {}).get("installed", 0) < 1:
-    raise SystemExit(f"Megapack buyer did not return home and install the product: {megapack_sale}")
+if not checked.get("grid_battery_created") or not checked.get("grid_battery_recipe_enabled"):
+    raise SystemExit(f"Energy Products did not unlock a placeable Grid Battery: {checked}")
+if not checked.get("sell_grid_battery_recipe_enabled"):
+    raise SystemExit(f"Energy Products did not unlock Sell Grid Battery: {checked}")
+if checked.get("grid_battery_sale_input") != 1:
+    raise SystemExit(f"Grid Battery Sales Office did not accept its physical product: {checked}")
+grid_battery_adoption = checked.get("grid_battery_adoption") or {}
+if grid_battery_adoption.get("settlements", 0) < 1 or grid_battery_adoption.get("eligible", 0) < 1:
+    raise SystemExit(f"Grid Battery social adoption did not seed energy believers: {checked}")
+if grid_battery_sale is None or grid_battery_sale.get("dollars", 0) < 20:
+    raise SystemExit(f"Physical Grid Battery buyer did not complete a 20 Dollar sale: {grid_battery_sale}")
+if (grid_battery_sale.get("adoption") or {}).get("installed", 0) < 1:
+    raise SystemExit(f"Grid Battery buyer did not return home and install the product: {grid_battery_sale}")
 if not checked.get("terrestrial_datacenter_created"):
     raise SystemExit(f"Terrestrial Datacenter was not created in smoke test: {checked}")
 if checked.get("terrestrial_datacenter_tokens", 0) < 20:
@@ -2266,13 +2266,13 @@ if not checked.get("roadster_started_charged"):
 if checked.get("roadster_battery_energy", 0) <= 0 or checked.get("roadster_electric_fuel", 0) != 1:
     raise SystemExit(f"powered V2 charger did not charge the Roadster and produce electric drive fuel: {checked}")
 if not checked.get("ev_charging_station_v3_enabled"):
-    raise SystemExit(f"Mass-market EV Production did not unlock the V3 Supercharger: {checked}")
+    raise SystemExit(f"Mass-market EV Production did not unlock the V3 Rapid Charger: {checked}")
 if not checked.get("ev_charging_station_v4_enabled"):
-    raise SystemExit(f"Autonomous Logistics did not unlock the V4 Supercharger: {checked}")
+    raise SystemExit(f"Autonomous Logistics did not unlock the V4 Solar Charging Hub: {checked}")
 if not checked.get("ev_charging_station_v3_created") or not checked.get("ev_charging_station_v3_unpowered_survived"):
-    raise SystemExit(f"V3 Supercharger did not survive unpowered placement: {checked}")
+    raise SystemExit(f"V3 Rapid Charger did not survive unpowered placement: {checked}")
 if not checked.get("ev_charging_station_v4_created") or not checked.get("ev_charging_station_v4_unpowered_survived"):
-    raise SystemExit(f"V4 Supercharger did not survive unpowered placement: {checked}")
+    raise SystemExit(f"V4 Solar Charging Hub did not survive unpowered placement: {checked}")
 if not checked.get("biter_customer_mode"):
     raise SystemExit(f"biter customer mode was not enabled in smoke test: {checked}")
 if not checked.get("customer_force_created"):
@@ -2296,12 +2296,12 @@ if not checked.get("commanded_biter_converted") or not checked.get("customer_att
 if not checked.get("customer_biter_wandered"):
     raise SystemExit(f"baked vehicle-owner units did not retain non-combat wander commands: {checked}")
 owner_entities = checked.get("vehicle_ownership", {}).get("by_entity_name", {})
-if sum(owner_entities.values()) != 3 or not all(name.endswith("-robotaxi") for name in owner_entities):
-    raise SystemExit(f"Robotaxi sale did not replace owners with baked Robotaxi variants: {checked}")
+if sum(owner_entities.values()) != 3 or not all(name.endswith("-bitertaxi") for name in owner_entities):
+    raise SystemExit(f"Bitertaxi sale did not replace owners with baked Bitertaxi variants: {checked}")
 if not checked.get("outer_customer_biter_converted"):
     raise SystemExit(f"mobile unit beside a served outer spawner did not remain a customer: {checked}")
-if checked.get("v4_recipe_enabled_before_robotaxi_sale") is not True:
-    raise SystemExit(f"Autonomous Logistics should unlock the V4 Supercharger needed by the Robotaxi Service Center: {checked}")
+if checked.get("v4_recipe_enabled_before_bitertaxi_sale") is not True:
+    raise SystemExit(f"Autonomous Logistics should unlock the V4 Solar Charging Hub needed by the Bitertaxi Depot: {checked}")
 if not checked.get("player_customer_friend") or not checked.get("customer_player_friend"):
     raise SystemExit(f"player and customer forces should be mutual friends: {checked}")
 if checked.get("covered_biter_settlements", 0) < 1:
@@ -2310,7 +2310,7 @@ preproduction_market = checked.get("preproduction_market", {})
 if preproduction_market.get("customer_ev_fleet") != 0 or preproduction_market.get("active_customer_stalls") != 0:
     raise SystemExit(f"charging utilization should be zero before the first EV is produced: {checked}")
 if checked.get("market", {}).get("customer_ev_fleet") != 3:
-    raise SystemExit(f"expected three living Robotaxi owners in the active customer fleet: {checked}")
+    raise SystemExit(f"expected three living Bitertaxi owners in the active customer fleet: {checked}")
 charger_allocator = checked.get("charger_allocator", {})
 if charger_allocator.get("active_by_station") != [1, 1, 1]:
     raise SystemExit(f"demand-first charger allocation did not balance one stall onto each eligible charger: {checked}")

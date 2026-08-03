@@ -18,7 +18,7 @@ The trailer and README media should answer three questions quickly:
 - Every player, vehicle, customer, belt, and building position must be reachable
   through normal gameplay. Do not use teleportation to compose a shot.
 - Build working systems. Cars charge, reservations move, Dollars leave the
-  Sales Office, and Gigafactories consume real inputs during capture.
+  Sales Office, and Biterfactories consume real inputs during capture.
 - Review the sandbox layout and one still frame from each scene with Luke before
   recording final footage.
 - Capture native 1920x1080 gameplay at 60 fps. Hide debug and coach overlays;
@@ -34,7 +34,7 @@ The trailer and README media should answer three questions quickly:
    brakes into a powered charging area, and visibly gains charge.
 2. **Sell to biters:** prospects gather around a powered customer outpost while
    reservations and EVs enter a Sales Office and Dollars leave on a belt.
-3. **Scale production:** multiple Gigafactories run at full animation with
+3. **Scale production:** multiple Biterfactories run at full animation with
    supporting belts, bots, power, and battery intermediates visible.
 
 For each scene, capture one clean PNG and one 5-8 second loop. Optimize the
@@ -49,9 +49,9 @@ selected loops only after checking GitHub and mod-portal size and format limits.
 | 14-27s | First biter outpost, prospects, reservations, sale, Dollars | `The customers are not friendly. Yet.` |
 | 27-36s | Premium and Mass-market EV production replacing the pilot line | `Every generation demands a retool.` |
 | 36-46s | Nickel and lithium refining, tailings, clean processing, recycling | `Own the battery supply chain.` |
-| 46-58s | Gigafactories, dense logistics, bots, and moving EV output | `Make the next order of magnitude routine.` |
-| 58-67s | HD solar, Megapacks, charging load, and a strained power graph | `Success becomes a grid problem.` |
-| 67-72s | Robotaxi fleet and Cybertrain fly-by | `Automate what comes next.` |
+| 46-58s | Biterfactories, dense logistics, bots, and moving EV output | `Make the next order of magnitude routine.` |
+| 58-67s | HD solar, Grid Batteries, charging load, and a strained power graph | `Success becomes a grid problem.` |
+| 67-72s | Bitertaxi fleet and Cybertrain fly-by | `Automate what comes next.` |
 | 72-75s | Biter Motors title and Alpha badge | `Biter Motors - Alpha` |
 
 ## YouTube Deliverables

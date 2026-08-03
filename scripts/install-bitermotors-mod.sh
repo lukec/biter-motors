@@ -2,13 +2,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source_dir="$repo_root/mod/bitermotors_0.1.0"
+source_dir="$repo_root/mod/bitermotors_0.1.1"
 client_mods_dir="${FACTORIO_CLIENT_MODS_DIR:-${FACTORIO_MODS_DIR:-$HOME/Library/Application Support/factorio/mods}}"
 server_mods_dir="${FACTORIO_SERVER_MODS_DIR:-}"
 
 link_bitermotors() {
   local mods_dir="$1"
-  local target_dir="$mods_dir/bitermotors_0.1.0"
+  local target_dir="$mods_dir/bitermotors_0.1.1"
   local mod_list="$mods_dir/mod-list.json"
 
   mkdir -p "$mods_dir"
@@ -16,6 +16,11 @@ link_bitermotors() {
     echo "Refusing to replace non-symlink Biter Motors install: $target_dir" >&2
     exit 2
   fi
+  for stale_dir in "$mods_dir"/bitermotors_*; do
+    if [[ "$stale_dir" != "$target_dir" && -L "$stale_dir" ]]; then
+      rm "$stale_dir"
+    fi
+  done
   ln -sfn "$source_dir" "$target_dir"
 
   if [[ -f "$mod_list" ]]; then

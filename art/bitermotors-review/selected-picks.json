@@ -49,11 +49,11 @@
       "source": "assets/ev-reservation.png"
     },
     {
-      "name": "Gigafactory Module",
-      "prototype": "bitermotors-gigafactory-module",
+      "name": "Biterfactory Module",
+      "prototype": "bitermotors-biterfactory-module",
       "option": 3,
       "position": "bottom-left",
-      "source": "assets/gigafactory-module.png"
+      "source": "assets/biterfactory-module.png"
     },
     {
       "name": "AI Token",
@@ -91,11 +91,11 @@
       "source": "assets/mass-market-ev.png"
     },
     {
-      "name": "Robotaxi Fleet",
-      "prototype": "bitermotors-robotaxi-fleet",
+      "name": "Bitertaxi Fleet",
+      "prototype": "bitermotors-bitertaxi-fleet",
       "option": 3,
       "position": "bottom-left",
-      "source": "assets/robotaxi-fleet.png"
+      "source": "assets/bitertaxi-fleet.png"
     },
     {
       "name": "Small Launch Service",

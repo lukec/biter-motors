@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "art/blender/battery-cybertrain/renders"
-GRAPHICS = ROOT / "mod/bitermotors_0.1.0/graphics"
+GRAPHICS = ROOT / "mod/bitermotors_0.1.1/graphics"
 ICON_OUTPUT = GRAPHICS / "icons"
 TRAIN_OUTPUT = GRAPHICS / "entity/cybertrain"
 STOP_OUTPUT = GRAPHICS / "entity/cybertrain-charging-stop"

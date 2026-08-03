@@ -1,0 +1,56 @@
+{
+  "item": [
+    ["bitermotors-ev-autopilot-destination", "bitermotors-ev-self-driving-destination"],
+    ["bitermotors-gigacast", "bitermotors-structural-casting"],
+    ["bitermotors-gigafactory-building", "bitermotors-biterfactory-building"],
+    ["bitermotors-gigafactory-module", "bitermotors-biterfactory-module"],
+    ["bitermotors-gigafactory-v2", "bitermotors-biterfactory-v2"],
+    ["bitermotors-megapack", "bitermotors-grid-battery"],
+    ["bitermotors-grid-megapack", "bitermotors-grid-battery-array"],
+    ["bitermotors-robotaxi-fleet", "bitermotors-bitertaxi-fleet"],
+    ["bitermotors-robotaxi-service-center", "bitermotors-bitertaxi-depot"]
+  ],
+  "entity": [
+    ["bitermotors-behemoth-biter-robotaxi", "bitermotors-behemoth-biter-bitertaxi"],
+    ["bitermotors-behemoth-spitter-robotaxi", "bitermotors-behemoth-spitter-bitertaxi"],
+    ["bitermotors-big-biter-robotaxi", "bitermotors-big-biter-bitertaxi"],
+    ["bitermotors-big-spitter-robotaxi", "bitermotors-big-spitter-bitertaxi"],
+    ["bitermotors-gigafactory-building", "bitermotors-biterfactory-building"],
+    ["bitermotors-gigafactory-v2", "bitermotors-biterfactory-v2"],
+    ["bitermotors-medium-biter-robotaxi", "bitermotors-medium-biter-bitertaxi"],
+    ["bitermotors-medium-spitter-robotaxi", "bitermotors-medium-spitter-bitertaxi"],
+    ["bitermotors-megapack", "bitermotors-grid-battery"],
+    ["bitermotors-grid-megapack", "bitermotors-grid-battery-array"],
+    ["bitermotors-robotaxi-fleet", "bitermotors-bitertaxi-fleet"],
+    ["bitermotors-robotaxi-service-center", "bitermotors-bitertaxi-depot"],
+    ["bitermotors-robotaxi-service-power", "bitermotors-bitertaxi-depot-power"],
+    ["bitermotors-small-biter-robotaxi", "bitermotors-small-biter-bitertaxi"],
+    ["bitermotors-small-spitter-robotaxi", "bitermotors-small-spitter-bitertaxi"]
+  ],
+  "recipe": [
+    ["bitermotors-ev-autopilot-destination-recycling", "bitermotors-ev-self-driving-destination-recycling"],
+    ["bitermotors-gigacast", "bitermotors-structural-casting"],
+    ["bitermotors-gigacast-recycling", "bitermotors-structural-casting-recycling"],
+    ["bitermotors-gigafactory-building", "bitermotors-biterfactory-building"],
+    ["bitermotors-gigafactory-building-recycling", "bitermotors-biterfactory-building-recycling"],
+    ["bitermotors-gigafactory-module", "bitermotors-biterfactory-module"],
+    ["bitermotors-gigafactory-module-recycling", "bitermotors-biterfactory-module-recycling"],
+    ["bitermotors-gigafactory-v2", "bitermotors-biterfactory-v2"],
+    ["bitermotors-gigafactory-v2-recycling", "bitermotors-biterfactory-v2-recycling"],
+    ["bitermotors-megapack", "bitermotors-grid-battery"],
+    ["bitermotors-megapack-recycling", "bitermotors-grid-battery-recycling"],
+    ["bitermotors-grid-megapack", "bitermotors-grid-battery-array"],
+    ["bitermotors-grid-megapack-recycling", "bitermotors-grid-battery-array-recycling"],
+    ["bitermotors-operate-robotaxis", "bitermotors-operate-bitertaxi-fleet"],
+    ["bitermotors-robotaxi-fleet", "bitermotors-bitertaxi-fleet"],
+    ["bitermotors-robotaxi-fleet-recycling", "bitermotors-bitertaxi-fleet-recycling"],
+    ["bitermotors-robotaxi-service-center", "bitermotors-bitertaxi-depot"],
+    ["bitermotors-robotaxi-service-center-recycling", "bitermotors-bitertaxi-depot-recycling"],
+    ["bitermotors-sell-megapack", "bitermotors-sell-grid-battery"],
+    ["bitermotors-sell-robotaxi-fleet", "bitermotors-sell-bitertaxi-fleet"]
+  ],
+  "technology": [
+    ["bitermotors-megapack-productivity", "bitermotors-grid-battery-productivity"],
+    ["bitermotors-supercharging-power-electronics", "bitermotors-rapid-charging-power-electronics"]
+  ]
+}

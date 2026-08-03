@@ -10,19 +10,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "art/bitermotors-qa"
-GRAPHICS = ROOT / "mod/bitermotors_0.1.0/graphics"
+GRAPHICS = ROOT / "mod/bitermotors_0.1.1/graphics"
 
 ENTITIES = [
     ("Sales Office", "sales-office/sales-office.png", "sales-office.png", 3, 512, 0.19, "generated-final"),
     ("EV Charging Station", "ev-charging-station/ev-charging-station.png", "ev-charging-station.png", 2, 512, 0.14, "aligned-final"),
     ("EV Charging Station V2", "ev-charging-station-v2/ev-charging-station-v2.png", "ev-charging-station-v2.png", 4, 512, 0.26, "aligned-final"),
-    ("V3 Supercharger", "ev-charging-station-v3/ev-charging-station-v3.png", "ev-charging-station-v3.png", 5, 512, 0.35, "aligned-final"),
-    ("V4 Supercharger", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 512, 0.38, "aligned-final"),
-    ("Gigafactory", "gigafactory/gigafactory.png", "gigafactory.png", 9, 1024, 0.325, "aligned-final"),
-    ("Gigafactory V2", "gigafactory/gigafactory-v2.png", "gigafactory.png", 9, 1024, 0.325, "aligned-final"),
-    ("Megapack", "megapack/megapack.png", "megapack.png", 2, 512, 0.14, "aligned-final"),
+    ("V3 Rapid Charger", "ev-charging-station-v3/ev-charging-station-v3.png", "ev-charging-station-v3.png", 5, 512, 0.35, "aligned-final"),
+    ("V4 Solar Charging Hub", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 512, 0.38, "aligned-final"),
+    ("Biterfactory", "biterfactory/biterfactory.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
+    ("Biterfactory V2", "biterfactory/biterfactory-v2.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
+    ("Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 512, 0.14, "aligned-final"),
     ("Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 512, 0.36, "generated-final"),
-    ("Robotaxi Service Center", "robotaxi-service-center/robotaxi-service-center.png", "robotaxi-service-center.png", 8, 512, 0.48, "aligned-final"),
+    ("Bitertaxi Depot", "bitertaxi-depot/bitertaxi-depot.png", "bitertaxi-depot.png", 8, 512, 0.48, "aligned-final"),
     ("Orbital Compute Array", "orbital-compute-array/orbital-compute-array.png", "orbital-compute-array.png", 3, 512, 0.18, "playtest"),
     ("Planetary Grid Controller", "planetary-grid-controller/planetary-grid-controller.png", "planetary-grid-controller.png", 3, 512, 0.19, "aligned-final"),
 ]
@@ -35,11 +35,11 @@ ANIMATIONS = [
     ("Charger stall full", "charger-stall-full.png", 32, 32, "Near capacity"),
     ("Charger stall overload", "charger-stall-overload.png", 32, 32, "Underserved customers"),
     ("Charger stall charging", "charger-stall-charging.png", 32, 32, "Physical charging visit"),
-    ("Gigafactory V1 production line", "gigafactory-v1-activity.png", 512, 512, "Crafting only"),
-    ("Gigafactory V2 gigacasting line", "gigafactory-v2-activity.png", 512, 512, "Crafting only"),
-    ("Gigafactory loading bays", "gigafactory-loading-lights.png", 512, 128, "Crafting only"),
+    ("Biterfactory V1 production line", "biterfactory-v1-activity.png", 512, 512, "Crafting only"),
+    ("Biterfactory V2 structural_casting line", "biterfactory-v2-activity.png", 512, 512, "Crafting only"),
+    ("Biterfactory loading bays", "biterfactory-loading-lights.png", 512, 128, "Crafting only"),
     ("Datacenter cooling fans", "datacenter-cooling-fans.png", 128, 64, "Compute active"),
-    ("Robotaxi dispatch lights", "robotaxi-dispatch-lights.png", 128, 64, "Fleet allocated"),
+    ("Bitertaxi dispatch lights", "bitertaxi-dispatch-lights.png", 128, 64, "Fleet allocated"),
     ("Grid charge stages", "grid-charge-stages.png", 128, 128, "Charging only"),
 ]
 

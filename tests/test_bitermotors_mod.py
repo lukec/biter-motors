@@ -7,7 +7,7 @@ from PIL import Image, ImageChops
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MOD = ROOT / "mod" / "bitermotors_0.1.0"
+MOD = ROOT / "mod" / "bitermotors_0.1.1"
 
 
 class BiterMotorsModTest(unittest.TestCase):
@@ -24,9 +24,9 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-ev-charging-grid-connection": "EV Charging Station grid connection",
             "bitermotors-ev-charging-power-sink": "EV Charging Station charging stalls",
             "bitermotors-ev-charging-v2-power-sink": "EV Charging Station V2 charging stalls",
-            "bitermotors-ev-charging-v3-power-sink": "V3 Supercharger charging stalls",
-            "bitermotors-ev-charging-v4-power-sink": "V4 Supercharger charging stalls",
-            "bitermotors-robotaxi-service-power": "Robotaxi Service Center charging",
+            "bitermotors-ev-charging-v3-power-sink": "V3 Rapid Charger charging stalls",
+            "bitermotors-ev-charging-v4-power-sink": "V4 Solar Charging Hub charging stalls",
+            "bitermotors-bitertaxi-depot-power": "Bitertaxi Depot charging",
             "bitermotors-cybertrain-charging-power": "Cybertrain charging",
         }
         for key, label in expected.items():
@@ -51,10 +51,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("ELECTRIC_VEHICLE_NAMES", control)
         self.assertIn("update_ev_reverse_warnings()", control)
 
-    def test_bitermotors_ev_autopilot_is_physical_owned_bounded_and_excludes_roadster(self):
+    def test_bitermotors_ev_self_driving_is_physical_owned_bounded_and_excludes_roadster(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        runtime = (MOD / "runtime" / "ev_autopilot.lua").read_text()
+        runtime = (MOD / "runtime" / "ev_self_driving.lua").read_text()
         locale = (MOD / "locale" / "en" / "bitermotors.cfg").read_text()
         roadmap = (ROOT / "ROADMAP.md").read_text()
         validator = (ROOT / "scripts" / "validate-bitermotors-mod.sh").read_text()
@@ -63,12 +63,12 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-premium-ev",
             "bitermotors-mass-market-ev",
             "bitermotors-megatruck",
-            "bitermotors-robotaxi-fleet",
+            "bitermotors-bitertaxi-fleet",
         ]:
             self.assertIn(f'["{name}"] = true', runtime)
         self.assertNotIn('["bitermotors-prototype-roadster"] = true', runtime)
-        self.assertIn('name = "bitermotors-ev-autopilot-destination"', data)
-        self.assertIn('name = "bitermotors-navigate-ev"', data)
+        self.assertIn('name = "bitermotors-ev-self-driving-destination"', data)
+        self.assertIn('name = "bitermotors-route-ev"', data)
         self.assertIn('name = "bitermotors-summon-ev"', data)
         self.assertIn('technology_to_unlock = "bitermotors-autonomous-logistics"', data)
         for control_name in ["move-up", "move-down", "move-left", "move-right"]:
@@ -81,24 +81,24 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("vehicle.riding_state =", control)
         self.assertIn("defines.events.on_script_path_request_finished", control)
         self.assertIn("defines.events.on_player_selected_area", control)
-        self.assertIn("EV_AUTOPILOT_SUMMON_SHORTCUT", control)
+        self.assertIn("EV_SELF_DRIVING_SUMMON_SHORTCUT", control)
         self.assertIn("function nearest_recent_ev_for_player", control)
         self.assertIn("runtime.owner_by_vehicle[unit_number] == player.index", control)
         self.assertIn("function player_is_vehicle_driver", control)
-        self.assertIn('cancel_ev_autopilot(unit_number, "no route found"', control)
-        self.assertIn("EvAutopilot.config.max_active", control)
-        self.assertIn("EvAutopilot.config.updates_per_tick", control)
+        self.assertIn('cancel_ev_self_driving(unit_number, "no route found"', control)
+        self.assertIn("EvSelfDriving.config.max_active", control)
+        self.assertIn("EvSelfDriving.config.updates_per_tick", control)
         self.assertIn("safety_check_ticks = 30", runtime)
-        self.assertIn("state.next_safety_tick = game.tick + EvAutopilot.config.safety_check_ticks", control)
+        self.assertIn("state.next_safety_tick = game.tick + EvSelfDriving.config.safety_check_ticks", control)
         self.assertIn('state.mode == "summon"', control)
         self.assertIn("return vehicle, vehicle, player", control)
         self.assertNotIn("teleport", runtime)
 
-        self.assertIn("bitermotors-navigate-ev=Navigate EV", locale)
+        self.assertIn("bitermotors-route-ev=Route EV", locale)
         self.assertIn("bitermotors-summon-ev=Summon nearest recent EV", locale)
-        self.assertIn("Autopilot, and Summon", roadmap)
-        self.assertIn('"test_ev_autopilot_start"', validator)
-        self.assertIn("autopilot_distance_moved", validator)
+        self.assertIn("Self-driving, and Summon", roadmap)
+        self.assertIn('"test_ev_self_driving_start"', validator)
+        self.assertIn("self_driving_distance_moved", validator)
         self.assertIn("blocked Biter Motors EV route did not abort cleanly", validator)
 
     def test_sales_office_panel_explains_market_saturation(self):
@@ -122,7 +122,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("BITERMOTORS_STATE_COLORS", control)
         self.assertIn("add_station_info_label(state_row, state_text, state_color)", control)
         sales_panel = control[control.index("if entity.name == SALES_OFFICE_NAME then", control.index("local function show_manufacturer_info_panel")):
-                              control.index("  else\n    local config = GIGAFACTORY_CONFIGS", control.index("local function show_manufacturer_info_panel"))]
+                              control.index("  else\n    local config = BITERFACTORY_CONFIGS", control.index("local function show_manufacturer_info_panel"))]
         self.assertIn("add_bitermotors_metric_table", sales_panel)
         self.assertNotIn("Cycle progress", sales_panel)
         self.assertNotIn("Inputs", sales_panel)
@@ -245,8 +245,48 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_bitermotors_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
         self.assertEqual(info["name"], "bitermotors")
-        self.assertEqual(info["version"], "0.1.0")
+        self.assertEqual(info["version"], "0.1.1")
         self.assertIn("space-age >= 2.1.0", info["dependencies"])
+
+    def test_legacy_product_names_exist_only_in_the_namespace_migration(self):
+        current_sources = "\n".join(
+            path.read_text()
+            for path in [
+                MOD / "data.lua",
+                MOD / "data-updates.lua",
+                MOD / "data-final-fixes.lua",
+                MOD / "control.lua",
+                MOD / "locale" / "en" / "bitermotors.cfg",
+            ]
+        ).lower()
+        for retired in [
+            "gigafactory",
+            "gigacast",
+            "robotaxi",
+            "megapack",
+            "autopilot",
+            "supercharger",
+        ]:
+            self.assertNotIn(retired, current_sources)
+
+        migration = json.loads((MOD / "migrations" / "0.1.1.json").read_text())
+        self.assertIn(
+            ["bitermotors-gigafactory-building", "bitermotors-biterfactory-building"],
+            migration["entity"],
+        )
+        self.assertIn(
+            ["bitermotors-robotaxi-service-center", "bitermotors-bitertaxi-depot"],
+            migration["entity"],
+        )
+        self.assertIn(
+            ["bitermotors-grid-megapack", "bitermotors-grid-battery-array"],
+            migration["item"],
+        )
+        runtime_migration = (MOD / "runtime" / "namespace_migration.lua").read_text()
+        self.assertIn("function NamespaceMigration.migrate(runtime)", runtime_migration)
+        self.assertIn("function NamespaceMigration.audit(runtime)", runtime_migration)
+        self.assertIn("NamespaceMigration.migrate(storage)", (MOD / "control.lua").read_text())
+        self.assertIn("internal_namespace_status = function", (MOD / "control.lua").read_text())
 
     def test_bitermotors_mvp_surface(self):
         data = (MOD / "data.lua").read_text()
@@ -254,12 +294,12 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-sales-office",
             "bitermotors-dollar",
             "bitermotors-ev-reservation",
-            "bitermotors-gigafactory-module",
-            "bitermotors-gigafactory-building",
-            "bitermotors-gigacast",
-            "bitermotors-gigafactory-v2",
+            "bitermotors-biterfactory-module",
+            "bitermotors-biterfactory-building",
+            "bitermotors-structural-casting",
+            "bitermotors-biterfactory-v2",
             "bitermotors-high-density-solar-array",
-            "bitermotors-megapack",
+            "bitermotors-grid-battery",
             "bitermotors-energy-products",
             "bitermotors-ev-charging-station",
             "bitermotors-ev-charging-station-v2",
@@ -289,14 +329,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors-sell-premium-ev=Sell premium product", locale)
         self.assertIn("bitermotors-premium-ev-program=EV Production Line", locale)
         self.assertIn("bitermotors-advanced-battery-chemistry=Advanced Battery Chemistry", locale)
-        self.assertIn("bitermotors-gigafactory-building=Gigafactory", locale)
-        self.assertIn("bitermotors-gigafactory-v2=Gigafactory V2", locale)
-        self.assertIn("bitermotors-gigacast=Gigacast", locale)
+        self.assertIn("bitermotors-biterfactory-building=Biterfactory", locale)
+        self.assertIn("bitermotors-biterfactory-v2=Biterfactory V2", locale)
+        self.assertIn("bitermotors-structural-casting=Structural Casting", locale)
         self.assertIn("bitermotors-ev-charging-station-v2=EV Charging Station V2", locale)
-        self.assertIn("bitermotors-ev-charging-station-v3=V3 Supercharger", locale)
-        self.assertIn("bitermotors-ev-charging-station-v4=V4 Supercharger", locale)
+        self.assertIn("bitermotors-ev-charging-station-v3=V3 Rapid Charger", locale)
+        self.assertIn("bitermotors-ev-charging-station-v4=V4 Solar Charging Hub", locale)
         self.assertIn("bitermotors-energy-products=Energy Products", locale)
-        self.assertIn("bitermotors-megapack=Megapack", locale)
+        self.assertIn("bitermotors-grid-battery=Grid Battery", locale)
         self.assertIn("bitermotors-high-density-solar-array=High-density Solar Panel", locale)
         self.assertIn("Roughly US$10,000", locale)
         settings = (MOD / "settings.lua").read_text()
@@ -311,7 +351,7 @@ class BiterMotorsModTest(unittest.TestCase):
         roadmap = (ROOT / "ROADMAP.md").read_text()
 
         for technology in [
-            "bitermotors-supercharging-power-electronics",
+            "bitermotors-rapid-charging-power-electronics",
             "bitermotors-long-range-battery",
             "bitermotors-premium-audio-systems",
         ]:
@@ -331,24 +371,24 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors-premium-audio-systems=Biters love Nickelback.", locale)
         for technology, recipe, count_formula in [
             ("bitermotors-high-density-solar-productivity", "bitermotors-high-density-solar-array", "750*1.5^(L-1)"),
-            ("bitermotors-megapack-productivity", "bitermotors-megapack", "750*1.5^(L-1)"),
+            ("bitermotors-grid-battery-productivity", "bitermotors-grid-battery", "750*1.5^(L-1)"),
         ]:
             start = data.index(f'    "{technology}"')
             block = data[start:start + 900]
             self.assertIn(f'recipe = "{recipe}", change = 0.1', block)
             self.assertIn(f'"{count_formula}"', block)
             self.assertIn('{"bitermotors-dollar", 1}', block)
-        solar_productivity = data[data.index('    "bitermotors-high-density-solar-productivity"'):data.index('    "bitermotors-megapack-productivity"')]
+        solar_productivity = data[data.index('    "bitermotors-high-density-solar-productivity"'):data.index('    "bitermotors-grid-battery-productivity"')]
         self.assertIn('recipe = "bitermotors-high-density-solar-array-batch", change = 0.1', solar_productivity)
         self.assertIn("High-density Solar Panel recipe productivity: +10% per level", locale)
-        self.assertIn("Megapack recipe productivity: +10% per level", locale)
+        self.assertIn("Grid Battery recipe productivity: +10% per level", locale)
         self.assertNotIn("bitermotors-solar-cell-productivity", data)
         self.assertIn("function station_stall_power_watts", control)
         self.assertIn("sink.power_usage = watts", control)
         self.assertIn("1 + battery_level * 0.05", control)
         self.assertIn("1 - battery_level * 0.08", control)
         self.assertIn("function accelerate_consumer_ev_sales", control)
-        self.assertIn("function award_robotaxi_audio_revenue", control)
+        self.assertIn("function award_bitertaxi_audio_revenue", control)
         self.assertIn("1 + referral_level * 0.1", control)
         self.assertIn("continuous_improvements = function", control)
 
@@ -418,7 +458,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("surface.create_entity", configure)
         jumpstart = control[control.index("BITERMOTORS_ENERGY_JUMPSTART_ITEMS"):control.index("local STATION_GRID_CONNECTION_DISTANCE")]
         self.assertIn('["bitermotors-high-density-solar-array"] = 54', jumpstart)
-        self.assertIn('["bitermotors-megapack"] = 24', jumpstart)
+        self.assertIn('["bitermotors-grid-battery"] = 24', jumpstart)
         self.assertIn('["substation"] = 40', jumpstart)
         self.assertIn('["roboport"] = 20', jumpstart)
         self.assertIn('["passive-provider-chest"] = 50', jumpstart)
@@ -460,7 +500,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-premium-ev-cell-scale": 20,
             "bitermotors-mass-market-ev": 8,
             "bitermotors-megatruck": 15,
-            "bitermotors-robotaxi-fleet": 20,
+            "bitermotors-bitertaxi-fleet": 20,
         }
         for recipe_name, seconds in expected.items():
             start = data.index(f'recipe("{recipe_name}"')
@@ -472,7 +512,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('name = "bitermotors-high-energy-battery-pack", amount = 4', megatruck)
         self.assertNotIn("low-density-structure", megatruck)
         self.assertNotIn("processing-unit", megatruck)
-        megatruck_sale = data[data.index('recipe("bitermotors-sell-megatruck"'):data.index('recipe("bitermotors-sell-megapack"')]
+        megatruck_sale = data[data.index('recipe("bitermotors-sell-megatruck"'):data.index('recipe("bitermotors-sell-grid-battery"')]
         self.assertIn('name = "bitermotors-dollar", amount = 2', megatruck_sale)
         self.assertIn('name = "bitermotors-ev-reservation", amount = 1', megatruck_sale)
         self.assertIn("}}, 10", megatruck_sale)
@@ -497,7 +537,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('profile.equipment_grid or "medium-equipment-grid"', data)
         self.assertIn('fuel_categories = {"bitermotors-electric-drive"}', data)
         self.assertIn('fuel_value = "1MJ"', data)
-        for name in ["bitermotors-prototype-roadster", "bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-megatruck", "bitermotors-robotaxi-fleet"]:
+        for name in ["bitermotors-prototype-roadster", "bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-megatruck", "bitermotors-bitertaxi-fleet"]:
             item_start = data.index(f'item("{name}"')
             self.assertIn(f'place_result = "{name}"', data[item_start:item_start + 300])
             self.assertIn(f'"{name}"', control[control.index("ELECTRIC_VEHICLE_BATTERIES ="):control.index("ELECTRIC_DRIVE_FUEL_NAME =")])
@@ -523,13 +563,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("prototype.light_animation = nil", data)
         self.assertIn('profile.artwork .. "-shadow.png"', data)
         self.assertIn("draw_as_shadow = true", data)
-        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "megatruck", "robotaxi-fleet"]:
+        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "megatruck", "bitertaxi-fleet"]:
             self.assertTrue((MOD / f"graphics/entity/vehicles/{artwork}-shadow.png").exists())
         self.assertIn("bitermotors-electric-drive=Electric drive", locale)
         self.assertIn("bitermotors-electric-drive-charge=Stored battery charge", locale)
         self.assertIn("no manually inserted fuel is required", locale)
         self.assertIn("begins with a full battery", locale)
-        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "megatruck", "robotaxi-fleet"]:
+        for artwork in ["prototype-roadster", "premium-ev", "mass-market-ev", "megatruck", "bitertaxi-fleet"]:
             self.assertIn(f'artwork = "{artwork}"', data)
             sheet = MOD / f"graphics/entity/vehicles/{artwork}.png"
             self.assertTrue(sheet.exists())
@@ -558,7 +598,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-premium-ev": 2,
             "bitermotors-mass-market-ev": 1,
             "bitermotors-megatruck": 4,
-            "bitermotors-robotaxi-fleet": 2,
+            "bitermotors-bitertaxi-fleet": 2,
         }.items():
             self.assertIn(f'["{name}"] = {batteries}', control)
 
@@ -682,17 +722,17 @@ class BiterMotorsModTest(unittest.TestCase):
             "terrestrial-datacenter",
             "orbital-datacenter-core",
             "ev-reservation",
-            "gigafactory-module",
+            "biterfactory-module",
             "ai-token",
             "prototype-roadster",
             "premium-ev",
             "mass-market-ev",
-            "robotaxi-fleet",
+            "bitertaxi-fleet",
             "datacenter-rack",
-            "gigacast",
+            "structural-casting",
             "agi-model",
             "planetary-grid-controller",
-            "robotaxi-service-center",
+            "bitertaxi-depot",
         ]:
             self.assertIn(f'generated_icon("{slug}")', data)
             icon_path = MOD / f"graphics/icons/{slug}.png"
@@ -717,7 +757,7 @@ class BiterMotorsModTest(unittest.TestCase):
         with Image.open(MOD / "thumbnail.png") as image:
             self.assertEqual(image.size, (144, 144))
             self.assertEqual(image.mode, "RGB")
-        for slug in ["robotaxi-service-center", "planetary-grid-controller"]:
+        for slug in ["bitertaxi-depot", "planetary-grid-controller"]:
             entity_path = MOD / f"graphics/entity/{slug}/{slug}.png"
             self.assertTrue(entity_path.exists())
             with Image.open(entity_path) as image:
@@ -778,11 +818,11 @@ class BiterMotorsModTest(unittest.TestCase):
             "charger-stall-full.png": (256, 32),
             "charger-stall-overload.png": (256, 32),
             "charger-stall-charging.png": (256, 32),
-            "gigafactory-v1-activity.png": (4096, 512),
-            "gigafactory-v2-activity.png": (4096, 512),
-            "gigafactory-loading-lights.png": (4096, 128),
+            "biterfactory-v1-activity.png": (4096, 512),
+            "biterfactory-v2-activity.png": (4096, 512),
+            "biterfactory-loading-lights.png": (4096, 128),
             "datacenter-cooling-fans.png": (1024, 64),
-            "robotaxi-dispatch-lights.png": (1024, 64),
+            "bitertaxi-dispatch-lights.png": (1024, 64),
             "grid-charge-stages.png": (1024, 128),
         }
         for filename, expected_size in animation_sizes.items():
@@ -807,7 +847,7 @@ class BiterMotorsModTest(unittest.TestCase):
         for technology in [
             "sales-office",
             "ev-charging-network",
-            "gigafactory",
+            "biterfactory",
             "terrestrial-ai",
             "autonomous-logistics",
             "planetary-energy-grid",
@@ -823,14 +863,14 @@ class BiterMotorsModTest(unittest.TestCase):
             "sales-office",
             "ev-charging-station-v2",
             "terrestrial-datacenter",
-            "robotaxi-service-center",
+            "bitertaxi-depot",
             "planetary-grid-controller",
         ]:
             self.assertIn(f'"__bitermotors__/graphics/icons/{clean_subject}.png"', data)
 
         self.assertIn('working_animation(activity_slug, 512, 512, 0.325', data)
-        self.assertIn('working_animation("gigafactory-loading-lights", 512, 128, 0.325', data)
-        self.assertIn('tier == 2 and "gigafactory-v2-activity" or "gigafactory-v1-activity"', data)
+        self.assertIn('working_animation("biterfactory-loading-lights", 512, 128, 0.325', data)
+        self.assertIn('tier == 2 and "biterfactory-v2-activity" or "biterfactory-v1-activity"', data)
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
         self.assertIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
@@ -838,7 +878,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('scale = 0.75', control)
         self.assertIn('scale = 0.78', control)
         self.assertIn('object.sprite = "bitermotors-charger-stall-" .. state .. "-frame-" .. staggered_frame', control)
-        self.assertIn('sprite_prefix = "bitermotors-robotaxi-dispatch-lights-frame-"', control)
+        self.assertIn('sprite_prefix = "bitermotors-bitertaxi-dispatch-lights-frame-"', control)
         self.assertIn("entry.object.sprite = entry.sprite_prefix .. frame_index", control)
         self.assertIn("update_bitermotors_runtime_visuals()", control)
 
@@ -882,8 +922,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('unlock("bitermotors-sell-prototype-roadster")', premium_tech)
         self.assertIn('{"bitermotors-dollar", 1}', premium_tech)
         self.assertIn('    250,', premium_tech)
-        self.assertNotIn('unlock("bitermotors-gigafactory-module")', premium_tech)
-        self.assertNotIn('unlock("bitermotors-gigafactory-building")', premium_tech)
+        self.assertNotIn('unlock("bitermotors-biterfactory-module")', premium_tech)
+        self.assertNotIn('unlock("bitermotors-biterfactory-building")', premium_tech)
         self.assertNotIn('unlock("bitermotors-dirty-nickel-refining")', premium_tech)
         self.assertNotIn('unlock("bitermotors-lithium-extraction")', premium_tech)
         self.assertIn('unlock("bitermotors-dirty-nickel-refining")', battery_tech)
@@ -948,29 +988,29 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("Commodity battery supply has reached its scale limit after %d Premium EVs", control)
         chemistry_gate = control[
             control.index("function sync_advanced_battery_chemistry_gate"):
-            control.index("function sync_gigafactory_production_gate")
+            control.index("function sync_biterfactory_production_gate")
         ]
         self.assertIn("ADVANCED_BATTERY_CHEMISTRY_RECIPES", chemistry_gate)
         self.assertIn("recipe.enabled = technology.researched", chemistry_gate)
-        self.assertIn("function sync_gigafactory_production_gate", control)
+        self.assertIn("function sync_biterfactory_production_gate", control)
         gate = control[
-            control.index("function sync_gigafactory_production_gate"):
+            control.index("function sync_biterfactory_production_gate"):
             control.index("function customer_ev_fleet_size")
         ]
         self.assertIn('count_item_produced(force, PREMIUM_EV_NAME)', gate)
         self.assertIn('researched(force, "bitermotors-premium-ev-program")', gate)
         self.assertNotIn("researched(force, ADVANCED_BATTERY_CHEMISTRY_TECH_NAME)", gate)
         self.assertNotIn('and researched(force, "foundry")', gate)
-        self.assertIn('"bitermotors-gigafactory-module", "bitermotors-gigafactory-building"', gate)
+        self.assertIn('"bitermotors-biterfactory-module", "bitermotors-biterfactory-building"', gate)
         self.assertIn('solar_batch_recipe.enabled = unlocked and researched(force, "bitermotors-energy-products")', gate)
         self.assertNotIn('"bitermotors-cell-scale-high-nickel"', gate)
-        self.assertIn("Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available", control)
-        self.assertIn("sync_gigafactory_production_gate(force, true)", control)
+        self.assertIn("Premium pilot proven: %d Premium EVs produced. Biterfactory construction is now available", control)
+        self.assertIn("sync_biterfactory_production_gate(force, true)", control)
         self.assertIn('"Premium pilot production"', control)
-        self.assertIn('"Gigafactory scale"', control)
+        self.assertIn('"Biterfactory scale"', control)
         self.assertIn("snapshot.premium_pilot_production_gate", control)
         self.assertIn("snapshot.advanced_battery_chemistry_production_gate", control)
-        self.assertIn("Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory", control)
+        self.assertIn("Premium EV sales are working. Build 100 pilot vehicles to unlock the Biterfactory", control)
         self.assertIn("bitermotors_first_premium_ev_sales", control)
 
     def test_progress_panel_makes_charging_power_and_customer_impact_prominent(self):
@@ -1005,10 +1045,10 @@ class BiterMotorsModTest(unittest.TestCase):
         )
         self.assertLess(
             objective.index('elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then'),
-            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
+            objective.index('elseif snapshot.biterfactories == 0 and snapshot.biterfactories_v2 == 0 then'),
         )
         self.assertLess(
-            objective.index('elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then'),
+            objective.index('elseif snapshot.biterfactories == 0 and snapshot.biterfactories_v2 == 0 then'),
             objective.index('elseif snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then'),
         )
         self.assertLess(
@@ -1065,15 +1105,15 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-sell-prototype-roadster": 'sale_icon(generated_icon("prototype-roadster"))',
             "bitermotors-sell-premium-ev": 'sale_icon(generated_icon("premium-ev"))',
             "bitermotors-sell-mass-market-ev": 'sale_icon(generated_icon("mass-market-ev"))',
-            "bitermotors-sell-megapack": "sale_icon(megapack_icon)",
-            "bitermotors-sell-robotaxi-fleet": 'sale_icon(generated_icon("robotaxi-fleet"))',
+            "bitermotors-sell-grid-battery": "sale_icon(grid_battery_icon)",
+            "bitermotors-sell-bitertaxi-fleet": 'sale_icon(generated_icon("bitertaxi-fleet"))',
         }
         for recipe_name, expected_icon in expected_icons.items():
             start = data.index(f'recipe("{recipe_name}"')
             block = data[start:start + 650]
             self.assertIn(f"icons = {expected_icon}", block)
 
-    def test_terrestrial_ai_and_robotaxi_form_a_complete_pre_space_loop(self):
+    def test_terrestrial_ai_and_bitertaxi_form_a_complete_pre_space_loop(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         locale = (MOD / "locale/en/bitermotors.cfg").read_text()
@@ -1090,9 +1130,9 @@ class BiterMotorsModTest(unittest.TestCase):
             data.index('recipe("bitermotors-terrestrial-ai-token"'):
             data.index('recipe("bitermotors-orbital-ai-token"')
         ]
-        robotaxi_recipe = data[
-            data.index('recipe("bitermotors-robotaxi-fleet"'):
-            data.index('recipe("bitermotors-robotaxi-service-center"')
+        bitertaxi_recipe = data[
+            data.index('recipe("bitermotors-bitertaxi-fleet"'):
+            data.index('recipe("bitermotors-bitertaxi-depot"')
         ]
         datacenter_entity = data[
             data.index('local terrestrial_datacenter = copied_assembler('):
@@ -1135,19 +1175,19 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertIn(ingredient, autonomous_tech)
         self.assertNotIn('"logistic-system"', autonomous_tech)
         self.assertNotIn("space-science-pack", autonomous_tech)
-        self.assertIn('{"bitermotors-mass-vehicle-assembly"}', robotaxi_recipe)
-        self.assertNotIn('{"advanced-crafting"}', robotaxi_recipe)
+        self.assertIn('{"bitermotors-mass-vehicle-assembly"}', bitertaxi_recipe)
+        self.assertNotIn('{"advanced-crafting"}', bitertaxi_recipe)
         self.assertIn('"rocket-silo"', data[data.index('tech("bitermotors-orbital-compute"'):])
         self.assertIn('unlock("bitermotors-orbital-datacenter-core")', data)
 
-        self.assertIn('ROBOTAXI_SALE_RECIPE = "bitermotors-sell-robotaxi-fleet"', control)
-        self.assertIn("announce_first_robotaxi_service", control)
+        self.assertIn('BITERTAXI_SALE_RECIPE = "bitermotors-sell-bitertaxi-fleet"', control)
+        self.assertIn("announce_first_bitertaxi_depot", control)
         self.assertNotIn("launch_technology.enabled = true", control)
         self.assertIn("v4_recipe.enabled = true", control)
-        self.assertIn("Robotaxi service is producing recurring profit", control)
+        self.assertIn("Bitertaxi service is producing recurring profit", control)
         self.assertIn("cargo pods must return them to Nauvis", locale)
-        self.assertIn("robotaxi_sale_complete", control)
-        self.assertIn("Operate the Robotaxi service", control)
+        self.assertIn("bitertaxi_sale_complete", control)
+        self.assertIn("Operate the Bitertaxi service", control)
         self.assertIn("Cumulative AI Tokens", control)
         self.assertIn("snapshot.ai_tokens_produced < 1000", control)
         self.assertIn("Generate 1,000 AI Tokens", control)
@@ -1247,9 +1287,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('add_lab_input("lab", "bitermotors-planetary-grid-segment")', data)
         self.assertNotIn('add_lab_input("biolab", "bitermotors-planetary-grid-segment")', data)
 
-    def test_bitermotors_gigafactory_module_is_an_early_production_cell(self):
+    def test_bitermotors_biterfactory_module_is_an_early_production_cell(self):
         data = (MOD / "data.lua").read_text()
-        module_recipe = data.index('recipe("bitermotors-gigafactory-module"')
+        module_recipe = data.index('recipe("bitermotors-biterfactory-module"')
         module_block = data[module_recipe:module_recipe + 900]
         for expected in [
             '"bitermotors-dollar"',
@@ -1266,32 +1306,32 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('"express-transport-belt"', module_block)
         self.assertNotIn('"fast-transport-belt"', module_block)
 
-    def test_gigafactory_v1_is_large_and_builds_premium_evs(self):
+    def test_biterfactory_v1_is_large_and_builds_premium_evs(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        entity = data[data.index('local gigafactory = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
-        recipe = data[data.index('recipe("bitermotors-gigafactory-building"'):data.index('recipe("bitermotors-dirty-nickel-refining"')]
+        entity = data[data.index('local biterfactory = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
+        recipe = data[data.index('recipe("bitermotors-biterfactory-building"'):data.index('recipe("bitermotors-dirty-nickel-refining"')]
         mass_ev = data[data.index('recipe("bitermotors-mass-market-ev"'):data.index('recipe("bitermotors-high-density-solar-array"')]
 
-        self.assertIn('"bitermotors-gigafactory-building"', entity)
+        self.assertIn('"bitermotors-biterfactory-building"', entity)
         self.assertIn('{"advanced-crafting", "bitermotors-vehicle-assembly", "bitermotors-energy-products", "bitermotors-energy-products-batch", "bitermotors-vertical-integration"}', entity)
         self.assertIn('"20MW"', entity)
         self.assertIn('\n  4\n)', entity)
-        self.assertIn('gigafactory.effect_receiver = {base_effect = {productivity = 0.5}}', entity)
-        self.assertIn('gigafactory.max_health = 5000', entity)
-        self.assertIn('gigafactory.module_slots = 8', entity)
+        self.assertIn('biterfactory.effect_receiver = {base_effect = {productivity = 0.5}}', entity)
+        self.assertIn('biterfactory.max_health = 5000', entity)
+        self.assertIn('biterfactory.module_slots = 8', entity)
         self.assertIn('"productivity"', entity)
         self.assertIn('collision_box = {{-4.4, -4.4}, {4.4, 4.4}}', entity)
         self.assertIn('selection_box = {{-4.5, -4.5}, {4.5, 4.5}}', entity)
-        self.assertIn('gigafactory.graphics_set = gigafactory_animation()', entity)
-        self.assertIn('gigafactory.fast_replaceable_group = "bitermotors-gigafactory"', entity)
-        self.assertIn('gigafactory.next_upgrade = "bitermotors-gigafactory-v2"', entity)
+        self.assertIn('biterfactory.graphics_set = biterfactory_animation()', entity)
+        self.assertIn('biterfactory.fast_replaceable_group = "bitermotors-biterfactory"', entity)
+        self.assertIn('biterfactory.next_upgrade = "bitermotors-biterfactory-v2"', entity)
         self.assertIn('LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"', control)
-        self.assertNotIn("unlock_gigafactory_logistics", control)
-        self.assertNotIn("Gigafactory logistics online", control)
+        self.assertNotIn("unlock_biterfactory_logistics", control)
+        self.assertNotIn("Biterfactory logistics online", control)
         self.assertIn("logistic_system.enabled = true", control)
         self.assertNotIn("logistic_system.enabled = unlocked", control)
-        self.assertIn("Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available", control)
+        self.assertIn("Premium pilot proven: %d Premium EVs produced. Biterfactory construction is now available", control)
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
@@ -1304,13 +1344,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('"bitermotors-dollar"', logistic_rewrite)
         self.assertNotIn('"space-science-pack"', logistic_rewrite)
         self.assertIn("logistic_system_tech.enabled = true", logistic_rewrite)
-        self.assertIn('name = "bitermotors-gigafactory-module", amount = 10', recipe)
+        self.assertIn('name = "bitermotors-biterfactory-module", amount = 10', recipe)
         self.assertIn('name = "substation", amount = 2', recipe)
         self.assertIn('{"bitermotors-mass-vehicle-assembly"}', mass_ev)
         self.assertNotIn('{"advanced-crafting"}', mass_ev)
-        self.assertTrue((MOD / "graphics/icons/gigafactory.png").exists())
-        self.assertTrue((MOD / "graphics/entity/gigafactory/gigafactory.png").exists())
-        with Image.open(MOD / "graphics/entity/gigafactory/gigafactory.png") as image:
+        self.assertTrue((MOD / "graphics/icons/biterfactory.png").exists())
+        self.assertTrue((MOD / "graphics/entity/biterfactory/biterfactory.png").exists())
+        with Image.open(MOD / "graphics/entity/biterfactory/biterfactory.png") as image:
             self.assertEqual(image.size, (1024, 1024))
             alpha = image.convert("RGBA").getchannel("A")
             self.assertEqual(alpha.getpixel((0, 0)), 0)
@@ -1320,34 +1360,34 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.05)
             self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.05)
 
-    def test_gigafactory_v2_is_a_faster_more_efficient_gigacasting_upgrade(self):
+    def test_biterfactory_v2_is_a_faster_more_efficient_structural_casting_upgrade(self):
         data = (MOD / "data.lua").read_text()
-        entity = data[data.index('local gigafactory_v2 = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
-        gigacast_recipe = data[data.index('recipe("bitermotors-gigacast"'):data.index('recipe("bitermotors-gigafactory-v2"')]
-        v2_recipe = data[data.index('recipe("bitermotors-gigafactory-v2"'):data.index('recipe("bitermotors-dirty-nickel-refining"')]
+        entity = data[data.index('local biterfactory_v2 = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]
+        structural_casting_recipe = data[data.index('recipe("bitermotors-structural-casting"'):data.index('recipe("bitermotors-biterfactory-v2"')]
+        v2_recipe = data[data.index('recipe("bitermotors-biterfactory-v2"'):data.index('recipe("bitermotors-dirty-nickel-refining"')]
         capital_tech = data[data.index('tech("bitermotors-capital-scaling"'):data.index('tech("bitermotors-ev-charging-network"')]
 
         self.assertIn('{"advanced-crafting", "bitermotors-vehicle-assembly", "bitermotors-mass-vehicle-assembly", "bitermotors-energy-products", "bitermotors-energy-products-batch", "bitermotors-vertical-integration"}', entity)
         self.assertIn('"30MW"', entity)
         self.assertIn('\n  8\n)', entity)
         self.assertIn('base_effect = {productivity = 1.5}', entity)
-        self.assertIn('gigafactory_v2.max_health = 7500', entity)
-        self.assertIn('gigafactory_v2.module_slots = 8', entity)
-        self.assertIn('gigafactory_v2.fast_replaceable_group = "bitermotors-gigafactory"', entity)
-        self.assertIn('gigafactory/gigafactory-v2.png', entity)
+        self.assertIn('biterfactory_v2.max_health = 7500', entity)
+        self.assertIn('biterfactory_v2.module_slots = 8', entity)
+        self.assertIn('biterfactory_v2.fast_replaceable_group = "bitermotors-biterfactory"', entity)
+        self.assertIn('biterfactory/biterfactory-v2.png', entity)
         self.assertIn('"productivity"', entity)
-        self.assertIn('name = "electric-furnace", amount = 20', gigacast_recipe)
-        self.assertIn('name = "steel-plate", amount = 500', gigacast_recipe)
-        self.assertIn('name = "electric-engine-unit", amount = 50', gigacast_recipe)
-        self.assertIn('name = "bitermotors-dollar", amount = 50', gigacast_recipe)
-        self.assertIn('name = "bitermotors-gigafactory-building", amount = 1', v2_recipe)
-        self.assertIn('name = "bitermotors-gigacast", amount = 1', v2_recipe)
+        self.assertIn('name = "electric-furnace", amount = 20', structural_casting_recipe)
+        self.assertIn('name = "steel-plate", amount = 500', structural_casting_recipe)
+        self.assertIn('name = "electric-engine-unit", amount = 50', structural_casting_recipe)
+        self.assertIn('name = "bitermotors-dollar", amount = 50', structural_casting_recipe)
+        self.assertIn('name = "bitermotors-biterfactory-building", amount = 1', v2_recipe)
+        self.assertIn('name = "bitermotors-structural-casting", amount = 1', v2_recipe)
         self.assertIn('name = "bitermotors-dollar", amount = 100', v2_recipe)
         self.assertNotIn('"refined-concrete"', v2_recipe)
-        self.assertIn('unlock("bitermotors-gigacast")', capital_tech)
-        self.assertIn('unlock("bitermotors-gigafactory-v2")', capital_tech)
+        self.assertIn('unlock("bitermotors-structural-casting")', capital_tech)
+        self.assertIn('unlock("bitermotors-biterfactory-v2")', capital_tech)
         self.assertIn('unlock("bitermotors-mass-market-ev")', capital_tech)
-        v2_art = MOD / "graphics/entity/gigafactory/gigafactory-v2.png"
+        v2_art = MOD / "graphics/entity/biterfactory/biterfactory-v2.png"
         self.assertTrue(v2_art.exists())
         with Image.open(v2_art) as image:
             self.assertEqual(image.size, (1024, 1024))
@@ -1359,7 +1399,7 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.05)
             self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.05)
 
-    def test_gigafactory_vertical_integration_only_productivizes_intermediates(self):
+    def test_biterfactory_vertical_integration_only_productivizes_intermediates(self):
         data = (MOD / "data.lua").read_text()
         locale = (MOD / "locale/en/bitermotors.cfg").read_text()
         control = (MOD / "control.lua").read_text()
@@ -1369,8 +1409,8 @@ class BiterMotorsModTest(unittest.TestCase):
             "electronic-circuit",
             "advanced-circuit",
             "low-density-structure",
-            "bitermotors-gigafactory-module",
-            "bitermotors-gigacast",
+            "bitermotors-biterfactory-module",
+            "bitermotors-structural-casting",
             "bitermotors-electric-drivetrain",
             "bitermotors-autonomy-computer",
             "bitermotors-datacenter-rack",
@@ -1380,22 +1420,22 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-premium-ev",
             "bitermotors-mass-market-ev",
             "bitermotors-high-density-solar-array",
-            "bitermotors-megapack",
-            "bitermotors-robotaxi-fleet",
+            "bitermotors-grid-battery",
+            "bitermotors-bitertaxi-fleet",
         ]:
             self.assertIn(f'"{recipe_name}"', data[data.index("for _, recipe_name in pairs({"):])
         self.assertIn('add_recipe_category(recipe_name, "bitermotors-vertical-integration").allow_productivity = true', data)
         self.assertIn("data.raw.recipe[recipe_name].allow_productivity = false", data)
-        self.assertIn("bitermotors-vertical-integration=Gigafactory vertical integration", locale)
+        self.assertIn("bitermotors-vertical-integration=Biterfactory vertical integration", locale)
         self.assertIn("vertically integrated component recipe", control)
-        self.assertIn("First Gigafactory V2 online", (MOD / "control.lua").read_text())
+        self.assertIn("First Biterfactory V2 online", (MOD / "control.lua").read_text())
 
-    def test_energy_products_are_parallel_placeable_and_gigafactory_built(self):
+    def test_energy_products_are_parallel_placeable_and_biterfactory_built(self):
         data = (MOD / "data.lua").read_text()
         locale = (MOD / "locale/en/bitermotors.cfg").read_text()
         solar_recipe = data[data.index('recipe("bitermotors-high-density-solar-array"'):data.index('recipe("bitermotors-high-density-solar-array-batch"')]
-        solar_batch_recipe = data[data.index('recipe("bitermotors-high-density-solar-array-batch"'):data.index('recipe("bitermotors-megapack"')]
-        megapack_recipe = data[data.index('recipe("bitermotors-megapack"'):data.index('recipe("bitermotors-autonomy-computer"')]
+        solar_batch_recipe = data[data.index('recipe("bitermotors-high-density-solar-array-batch"'):data.index('recipe("bitermotors-grid-battery"')]
+        grid_battery_recipe = data[data.index('recipe("bitermotors-grid-battery"'):data.index('recipe("bitermotors-autonomy-computer"')]
         energy_tech = data[data.index('tech("bitermotors-energy-products"'):data.index('tech("bitermotors-terrestrial-ai"')]
 
         self.assertIn('copied_energy_entity(\n  "solar-panel"', data)
@@ -1412,13 +1452,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("bitermotors-high-density-solar-array-power-source", data)
         self.assertNotIn("replace_solar_array_orientation", control)
         self.assertIn('copied_energy_entity(\n  "accumulator"', data)
-        self.assertIn('megapack.energy_source.buffer_capacity = "100MJ"', data)
-        self.assertIn('megapack.energy_source.input_flow_limit = "5MW"', data)
-        self.assertIn('megapack.energy_source.output_flow_limit = "5MW"', data)
-        self.assertIn('generated_icon("megapack")', data)
-        self.assertIn('generated_entity_picture("megapack", nil, 0.14)', data)
-        self.assertTrue((MOD / "graphics/icons/megapack.png").exists())
-        self.assertTrue((MOD / "graphics/entity/megapack/megapack.png").exists())
+        self.assertIn('grid_battery.energy_source.buffer_capacity = "100MJ"', data)
+        self.assertIn('grid_battery.energy_source.input_flow_limit = "5MW"', data)
+        self.assertIn('grid_battery.energy_source.output_flow_limit = "5MW"', data)
+        self.assertIn('generated_icon("grid-battery")', data)
+        self.assertIn('generated_entity_picture("grid-battery", nil, 0.14)', data)
+        self.assertTrue((MOD / "graphics/icons/grid-battery.png").exists())
+        self.assertTrue((MOD / "graphics/entity/grid-battery/grid-battery.png").exists())
         self.assertIn('{"advanced-crafting"}', solar_recipe)
         self.assertIn('name = "solar-panel", amount = 1', solar_recipe)
         self.assertIn('name = "processing-unit", amount = 2', solar_recipe)
@@ -1431,20 +1471,20 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('name = "bitermotors-dollar"', solar_batch_recipe)
         self.assertIn('name = "bitermotors-high-density-solar-array", amount = 4', solar_batch_recipe)
         self.assertIn('item("bitermotors-high-density-solar-array", high_density_solar_array_icon, "energy", "bitermotors-a[high-density-solar-array]", 10', data)
-        self.assertIn('{"bitermotors-energy-products"}', megapack_recipe)
-        self.assertIn('name = "bitermotors-lfp-battery-pack", amount = 12', megapack_recipe)
-        self.assertIn('name = "accumulator", amount = 4', megapack_recipe)
-        self.assertIn('name = "substation", amount = 1', megapack_recipe)
+        self.assertIn('{"bitermotors-energy-products"}', grid_battery_recipe)
+        self.assertIn('name = "bitermotors-lfp-battery-pack", amount = 12', grid_battery_recipe)
+        self.assertIn('name = "accumulator", amount = 4', grid_battery_recipe)
+        self.assertIn('name = "substation", amount = 1', grid_battery_recipe)
         self.assertIn('{"bitermotors-advanced-battery-chemistry", "electric-energy-accumulators", "solar-energy"}', energy_tech)
         self.assertNotIn('"production-science-pack"', energy_tech)
         self.assertIn("    200,", energy_tech)
         self.assertIn("    30\n  ),", energy_tech)
         self.assertNotIn('"bitermotors-capital-scaling"', energy_tech)
-        self.assertNotIn('unlock("bitermotors-gigafactory-building")', energy_tech)
+        self.assertNotIn('unlock("bitermotors-biterfactory-building")', energy_tech)
         self.assertIn('unlock("bitermotors-high-density-solar-array")', energy_tech)
-        self.assertIn('unlock("bitermotors-megapack")', energy_tech)
-        self.assertIn('unlock("bitermotors-sell-megapack")', energy_tech)
-        self.assertIn("bitermotors-megapack=Stores 100 MJ", locale)
+        self.assertIn('unlock("bitermotors-grid-battery")', energy_tech)
+        self.assertIn('unlock("bitermotors-sell-grid-battery")', energy_tech)
+        self.assertIn("bitermotors-grid-battery=Stores 100 MJ", locale)
         self.assertNotIn("bitermotors-grid-storage-unit", data)
         self.assertNotIn("bitermotors-sell-grid-storage", data)
 
@@ -1572,10 +1612,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('a basic melting and casting pair draws 5 MW', locale)
         self.assertIn("FOUNDRY_POWER_GATE = {", control)
         self.assertIn("solar_panels = 25", control)
-        self.assertIn("megapacks = 5", control)
+        self.assertIn("grid_batteries = 5", control)
         self.assertIn("function foundry_power_gate_status(force)", control)
         self.assertIn("count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)", control)
-        self.assertIn("count_deployed_energy_product(force, MEGAPACK_NAME)", control)
+        self.assertIn("count_deployed_energy_product(force, GRID_BATTERY_NAME)", control)
         self.assertIn("quality = BITERMOTORS_ENERGY_JUMPSTART_QUALITY", control)
         self.assertIn("total - math.min(starter_count, starter_quality_count)", control)
         self.assertIn("technology.enabled = technology.researched or gate.qualified", control)
@@ -1594,7 +1634,7 @@ class BiterMotorsModTest(unittest.TestCase):
         for old_ringed_icon in [
             "sales-office.png",
             "ev-charging-network.png",
-            "gigafactory.png",
+            "biterfactory.png",
             "terrestrial-ai.png",
             "autonomous-logistics.png",
             "planetary-energy-grid.png",
@@ -1605,15 +1645,15 @@ class BiterMotorsModTest(unittest.TestCase):
             "graphics/icons/premium-ev.png",
             "graphics/icons/mass-market-ev.png",
             "graphics/icons/ev-charging-station-v2.png",
-            "graphics/icons/megapack.png",
-            "graphics/icons/robotaxi-service-center.png",
+            "graphics/icons/grid-battery.png",
+            "graphics/icons/bitertaxi-depot.png",
             "graphics/icons/planetary-grid-controller.png",
         ]:
             self.assertIn(clean_subject, data)
         station_recipe = data[data.index('recipe("bitermotors-ev-charging-station"'):data.index('recipe("bitermotors-ev-charging-station-v2"')]
         station_v2_recipe = data[data.index('recipe("bitermotors-ev-charging-station-v2"'):data.index('recipe("bitermotors-ev-charging-station-v3"')]
         station_v3_recipe = data[data.index('recipe("bitermotors-ev-charging-station-v3"'):data.index('recipe("bitermotors-ev-charging-station-v4"')]
-        station_v4_recipe = data[data.index('recipe("bitermotors-ev-charging-station-v4"'):data.index('recipe("bitermotors-gigafactory-module"')]
+        station_v4_recipe = data[data.index('recipe("bitermotors-ev-charging-station-v4"'):data.index('recipe("bitermotors-biterfactory-module"')]
         self.assertNotIn('"bitermotors-dollar"', station_recipe)
         for expected in [
             '"substation"',
@@ -1645,7 +1685,7 @@ class BiterMotorsModTest(unittest.TestCase):
         for expected in [
             'name = "bitermotors-ev-charging-station-v3", amount = 1',
             'name = "bitermotors-high-density-solar-array", amount = 4',
-            'name = "bitermotors-megapack", amount = 4',
+            'name = "bitermotors-grid-battery", amount = 4',
             'name = "bitermotors-dollar", amount = 200',
         ]:
             self.assertIn(expected, station_v4_recipe)
@@ -1657,17 +1697,17 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('unlock("bitermotors-ev-charging-station-v3")', capital_scaling_tech)
         self.assertIn('unlock("bitermotors-ev-charging-station-v4")', autonomous_tech)
         self.assertIn('v4_recipe.enabled = researched(force, "bitermotors-autonomous-logistics")', control)
-        mass_sale = data[data.index('recipe("bitermotors-sell-mass-market-ev"'):data.index('recipe("bitermotors-sell-megapack"')]
-        robotaxi_sale = data[data.index('recipe("bitermotors-sell-robotaxi-fleet"'):data.index('recipe("bitermotors-terrestrial-ai-token"')]
+        mass_sale = data[data.index('recipe("bitermotors-sell-mass-market-ev"'):data.index('recipe("bitermotors-sell-grid-battery"')]
+        bitertaxi_sale = data[data.index('recipe("bitermotors-sell-bitertaxi-fleet"'):data.index('recipe("bitermotors-terrestrial-ai-token"')]
         self.assertIn('"bitermotors-ev-reservation"', mass_sale)
         self.assertIn('name = "bitermotors-mass-market-ev", amount = 1', mass_sale)
         self.assertIn('name = "bitermotors-ev-reservation", amount = 1', mass_sale)
         self.assertIn('{{type = "item", name = "bitermotors-dollar", amount = 1}}, 5', mass_sale)
-        self.assertNotIn('"bitermotors-ev-reservation"', robotaxi_sale)
-        self.assertIn('name = "bitermotors-robotaxi-fleet", amount = 3', robotaxi_sale)
-        self.assertIn('{{type = "item", name = "bitermotors-dollar", amount = 1}}, 3', robotaxi_sale)
-        robotaxi_recipe = data[data.index('recipe("bitermotors-robotaxi-fleet"'):data.index('recipe("bitermotors-robotaxi-service-center"')]
-        self.assertIn('name = "bitermotors-dollar", amount = 100', robotaxi_recipe)
+        self.assertNotIn('"bitermotors-ev-reservation"', bitertaxi_sale)
+        self.assertIn('name = "bitermotors-bitertaxi-fleet", amount = 3', bitertaxi_sale)
+        self.assertIn('{{type = "item", name = "bitermotors-dollar", amount = 1}}, 3', bitertaxi_sale)
+        bitertaxi_recipe = data[data.index('recipe("bitermotors-bitertaxi-fleet"'):data.index('recipe("bitermotors-bitertaxi-depot"')]
+        self.assertIn('name = "bitermotors-dollar", amount = 100', bitertaxi_recipe)
 
     def test_sales_office_coverage_has_remote_view_toggle(self):
         data = (MOD / "data.lua").read_text()
@@ -1694,7 +1734,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("rendering.draw_circle", control)
         self.assertIn('render_mode = "chart"', control)
         self.assertIn(
-            "local radius = megapack_market and MEGAPACK_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS",
+            "local radius = grid_battery_market and GRID_BATTERY_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS",
             control,
         )
         self.assertIn("radius = radius", control)
@@ -1707,51 +1747,51 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("{r = 0.10, g = 0.20, b = 0.08, a = 0.10}", control)
         self.assertNotIn("color = {r = 0.2, g = 1.0, b = 0.35", control)
 
-    def test_megapack_sales_use_social_adoption_and_physical_buyers(self):
+    def test_grid_battery_sales_use_social_adoption_and_physical_buyers(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         sale = data[
-            data.index('recipe("bitermotors-sell-megapack"'):
-            data.index('recipe("bitermotors-sell-robotaxi-fleet"')
+            data.index('recipe("bitermotors-sell-grid-battery"'):
+            data.index('recipe("bitermotors-sell-bitertaxi-fleet"')
         ]
 
-        self.assertIn('name = "bitermotors-megapack", amount = 1', sale)
+        self.assertIn('name = "bitermotors-grid-battery", amount = 1', sale)
         self.assertIn('name = "bitermotors-dollar", amount = 20', sale)
         self.assertIn("}}, 30,", sale)
         self.assertNotIn("bitermotors-ev-reservation", sale)
         for contract in [
-            "MEGAPACK_SALES_RADIUS = 384",
-            "MEGAPACK_INITIAL_ADOPTION_FRACTION = 0.05",
-            "MEGAPACK_REFERRAL_FRACTION = 0.05",
-            "MEGAPACK_REFERRAL_WAVE_TICKS = 5 * 60 * 60",
-            "MEGAPACK_BUYER_MAX_ACTIVE = 32",
-            "MEGAPACK_BUYER_STARTS_PER_SECOND = 4",
-            "function sync_megapack_adoption_waves()",
-            "function ensure_megapack_buyer_icon(",
-            "function begin_megapack_buyer_trip(",
-            "function hold_megapack_buyer_at_showroom(",
-            "function complete_megapack_buyer_arrival(",
-            "function send_megapack_buyer_home(",
-            "function install_megapack_at_settlement(",
-            "function handle_megapack_buyer_command_completed(",
-            "function sync_megapack_sales_offices()",
-            'sprite = "item/" .. MEGAPACK_NAME',
+            "GRID_BATTERY_SALES_RADIUS = 384",
+            "GRID_BATTERY_INITIAL_ADOPTION_FRACTION = 0.05",
+            "GRID_BATTERY_REFERRAL_FRACTION = 0.05",
+            "GRID_BATTERY_REFERRAL_WAVE_TICKS = 5 * 60 * 60",
+            "GRID_BATTERY_BUYER_MAX_ACTIVE = 32",
+            "GRID_BATTERY_BUYER_STARTS_PER_SECOND = 4",
+            "function sync_grid_battery_adoption_waves()",
+            "function ensure_grid_battery_buyer_icon(",
+            "function begin_grid_battery_buyer_trip(",
+            "function hold_grid_battery_buyer_at_showroom(",
+            "function complete_grid_battery_buyer_arrival(",
+            "function send_grid_battery_buyer_home(",
+            "function install_grid_battery_at_settlement(",
+            "function handle_grid_battery_buyer_command_completed(",
+            "function sync_grid_battery_sales_offices()",
+            'sprite = "item/" .. GRID_BATTERY_NAME',
             'trip.phase == "waiting_product"',
             "trip.showroom_position",
         ]:
             self.assertIn(contract, control)
         self.assertIn("if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end", control)
-        self.assertIn("return hold_megapack_buyer_at_showroom(trip, entity)", control)
+        self.assertIn("return hold_grid_battery_buyer_at_showroom(trip, entity)", control)
         self.assertIn(
-            "if not handle_megapack_buyer_command_completed(event) then",
+            "if not handle_grid_battery_buyer_command_completed(event) then",
             control,
         )
         self.assertIn(
-            "if not megapack_buyer_reservations()[entity.unit_number]",
+            "if not grid_battery_buyer_reservations()[entity.unit_number]",
             control,
         )
-        self.assertIn("complete_megapack_sale(office)", control)
-        self.assertIn("Megapack adoption", control)
+        self.assertIn("complete_grid_battery_sale(office)", control)
+        self.assertIn("Grid Battery adoption", control)
         self.assertIn("Next referral wave", control)
 
     def test_bitermotors_progress_interface_is_live_and_actionable(self):
@@ -1819,13 +1859,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("if snapshot.mass_market_researched then", control)
         self.assertIn("Wait for the first EV Reservation at the charger", control)
         self.assertIn("Run Sell hopes and dreams", control)
-        self.assertIn("Upgrade a Gigafactory to V2", control)
+        self.assertIn("Upgrade a Biterfactory to V2", control)
 
-    def test_sales_office_and_gigafactory_panels_report_bottlenecks(self):
+    def test_sales_office_and_biterfactory_panels_report_bottlenecks(self):
         control = (MOD / "control.lua").read_text()
 
         self.assertIn('ENTITY_INFO_PANEL_NAME = "bitermotors_entity_info_panel"', control)
-        self.assertIn("GIGAFACTORY_CONFIGS", control)
+        self.assertIn("BITERFACTORY_CONFIGS", control)
         self.assertIn('power = "20 MW"', control)
         self.assertIn('power = "30 MW"', control)
         self.assertIn('productivity = "4x crafting speed; 50% built-in productivity"', control)
@@ -1958,9 +1998,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('power_sink_name = "bitermotors-ev-charging-v4-power-sink"', control)
         self.assertIn('chargers_v3 = count_entities(force, "bitermotors-ev-charging-station-v3")', control)
         self.assertIn('chargers_v4 = count_entities(force, "bitermotors-ev-charging-station-v4")', control)
-        self.assertIn("Craft and place a V3 Supercharger", control)
-        self.assertIn("Craft and place a solar-canopy V4 Supercharger", control)
-        self.assertIn("research Autonomous Logistics to unlock Robotaxis, V4 fleet charging", control)
+        self.assertIn("Craft and place a V3 Rapid Charger", control)
+        self.assertIn("Craft and place a solar-canopy V4 Solar Charging Hub", control)
+        self.assertIn("research Autonomous Logistics to unlock Bitertaxis, V4 fleet charging", control)
         self.assertIn("ensure_station_power_sinks", control)
         self.assertIn("remove_station_power_sink", control)
         self.assertIn("active_station_stalls", control)
@@ -2044,7 +2084,7 @@ class BiterMotorsModTest(unittest.TestCase):
         fleet = control[control.index("function customer_ev_fleet_size"):control.index("local function calculate_station_utilization")]
         utilization = control[control.index("local function calculate_station_utilization"):control.index("local function destroy_customer_marker_key")]
 
-        for item_name in ["bitermotors-prototype-roadster", "bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-megatruck", "bitermotors-robotaxi-fleet"]:
+        for item_name in ["bitermotors-prototype-roadster", "bitermotors-premium-ev", "bitermotors-mass-market-ev", "bitermotors-megatruck", "bitermotors-bitertaxi-fleet"]:
             self.assertIn(f'"{item_name}"', control)
         self.assertIn("CUSTOMER_EV_SALE_RECIPES", control)
         self.assertIn("record_customer_ev_sales", control)
@@ -2126,45 +2166,45 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("terrestrial ceiling reached", control)
         self.assertIn("terrestrial_ai_tokens_generated", control)
 
-    def test_robotaxi_service_center_economy(self):
+    def test_bitertaxi_depot_economy(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         locale = (MOD / "locale/en/bitermotors.cfg").read_text()
 
-        robotaxi_item = next(line for line in data.splitlines() if 'item("bitermotors-robotaxi-fleet"' in line)
-        self.assertIn('"transport", "bitermotors-e[robotaxi-fleet]", 5,', robotaxi_item)
-        self.assertIn('name = "bitermotors-robotaxi-service-center"', data)
-        self.assertIn("robotaxi_service_center.inventory_size = 43", data)
-        self.assertIn('"bitermotors-robotaxi-service-power"', data)
-        self.assertIn('"10MW"', data[data.index("local robotaxi_service_power ="):data.index("local orbital_datacenter_core =")])
-        self.assertIn('recipe("bitermotors-operate-robotaxis", {"bitermotors-robotaxi-service"}', data)
-        self.assertIn('unlock("bitermotors-robotaxi-service-center")', data)
-        self.assertIn('unlock("bitermotors-operate-robotaxis")', data)
-        self.assertIn("ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5", control)
-        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
-        self.assertIn("ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60", control)
-        self.assertIn("function process_robotaxi_service_centers", control)
-        self.assertIn("function ensure_robotaxi_service_power", control)
-        self.assertIn("function robotaxi_customer_allocations", control)
-        self.assertIn('registered_bitermotors_entities("robotaxi_centers", force)', control)
+        bitertaxi_item = next(line for line in data.splitlines() if 'item("bitermotors-bitertaxi-fleet"' in line)
+        self.assertIn('"transport", "bitermotors-e[bitertaxi-fleet]", 5,', bitertaxi_item)
+        self.assertIn('name = "bitermotors-bitertaxi-depot"', data)
+        self.assertIn("bitertaxi_depot.inventory_size = 43", data)
+        self.assertIn('"bitermotors-bitertaxi-depot-power"', data)
+        self.assertIn('"10MW"', data[data.index("local bitertaxi_depot_power ="):data.index("local orbital_datacenter_core =")])
+        self.assertIn('recipe("bitermotors-operate-bitertaxi-fleet", {"bitermotors-bitertaxi-depot"}', data)
+        self.assertIn('unlock("bitermotors-bitertaxi-depot")', data)
+        self.assertIn('unlock("bitermotors-operate-bitertaxi-fleet")', data)
+        self.assertIn("BITERTAXI_CUSTOMERS_PER_VEHICLE = 5", control)
+        self.assertIn("BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
+        self.assertIn("BITERTAXI_ATTRITION_VEHICLE_HOURS = 60", control)
+        self.assertIn("function process_bitertaxi_depots", control)
+        self.assertIn("function ensure_bitertaxi_depot_power", control)
+        self.assertIn("function bitertaxi_customer_allocations", control)
+        self.assertIn('registered_bitermotors_entities("bitertaxi_depots", force)', control)
         self.assertIn("customer_settlement_populations()", control)
-        self.assertIn("distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS", control)
+        self.assertIn("distance <= BITERTAXI_DEPOT_RADIUS * BITERTAXI_DEPOT_RADIUS", control)
         self.assertIn("available[center.unit_number] = stored > 0", control)
         self.assertIn("result[selected.unit_number] = result[selected.unit_number] + customers", control)
         self.assertIn("game.tick - cached.tick < 300", control)
-        self.assertIn("function robotaxi_dollar_output_blocked", control)
+        self.assertIn("function bitertaxi_dollar_output_blocked", control)
         self.assertIn("slot.count >= slot.prototype.stack_size", control)
-        self.assertIn("output_blocked = robotaxi_dollar_output_blocked(output)", control)
+        self.assertIn("output_blocked = bitertaxi_dollar_output_blocked(output)", control)
         self.assertIn("not snapshot.output_blocked", control)
         self.assertIn("trips and fleet attrition are paused", control)
         self.assertIn("radius = 0.25", control)
         self.assertIn("active_power_units", control)
         self.assertIn("not active_power_units[power.unit_number]", control)
-        self.assertIn("robotaxi_service_status = function", control)
+        self.assertIn("bitertaxi_depot_status = function", control)
         self.assertIn("Premium Audio increases trip revenue", control)
-        self.assertIn("legacy_robotaxi_sale.enabled = false", control)
-        self.assertIn("invalidate_robotaxi_customer_allocations(entity.force)", control)
-        self.assertIn("bitermotors-robotaxi-service-center=Robotaxi Service Center", locale)
+        self.assertIn("legacy_bitertaxi_sale.enabled = false", control)
+        self.assertIn("invalidate_bitertaxi_customer_allocations(entity.force)", control)
+        self.assertIn("bitermotors-bitertaxi-depot=Bitertaxi Depot", locale)
 
     def test_easier_campaign_economy_is_consistent_in_runtime_and_prototypes(self):
         data = (MOD / "data.lua").read_text()
@@ -2189,7 +2229,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("customer_radius = 128", control)
         self.assertIn("customer_radius = 192", control)
         self.assertIn("customer_radius = 256", control)
-        self.assertIn("ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
+        self.assertIn("BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2", control)
         self.assertIn("Invests 150 cycles", locale)
         self.assertIn("Invests 600 cycles", locale)
 
@@ -2293,10 +2333,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("maximum_productivity = 0.1", lfp_pack)
         premium = data[data.index('recipe("bitermotors-premium-ev-cell-scale"'):data.index('recipe("bitermotors-mass-market-ev"')]
         mass = data[data.index('recipe("bitermotors-mass-market-ev"'):data.index('recipe("bitermotors-megatruck"')]
-        megapack = data[data.index('recipe("bitermotors-megapack"'):data.index('recipe("bitermotors-autonomy-computer"')]
+        grid_battery = data[data.index('recipe("bitermotors-grid-battery"'):data.index('recipe("bitermotors-autonomy-computer"')]
         self.assertIn('name = "bitermotors-high-energy-battery-pack", amount = 8', premium)
         self.assertIn('name = "bitermotors-lfp-battery-pack", amount = 4', mass)
-        self.assertIn('name = "bitermotors-lfp-battery-pack", amount = 12', megapack)
+        self.assertIn('name = "bitermotors-lfp-battery-pack", amount = 12', grid_battery)
         high_recovery = data[data.index('recipe("bitermotors-high-energy-battery-recovery"'):data.index('recipe("bitermotors-lfp-battery-recovery"')]
         lfp_recovery = data[data.index('recipe("bitermotors-lfp-battery-recovery"'):data.index('recipe("bitermotors-cybertrain"')]
         self.assertIn('amount = 10', high_recovery)
@@ -2307,9 +2347,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('allow_productivity = false', lfp_recovery)
         locale = (MOD / "locale" / "en" / "bitermotors.cfg").read_text()
         self.assertIn("bitermotors-high-nickel-cell=High-nickel cells (Chemical Plant)", locale)
-        self.assertIn("bitermotors-cell-scale-high-nickel=High-nickel cells (Gigafactory)", locale)
+        self.assertIn("bitermotors-cell-scale-high-nickel=High-nickel cells (Biterfactory)", locale)
         self.assertIn("bitermotors-lfp-cell=LFP cells (Chemical Plant)", locale)
-        self.assertIn("bitermotors-cell-scale-lfp=LFP cells (Gigafactory)", locale)
+        self.assertIn("bitermotors-cell-scale-lfp=LFP cells (Biterfactory)", locale)
         self.assertIn("one four-cell batch fills one High-energy Battery Pack", locale)
         self.assertIn("same dirty-refining precursors and cobalt", locale)
         self.assertIn("bitermotors-lithium-extraction=Dirty lithium extraction", locale)
@@ -2362,8 +2402,8 @@ class BiterMotorsModTest(unittest.TestCase):
             "lfp_cells_produced", "lfp_battery_packs_produced",
         ]:
             self.assertIn(field, control)
-        self.assertLess(objective.index('return "Premium pilot production"'), objective.index('return "Gigafactory scale"'))
-        self.assertLess(objective.index('return "Gigafactory scale"'), objective.index('return "Battery breakthrough"'))
+        self.assertLess(objective.index('return "Premium pilot production"'), objective.index('return "Biterfactory scale"'))
+        self.assertLess(objective.index('return "Biterfactory scale"'), objective.index('return "Battery breakthrough"'))
         self.assertLess(objective.index('return "Battery breakthrough"'), objective.index('return "Battery minerals"'))
         self.assertLess(objective.index('return "Battery minerals"'), objective.index('return "Battery refining"'))
         self.assertLess(objective.index('return "Battery refining"'), objective.index('return "Battery cells"'))
@@ -2371,11 +2411,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function count_fluid_produced", control)
         self.assertIn("get_fluid_production_statistics", control)
 
-    def test_robotaxi_safety_improves_automatically_with_completed_rides(self):
+    def test_bitertaxi_safety_improves_automatically_with_completed_rides(self):
         control = (MOD / "control.lua").read_text()
-        self.assertIn("ROBOTAXI_SAFETY_RIDES_SCALE = 1000", control)
-        self.assertIn("ROBOTAXI_ROUTINE_WEAR_FLOOR = 0.20", control)
-        self.assertIn("function robotaxi_safety_snapshot", control)
+        self.assertIn("BITERTAXI_SAFETY_RIDES_SCALE = 1000", control)
+        self.assertIn("BITERTAXI_ROUTINE_WEAR_FLOOR = 0.20", control)
+        self.assertIn("function bitertaxi_safety_snapshot", control)
         self.assertIn("math.log(1 + state.completed_rides", control)
         self.assertIn("completed_rides_by_force", control)
         self.assertIn("snapshot.allocated * snapshot.power_factor / 60", control)
@@ -2533,7 +2573,7 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_vehicle_owner_classes_use_baked_prototypes(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        for class_name in ["roadster", "premium", "mass-market", "robotaxi"]:
+        for class_name in ["roadster", "premium", "mass-market", "bitertaxi"]:
             self.assertIn(f'{class_name} = {{' if class_name != "mass-market" else '["mass-market"] = {', data)
         self.assertIn("0.90, g = 0.02, b = 0.01", data)
         self.assertIn("0.015, g = 0.015, b = 0.015", data)
@@ -2668,7 +2708,7 @@ class BiterMotorsModTest(unittest.TestCase):
         controller = data[data.index('"bitermotors-planetary-grid-controller"'):data.index('planetary_grid_controller.energy_source')]
         self.assertIn('"10GW"', controller)
         charge_recipe = data[data.index('recipe("bitermotors-agi-training-run"'):data.index('add_lab_input("lab", "bitermotors-dollar")')]
-        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-megapack", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '3600']:
+        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-battery-array", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '3600']:
             self.assertIn(expected, charge_recipe)
         self.assertIn('name = "bitermotors-ai-token", amount = 50000', data)
         capital_recipe = data[
@@ -2694,17 +2734,17 @@ class BiterMotorsModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
 
-        solar = data[data.index("local high_density_solar_array ="):data.index("local megapack =")]
+        solar = data[data.index("local high_density_solar_array ="):data.index("local grid_battery =")]
         self.assertIn('high_density_solar_array.production = "300kW"', solar)
         self.assertIn('high_density_solar_array.next_upgrade = "bitermotors-tandem-solar-array"', solar)
         self.assertIn('tandem_solar_array.production = "3MW"', solar)
 
-        storage = data[data.index("local megapack ="):data.index("local terrestrial_datacenter =")]
-        self.assertIn('megapack.energy_source.buffer_capacity = "100MJ"', storage)
-        self.assertIn('megapack.next_upgrade = "bitermotors-grid-megapack"', storage)
-        self.assertIn('grid_megapack.energy_source.buffer_capacity = "1GJ"', storage)
-        self.assertIn('grid_megapack.energy_source.input_flow_limit = "50MW"', storage)
-        self.assertIn('grid_megapack.energy_source.output_flow_limit = "50MW"', storage)
+        storage = data[data.index("local grid_battery ="):data.index("local terrestrial_datacenter =")]
+        self.assertIn('grid_battery.energy_source.buffer_capacity = "100MJ"', storage)
+        self.assertIn('grid_battery.next_upgrade = "bitermotors-grid-battery-array"', storage)
+        self.assertIn('grid_battery_array.energy_source.buffer_capacity = "1GJ"', storage)
+        self.assertIn('grid_battery_array.energy_source.input_flow_limit = "50MW"', storage)
+        self.assertIn('grid_battery_array.energy_source.output_flow_limit = "50MW"', storage)
 
         for recipe_name, output in [
             ("bitermotors-orbital-ai-token", 10000),
@@ -2728,7 +2768,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("local unlocked = track.generated >= milestone.threshold", control)
         self.assertIn("technology.enabled = unlocked", control)
         self.assertIn('unlock("bitermotors-tandem-solar-array")', data)
-        self.assertIn('unlock("bitermotors-grid-megapack")', data)
+        self.assertIn('unlock("bitermotors-grid-battery-array")', data)
 
     def test_bitermotors_compute_runs_reset_when_underpowered(self):
         control = (MOD / "control.lua").read_text()
@@ -2744,7 +2784,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('entity.disabled_by_script = false', control)
         one_tick = control[control.index("script.on_nth_tick(1"):control.index("script.on_nth_tick(6")]
         self.assertIn("reset_underpowered_compute_progress()", one_tick)
-        self.assertIn("process_ev_autopilots()", one_tick)
+        self.assertIn("process_ev_self_drivings()", one_tick)
         self.assertIn('while processed < 32', control)
         self.assertIn('track_bitermotors_compute_machine(entity)', control)
         self.assertIn('rebuild_bitermotors_compute_machines()', control)
@@ -2764,7 +2804,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "defines.events.on_ai_command_completed",
             "handle_customer_commute_command_completed",
             "CUSTOMER_COMMUTE_RETRY_BASE_TICKS * (2 ^ (attempts - 1))",
-            "fraction * (1 + supercharging * 0.1)",
+            "fraction * (1 + rapid_charging * 0.1)",
             "customer_commute_interval_ticks",
             "customer_commute_totals",
             'label = "Charging commutes"',
@@ -2895,7 +2935,7 @@ class BiterMotorsModTest(unittest.TestCase):
         performance_state = (MOD / "runtime/performance_state.lua").read_text()
         customer_aggregates = (MOD / "runtime/customer_aggregates.lua").read_text()
         buyer_queues = (MOD / "runtime/buyer_queues.lua").read_text()
-        robotaxi_service = (MOD / "runtime/robotaxi_service.lua").read_text()
+        bitertaxi_depot = (MOD / "runtime/bitertaxi_depot.lua").read_text()
         power_queue = (MOD / "runtime/power_queue.lua").read_text()
         ui_refresh = (MOD / "runtime/ui_refresh.lua").read_text()
         sales_office_market = (MOD / "runtime/sales_office_market.lua").read_text()
@@ -2909,13 +2949,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('require("runtime.customer_aggregates")', (MOD / "control.lua").read_text())
         self.assertIn("function BuyerQueues.pop_valid", buyer_queues)
         self.assertIn('require("runtime.buyer_queues")', (MOD / "control.lua").read_text())
-        self.assertIn("function RobotaxiService.metrics", robotaxi_service)
+        self.assertIn("function BitertaxiDepot.metrics", bitertaxi_depot)
         self.assertIn("function PowerQueue.next", power_queue)
         self.assertIn("interval_ticks = 300", ui_refresh)
         self.assertIn("progress_interval_ticks = 1800", ui_refresh)
         self.assertIn("function UiRefresh.should_refresh_progress", ui_refresh)
         self.assertIn("function SalesOfficeMarket.classify", sales_office_market)
-        self.assertIn('require("runtime.robotaxi_service")', (MOD / "control.lua").read_text())
+        self.assertIn('require("runtime.bitertaxi_depot")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.power_queue")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.ui_refresh")', (MOD / "control.lua").read_text())
         self.assertIn('require("runtime.sales_office_market")', (MOD / "control.lua").read_text())
@@ -3086,16 +3126,16 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-premium-ev",
             "bitermotors-mass-market-ev",
             "bitermotors-megatruck",
-            "bitermotors-gigafactory-module",
+            "bitermotors-biterfactory-module",
             "bitermotors-wrecked-ev",
         ]:
             item_line = next(line for line in data.splitlines() if f'item("{name}"' in line)
             self.assertIn(", 1", item_line, name)
-        robotaxi_line = next(line for line in data.splitlines() if 'item("bitermotors-robotaxi-fleet"' in line)
-        self.assertIn(", 5,", robotaxi_line)
+        bitertaxi_line = next(line for line in data.splitlines() if 'item("bitermotors-bitertaxi-fleet"' in line)
+        self.assertIn(", 5,", bitertaxi_line)
         for name in [
-            "bitermotors-gigafactory-building",
-            "bitermotors-gigafactory-v2",
+            "bitermotors-biterfactory-building",
+            "bitermotors-biterfactory-v2",
             "bitermotors-terrestrial-datacenter",
             "bitermotors-orbital-datacenter-core",
             "bitermotors-planetary-grid-controller",

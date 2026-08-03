@@ -161,15 +161,15 @@ local function tint_animation_masks(value, primary, secondary)
   end
 end
 
-local function gigafactory_animation(filename, tier)
-  local activity_slug = tier == 2 and "gigafactory-v2-activity" or "gigafactory-v1-activity"
+local function biterfactory_animation(filename, tier)
+  local activity_slug = tier == 2 and "biterfactory-v2-activity" or "biterfactory-v1-activity"
   local activity_speed = tier == 2 and 0.38 or 0.22
   local loading_speed = tier == 2 and 0.48 or 0.3
   return {
     animation = {
       layers = {
         {
-          filename = filename or "__bitermotors__/graphics/entity/gigafactory/gigafactory.png",
+          filename = filename or "__bitermotors__/graphics/entity/biterfactory/biterfactory.png",
           priority = "high",
           width = 1024,
           height = 1024,
@@ -182,7 +182,7 @@ local function gigafactory_animation(filename, tier)
     },
     working_visualisations = {
       working_animation(activity_slug, 512, 512, 0.325, {0, 0}, activity_speed, false),
-      working_animation("gigafactory-loading-lights", 512, 128, 0.325, {0, 3.9}, loading_speed, true)
+      working_animation("biterfactory-loading-lights", 512, 128, 0.325, {0, 3.9}, loading_speed, true)
     }
   }
 end
@@ -563,12 +563,12 @@ local wrecked_ev_icon = layered_icon64(
 )
 local ai_token_icon = generated_icon("ai-token")
 local agi_model_icon = generated_icon("agi-model")
-local gigafactory_module_icon = generated_icon("gigafactory-module")
-local gigafactory_icon = generated_icon("gigafactory")
-local gigacast_icon = generated_icon("gigacast")
-local gigafactory_v2_icon = {
+local biterfactory_module_icon = generated_icon("biterfactory-module")
+local biterfactory_icon = generated_icon("biterfactory")
+local structural_casting_icon = generated_icon("structural-casting")
+local biterfactory_v2_icon = {
   {
-    icon = "__bitermotors__/graphics/icons/gigafactory.png",
+    icon = "__bitermotors__/graphics/icons/biterfactory.png",
     icon_size = 256,
     tint = {r = 0.72, g = 0.92, b = 1.0, a = 1.0}
   },
@@ -614,19 +614,19 @@ local tandem_solar_array_icon = layered_icon64(
   "__base__/graphics/icons/productivity-module-3.png",
   {r = 0.55, g = 1.0, b = 0.78, a = 1.0}
 )
-local megapack_icon = generated_icon("megapack")
-local grid_megapack_icon = layered_icon64(
-  "__bitermotors__/graphics/icons/megapack.png",
+local grid_battery_icon = generated_icon("grid-battery")
+local grid_battery_array_icon = layered_icon64(
+  "__bitermotors__/graphics/icons/grid-battery.png",
   "__base__/graphics/icons/processing-unit.png",
   {r = 0.62, g = 0.92, b = 1.0, a = 1.0}
 )
-local robotaxi_service_center_icon = generated_icon("robotaxi-service-center")
+local bitertaxi_depot_icon = generated_icon("bitertaxi-depot")
 local megatruck_icon = generated_icon("megatruck")
 
 local runtime_visual_sprites = {}
 for frame_index = 1, 8 do
   for _, visual in pairs({
-    {name = "robotaxi-dispatch-lights", width = 128, height = 64}
+    {name = "bitertaxi-dispatch-lights", width = 128, height = 64}
   }) do
     runtime_visual_sprites[#runtime_visual_sprites + 1] = {
       type = "sprite",
@@ -717,13 +717,13 @@ data:extend(sales_office_showroom_sprites)
 data:extend({
   {
     type = "selection-tool",
-    name = "bitermotors-ev-autopilot-destination",
+    name = "bitermotors-ev-self-driving-destination",
     icon = "__bitermotors__/graphics/icons/mass-market-ev.png",
     icon_size = 256,
     flags = {"only-in-cursor", "not-stackable", "spawnable", "always-show"},
     hidden = true,
     subgroup = "spawnables",
-    order = "z[bitermotors]-c[ev-autopilot-destination]",
+    order = "z[bitermotors]-c[ev-self-driving-destination]",
     stack_size = 1,
     always_include_tiles = true,
     select = {
@@ -761,10 +761,10 @@ data:extend({
   },
   {
     type = "shortcut",
-    name = "bitermotors-navigate-ev",
-    order = "z[bitermotors]-c[navigate]",
+    name = "bitermotors-route-ev",
+    order = "z[bitermotors]-c[route]",
     action = "spawn-item",
-    item_to_spawn = "bitermotors-ev-autopilot-destination",
+    item_to_spawn = "bitermotors-ev-self-driving-destination",
     technology_to_unlock = "bitermotors-autonomous-logistics",
     icon = "__bitermotors__/graphics/icons/mass-market-ev.png",
     icon_size = 256,
@@ -777,14 +777,14 @@ data:extend({
     order = "z[bitermotors]-d[summon]",
     action = "lua",
     technology_to_unlock = "bitermotors-autonomous-logistics",
-    icon = "__bitermotors__/graphics/icons/robotaxi-fleet.png",
+    icon = "__bitermotors__/graphics/icons/bitertaxi-fleet.png",
     icon_size = 256,
-    small_icon = "__bitermotors__/graphics/icons/robotaxi-fleet.png",
+    small_icon = "__bitermotors__/graphics/icons/bitertaxi-fleet.png",
     small_icon_size = 256
   },
   {
     type = "custom-input",
-    name = "bitermotors-ev-autopilot-manual-up",
+    name = "bitermotors-ev-self-driving-manual-up",
     key_sequence = "",
     linked_game_control = "move-up",
     consuming = "none",
@@ -792,7 +792,7 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "bitermotors-ev-autopilot-manual-down",
+    name = "bitermotors-ev-self-driving-manual-down",
     key_sequence = "",
     linked_game_control = "move-down",
     consuming = "none",
@@ -800,7 +800,7 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "bitermotors-ev-autopilot-manual-left",
+    name = "bitermotors-ev-self-driving-manual-left",
     key_sequence = "",
     linked_game_control = "move-left",
     consuming = "none",
@@ -808,7 +808,7 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "bitermotors-ev-autopilot-manual-right",
+    name = "bitermotors-ev-self-driving-manual-right",
     key_sequence = "",
     linked_game_control = "move-right",
     consuming = "none",
@@ -870,7 +870,7 @@ data:extend({
   },
   {
     type = "recipe-category",
-    name = "bitermotors-robotaxi-service"
+    name = "bitermotors-bitertaxi-depot"
   },
   {
     type = "fuel-category",
@@ -934,8 +934,8 @@ data:extend({
   item("bitermotors-wrecked-ev", wrecked_ev_icon, "bitermotors-components", "z[wrecked-ev]", 1, {
     flags = {"always-show"}
   }),
-  item("bitermotors-gigafactory-module", gigafactory_module_icon, "bitermotors-components", "c[gigafactory-module]", 1),
-  item("bitermotors-gigacast", gigacast_icon, "bitermotors-components", "d[gigacast]", 10),
+  item("bitermotors-biterfactory-module", biterfactory_module_icon, "bitermotors-components", "c[biterfactory-module]", 1),
+  item("bitermotors-structural-casting", structural_casting_icon, "bitermotors-components", "d[structural-casting]", 10),
   item("bitermotors-ai-token", ai_token_icon, "science-pack", "h[bitermotors-ai-token]", 1000000, {weight = 1}),
   item("bitermotors-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 10000),
   item("bitermotors-capital-allocation", dollar_icon, "bitermotors-capital", "b[capital-allocation]", 10000),
@@ -959,7 +959,7 @@ data:extend({
   item("bitermotors-mass-market-ev", generated_icon("mass-market-ev"), "transport", "bitermotors-c[mass-market-ev]", 1, {place_result = "bitermotors-mass-market-ev"}),
   item("bitermotors-megatruck", megatruck_icon, "transport", "bitermotors-d[megatruck]", 1, {place_result = "bitermotors-megatruck"}),
   item("bitermotors-autonomy-computer", layered_icon64("__base__/graphics/icons/processing-unit.png", "__base__/graphics/icons/speed-module.png"), "bitermotors-components", "e[autonomy-computer]", 50),
-  item("bitermotors-robotaxi-fleet", generated_icon("robotaxi-fleet"), "transport", "bitermotors-e[robotaxi-fleet]", 5, {place_result = "bitermotors-robotaxi-fleet"}),
+  item("bitermotors-bitertaxi-fleet", generated_icon("bitertaxi-fleet"), "transport", "bitermotors-e[bitertaxi-fleet]", 5, {place_result = "bitermotors-bitertaxi-fleet"}),
 
   item("bitermotors-electric-drive-charge", icon64("__base__/graphics/icons/battery.png"), "other", "z[bitermotors-electric-drive-charge]", 1, {
     hidden = true,
@@ -983,14 +983,14 @@ data:extend({
   item("bitermotors-ev-charging-station-v2", ev_charging_station_v2_icon, "bitermotors-infrastructure", "c[ev-charging-station-v2]", 5, {place_result = "bitermotors-ev-charging-station-v2"}),
   item("bitermotors-ev-charging-station-v3", ev_charging_station_v3_icon, "bitermotors-infrastructure", "d[ev-charging-station-v3]", 5, {place_result = "bitermotors-ev-charging-station-v3"}),
   item("bitermotors-ev-charging-station-v4", ev_charging_station_v4_icon, "bitermotors-infrastructure", "e[ev-charging-station-v4]", 5, {place_result = "bitermotors-ev-charging-station-v4"}),
-  item("bitermotors-gigafactory-building", gigafactory_icon, "bitermotors-infrastructure", "f[gigafactory]", 1, {place_result = "bitermotors-gigafactory-building"}),
-  item("bitermotors-gigafactory-v2", gigafactory_v2_icon, "bitermotors-infrastructure", "g[gigafactory-v2]", 1, {place_result = "bitermotors-gigafactory-v2"}),
+  item("bitermotors-biterfactory-building", biterfactory_icon, "bitermotors-infrastructure", "f[biterfactory]", 1, {place_result = "bitermotors-biterfactory-building"}),
+  item("bitermotors-biterfactory-v2", biterfactory_v2_icon, "bitermotors-infrastructure", "g[biterfactory-v2]", 1, {place_result = "bitermotors-biterfactory-v2"}),
   item("bitermotors-high-density-solar-array", high_density_solar_array_icon, "energy", "bitermotors-a[high-density-solar-array]", 10, {place_result = "bitermotors-high-density-solar-array"}),
   item("bitermotors-tandem-solar-array", tandem_solar_array_icon, "energy", "bitermotors-a2[tandem-solar-array]", 10, {place_result = "bitermotors-tandem-solar-array"}),
-  item("bitermotors-megapack", megapack_icon, "energy", "bitermotors-b[megapack]", 10, {place_result = "bitermotors-megapack"}),
-  item("bitermotors-grid-megapack", grid_megapack_icon, "energy", "bitermotors-b2[grid-megapack]", 10, {place_result = "bitermotors-grid-megapack"}),
+  item("bitermotors-grid-battery", grid_battery_icon, "energy", "bitermotors-b[grid-battery]", 10, {place_result = "bitermotors-grid-battery"}),
+  item("bitermotors-grid-battery-array", grid_battery_array_icon, "energy", "bitermotors-b2[grid-battery-array]", 10, {place_result = "bitermotors-grid-battery-array"}),
   item("bitermotors-terrestrial-datacenter", datacenter_icon, "bitermotors-infrastructure", "f[terrestrial-datacenter]", 1, {place_result = "bitermotors-terrestrial-datacenter"}),
-  item("bitermotors-robotaxi-service-center", robotaxi_service_center_icon, "bitermotors-infrastructure", "g[robotaxi-service-center]", 1, {place_result = "bitermotors-robotaxi-service-center"}),
+  item("bitermotors-bitertaxi-depot", bitertaxi_depot_icon, "bitermotors-infrastructure", "g[bitertaxi-depot]", 1, {place_result = "bitermotors-bitertaxi-depot"}),
   item("bitermotors-cybertrain", generated_icon("cybertrain"), "transport", "bitermotors-f[cybertrain]", 5, {place_result = "bitermotors-cybertrain"}),
   item("bitermotors-cybertrain-charging-stop", generated_icon("cybertrain-charging-stop"), "transport", "bitermotors-g[cybertrain-charging-stop]", 10, {place_result = "bitermotors-cybertrain-charging-stop"}),
   item("bitermotors-orbital-datacenter-core", orbital_datacenter_core_icon, "bitermotors-infrastructure", "h[orbital-datacenter-core]", 1, {place_result = "bitermotors-orbital-datacenter-core"}),
@@ -1072,46 +1072,46 @@ ev_charging_station_v4.selection_box = {{-3, -3}, {3, 3}}
 ev_charging_station_v4.robot_door.animation = generated_entity_picture("ev-charging-station-v4", nil, 0.38)
 ev_charging_station_v4.radius_visualisation_specification = customer_radius_visualisation(256)
 
-local gigafactory = copied_assembler(
+local biterfactory = copied_assembler(
   "assembling-machine-2",
-  "bitermotors-gigafactory-building",
-  gigafactory_icon,
-  "bitermotors-gigafactory-building",
+  "bitermotors-biterfactory-building",
+  biterfactory_icon,
+  "bitermotors-biterfactory-building",
   {"advanced-crafting", "bitermotors-vehicle-assembly", "bitermotors-energy-products", "bitermotors-energy-products-batch", "bitermotors-vertical-integration"},
   "20MW",
   4
 )
-gigafactory.max_health = 5000
-gigafactory.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
-gigafactory.selection_box = {{-4.5, -4.5}, {4.5, 4.5}}
-gigafactory.drawing_box_vertical_extension = 1.0
-gigafactory.energy_source.emissions_per_minute = {pollution = 12}
-gigafactory.module_slots = 8
-gigafactory.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
-gigafactory.effect_receiver = {base_effect = {productivity = 0.5}}
-gigafactory.graphics_set = gigafactory_animation()
-gigafactory.fast_replaceable_group = "bitermotors-gigafactory"
-gigafactory.next_upgrade = "bitermotors-gigafactory-v2"
+biterfactory.max_health = 5000
+biterfactory.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
+biterfactory.selection_box = {{-4.5, -4.5}, {4.5, 4.5}}
+biterfactory.drawing_box_vertical_extension = 1.0
+biterfactory.energy_source.emissions_per_minute = {pollution = 12}
+biterfactory.module_slots = 8
+biterfactory.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
+biterfactory.effect_receiver = {base_effect = {productivity = 0.5}}
+biterfactory.graphics_set = biterfactory_animation()
+biterfactory.fast_replaceable_group = "bitermotors-biterfactory"
+biterfactory.next_upgrade = "bitermotors-biterfactory-v2"
 
-local gigafactory_v2 = copied_assembler(
+local biterfactory_v2 = copied_assembler(
   "assembling-machine-2",
-  "bitermotors-gigafactory-v2",
-  gigafactory_v2_icon,
-  "bitermotors-gigafactory-v2",
+  "bitermotors-biterfactory-v2",
+  biterfactory_v2_icon,
+  "bitermotors-biterfactory-v2",
   {"advanced-crafting", "bitermotors-vehicle-assembly", "bitermotors-mass-vehicle-assembly", "bitermotors-energy-products", "bitermotors-energy-products-batch", "bitermotors-vertical-integration"},
   "30MW",
   8
 )
-gigafactory_v2.max_health = 7500
-gigafactory_v2.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
-gigafactory_v2.selection_box = {{-4.5, -4.5}, {4.5, 4.5}}
-gigafactory_v2.drawing_box_vertical_extension = 1.0
-gigafactory_v2.energy_source.emissions_per_minute = {pollution = 18}
-gigafactory_v2.module_slots = 8
-gigafactory_v2.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
-gigafactory_v2.effect_receiver = {base_effect = {productivity = 1.5}}
-gigafactory_v2.graphics_set = gigafactory_animation("__bitermotors__/graphics/entity/gigafactory/gigafactory-v2.png", 2)
-gigafactory_v2.fast_replaceable_group = "bitermotors-gigafactory"
+biterfactory_v2.max_health = 7500
+biterfactory_v2.collision_box = {{-4.4, -4.4}, {4.4, 4.4}}
+biterfactory_v2.selection_box = {{-4.5, -4.5}, {4.5, 4.5}}
+biterfactory_v2.drawing_box_vertical_extension = 1.0
+biterfactory_v2.energy_source.emissions_per_minute = {pollution = 18}
+biterfactory_v2.module_slots = 8
+biterfactory_v2.allowed_effects = {"consumption", "speed", "productivity", "pollution", "quality"}
+biterfactory_v2.effect_receiver = {base_effect = {productivity = 1.5}}
+biterfactory_v2.graphics_set = biterfactory_animation("__bitermotors__/graphics/entity/biterfactory/biterfactory-v2.png", 2)
+biterfactory_v2.fast_replaceable_group = "bitermotors-biterfactory"
 
 local high_density_solar_array = copied_energy_entity(
   "solar-panel",
@@ -1138,32 +1138,32 @@ tandem_solar_array.minable = {mining_time = 0.2, result = "bitermotors-tandem-so
 tandem_solar_array.production = "3MW"
 tandem_solar_array.next_upgrade = nil
 
-local megapack = copied_energy_entity(
+local grid_battery = copied_energy_entity(
   "accumulator",
   "accumulator",
-  "bitermotors-megapack",
-  megapack_icon,
-  "bitermotors-megapack"
+  "bitermotors-grid-battery",
+  grid_battery_icon,
+  "bitermotors-grid-battery"
 )
-megapack.max_health = 600
-megapack.energy_source.buffer_capacity = "100MJ"
-megapack.energy_source.input_flow_limit = "5MW"
-megapack.energy_source.output_flow_limit = "5MW"
-megapack.fast_replaceable_group = "bitermotors-megapack"
-megapack.next_upgrade = "bitermotors-grid-megapack"
-megapack.chargable_graphics = {
-  picture = generated_entity_picture("megapack", nil, 0.14)
+grid_battery.max_health = 600
+grid_battery.energy_source.buffer_capacity = "100MJ"
+grid_battery.energy_source.input_flow_limit = "5MW"
+grid_battery.energy_source.output_flow_limit = "5MW"
+grid_battery.fast_replaceable_group = "bitermotors-grid-battery"
+grid_battery.next_upgrade = "bitermotors-grid-battery-array"
+grid_battery.chargable_graphics = {
+  picture = generated_entity_picture("grid-battery", nil, 0.14)
 }
-megapack.water_reflection = nil
+grid_battery.water_reflection = nil
 
-local grid_megapack = table.deepcopy(megapack)
-grid_megapack.name = "bitermotors-grid-megapack"
-grid_megapack.icons = grid_megapack_icon
-grid_megapack.minable = {mining_time = 0.2, result = "bitermotors-grid-megapack"}
-grid_megapack.energy_source.buffer_capacity = "1GJ"
-grid_megapack.energy_source.input_flow_limit = "50MW"
-grid_megapack.energy_source.output_flow_limit = "50MW"
-grid_megapack.next_upgrade = nil
+local grid_battery_array = table.deepcopy(grid_battery)
+grid_battery_array.name = "bitermotors-grid-battery-array"
+grid_battery_array.icons = grid_battery_array_icon
+grid_battery_array.minable = {mining_time = 0.2, result = "bitermotors-grid-battery-array"}
+grid_battery_array.energy_source.buffer_capacity = "1GJ"
+grid_battery_array.energy_source.input_flow_limit = "50MW"
+grid_battery_array.energy_source.output_flow_limit = "50MW"
+grid_battery_array.next_upgrade = nil
 
 local terrestrial_datacenter = copied_assembler(
   "assembling-machine-2",
@@ -1183,32 +1183,32 @@ terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-da
   working_animation("datacenter-cooling-fans", 128, 64, 0.55, {0, -1.65}, 0.4, false)
 })
 
-local robotaxi_service_center = table.deepcopy(data.raw["logistic-container"]["passive-provider-chest"])
-robotaxi_service_center.name = "bitermotors-robotaxi-service-center"
-robotaxi_service_center.icons = robotaxi_service_center_icon
-robotaxi_service_center.icon = nil
-robotaxi_service_center.minable = {mining_time = 1, result = "bitermotors-robotaxi-service-center"}
-robotaxi_service_center.inventory_size = 43
-robotaxi_service_center.collision_box = {{-3.9, -3.9}, {3.9, 3.9}}
-robotaxi_service_center.selection_box = {{-4, -4}, {4, 4}}
-robotaxi_service_center.picture = generated_entity_picture("robotaxi-service-center", nil, 0.48)
-robotaxi_service_center.radius_visualisation_specification = customer_radius_visualisation(256)
+local bitertaxi_depot = table.deepcopy(data.raw["logistic-container"]["passive-provider-chest"])
+bitertaxi_depot.name = "bitermotors-bitertaxi-depot"
+bitertaxi_depot.icons = bitertaxi_depot_icon
+bitertaxi_depot.icon = nil
+bitertaxi_depot.minable = {mining_time = 1, result = "bitermotors-bitertaxi-depot"}
+bitertaxi_depot.inventory_size = 43
+bitertaxi_depot.collision_box = {{-3.9, -3.9}, {3.9, 3.9}}
+bitertaxi_depot.selection_box = {{-4, -4}, {4, 4}}
+bitertaxi_depot.picture = generated_entity_picture("bitertaxi-depot", nil, 0.48)
+bitertaxi_depot.radius_visualisation_specification = customer_radius_visualisation(256)
 
-local robotaxi_service_power = copied_assembler(
+local bitertaxi_depot_power = copied_assembler(
   "assembling-machine-2",
-  "bitermotors-robotaxi-service-power",
-  robotaxi_service_center_icon,
+  "bitermotors-bitertaxi-depot-power",
+  bitertaxi_depot_icon,
   nil,
-  {"bitermotors-robotaxi-service"},
+  {"bitermotors-bitertaxi-depot"},
   "10MW",
   1
 )
-robotaxi_service_power.flags = {"not-on-map", "not-blueprintable", "not-deconstructable"}
-robotaxi_service_power.minable = nil
-robotaxi_service_power.selectable_in_game = false
-robotaxi_service_power.collision_mask = {layers = {}}
-robotaxi_service_power.collision_box = {{0, 0}, {0, 0}}
-robotaxi_service_power.selection_box = {{0, 0}, {0, 0}}
+bitertaxi_depot_power.flags = {"not-on-map", "not-blueprintable", "not-deconstructable"}
+bitertaxi_depot_power.minable = nil
+bitertaxi_depot_power.selectable_in_game = false
+bitertaxi_depot_power.collision_mask = {layers = {}}
+bitertaxi_depot_power.collision_box = {{0, 0}, {0, 0}}
+bitertaxi_depot_power.selection_box = {{0, 0}, {0, 0}}
 
 local cybertrain_icon = generated_icon("cybertrain")
 local cybertrain = table.deepcopy(data.raw.locomotive.locomotive)
@@ -1435,11 +1435,11 @@ local electric_vehicles = {
       }}
   ),
   copied_electric_vehicle(
-    "bitermotors-robotaxi-fleet", generated_icon("robotaxi-fleet"),
+    "bitermotors-bitertaxi-fleet", generated_icon("bitertaxi-fleet"),
     {r = 0.85, g = 0.52, b = 0.03, a = 1}, {r = 1.00, g = 0.82, b = 0.18, a = 1},
     {consumption = "270kW", weight = 850, max_health = 650, rotation_multiplier = 1.15,
       braking_multiplier = 6.0, friction_force = 1.75e-3, energy_per_hit_point = 0.8, inventory_size = 30,
-      artwork = "robotaxi-fleet", sprite_scale = 0.68}
+      artwork = "bitertaxi-fleet", sprite_scale = 0.68}
   )
 }
 
@@ -1454,15 +1454,15 @@ data:extend({
   ev_charging_station_v2,
   ev_charging_station_v3,
   ev_charging_station_v4,
-  gigafactory,
-  gigafactory_v2,
+  biterfactory,
+  biterfactory_v2,
   high_density_solar_array,
   tandem_solar_array,
-  megapack,
-  grid_megapack,
+  grid_battery,
+  grid_battery_array,
   terrestrial_datacenter,
-  robotaxi_service_center,
-  robotaxi_service_power,
+  bitertaxi_depot,
+  bitertaxi_depot_power,
   cybertrain,
   cybertrain_charging_stop,
   cybertrain_charging_power,
@@ -1515,43 +1515,43 @@ data:extend({
     {
       {type = "item", name = "bitermotors-ev-charging-station-v3", amount = 1},
       {type = "item", name = "bitermotors-high-density-solar-array", amount = 4},
-      {type = "item", name = "bitermotors-megapack", amount = 4},
+      {type = "item", name = "bitermotors-grid-battery", amount = 4},
       {type = "item", name = "bitermotors-dollar", amount = 200}
     },
     {{type = "item", name = "bitermotors-ev-charging-station-v4", amount = 1}}, 60
   ),
-  recipe("bitermotors-gigafactory-module", {"advanced-crafting"}, "bitermotors-components", "c[gigafactory-module]",
+  recipe("bitermotors-biterfactory-module", {"advanced-crafting"}, "bitermotors-components", "c[biterfactory-module]",
     {
       {type = "item", name = "bitermotors-dollar", amount = 10},
       {type = "item", name = "assembling-machine-2", amount = 5},
       {type = "item", name = "lab", amount = 5},
       {type = "item", name = "refined-concrete", amount = 50}
     },
-    {{type = "item", name = "bitermotors-gigafactory-module", amount = 1}}, 15
+    {{type = "item", name = "bitermotors-biterfactory-module", amount = 1}}, 15
   ),
-  recipe("bitermotors-gigafactory-building", {"advanced-crafting"}, "bitermotors-infrastructure", "d[gigafactory]",
+  recipe("bitermotors-biterfactory-building", {"advanced-crafting"}, "bitermotors-infrastructure", "d[biterfactory]",
     {
-      {type = "item", name = "bitermotors-gigafactory-module", amount = 10},
+      {type = "item", name = "bitermotors-biterfactory-module", amount = 10},
       {type = "item", name = "substation", amount = 2}
     },
-    {{type = "item", name = "bitermotors-gigafactory-building", amount = 1}}, 120
+    {{type = "item", name = "bitermotors-biterfactory-building", amount = 1}}, 120
   ),
-  recipe("bitermotors-gigacast", {"advanced-crafting"}, "bitermotors-components", "d[gigacast]",
+  recipe("bitermotors-structural-casting", {"advanced-crafting"}, "bitermotors-components", "d[structural-casting]",
     {
       {type = "item", name = "electric-furnace", amount = 20},
       {type = "item", name = "steel-plate", amount = 500},
       {type = "item", name = "electric-engine-unit", amount = 50},
       {type = "item", name = "bitermotors-dollar", amount = 50}
     },
-    {{type = "item", name = "bitermotors-gigacast", amount = 1}}, 60
+    {{type = "item", name = "bitermotors-structural-casting", amount = 1}}, 60
   ),
-  recipe("bitermotors-gigafactory-v2", {"advanced-crafting"}, "bitermotors-infrastructure", "e[gigafactory-v2]",
+  recipe("bitermotors-biterfactory-v2", {"advanced-crafting"}, "bitermotors-infrastructure", "e[biterfactory-v2]",
     {
-      {type = "item", name = "bitermotors-gigafactory-building", amount = 1},
-      {type = "item", name = "bitermotors-gigacast", amount = 1},
+      {type = "item", name = "bitermotors-biterfactory-building", amount = 1},
+      {type = "item", name = "bitermotors-structural-casting", amount = 1},
       {type = "item", name = "bitermotors-dollar", amount = 100}
     },
-    {{type = "item", name = "bitermotors-gigafactory-v2", amount = 1}}, 180
+    {{type = "item", name = "bitermotors-biterfactory-v2", amount = 1}}, 180
   ),
   recipe("bitermotors-dirty-nickel-refining", {"chemistry"}, "bitermotors-components", "a-a[dirty-nickel]",
     {
@@ -1810,22 +1810,22 @@ data:extend({
     {{type = "item", name = "bitermotors-tandem-solar-array", amount = 1}}, 10,
     {allow_productivity = false}
   ),
-  recipe("bitermotors-megapack", {"bitermotors-energy-products"}, "energy", "bitermotors-b[megapack]",
+  recipe("bitermotors-grid-battery", {"bitermotors-energy-products"}, "energy", "bitermotors-b[grid-battery]",
     {
       {type = "item", name = "bitermotors-lfp-battery-pack", amount = 12},
       {type = "item", name = "accumulator", amount = 4},
       {type = "item", name = "substation", amount = 1}
     },
-    {{type = "item", name = "bitermotors-megapack", amount = 1}}, 8
+    {{type = "item", name = "bitermotors-grid-battery", amount = 1}}, 8
   ),
-  recipe("bitermotors-grid-megapack", {"advanced-crafting", "bitermotors-energy-products"}, "energy", "bitermotors-b2[grid-megapack]",
+  recipe("bitermotors-grid-battery-array", {"advanced-crafting", "bitermotors-energy-products"}, "energy", "bitermotors-b2[grid-battery-array]",
     {
-      {type = "item", name = "bitermotors-megapack", amount = 1},
+      {type = "item", name = "bitermotors-grid-battery", amount = 1},
       {type = "item", name = "bitermotors-lfp-battery-pack", amount = 24},
       {type = "item", name = "processing-unit", amount = 20},
       {type = "item", name = "bitermotors-dollar", amount = 5}
     },
-    {{type = "item", name = "bitermotors-grid-megapack", amount = 1}}, 20,
+    {{type = "item", name = "bitermotors-grid-battery-array", amount = 1}}, 20,
     {allow_productivity = false}
   ),
   recipe("bitermotors-autonomy-computer", {"advanced-crafting"}, "bitermotors-components", "e[autonomy-computer]",
@@ -1835,24 +1835,24 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-autonomy-computer", amount = 1}}, 6
   ),
-  recipe("bitermotors-robotaxi-fleet", {"bitermotors-mass-vehicle-assembly"}, "transport", "bitermotors-d[robotaxi-fleet]",
+  recipe("bitermotors-bitertaxi-fleet", {"bitermotors-mass-vehicle-assembly"}, "transport", "bitermotors-d[bitertaxi-fleet]",
     {
       {type = "item", name = "bitermotors-mass-market-ev", amount = 4},
       {type = "item", name = "bitermotors-autonomy-computer", amount = 4},
       {type = "item", name = "bitermotors-dollar", amount = 100}
     },
-    {{type = "item", name = "bitermotors-robotaxi-fleet", amount = 1}}, 20
+    {{type = "item", name = "bitermotors-bitertaxi-fleet", amount = 1}}, 20
   ),
-  recipe("bitermotors-robotaxi-service-center", {"advanced-crafting"}, "bitermotors-infrastructure", "g[robotaxi-service-center]",
+  recipe("bitermotors-bitertaxi-depot", {"advanced-crafting"}, "bitermotors-infrastructure", "g[bitertaxi-depot]",
     {
       {type = "item", name = "bitermotors-ev-charging-station-v4", amount = 1},
       {type = "item", name = "roboport", amount = 4},
       {type = "item", name = "processing-unit", amount = 50},
       {type = "item", name = "bitermotors-dollar", amount = 200}
     },
-    {{type = "item", name = "bitermotors-robotaxi-service-center", amount = 1}}, 60
+    {{type = "item", name = "bitermotors-bitertaxi-depot", amount = 1}}, 60
   ),
-  recipe("bitermotors-operate-robotaxis", {"bitermotors-robotaxi-service"}, "bitermotors-capital", "i[operate-robotaxis]",
+  recipe("bitermotors-operate-bitertaxi-fleet", {"bitermotors-bitertaxi-depot"}, "bitermotors-capital", "i[operate-bitertaxi-fleet]",
     {},
     {{type = "item", name = "bitermotors-dollar", amount = 1}}, 100000000
   ),
@@ -1905,7 +1905,7 @@ data:extend({
   ),
   recipe("bitermotors-terrestrial-datacenter", {"advanced-crafting"}, "bitermotors-infrastructure", "f[terrestrial-datacenter]",
     {
-      {type = "item", name = "bitermotors-gigafactory-module", amount = 1},
+      {type = "item", name = "bitermotors-biterfactory-module", amount = 1},
       {type = "item", name = "bitermotors-datacenter-rack", amount = 4},
       {type = "item", name = "substation", amount = 4},
       {type = "item", name = "refined-concrete", amount = 100}
@@ -1941,8 +1941,8 @@ data:extend({
   ),
   recipe("bitermotors-planetary-grid-controller", {"advanced-crafting"}, "bitermotors-infrastructure", "h[planetary-grid-controller]",
     {
-      {type = "item", name = "bitermotors-gigafactory-module", amount = 100},
-      {type = "item", name = "bitermotors-grid-megapack", amount = 10},
+      {type = "item", name = "bitermotors-biterfactory-module", amount = 100},
+      {type = "item", name = "bitermotors-grid-battery-array", amount = 10},
       {type = "item", name = "substation", amount = 100},
       {type = "item", name = "bitermotors-dollar", amount = 10000}
     },
@@ -1981,15 +1981,15 @@ data:extend({
     {{type = "item", name = "bitermotors-dollar", amount = 2}}, 10,
     {icons = sale_icon(megatruck_icon)}
   ),
-  recipe("bitermotors-sell-megapack", {"bitermotors-sales"}, "bitermotors-capital", "e[sell-megapack]",
-    {{type = "item", name = "bitermotors-megapack", amount = 1}},
+  recipe("bitermotors-sell-grid-battery", {"bitermotors-sales"}, "bitermotors-capital", "e[sell-grid-battery]",
+    {{type = "item", name = "bitermotors-grid-battery", amount = 1}},
     {{type = "item", name = "bitermotors-dollar", amount = 20}}, 30,
-    {icons = sale_icon(megapack_icon)}
+    {icons = sale_icon(grid_battery_icon)}
   ),
-  recipe("bitermotors-sell-robotaxi-fleet", {"bitermotors-sales"}, "bitermotors-capital", "h[sell-robotaxi-fleet]",
-    {{type = "item", name = "bitermotors-robotaxi-fleet", amount = 3}},
+  recipe("bitermotors-sell-bitertaxi-fleet", {"bitermotors-sales"}, "bitermotors-capital", "h[sell-bitertaxi-fleet]",
+    {{type = "item", name = "bitermotors-bitertaxi-fleet", amount = 3}},
     {{type = "item", name = "bitermotors-dollar", amount = 1}}, 3,
-    {icons = sale_icon(generated_icon("robotaxi-fleet"))}
+    {icons = sale_icon(generated_icon("bitertaxi-fleet"))}
   ),
 
   recipe("bitermotors-terrestrial-ai-token", {"bitermotors-datacenter"}, "science-pack", "bitermotors-c[terrestrial-ai-token]",
@@ -2067,7 +2067,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-agi-training-dataset", amount = 20000},
       {type = "item", name = "bitermotors-capital-allocation", amount = 100},
-      {type = "item", name = "bitermotors-grid-megapack", amount = 100},
+      {type = "item", name = "bitermotors-grid-battery-array", amount = 100},
       {type = "item", name = "processing-unit", amount = 10000}
     },
     {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 3600,
@@ -2153,8 +2153,8 @@ data:extend({
       "utility-science-pack"
     },
     {
-      unlock("bitermotors-gigacast"),
-      unlock("bitermotors-gigafactory-v2"),
+      unlock("bitermotors-structural-casting"),
+      unlock("bitermotors-biterfactory-v2"),
       unlock("bitermotors-clean-nickel-refining"),
       unlock("bitermotors-clean-lithium-extraction"),
       unlock("bitermotors-clean-phosphate-extraction"),
@@ -2208,7 +2208,7 @@ data:extend({
     30
   ),
   tech("bitermotors-energy-products",
-    "__bitermotors__/graphics/icons/megapack.png",
+    "__bitermotors__/graphics/icons/grid-battery.png",
     {"bitermotors-advanced-battery-chemistry", "electric-energy-accumulators", "solar-energy"},
     {
       unlock("bitermotors-high-density-solar-array"),
@@ -2216,8 +2216,8 @@ data:extend({
       unlock("bitermotors-lfp-cell"),
       unlock("bitermotors-cell-scale-lfp"),
       unlock("bitermotors-lfp-battery-pack"),
-      unlock("bitermotors-megapack"),
-      unlock("bitermotors-sell-megapack")
+      unlock("bitermotors-grid-battery"),
+      unlock("bitermotors-sell-grid-battery")
     },
     200,
     {
@@ -2296,7 +2296,7 @@ data:extend({
     {
       unlock("bitermotors-orbital-ai-token-grid-scale"),
       unlock("bitermotors-tandem-solar-array"),
-      unlock("bitermotors-grid-megapack")
+      unlock("bitermotors-grid-battery-array")
     },
     1500,
     {
@@ -2333,14 +2333,14 @@ data:extend({
     {enabled = false}
   ),
   tech("bitermotors-autonomous-logistics",
-    "__bitermotors__/graphics/icons/robotaxi-service-center.png",
+    "__bitermotors__/graphics/icons/bitertaxi-depot.png",
     {"bitermotors-terrestrial-ai", "logistic-robotics", "production-science-pack", "utility-science-pack"},
     {
-      unlock("bitermotors-robotaxi-fleet"),
+      unlock("bitermotors-bitertaxi-fleet"),
       unlock("bitermotors-ev-charging-station-v4"),
-      unlock("bitermotors-robotaxi-service-center"),
-      unlock("bitermotors-operate-robotaxis"),
-      unlock("bitermotors-sell-robotaxi-fleet")
+      unlock("bitermotors-bitertaxi-depot"),
+      unlock("bitermotors-operate-bitertaxi-fleet"),
+      unlock("bitermotors-sell-bitertaxi-fleet")
     },
     750,
     {
@@ -2417,10 +2417,10 @@ data:extend({
 
 data:extend({
   infinite_tech(
-    "bitermotors-supercharging-power-electronics",
+    "bitermotors-rapid-charging-power-electronics",
     "__base__/graphics/technology/electric-energy-distribution-2.png",
     {"bitermotors-ev-charging-network"},
-    {{type = "nothing", effect_description = {"technology-effect-description.bitermotors-supercharging-power-electronics"}}},
+    {{type = "nothing", effect_description = {"technology-effect-description.bitermotors-rapid-charging-power-electronics"}}},
     "200*2^(L-1)",
     {
       {"automation-science-pack", 1},
@@ -2496,12 +2496,12 @@ data:extend({
     60
   ),
   infinite_tech(
-    "bitermotors-megapack-productivity",
+    "bitermotors-grid-battery-productivity",
     "__base__/graphics/technology/electric-energy-acumulators.png",
     {"bitermotors-energy-products"},
     {
-      {type = "change-recipe-productivity", recipe = "bitermotors-megapack", change = 0.1},
-      {type = "change-recipe-productivity", recipe = "bitermotors-grid-megapack", change = 0.1}
+      {type = "change-recipe-productivity", recipe = "bitermotors-grid-battery", change = 0.1},
+      {type = "change-recipe-productivity", recipe = "bitermotors-grid-battery-array", change = 0.1}
     },
     "750*1.5^(L-1)",
     {
@@ -2569,8 +2569,8 @@ local vertically_integrated_intermediates = {
   "electronic-circuit",
   "advanced-circuit",
   "low-density-structure",
-  "bitermotors-gigafactory-module",
-  "bitermotors-gigacast",
+  "bitermotors-biterfactory-module",
+  "bitermotors-structural-casting",
   "bitermotors-electric-drivetrain",
   "bitermotors-autonomy-computer",
   "bitermotors-datacenter-rack"
@@ -2587,9 +2587,9 @@ for _, recipe_name in pairs({
   "bitermotors-high-density-solar-array",
   "bitermotors-high-density-solar-array-batch",
   "bitermotors-tandem-solar-array",
-  "bitermotors-megapack",
-  "bitermotors-grid-megapack",
-  "bitermotors-robotaxi-fleet"
+  "bitermotors-grid-battery",
+  "bitermotors-grid-battery-array",
+  "bitermotors-bitertaxi-fleet"
 }) do
   data.raw.recipe[recipe_name].allow_productivity = false
 end
@@ -2599,8 +2599,8 @@ for _, recipe_name in pairs({
   "bitermotors-sell-premium-ev",
   "bitermotors-sell-mass-market-ev",
   "bitermotors-sell-megatruck",
-  "bitermotors-sell-megapack",
-  "bitermotors-sell-robotaxi-fleet",
+  "bitermotors-sell-grid-battery",
+  "bitermotors-sell-bitertaxi-fleet",
   "bitermotors-terrestrial-ai-token",
   "bitermotors-orbital-ai-token",
   "bitermotors-orbital-ai-token-cluster",
@@ -2635,8 +2635,8 @@ local customer_vehicle_classes = {
     primary = {r = 0.82, g = 0.82, b = 0.82, a = 1},
     secondary = {r = 1.00, g = 1.00, b = 1.00, a = 1}
   },
-  robotaxi = {
-    label = "Robotaxi",
+  bitertaxi = {
+    label = "Bitertaxi",
     primary = {r = 0.85, g = 0.52, b = 0.03, a = 1},
     secondary = {r = 1.00, g = 0.82, b = 0.18, a = 1}
   },

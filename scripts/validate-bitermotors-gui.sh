@@ -29,7 +29,7 @@ trap cleanup EXIT
 
 mkdir -p "$mods" "$helper" "$tmp/script-output"
 cp "$source_save" "$save"
-ln -s "$repo_root/mod/bitermotors_0.1.0" "$mods/bitermotors_0.1.0"
+ln -s "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
 
 cat > "$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -51,7 +51,7 @@ EOF_MOD_LIST
 cat > "$helper/info.json" <<'EOF_INFO'
 {
   "name": "bitermotors_gui_smoke",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "title": "Biter Motors GUI Smoke Test",
   "author": "Codex",
   "factorio_version": "2.1",
@@ -144,7 +144,7 @@ script.on_event(defines.events.on_tick, function()
 
   remote.call("bitermotors", "grant_energy_jumpstart", player.index)
   local jumpstart_solar = 0
-  local jumpstart_megapacks = 0
+  local jumpstart_grid_batteries = 0
   local jumpstart_substations = 0
   local jumpstart_roboports = 0
   local jumpstart_construction_robots = 0
@@ -158,7 +158,7 @@ script.on_event(defines.events.on_tick, function()
     local inventory = chest.get_inventory(defines.inventory.chest)
     if inventory then
       jumpstart_solar = jumpstart_solar + inventory.get_item_count{name = "bitermotors-high-density-solar-array", quality = "legendary"}
-      jumpstart_megapacks = jumpstart_megapacks + inventory.get_item_count{name = "bitermotors-megapack", quality = "legendary"}
+      jumpstart_grid_batteries = jumpstart_grid_batteries + inventory.get_item_count{name = "bitermotors-grid-battery", quality = "legendary"}
       jumpstart_substations = jumpstart_substations + inventory.get_item_count{name = "substation", quality = "legendary"}
       jumpstart_roboports = jumpstart_roboports + inventory.get_item_count{name = "roboport", quality = "legendary"}
       jumpstart_construction_robots = jumpstart_construction_robots + inventory.get_item_count{name = "construction-robot", quality = "legendary"}
@@ -185,23 +185,23 @@ script.on_event(defines.events.on_tick, function()
   local progress_panel = player.gui.screen.bitermotors_progress_panel
   local progress_has_business = has_caption(progress_panel, "Business")
   local progress_has_current_premium = has_caption(progress_panel, "Premium EVs")
-  local progress_has_future_robotaxi = has_caption(progress_panel, "Robotaxi Service Centers")
+  local progress_has_future_bitertaxi = has_caption(progress_panel, "Bitertaxi Depots")
   local progress_has_future_agi = has_caption(progress_panel, "AGI training")
   local dollars_label = find_named(progress_panel, "bitermotors_dollars_produced_value")
   local dollars_caption = dollars_label and dollars_label.caption
   local solar_productivity_label = find_named(progress_panel, "bitermotors_solar_productivity_level_value")
-  local megapack_productivity_label = find_named(progress_panel, "bitermotors_megapack_productivity_level_value")
+  local grid_battery_productivity_label = find_named(progress_panel, "bitermotors_grid_battery_productivity_level_value")
   local solar_productivity_caption = solar_productivity_label and solar_productivity_label.caption
-  local megapack_productivity_caption = megapack_productivity_label and megapack_productivity_label.caption
-  local gigafactory
+  local grid_battery_productivity_caption = grid_battery_productivity_label and grid_battery_productivity_label.caption
+  local biterfactory
   local datacenter
-  local gigafactory_v2
+  local biterfactory_v2
   local charger
   local charger_panel_created = false
   local datacenter_recipe_selected = false
-  local robotaxi_recipe_selected = false
+  local bitertaxi_recipe_selected = false
   local datacenter_panel_created = false
-  local gigafactory_v2_panel_created = false
+  local biterfactory_v2_panel_created = false
   local charger_shared_build_event_ok = false
   local charger_shared_build_event_error
   local custom_power_alert_ok = false
@@ -238,20 +238,20 @@ script.on_event(defines.events.on_tick, function()
       end
     end
     local position = surface.find_non_colliding_position(
-      "bitermotors-gigafactory-building",
+      "bitermotors-biterfactory-building",
       {office.position.x + 24, office.position.y},
       128,
       1
     )
     if position then
-      gigafactory = surface.create_entity{
-        name = "bitermotors-gigafactory-building",
+      biterfactory = surface.create_entity{
+        name = "bitermotors-biterfactory-building",
         position = position,
         force = player.force
       }
-      if gigafactory then
-        player.opened = gigafactory
-        remote.call("bitermotors", "open_entity_info", player.index, gigafactory)
+      if biterfactory then
+        player.opened = biterfactory
+        remote.call("bitermotors", "open_entity_info", player.index, biterfactory)
       end
     end
     for _, technology_name in pairs({"bitermotors-terrestrial-ai", "bitermotors-autonomous-logistics"}) do
@@ -282,25 +282,25 @@ script.on_event(defines.events.on_tick, function()
         datacenter_panel_created = player.gui.relative.bitermotors_entity_info_panel ~= nil
       end
     end
-    local gigafactory_v2_position = surface.find_non_colliding_position(
-      "bitermotors-gigafactory-v2",
+    local biterfactory_v2_position = surface.find_non_colliding_position(
+      "bitermotors-biterfactory-v2",
       {office.position.x + 56, office.position.y},
       128,
       1
     )
-    if gigafactory_v2_position then
-      gigafactory_v2 = surface.create_entity{
-        name = "bitermotors-gigafactory-v2",
-        position = gigafactory_v2_position,
+    if biterfactory_v2_position then
+      biterfactory_v2 = surface.create_entity{
+        name = "bitermotors-biterfactory-v2",
+        position = biterfactory_v2_position,
         force = player.force
       }
-      if gigafactory_v2 then
-        gigafactory_v2.set_recipe("bitermotors-robotaxi-fleet")
-        robotaxi_recipe_selected = gigafactory_v2.get_recipe()
-          and gigafactory_v2.get_recipe().name == "bitermotors-robotaxi-fleet"
-        player.opened = gigafactory_v2
-        remote.call("bitermotors", "open_entity_info", player.index, gigafactory_v2)
-        gigafactory_v2_panel_created = player.gui.relative.bitermotors_entity_info_panel ~= nil
+      if biterfactory_v2 then
+        biterfactory_v2.set_recipe("bitermotors-bitertaxi-fleet")
+        bitertaxi_recipe_selected = biterfactory_v2.get_recipe()
+          and biterfactory_v2.get_recipe().name == "bitermotors-bitertaxi-fleet"
+        player.opened = biterfactory_v2
+        remote.call("bitermotors", "open_entity_info", player.index, biterfactory_v2)
+        biterfactory_v2_panel_created = player.gui.relative.bitermotors_entity_info_panel ~= nil
       end
     end
   end
@@ -309,7 +309,7 @@ script.on_event(defines.events.on_tick, function()
     status = "checked",
     progress_call_ok = progress_ok,
     jumpstart_solar = jumpstart_solar,
-    jumpstart_megapacks = jumpstart_megapacks,
+    jumpstart_grid_batteries = jumpstart_grid_batteries,
     jumpstart_substations = jumpstart_substations,
     jumpstart_roboports = jumpstart_roboports,
     jumpstart_construction_robots = jumpstart_construction_robots,
@@ -318,13 +318,13 @@ script.on_event(defines.events.on_tick, function()
     progress_panel_created = player.gui.screen.bitermotors_progress_panel ~= nil,
     progress_has_business = progress_has_business,
     progress_has_current_premium = progress_has_current_premium,
-    progress_has_future_robotaxi = progress_has_future_robotaxi,
+    progress_has_future_bitertaxi = progress_has_future_bitertaxi,
     progress_has_future_agi = progress_has_future_agi,
     progress_status = progress_status,
     progress_dollars = progress_status and progress_status.snapshot.dollars_produced,
     progress_dollars_caption = dollars_caption,
     solar_productivity_caption = solar_productivity_caption,
-    megapack_productivity_caption = megapack_productivity_caption,
+    grid_battery_productivity_caption = grid_battery_productivity_caption,
     market_status = market_status,
     progression_integrity_call_ok = integrity_ok,
     progression_integrity = integrity_result,
@@ -337,14 +337,14 @@ script.on_event(defines.events.on_tick, function()
     sales_office_panel_created = sales_office_panel_created,
     charger_created = charger ~= nil,
     charger_panel_created = charger_panel_created,
-    gigafactory_created = gigafactory ~= nil,
-    gigafactory_panel_created = player.gui.relative.bitermotors_entity_info_panel ~= nil,
+    biterfactory_created = biterfactory ~= nil,
+    biterfactory_panel_created = player.gui.relative.bitermotors_entity_info_panel ~= nil,
     datacenter_created = datacenter ~= nil,
     datacenter_recipe_selected = datacenter_recipe_selected,
     datacenter_panel_created = datacenter_panel_created,
-    gigafactory_v2_created = gigafactory_v2 ~= nil,
-    robotaxi_recipe_selected = robotaxi_recipe_selected,
-    gigafactory_v2_panel_created = gigafactory_v2_panel_created,
+    biterfactory_v2_created = biterfactory_v2 ~= nil,
+    bitertaxi_recipe_selected = bitertaxi_recipe_selected,
+    biterfactory_v2_panel_created = biterfactory_v2_panel_created,
     custom_power_alert_ok = custom_power_alert_ok,
     charger_shared_build_event_ok = charger_shared_build_event_ok,
     charger_shared_build_event_error = charger_shared_build_event_ok
@@ -387,21 +387,21 @@ for field in (
     "sales_office_panel_created",
     "charger_created",
     "charger_panel_created",
-    "gigafactory_created",
-    "gigafactory_panel_created",
+    "biterfactory_created",
+    "biterfactory_panel_created",
     "datacenter_created",
     "datacenter_recipe_selected",
     "datacenter_panel_created",
-    "gigafactory_v2_created",
-    "robotaxi_recipe_selected",
-    "gigafactory_v2_panel_created",
+    "biterfactory_v2_created",
+    "bitertaxi_recipe_selected",
+    "biterfactory_v2_panel_created",
     "custom_power_alert_ok",
     "charger_shared_build_event_ok",
     "prototype_roadster_enabled",
 ):
     if not checked.get(field):
         raise SystemExit(f"Biter Motors GUI check failed at {field}: {checked}")
-for field in ("progress_has_future_robotaxi", "progress_has_future_agi"):
+for field in ("progress_has_future_bitertaxi", "progress_has_future_agi"):
     if checked.get(field):
         raise SystemExit(f"Biter Motors progress panel revealed future content at {field}: {checked}")
 integrity = checked.get("progression_integrity", {})
@@ -415,7 +415,7 @@ if checked.get("progress_dollars_caption") != represented_profit:
     raise SystemExit(f"Biter Motors progress panel Dollar caption mismatch: {checked}")
 if checked.get("solar_productivity_caption") not in (None, "Level 0"):
     raise SystemExit(f"Biter Motors progress panel solar productivity caption mismatch: {checked}")
-if checked.get("megapack_productivity_caption") not in (None, "Level 0"):
-    raise SystemExit(f"Biter Motors progress panel Megapack productivity caption mismatch: {checked}")
+if checked.get("grid_battery_productivity_caption") not in (None, "Level 0"):
+    raise SystemExit(f"Biter Motors progress panel Grid Battery productivity caption mismatch: {checked}")
 print("Biter Motors GUI smoke report OK:", json.dumps(checked, sort_keys=True))
 PY

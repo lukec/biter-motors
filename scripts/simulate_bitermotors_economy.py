@@ -18,8 +18,8 @@ from typing import Iterable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DATA_LUA = REPO_ROOT / "mod/bitermotors_0.1.0/data.lua"
-CONTROL_LUA = REPO_ROOT / "mod/bitermotors_0.1.0/control.lua"
+DATA_LUA = REPO_ROOT / "mod/bitermotors_0.1.1/data.lua"
+CONTROL_LUA = REPO_ROOT / "mod/bitermotors_0.1.1/control.lua"
 
 DOLLAR_USD = 10_000
 
@@ -40,7 +40,7 @@ SALES = {
     "premium": Sale("Premium EV", 1, 30),
     "mass_market": Sale("Mass-market EV", 1, 5),
     "megatruck": Sale("Megatruck", 2, 10),
-    "megapack": Sale("Megapack", 20, 30),
+    "grid-battery": Sale("Grid Battery", 20, 30),
 }
 
 
@@ -63,13 +63,13 @@ PROGRESSION = (
         "Advanced Battery Chemistry",
         300,
         "Premium EV production and the battery branch",
-        "300 Dollars funds the first chemistry upgrade without requiring a Megapack economy.",
+        "300 Dollars funds the first chemistry upgrade without requiring a Grid Battery economy.",
     ),
     ProgressionStage(
         "Energy Products",
         200,
         "Advanced Battery Chemistry",
-        "200 Dollars opens the Megapack branch before large-scale EV expansion.",
+        "200 Dollars opens the Grid Battery branch before large-scale EV expansion.",
     ),
     ProgressionStage(
         "V2 Charging Network",
@@ -81,7 +81,7 @@ PROGRESSION = (
         "Capital Scaling",
         600,
         "250 Premium EVs sold",
-        "600 Dollars opens the Gigafactory V2 and mass-market production path.",
+        "600 Dollars opens the Biterfactory V2 and mass-market production path.",
     ),
     ProgressionStage(
         "Terrestrial AI",
@@ -93,7 +93,7 @@ PROGRESSION = (
         "Autonomous Logistics",
         750,
         "Terrestrial AI and logistics science",
-        "750 Dollars unlocks Robotaxi service and the V4 charging tier.",
+        "750 Dollars unlocks Bitertaxi service and the V4 charging tier.",
     ),
     ProgressionStage(
         "Orbital Compute",
@@ -129,7 +129,7 @@ PROGRESSION = (
         "Grid Controller",
         11_050,
         "Planetary Grid researched",
-        "10,000 Dollars, 100 capital-funded Gigafactory Modules, and the 5-Dollar upgrades for 10 Grid Megapacks.",
+        "10,000 Dollars, 100 capital-funded Biterfactory Modules, and the 5-Dollar upgrades for 10 Grid Battery Arrays.",
     ),
 )
 
@@ -140,7 +140,7 @@ class Balance:
     ai_target: float
     final_capital_dollars: float
     final_power_watts: float
-    robotaxi_vehicle_minutes_per_dollar: float
+    bitertaxi_vehicle_minutes_per_dollar: float
     solar_productivity: float
 
 
@@ -149,7 +149,7 @@ CURRENT = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=50_000,
     final_power_watts=10_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=2,
+    bitertaxi_vehicle_minutes_per_dollar=2,
     solar_productivity=0,
 )
 
@@ -158,7 +158,7 @@ RELEASE_CANDIDATE = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=50_000,
     final_power_watts=12_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=2,
+    bitertaxi_vehicle_minutes_per_dollar=2,
     solar_productivity=0.40,
 )
 
@@ -167,7 +167,7 @@ DEMANDING_RELEASE = Balance(
     ai_target=1_000_000_000,
     final_capital_dollars=60_000,
     final_power_watts=12_000_000_000,
-    robotaxi_vehicle_minutes_per_dollar=4,
+    bitertaxi_vehicle_minutes_per_dollar=4,
     solar_productivity=0.40,
 )
 
@@ -183,17 +183,17 @@ TANDEM_SOLAR_PEAK_WATTS = 3_000_000
 NAUVIS_SOLAR_AVERAGE_FRACTION = 0.70
 HD_SOLAR_BATCH_INPUT_DOLLARS = 3
 HD_SOLAR_BATCH_OUTPUT = 4
-MEGAPACK_CAPACITY_JOULES = 100_000_000
-GRID_MEGAPACK_CAPACITY_JOULES = 1_000_000_000
-MEGAPACK_SALE_DOLLARS = 20
+GRID_BATTERY_CAPACITY_JOULES = 100_000_000
+GRID_BATTERY_ARRAY_CAPACITY_JOULES = 1_000_000_000
+GRID_BATTERY_SALE_DOLLARS = 20
 BASE_SOLAR_PANEL_PEAK_WATTS = 60_000
 BASE_ACCUMULATOR_CAPACITY_JOULES = 5_000_000
 BASE_ACCUMULATORS_PER_PANEL = 0.84
 
-GRID_CONTROLLER_CONSUMED_MEGAPACKS = 10
-FINAL_RUN_CONSUMED_MEGAPACKS = 100
-CONSUMED_MEGAPACKS = GRID_CONTROLLER_CONSUMED_MEGAPACKS + FINAL_RUN_CONSUMED_MEGAPACKS
-FINAL_RUN_GRID_MEGAPACK_RECIPE_DOLLARS = FINAL_RUN_CONSUMED_MEGAPACKS * 5
+GRID_CONTROLLER_CONSUMED_GRID_BATTERIES = 10
+FINAL_RUN_CONSUMED_GRID_BATTERIES = 100
+CONSUMED_GRID_BATTERIES = GRID_CONTROLLER_CONSUMED_GRID_BATTERIES + FINAL_RUN_CONSUMED_GRID_BATTERIES
+FINAL_RUN_GRID_BATTERY_ARRAY_RECIPE_DOLLARS = FINAL_RUN_CONSUMED_GRID_BATTERIES * 5
 FINAL_CAPITAL_ALLOCATIONS = 100
 CAPITAL_ALLOCATION_DOLLARS = 500
 FINAL_DATASETS = 20_000
@@ -204,14 +204,14 @@ PRE_ENDGAME_DOLLARS = (
     + RECOMMENDED_PROGRESSION_CONSTRUCTION_DOLLARS
 )
 
-ROBOTAXI_FLEET_DOLLARS = 100
-ROBOTAXI_FLEETS_PER_CENTER = 200
-ROBOTAXI_CENTER_FIXED_DOLLARS = 75 + 200 + 200 + 4
-ROBOTAXI_CENTER_CAPEX = (
-    ROBOTAXI_FLEETS_PER_CENTER * ROBOTAXI_FLEET_DOLLARS
-    + ROBOTAXI_CENTER_FIXED_DOLLARS
+BITERTAXI_FLEET_DOLLARS = 100
+BITERTAXI_FLEETS_PER_CENTER = 200
+BITERTAXI_CENTER_FIXED_DOLLARS = 75 + 200 + 200 + 4
+BITERTAXI_CENTER_CAPEX = (
+    BITERTAXI_FLEETS_PER_CENTER * BITERTAXI_FLEET_DOLLARS
+    + BITERTAXI_CENTER_FIXED_DOLLARS
 )
-ROBOTAXI_CUSTOMERS_PER_FLEET = 5
+BITERTAXI_CUSTOMERS_PER_FLEET = 5
 ORBITAL_CORE_WATTS = 250_000_000
 ORBITAL_PANEL_PEAK_WATTS = 50_000_000
 NAUVIS_ORBIT_SOLAR_MULTIPLIER = 3
@@ -263,17 +263,17 @@ class AiPlan:
 class PowerPlan:
     watts: float
     panels: int
-    megapacks: int
+    grid_batteries: int
     panel_recipe_dollars: float
     solar_research_dollars: float
-    megapack_opportunity_dollars: float
+    grid_battery_opportunity_dollars: float
     panel_tiles: int
-    megapack_tiles: int
+    grid_battery_tiles: int
     tandem_arrays: int
-    grid_megapacks: int
+    grid_battery_arrays: int
     tandem_recipe_dollars: float
-    grid_megapack_recipe_dollars: float
-    grid_megapack_upgrade_opportunity_dollars: float
+    grid_battery_array_recipe_dollars: float
+    grid_battery_array_upgrade_opportunity_dollars: float
 
 
 @dataclass(frozen=True)
@@ -284,11 +284,11 @@ class CampaignPlan:
     pre_endgame_dollars: float
     final_capital_dollars: float
     orbital_panel_dollars: float
-    consumed_megapack_opportunity_dollars: float
+    consumed_grid_battery_opportunity_dollars: float
     direct_dollars: float
     economic_burden_dollars: float
-    megapacks_sold_to_fund_direct_cost: float
-    megapacks_manufactured: float
+    grid_batteries_sold_to_fund_direct_cost: float
+    grid_batteries_manufactured: float
     mass_market_ev_equivalent: float
 
 
@@ -351,26 +351,26 @@ def optimal_ai_plan(balance: Balance) -> AiPlan:
 def power_plan(balance: Balance) -> PowerPlan:
     average_panel_watts = TANDEM_SOLAR_PEAK_WATTS * NAUVIS_SOLAR_AVERAGE_FRACTION
     panels = math.ceil(balance.final_power_watts / average_panel_watts)
-    megapacks = math.ceil(panels * TANDEM_SOLAR_PEAK_WATTS * 70 / GRID_MEGAPACK_CAPACITY_JOULES)
+    grid_batteries = math.ceil(panels * TANDEM_SOLAR_PEAK_WATTS * 70 / GRID_BATTERY_ARRAY_CAPACITY_JOULES)
     tandem_recipe_dollars = panels * 1
-    grid_megapack_recipe_dollars = megapacks * 5
-    grid_megapack_upgrade_opportunity_dollars = megapacks * MEGAPACK_SALE_DOLLARS
+    grid_battery_array_recipe_dollars = grid_batteries * 5
+    grid_battery_array_upgrade_opportunity_dollars = grid_batteries * GRID_BATTERY_SALE_DOLLARS
     productivity_levels = round(balance.solar_productivity / 0.10)
     solar_research_dollars = sum(750 * 1.5**level for level in range(productivity_levels))
     return PowerPlan(
         watts=balance.final_power_watts,
         panels=panels,
-        megapacks=megapacks,
+        grid_batteries=grid_batteries,
         panel_recipe_dollars=tandem_recipe_dollars,
         solar_research_dollars=solar_research_dollars,
-        megapack_opportunity_dollars=megapacks * MEGAPACK_SALE_DOLLARS,
+        grid_battery_opportunity_dollars=grid_batteries * GRID_BATTERY_SALE_DOLLARS,
         panel_tiles=panels * 9,
-        megapack_tiles=megapacks * 4,
+        grid_battery_tiles=grid_batteries * 4,
         tandem_arrays=panels,
-        grid_megapacks=megapacks,
+        grid_battery_arrays=grid_batteries,
         tandem_recipe_dollars=tandem_recipe_dollars,
-        grid_megapack_recipe_dollars=grid_megapack_recipe_dollars,
-        grid_megapack_upgrade_opportunity_dollars=grid_megapack_upgrade_opportunity_dollars,
+        grid_battery_array_recipe_dollars=grid_battery_array_recipe_dollars,
+        grid_battery_array_upgrade_opportunity_dollars=grid_battery_array_upgrade_opportunity_dollars,
     )
 
 
@@ -384,24 +384,24 @@ def campaign_plan(balance: Balance) -> CampaignPlan:
         1 / (1 + balance.solar_productivity),
     )
     orbital_panel_dollars = space_panels * 4 * hd_panel_dollars_per_item
-    consumed_megapack_opportunity = CONSUMED_MEGAPACKS * MEGAPACK_SALE_DOLLARS
+    consumed_grid_battery_opportunity = CONSUMED_GRID_BATTERIES * GRID_BATTERY_SALE_DOLLARS
     direct_dollars = (
         PRE_ENDGAME_DOLLARS
         # The 50,000 milestone-research Dollars are already in PROGRESSION.
         + ai.operating_dollars
         + balance.final_capital_dollars
         + power.tandem_recipe_dollars
-        + power.grid_megapack_recipe_dollars
-        + FINAL_RUN_GRID_MEGAPACK_RECIPE_DOLLARS
+        + power.grid_battery_array_recipe_dollars
+        + FINAL_RUN_GRID_BATTERY_ARRAY_RECIPE_DOLLARS
         + power.solar_research_dollars
         + orbital_panel_dollars
     )
     economic_burden = (
         direct_dollars
-        + power.megapack_opportunity_dollars
-        + consumed_megapack_opportunity
+        + power.grid_battery_opportunity_dollars
+        + consumed_grid_battery_opportunity
     )
-    megapacks_sold = direct_dollars / SALES["megapack"].dollars
+    grid_batteries_sold = direct_dollars / SALES["grid-battery"].dollars
     return CampaignPlan(
         balance=balance.name,
         ai=ai,
@@ -409,30 +409,30 @@ def campaign_plan(balance: Balance) -> CampaignPlan:
         pre_endgame_dollars=PRE_ENDGAME_DOLLARS,
         final_capital_dollars=balance.final_capital_dollars,
         orbital_panel_dollars=orbital_panel_dollars,
-        consumed_megapack_opportunity_dollars=consumed_megapack_opportunity,
+        consumed_grid_battery_opportunity_dollars=consumed_grid_battery_opportunity,
         direct_dollars=direct_dollars,
         economic_burden_dollars=economic_burden,
-        megapacks_sold_to_fund_direct_cost=megapacks_sold,
-        megapacks_manufactured=megapacks_sold + power.grid_megapacks + CONSUMED_MEGAPACKS,
+        grid_batteries_sold_to_fund_direct_cost=grid_batteries_sold,
+        grid_batteries_manufactured=grid_batteries_sold + power.grid_battery_arrays + CONSUMED_GRID_BATTERIES,
         mass_market_ev_equivalent=economic_burden / SALES["mass_market"].dollars,
     )
 
 
-def robotaxi_revenue_per_hour(balance: Balance, centers: int) -> float:
+def bitertaxi_revenue_per_hour(balance: Balance, centers: int) -> float:
     vehicle_minutes_per_minute = (
-        centers * ROBOTAXI_FLEETS_PER_CENTER
+        centers * BITERTAXI_FLEETS_PER_CENTER
     )
-    return vehicle_minutes_per_minute / balance.robotaxi_vehicle_minutes_per_dollar * 60
+    return vehicle_minutes_per_minute / balance.bitertaxi_vehicle_minutes_per_dollar * 60
 
 
-def robotaxi_hours_to_net(balance: Balance, centers: int, target_dollars: float) -> float:
-    capex = centers * ROBOTAXI_CENTER_CAPEX
-    return (target_dollars + capex) / robotaxi_revenue_per_hour(balance, centers)
+def bitertaxi_hours_to_net(balance: Balance, centers: int, target_dollars: float) -> float:
+    capex = centers * BITERTAXI_CENTER_CAPEX
+    return (target_dollars + capex) / bitertaxi_revenue_per_hour(balance, centers)
 
 
-def robotaxi_payback_hours(balance: Balance) -> float:
+def bitertaxi_payback_hours(balance: Balance) -> float:
     """Return the full-center capex payback at the target allocation rate."""
-    return ROBOTAXI_CENTER_CAPEX / robotaxi_revenue_per_hour(balance, 1)
+    return BITERTAXI_CENTER_CAPEX / bitertaxi_revenue_per_hour(balance, 1)
 
 
 def replacement_purchase_capacity(customers: int) -> int:
@@ -507,13 +507,13 @@ def market_markdown() -> str:
 Each living customer can buy one of each consumer vehicle generation over the
 campaign: {models}. A replacement purchase changes the customer's active
 vehicle and has about a 5% chance to create a Wrecked EV, so a developed settlement can keep
-producing demand without requiring a new biter for every sale. Robotaxi fleet
+producing demand without requiring a new biter for every sale. Bitertaxi fleet
 service is recurring revenue and is not part of this consumer replacement
 count.
 
 - Purchase opportunities per represented customer: {MARKET.purchases_per_customer}
 - Replacement purchases: one per consumer vehicle generation
-- 5,000 consumer-sale Robotaxi gate: unchanged
+- 5,000 consumer-sale Bitertaxi gate: unchanged
 - Organic represented-population cap: {MARKET.organic_cap_multiplier}x each settlement's starting representation
 - Organic prospect interval: one represented prospect about every {MARKET.organic_prospect_interval_minutes} minutes while locally served
 - Growth suspension: {MARKET.growth_suspension_scope}; other settlements continue growing
@@ -553,22 +553,22 @@ def campaign_markdown(plans: Iterable[CampaignPlan]) -> str:
         ("Mandatory path + transition construction", lambda p: fmt(p.pre_endgame_dollars)),
         ("Final capital Dollars", lambda p: fmt(p.final_capital_dollars)),
         ("Tandem Solar Arrays", lambda p: fmt(p.power.tandem_arrays)),
-        ("Grid Megapacks", lambda p: fmt(p.power.grid_megapacks)),
+        ("Grid Battery Arrays", lambda p: fmt(p.power.grid_battery_arrays)),
         ("Tandem recipe Dollars", lambda p: fmt(p.power.tandem_recipe_dollars)),
-        ("Grid Megapack recipe Dollars", lambda p: fmt(p.power.grid_megapack_recipe_dollars)),
+        ("Grid Battery Array recipe Dollars", lambda p: fmt(p.power.grid_battery_array_recipe_dollars)),
         ("Solar productivity research Dollars", lambda p: fmt(p.power.solar_research_dollars)),
         ("Orbital solar recipe Dollars", lambda p: fmt(p.orbital_panel_dollars)),
         (
-            "Unsold Megapack opportunity cost",
+            "Unsold Grid Battery opportunity cost",
             lambda p: fmt(
-                p.power.megapack_opportunity_dollars
-                + p.consumed_megapack_opportunity_dollars
+                p.power.grid_battery_opportunity_dollars
+                + p.consumed_grid_battery_opportunity_dollars
             ),
         ),
         ("Direct Dollars required", lambda p: fmt(p.direct_dollars)),
         ("Total economic burden", lambda p: fmt(p.economic_burden_dollars)),
-        ("Megapacks sold to fund direct Dollars", lambda p: fmt(p.megapacks_sold_to_fund_direct_cost)),
-        ("Total Megapacks manufactured", lambda p: fmt(p.megapacks_manufactured)),
+        ("Grid Batteries sold to fund direct Dollars", lambda p: fmt(p.grid_batteries_sold_to_fund_direct_cost)),
+        ("Total Grid Batteries manufactured", lambda p: fmt(p.grid_batteries_manufactured)),
         ("One-Dollar EV equivalent", lambda p: fmt(p.mass_market_ev_equivalent)),
     )
     for label, getter in rows:
@@ -584,20 +584,20 @@ def timing_markdown(plans: Iterable[CampaignPlan]) -> str:
     ]
     for offices in (10, 25, 100):
         hours = [
-            plan.megapacks_sold_to_fund_direct_cost
-            / (SALES["megapack"].dollars_per_hour / SALES["megapack"].dollars * offices)
+            plan.grid_batteries_sold_to_fund_direct_cost
+            / (SALES["grid-battery"].dollars_per_hour / SALES["grid-battery"].dollars * offices)
             for plan in plans
         ]
         lines.append(
-            f"| {offices} saturated Megapack Sales Offices | "
+            f"| {offices} saturated Grid Battery Sales Offices | "
             + " | ".join(f"{fmt(value, 1)} h" for value in hours)
             + " |"
         )
     for centers in (10, 50, 100):
         lines.append(
-            f"| {centers} full Robotaxi Service Centers, net of fleet capex | "
+            f"| {centers} full Bitertaxi Depots, net of fleet capex | "
             + " | ".join(
-                f"{fmt(robotaxi_hours_to_net(balance, centers, plan.direct_dollars), 1)} h"
+                f"{fmt(bitertaxi_hours_to_net(balance, centers, plan.direct_dollars), 1)} h"
                 for balance, plan in zip((CURRENT, RELEASE_CANDIDATE, DEMANDING_RELEASE), plans)
             )
             + " |"
@@ -607,28 +607,28 @@ def timing_markdown(plans: Iterable[CampaignPlan]) -> str:
 
 def construction_markdown() -> str:
     rows = (
-        ("Gigafactory V1", "100", "10 Gigafactory Modules"),
-        ("Gigafactory V2 upgrade", "150", "Gigacast plus the V2 recipe"),
-        ("V3 Supercharger upgrade", "75", "Direct recipe capital"),
+        ("Biterfactory V1", "100", "10 Biterfactory Modules"),
+        ("Biterfactory V2 upgrade", "150", "Structural Casting plus the V2 recipe"),
+        ("V3 Rapid Charger upgrade", "75", "Direct recipe capital"),
         (
-            "V4 Supercharger upgrade",
+            "V4 Solar Charging Hub upgrade",
             "204 direct / 284 effective",
-            "200 Dollars, 4 HD panels, and 4 unsold Megapacks",
+            "200 Dollars, 4 HD panels, and 4 unsold Grid Batteries",
         ),
         (
-            "Full Robotaxi Service Center",
-            f"{fmt(ROBOTAXI_CENTER_CAPEX)} direct / {fmt(ROBOTAXI_CENTER_CAPEX + 80)} effective",
-            "200 fleets, charger chain, center, and four unsold Megapacks",
+            "Full Bitertaxi Depot",
+            f"{fmt(BITERTAXI_CENTER_CAPEX)} direct / {fmt(BITERTAXI_CENTER_CAPEX + 80)} effective",
+            "200 fleets, charger chain, center, and four unsold Grid Batteries",
         ),
         (
             "Planetary Grid Controller",
             "11,050 direct / 11,250 effective",
-            "10,000 direct, 100 capital-funded Gigafactory Modules, and 10 Grid Megapack upgrades",
+            "10,000 direct, 100 capital-funded Biterfactory Modules, and 10 Grid Battery Array upgrades",
         ),
         (
             "AGI final-run storage",
             "500 direct / 2,500 effective",
-            "100 Grid Megapacks, separate from the 1,001-grid-asset target",
+            "100 Grid Battery Arrays, separate from the 1,001-grid-asset target",
         ),
     )
     lines = [
@@ -648,11 +648,11 @@ def practical_progression_markdown() -> str:
         ("Capital Scaling", "250 Premium EVs sold", 600, 600, 0),
         ("Terrestrial AI", "Capital Scaling and Energy Products", 750, 750, 0),
         ("Autonomous Logistics", "Terrestrial AI and logistics science", 750, 750, 0),
-        ("Robotaxi", "5,000 cumulative consumer sales", 0, 0, 0),
+        ("Bitertaxi", "5,000 cumulative consumer sales", 0, 0, 0),
         ("Orbital Compute", "Rocket and orbital prerequisites", 1_500, 1_500, 0),
         ("Orbital milestone research", "1M / 10M / 100M tokens", 50_000, 50_000, 0),
         ("Planetary Grid", "Hyperscale and science", 0, 0, 0),
-        ("Grid Controller", "10 Grid Megapacks and modules", 11_050, 11_050, 0),
+        ("Grid Controller", "10 Grid Battery Arrays and modules", 11_050, 11_050, 0),
         ("Final capital package", "100 allocations", 50_000, 50_000, 0),
     )
     lines = [
@@ -690,7 +690,7 @@ One in-game Dollar represents `${DOLLAR_USD:,}` USD of profit.
 The physical sales gates remain important, but the early capital curve is now
 deliberately forgiving: the first terrestrial research sequence totals 4,500
 Dollars through Orbital Compute, excluding optional branches and construction.
-Once Energy Products unlocks, 20-Dollar Megapack sales can fund later research
+Once Energy Products unlocks, 20-Dollar Grid Battery sales can fund later research
 much more efficiently than one-Dollar EV sales.
 
 {market_markdown()}
@@ -699,19 +699,19 @@ much more efficiently than one-Dollar EV sales.
 
 {practical_progression_markdown()}
 
-This terrestrial path still uses the required consumer sales to open Robotaxi
-and orbital play, then uses Megapack sales as the scalable capital source. The
+This terrestrial path still uses the required consumer sales to open Bitertaxi
+and orbital play, then uses Grid Battery sales as the scalable capital source. The
 late path adds three explicit orbital research bills of 5,000, 15,000, and
 30,000 Dollars. It excludes raw ore throughput, customer acquisition, quality,
 modules, and factory build time, so real playtime will be longer.
 
 Recommended construction around the mass-market transition adds about 275
-Dollars: 100 for Gigafactory V1, 150 more for V2, and 25 for the solar-panel
-production gate. A fully stocked Robotaxi Service Center costs about
-{fmt(ROBOTAXI_CENTER_CAPEX)} Dollars, serves {fmt(ROBOTAXI_FLEETS_PER_CENTER * ROBOTAXI_CUSTOMERS_PER_FLEET)}
-customers, earns {fmt(robotaxi_revenue_per_hour(CURRENT, 1))} Dollars/hour at
+Dollars: 100 for Biterfactory V1, 150 more for V2, and 25 for the solar-panel
+production gate. A fully stocked Bitertaxi Depot costs about
+{fmt(BITERTAXI_CENTER_CAPEX)} Dollars, serves {fmt(BITERTAXI_FLEETS_PER_CENTER * BITERTAXI_CUSTOMERS_PER_FLEET)}
+customers, earns {fmt(bitertaxi_revenue_per_hour(CURRENT, 1))} Dollars/hour at
 the target rate, and pays back its full center-and-fleet capex in about
-{fmt(robotaxi_payback_hours(CURRENT), 1)} hours before other operating costs.
+{fmt(bitertaxi_payback_hours(CURRENT), 1)} hours before other operating costs.
 
 Optional finite branches add 1,250 Dollars: 250 for Megatruck Engineering, 250
 for Battery Material Recovery, and 750 for Cybertrain Logistics. Infinite
@@ -726,11 +726,11 @@ improvement research is intentionally excluded.
 {campaign_markdown(plans)}
 
 The approved 10 GW grid is approximately
-{fmt(plans[0].power.panel_tiles + plans[0].power.megapack_tiles)} occupied tiles
+{fmt(plans[0].power.panel_tiles + plans[0].power.grid_battery_tiles)} occupied tiles
 before substations, access, and factory logistics: {fmt(plans[0].power.tandem_arrays)}
-Tandem Solar Arrays and {fmt(plans[0].power.grid_megapacks)} Grid Megapacks. The
-Grid Megapacks also represent {fmt(plans[0].power.grid_megapack_upgrade_opportunity_dollars)}
-Dollars of normal Megapacks that were upgraded rather than sold.
+Tandem Solar Arrays and {fmt(plans[0].power.grid_battery_arrays)} Grid Battery Arrays. The
+Grid Battery Arrays also represent {fmt(plans[0].power.grid_battery_array_upgrade_opportunity_dollars)}
+Dollars of normal Grid Batteries that were upgraded rather than sold.
 
 The approved design keeps the 1-billion-token objective while changing four
 pressure points:
@@ -739,12 +739,12 @@ pressure points:
 - output rises from 10,000 to 25,000, 50,000, and 100,000 tokens at 1M, 10M,
   100M, and 1B cumulative tokens;
 - final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
-- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Megapacks;
-- Robotaxi service earns 1 Dollar per 2 allocated vehicle-minutes, targeting a
+- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Battery Arrays;
+- Bitertaxi service earns 1 Dollar per 2 allocated vehicle-minutes, targeting a
   roughly 3-4 hour full-center capex payback.
 
 At 10 GW the ending asks for about {fmt(plans[0].power.tandem_arrays)} Tandem
-Arrays and {fmt(plans[0].power.grid_megapacks)} Grid Megapacks. That is still a
+Arrays and {fmt(plans[0].power.grid_battery_arrays)} Grid Battery Arrays. That is still a
 major factory-scale objective, but it is thousands of late assets rather than
 millions of HD panels.
 
@@ -755,20 +755,20 @@ millions of HD panels.
 These times assume every office or service center is continuously saturated.
 Customer growth, reservations, production, transport, and power shortages all
 increase elapsed playtime. The simulator and live mod share the approved
-Robotaxi target rate.
+Bitertaxi target rate.
 
 ## Recommendation
 
 The terrestrial sequence is in the right order of magnitude: hundreds of early
-sales, thousands of mass-market sales, then a 5,000-customer Robotaxi gate. The
+sales, thousands of mass-market sales, then a 5,000-customer Bitertaxi gate. The
 approved late game turns the 1-billion-token objective into a staged capital
 and power campaign without requiring millions of placed power entities.
 
 The approved case and sensitivities bound the effective ending at roughly
 {fmt(plans[1].economic_burden_dollars)}-{fmt(plans[2].economic_burden_dollars)}
 Dollars. The approved case is about {fmt(plans[0].economic_burden_dollars)}
-Dollars, or roughly {fmt(plans[0].megapacks_sold_to_fund_direct_cost)} Megapack
-sales before Robotaxi income. Ten well-utilized Robotaxi Service Centers can
+Dollars, or roughly {fmt(plans[0].grid_batteries_sold_to_fund_direct_cost)} Grid Battery
+sales before Bitertaxi income. Ten well-utilized Bitertaxi Depots can
 meaningfully offset this capital burden, making
 customer-network scale useful without making it mandatory.
 
@@ -783,9 +783,9 @@ deliberately physical.
 ## Model Sources
 
 - Biter Motors recipes and technologies:
-  `mod/bitermotors_0.1.0/data.lua`
-- Runtime sales gates and Robotaxi constants:
-  `mod/bitermotors_0.1.0/control.lua`
+  `mod/bitermotors_0.1.1/data.lua`
+- Runtime sales gates and Bitertaxi constants:
+  `mod/bitermotors_0.1.1/control.lua`
 - Nauvis orbit solar multiplier:
   <https://wiki.factorio.com/Nauvis>
 - Base solar average and accumulator ratio:
@@ -825,7 +825,7 @@ def validate_source_snapshot() -> list[str]:
             'name = "bitermotors-dollar", amount = 2',
             "}}, 10,",
         ),
-        "bitermotors-sell-megapack": (
+        "bitermotors-sell-grid-battery": (
             'name = "bitermotors-dollar", amount = 20',
             "}}, 30,",
         ),
@@ -850,11 +850,11 @@ def validate_source_snapshot() -> list[str]:
             'name = "bitermotors-capital-allocation", amount = 1',
         ),
         "bitermotors-planetary-grid-controller": (
-            'name = "bitermotors-grid-megapack", amount = 10',
+            'name = "bitermotors-grid-battery-array", amount = 10',
             'name = "bitermotors-dollar", amount = 10000',
         ),
         "bitermotors-agi-training-run": (
-            'name = "bitermotors-grid-megapack", amount = 100',
+            'name = "bitermotors-grid-battery-array", amount = 100',
             'name = "bitermotors-agi-training-dataset", amount = 20000',
             'name = "bitermotors-capital-allocation", amount = 100',
             'name = "processing-unit", amount = 10000',
@@ -875,14 +875,14 @@ def validate_source_snapshot() -> list[str]:
         '  {"bitermotors-planetary-grid"},\n'
         '  "10GW"',
         'tandem_solar_array.production = "3MW"',
-        'grid_megapack.energy_source.buffer_capacity = "1GJ"',
-        'grid_megapack.energy_source.input_flow_limit = "50MW"',
+        'grid_battery_array.energy_source.buffer_capacity = "1GJ"',
+        'grid_battery_array.energy_source.input_flow_limit = "50MW"',
         'threshold = 1000000,\n    technology = "bitermotors-orbital-cluster-training"',
         '["bitermotors-orbital-ai-token-hyperscale"] = 100000',
         'high_density_space_solar_panel.production = "50MW"',
         '"750*1.5^(L-1)"',
-        "ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2",
-        "ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5",
+        "BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2",
+        "BITERTAXI_CUSTOMERS_PER_VEHICLE = 5",
     )
     combined = data + "\n" + control
     for fragment in source_fragments:

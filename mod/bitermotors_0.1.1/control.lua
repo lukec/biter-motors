@@ -2,13 +2,14 @@ TimingWheel = require("runtime.timing_wheel")
 PerformanceState = require("runtime.performance_state")
 CustomerAggregates = require("runtime.customer_aggregates")
 BuyerQueues = require("runtime.buyer_queues")
-RobotaxiService = require("runtime.robotaxi_service")
+BitertaxiDepot = require("runtime.bitertaxi_depot")
 PowerQueue = require("runtime.power_queue")
 UiRefresh = require("runtime.ui_refresh")
-EvAutopilot = require("runtime.ev_autopilot")
+EvSelfDriving = require("runtime.ev_self_driving")
 ProductionHistory = require("runtime.production_history")
 ChargerAllocator = require("runtime.charger_allocator")
 SalesOfficeMarket = require("runtime.sales_office_market")
+NamespaceMigration = require("runtime.namespace_migration")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -36,7 +37,7 @@ local STATION_CONFIGS = {
     power_sink_name = "bitermotors-ev-charging-v2-power-sink"
   },
   ["bitermotors-ev-charging-station-v3"] = {
-    display_name = "V3 Supercharger",
+    display_name = "V3 Rapid Charger",
     stalls = 12,
     evs_per_stall = 32,
     power_per_stall_kw = 250,
@@ -45,7 +46,7 @@ local STATION_CONFIGS = {
     power_sink_name = "bitermotors-ev-charging-v3-power-sink"
   },
   ["bitermotors-ev-charging-station-v4"] = {
-    display_name = "V4 Supercharger",
+    display_name = "V4 Solar Charging Hub",
     stalls = 20,
     evs_per_stall = 50,
     power_per_stall_kw = 500,
@@ -57,14 +58,14 @@ local STATION_CONFIGS = {
 local STATION_GRID_CONNECTION_NAME = "bitermotors-ev-charging-grid-connection"
 local SALES_OFFICE_COVERAGE_SHORTCUT = "bitermotors-toggle-sales-office-coverage"
 local BITERMOTORS_PROGRESS_SHORTCUT = "bitermotors-open-progress"
-EV_AUTOPILOT_DESTINATION_ITEM = "bitermotors-ev-autopilot-destination"
-EV_AUTOPILOT_SUMMON_SHORTCUT = "bitermotors-summon-ev"
-EV_AUTOPILOT_TECH_NAME = "bitermotors-autonomous-logistics"
-EV_AUTOPILOT_MANUAL_INPUTS = {
-  ["bitermotors-ev-autopilot-manual-up"] = true,
-  ["bitermotors-ev-autopilot-manual-down"] = true,
-  ["bitermotors-ev-autopilot-manual-left"] = true,
-  ["bitermotors-ev-autopilot-manual-right"] = true
+EV_SELF_DRIVING_DESTINATION_ITEM = "bitermotors-ev-self-driving-destination"
+EV_SELF_DRIVING_SUMMON_SHORTCUT = "bitermotors-summon-ev"
+EV_SELF_DRIVING_TECH_NAME = "bitermotors-autonomous-logistics"
+EV_SELF_DRIVING_MANUAL_INPUTS = {
+  ["bitermotors-ev-self-driving-manual-up"] = true,
+  ["bitermotors-ev-self-driving-manual-down"] = true,
+  ["bitermotors-ev-self-driving-manual-left"] = true,
+  ["bitermotors-ev-self-driving-manual-right"] = true
 }
 local SALES_OFFICE_NAME = "bitermotors-sales-office"
 SALES_OFFICE_LOW_PROSPECT_FRACTION = 0.20
@@ -72,15 +73,15 @@ SALES_OFFICE_LOW_PROSPECT_MINIMUM = 5
 SALES_OFFICE_RESERVATION_RECONCILE_TICKS = 10 * 60
 BUYER_QUEUE_SELF_REPAIR_TICKS = 10 * 60
 local LOGISTIC_SYSTEM_TECH_NAME = "logistic-system"
-local GIGAFACTORY_CONFIGS = {
-  ["bitermotors-gigafactory-building"] = {
-    display_name = "Gigafactory",
+local BITERFACTORY_CONFIGS = {
+  ["bitermotors-biterfactory-building"] = {
+    display_name = "Biterfactory",
     power = "20 MW",
     default_product = "Premium EV",
     productivity = "4x crafting speed; 50% built-in productivity"
   },
-  ["bitermotors-gigafactory-v2"] = {
-    display_name = "Gigafactory V2",
+  ["bitermotors-biterfactory-v2"] = {
+    display_name = "Biterfactory V2",
     power = "30 MW",
     default_product = "Mass-market EV",
     productivity = "2x crafting speed; 150% built-in productivity"
@@ -101,20 +102,20 @@ local GIGAFACTORY_CONFIGS = {
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "bitermotors-high-density-solar-array"
 local HIGH_DENSITY_SOLAR_BATCH_RECIPE = "bitermotors-high-density-solar-array-batch"
 TANDEM_SOLAR_ARRAY_NAME = "bitermotors-tandem-solar-array"
-local MEGAPACK_NAME = "bitermotors-megapack"
-GRID_MEGAPACK_NAME = "bitermotors-grid-megapack"
-MEGAPACK_SALE_RECIPE = "bitermotors-sell-megapack"
+local GRID_BATTERY_NAME = "bitermotors-grid-battery"
+GRID_BATTERY_ARRAY_NAME = "bitermotors-grid-battery-array"
+GRID_BATTERY_SALE_RECIPE = "bitermotors-sell-grid-battery"
 local TERRESTRIAL_DATACENTER_NAME = "bitermotors-terrestrial-datacenter"
-ROBOTAXI_SERVICE_CENTER_NAME = "bitermotors-robotaxi-service-center"
-ROBOTAXI_SERVICE_RECIPE = "bitermotors-operate-robotaxis"
-ROBOTAXI_SERVICE_POWER_NAME = "bitermotors-robotaxi-service-power"
-ROBOTAXI_ITEM_NAME = "bitermotors-robotaxi-fleet"
-ROBOTAXI_SERVICE_RADIUS = 256
-ROBOTAXI_CUSTOMERS_PER_VEHICLE = 5
-ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2
-ROBOTAXI_ATTRITION_VEHICLE_HOURS = 60
-ROBOTAXI_SAFETY_RIDES_SCALE = 1000
-ROBOTAXI_ROUTINE_WEAR_FLOOR = 0.20
+BITERTAXI_DEPOT_NAME = "bitermotors-bitertaxi-depot"
+BITERTAXI_DEPOT_RECIPE = "bitermotors-operate-bitertaxi-fleet"
+BITERTAXI_DEPOT_POWER_NAME = "bitermotors-bitertaxi-depot-power"
+BITERTAXI_ITEM_NAME = "bitermotors-bitertaxi-fleet"
+BITERTAXI_DEPOT_RADIUS = 256
+BITERTAXI_CUSTOMERS_PER_VEHICLE = 5
+BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2
+BITERTAXI_ATTRITION_VEHICLE_HOURS = 60
+BITERTAXI_SAFETY_RIDES_SCALE = 1000
+BITERTAXI_ROUTINE_WEAR_FLOOR = 0.20
 local RESERVATION_NAME = "bitermotors-ev-reservation"
 WRECKED_EV_NAME = "bitermotors-wrecked-ev"
 DAMAGED_HIGH_ENERGY_PACK_NAME = "bitermotors-damaged-high-energy-battery-pack"
@@ -165,26 +166,26 @@ PLAYER_VEHICLE_BATTERY_SCRAP = {
   [PREMIUM_EV_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
   ["bitermotors-mass-market-ev"] = {[DAMAGED_LFP_PACK_NAME] = 4},
   ["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 4, [DAMAGED_LFP_PACK_NAME] = 8},
-  [ROBOTAXI_ITEM_NAME] = {[DAMAGED_LFP_PACK_NAME] = 16},
+  [BITERTAXI_ITEM_NAME] = {[DAMAGED_LFP_PACK_NAME] = 16},
   [CYBERTRAIN_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}
 }
 PREMIUM_PILOT_PRODUCTION_GATE = 100
 ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE = 250
 FOUNDRY_POWER_GATE = {
   solar_panels = 25,
-  megapacks = 5
+  grid_batteries = 5
 }
 local FIRST_PROTOTYPE_SALE_RECIPE = "bitermotors-sell-prototype-roadster"
 local PREMIUM_EV_SALE_RECIPE = "bitermotors-sell-premium-ev"
 local MASS_MARKET_EV_SALE_RECIPE = "bitermotors-sell-mass-market-ev"
 MEGATRUCK_SALE_RECIPE = "bitermotors-sell-megatruck"
-local ROBOTAXI_SALE_RECIPE = "bitermotors-sell-robotaxi-fleet"
+local BITERTAXI_SALE_RECIPE = "bitermotors-sell-bitertaxi-fleet"
 CUSTOMER_EV_SALE_RECIPES = {
   [FIRST_PROTOTYPE_SALE_RECIPE] = {item = "bitermotors-prototype-roadster", vehicles = 1},
   [PREMIUM_EV_SALE_RECIPE] = {item = "bitermotors-premium-ev", vehicles = 1},
   [MASS_MARKET_EV_SALE_RECIPE] = {item = "bitermotors-mass-market-ev", vehicles = 1},
   [MEGATRUCK_SALE_RECIPE] = {item = "bitermotors-megatruck", vehicles = 1},
-  [ROBOTAXI_SALE_RECIPE] = {item = "bitermotors-robotaxi-fleet", vehicles = 3}
+  [BITERTAXI_SALE_RECIPE] = {item = "bitermotors-bitertaxi-fleet", vehicles = 3}
 }
 CUSTOMER_VEHICLE_REPLACEMENT_ORDER = {
   "bitermotors-prototype-roadster",
@@ -220,12 +221,12 @@ EV_SALES_GATES = {
     recipes = {"bitermotors-megatruck", "bitermotors-sell-megatruck"},
     label = "Megatruck"
   },
-  robotaxi = {
+  bitertaxi = {
     total_consumer_sales = true,
     threshold = 5000,
     technology = "bitermotors-autonomous-logistics",
-    recipes = {"bitermotors-robotaxi-fleet"},
-    label = "Robotaxi"
+    recipes = {"bitermotors-bitertaxi-fleet"},
+    label = "Bitertaxi"
   }
 }
 EV_SALES_GATED_RECIPES = {}
@@ -282,7 +283,7 @@ CUSTOMER_COMMUTE_INTERVALS = {
   ["bitermotors-premium-ev"] = 6 * 60 * 60,
   ["bitermotors-mass-market-ev"] = 5 * 60 * 60,
   ["bitermotors-megatruck"] = 8 * 60 * 60,
-  ["bitermotors-robotaxi-fleet"] = 7 * 60 * 60
+  ["bitermotors-bitertaxi-fleet"] = 7 * 60 * 60
 }
 AI_EFFICIENCY_THRESHOLDS = {1000, 10000, 100000, 1000000, 10000000, 100000000}
 ORBITAL_AI_MILESTONES = {
@@ -337,7 +338,7 @@ BITERMOTORS_REGISTRY_ENTITY_NAMES = {
   "bitermotors-ev-charging-station-v3",
   "bitermotors-ev-charging-station-v4",
   "bitermotors-sales-office",
-  "bitermotors-robotaxi-service-center",
+  "bitermotors-bitertaxi-depot",
   "bitermotors-terrestrial-datacenter",
   ORBITAL_DATACENTER_CORE_NAME
 }
@@ -407,7 +408,7 @@ BITERMOTORS_START_DEBRIS_ITEMS = {
 }
 BITERMOTORS_ENERGY_JUMPSTART_ITEMS = {
   ["bitermotors-high-density-solar-array"] = 54,
-  ["bitermotors-megapack"] = 24,
+  ["bitermotors-grid-battery"] = 24,
   ["substation"] = 40,
   ["roboport"] = 20,
   ["passive-provider-chest"] = 50,
@@ -437,7 +438,7 @@ local BITERMOTORS_RUNTIME_VISUAL_CONFIGS = {
     offset = {1.03, -1.18},
     scale = 0.5
   },
-  ["bitermotors-robotaxi-service-center"] = {sprite_prefix = "bitermotors-robotaxi-dispatch-lights-frame-", offset = {0, -0.55}, scale = 0.9}
+  ["bitermotors-bitertaxi-depot"] = {sprite_prefix = "bitermotors-bitertaxi-dispatch-lights-frame-", offset = {0, -0.55}, scale = 0.9}
 }
 CHARGER_STALL_VISUAL_LAYOUTS = {
   ["bitermotors-ev-charging-station"] = {columns = 4, spacing_x = 0.7, spacing_y = 0.7, offset_y = -0.35, scale = 0.75},
@@ -447,13 +448,13 @@ CHARGER_STALL_VISUAL_LAYOUTS = {
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
-MEGAPACK_SALES_RADIUS = 384
-MEGAPACK_INITIAL_ADOPTION_FRACTION = 0.05
-MEGAPACK_REFERRAL_FRACTION = 0.05
-MEGAPACK_REFERRAL_WAVE_TICKS = 5 * 60 * 60
-MEGAPACK_BUYER_MAX_ACTIVE = 32
-MEGAPACK_BUYER_STARTS_PER_SECOND = 4
-MEGAPACK_BUYER_PATH_TIMEOUT_TICKS = 3 * 60 * 60
+GRID_BATTERY_SALES_RADIUS = 384
+GRID_BATTERY_INITIAL_ADOPTION_FRACTION = 0.05
+GRID_BATTERY_REFERRAL_FRACTION = 0.05
+GRID_BATTERY_REFERRAL_WAVE_TICKS = 5 * 60 * 60
+GRID_BATTERY_BUYER_MAX_ACTIVE = 32
+GRID_BATTERY_BUYER_STARTS_PER_SECOND = 4
+GRID_BATTERY_BUYER_PATH_TIMEOUT_TICKS = 3 * 60 * 60
 local CUSTOMER_MOBILE_SERVICE_RADIUS = 48
 local CUSTOMER_WANDER_RADIUS = 8
 local ENEMY_RELEASE_WANDER_TICKS = 60
@@ -474,25 +475,25 @@ CUSTOMER_VEHICLE_CLASS_BY_ITEM = {
   ["bitermotors-premium-ev"] = "premium",
   ["bitermotors-mass-market-ev"] = "mass-market",
   ["bitermotors-megatruck"] = "megatruck",
-  ["bitermotors-robotaxi-fleet"] = "robotaxi"
+  ["bitermotors-bitertaxi-fleet"] = "bitertaxi"
 }
 ELECTRIC_VEHICLE_BATTERIES = {
   ["bitermotors-prototype-roadster"] = 1,
   ["bitermotors-premium-ev"] = 2,
   ["bitermotors-mass-market-ev"] = 1,
   ["bitermotors-megatruck"] = 4,
-  ["bitermotors-robotaxi-fleet"] = 2
+  ["bitermotors-bitertaxi-fleet"] = 2
 }
 ELECTRIC_DRIVE_FUEL_NAME = "bitermotors-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000
 EV_BATTERY_POPUP_TICKS = 2 * 60
 EV_BATTERY_POPUP_FADE_TICKS = 60
-SUPERCHARGING_TECH_NAME = "bitermotors-supercharging-power-electronics"
+RAPID_CHARGING_TECH_NAME = "bitermotors-rapid-charging-power-electronics"
 LONG_RANGE_BATTERY_TECH_NAME = "bitermotors-long-range-battery"
 PREMIUM_AUDIO_TECH_NAME = "bitermotors-premium-audio-systems"
 CUSTOMER_REFERRAL_TECH_NAME = "bitermotors-customer-referral-program"
 SOLAR_PRODUCTIVITY_TECH_NAME = "bitermotors-high-density-solar-productivity"
-MEGAPACK_PRODUCTIVITY_TECH_NAME = "bitermotors-megapack-productivity"
+GRID_BATTERY_PRODUCTIVITY_TECH_NAME = "bitermotors-grid-battery-productivity"
 local BITER_SETTLEMENT_NAMES = {
   ["biter-spawner"] = true,
   ["spitter-spawner"] = true
@@ -881,12 +882,12 @@ end
 
 function continuous_improvement_levels(force)
   return {
-    supercharging = continuous_improvement_level(force, SUPERCHARGING_TECH_NAME),
+    rapid_charging = continuous_improvement_level(force, RAPID_CHARGING_TECH_NAME),
     battery = continuous_improvement_level(force, LONG_RANGE_BATTERY_TECH_NAME),
     audio = continuous_improvement_level(force, PREMIUM_AUDIO_TECH_NAME),
     referrals = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME),
     solar_productivity = continuous_improvement_level(force, SOLAR_PRODUCTIVITY_TECH_NAME),
-    megapack_productivity = continuous_improvement_level(force, MEGAPACK_PRODUCTIVITY_TECH_NAME)
+    grid_battery_productivity = continuous_improvement_level(force, GRID_BATTERY_PRODUCTIVITY_TECH_NAME)
   }
 end
 
@@ -1757,15 +1758,15 @@ function feed_tracked_electric_vehicles()
   end
 end
 
-function ev_autopilot_runtime()
-  storage.bitermotors_ev_autopilot = EvAutopilot.ensure(storage.bitermotors_ev_autopilot)
-  return storage.bitermotors_ev_autopilot
+function ev_self_driving_runtime()
+  storage.bitermotors_ev_self_driving = EvSelfDriving.ensure(storage.bitermotors_ev_self_driving)
+  return storage.bitermotors_ev_self_driving
 end
 
-function is_ev_autopilot_eligible(entity)
+function is_ev_self_driving_eligible(entity)
   return is_electric_vehicle(entity)
     and entity.unit_number
-    and EvAutopilot.is_eligible_name(entity.name)
+    and EvSelfDriving.is_eligible_name(entity.name)
 end
 
 function player_is_vehicle_driver(player, vehicle)
@@ -1774,7 +1775,7 @@ function player_is_vehicle_driver(player, vehicle)
   return driver == player or driver == player.character
 end
 
-function set_ev_autopilot_status(vehicle, text, diode)
+function set_ev_self_driving_status(vehicle, text, diode)
   if not vehicle or not vehicle.valid then return end
   pcall(function()
     vehicle.custom_status = {
@@ -1784,19 +1785,19 @@ function set_ev_autopilot_status(vehicle, text, diode)
   end)
 end
 
-function clear_ev_autopilot_status(vehicle)
+function clear_ev_self_driving_status(vehicle)
   if vehicle and vehicle.valid then pcall(function() vehicle.custom_status = nil end) end
 end
 
-function destroy_ev_autopilot_rendering(state)
+function destroy_ev_self_driving_rendering(state)
   for _, object in pairs(state and state.render_objects or {}) do
     if object and object.valid then object.destroy() end
   end
   if state then state.render_objects = {} end
 end
 
-function draw_ev_autopilot_destination(state)
-  destroy_ev_autopilot_rendering(state)
+function draw_ev_self_driving_destination(state)
+  destroy_ev_self_driving_rendering(state)
   local player = state.player_index and game.get_player(state.player_index)
   local vehicle = state.vehicle
   if not player or not vehicle or not vehicle.valid or not state.goal then return end
@@ -1822,7 +1823,7 @@ function draw_ev_autopilot_destination(state)
       players = {player}
     },
     rendering.draw_text{
-      text = state.mode == "summon" and "SUMMON" or "NAVIGATE",
+      text = state.mode == "summon" and "SUMMON" or "ROUTE",
       color = {r = 0.55, g = 1.0, b = 0.72, a = 1},
       alignment = "center",
       target = state.goal,
@@ -1835,27 +1836,27 @@ function draw_ev_autopilot_destination(state)
 end
 
 function remember_player_ev(player, vehicle)
-  if not player or not player.valid or not is_ev_autopilot_eligible(vehicle) then return false end
-  local runtime = ev_autopilot_runtime()
+  if not player or not player.valid or not is_ev_self_driving_eligible(vehicle) then return false end
+  local runtime = ev_self_driving_runtime()
   local active = runtime.active[vehicle.unit_number]
   if active and active.player_index ~= player.index then
-    cancel_ev_autopilot(vehicle.unit_number, "another player took control", {notify = true})
+    cancel_ev_self_driving(vehicle.unit_number, "another player took control", {notify = true})
   end
-  EvAutopilot.remember_vehicle(runtime, player.index, vehicle.unit_number)
+  EvSelfDriving.remember_vehicle(runtime, player.index, vehicle.unit_number)
   return true
 end
 
-function remove_ev_from_autopilot_history(unit_number)
+function remove_ev_from_self_driving_history(unit_number)
   if not unit_number then return end
-  local runtime = ev_autopilot_runtime()
+  local runtime = ev_self_driving_runtime()
   if runtime.active[unit_number] then
-    cancel_ev_autopilot(unit_number, "vehicle is no longer available", {notify = true})
+    cancel_ev_self_driving(unit_number, "vehicle is no longer available", {notify = true})
   end
-  EvAutopilot.forget_vehicle(runtime, unit_number)
+  EvSelfDriving.forget_vehicle(runtime, unit_number)
 end
 
-function cancel_player_ev_autopilots(player_index, reason, notify)
-  local runtime = ev_autopilot_runtime()
+function cancel_player_ev_self_drivings(player_index, reason, notify)
+  local runtime = ev_self_driving_runtime()
   local unit_numbers = {}
   for unit_number, state in pairs(runtime.active) do
     if state.player_index == player_index then
@@ -1863,13 +1864,13 @@ function cancel_player_ev_autopilots(player_index, reason, notify)
     end
   end
   for _, unit_number in pairs(unit_numbers) do
-    cancel_ev_autopilot(unit_number, reason, {notify = notify == true})
+    cancel_ev_self_driving(unit_number, reason, {notify = notify == true})
   end
 end
 
-function remove_player_ev_autopilot_history(player_index)
-  local runtime = ev_autopilot_runtime()
-  cancel_player_ev_autopilots(player_index, "controlling player disconnected", false)
+function remove_player_ev_self_driving_history(player_index)
+  local runtime = ev_self_driving_runtime()
+  cancel_player_ev_self_drivings(player_index, "controlling player disconnected", false)
   for _, unit_number in pairs(runtime.recent_by_player[player_index] or {}) do
     if runtime.owner_by_vehicle[unit_number] == player_index then
       runtime.owner_by_vehicle[unit_number] = nil
@@ -1878,12 +1879,12 @@ function remove_player_ev_autopilot_history(player_index)
   runtime.recent_by_player[player_index] = nil
 end
 
-function reset_active_ev_autopilots()
-  local runtime = ev_autopilot_runtime()
+function reset_active_ev_self_drivings()
+  local runtime = ev_self_driving_runtime()
   local unit_numbers = {}
   for unit_number in pairs(runtime.active) do unit_numbers[#unit_numbers + 1] = unit_number end
   for _, unit_number in pairs(unit_numbers) do
-    cancel_ev_autopilot(unit_number, nil, {notify = false, record = false})
+    cancel_ev_self_driving(unit_number, nil, {notify = false, record = false})
   end
   runtime.active = {}
   runtime.order = {}
@@ -1891,21 +1892,21 @@ function reset_active_ev_autopilots()
   runtime.path_requests = {}
 end
 
-function ev_autopilot_charge_ratio(vehicle)
+function ev_self_driving_charge_ratio(vehicle)
   local energy, capacity = vehicle_total_charge_energy(vehicle)
   return capacity > 0 and energy / capacity or 0
 end
 
-function ev_autopilot_nearest_enemy(surface, force, position, radius)
+function ev_self_driving_nearest_enemy(surface, force, position, radius)
   if not surface or not surface.valid then return nil end
   return surface.find_nearest_enemy{
     position = position,
-    max_distance = radius or EvAutopilot.config.safety_radius,
+    max_distance = radius or EvSelfDriving.config.safety_radius,
     force = force
   }
 end
 
-function ev_autopilot_path_is_safe(state, path)
+function ev_self_driving_path_is_safe(state, path)
   local vehicle = state.vehicle
   if not vehicle or not vehicle.valid then return false, "vehicle is no longer available" end
   for _, waypoint in pairs(path or {}) do
@@ -1915,18 +1916,18 @@ function ev_autopilot_path_is_safe(state, path)
   end
   local stride = math.max(1, math.ceil(#path / 64))
   for index = 1, #path, stride do
-    local enemy = ev_autopilot_nearest_enemy(
+    local enemy = ev_self_driving_nearest_enemy(
       vehicle.surface,
       vehicle.force,
       path[index].position,
-      EvAutopilot.config.safety_radius
+      EvSelfDriving.config.safety_radius
     )
     if enemy then return false, "hostile activity makes the route unsafe" end
   end
   return true
 end
 
-function ev_autopilot_safe_goal(vehicle, requested, stand_off)
+function ev_self_driving_safe_goal(vehicle, requested, stand_off)
   local target = {x = requested.x, y = requested.y}
   if stand_off and stand_off > 0 then
     local dx = vehicle.position.x - target.x
@@ -1947,14 +1948,14 @@ function ev_autopilot_safe_goal(vehicle, requested, stand_off)
   )
 end
 
-function cancel_ev_autopilot(unit_number, reason, options)
+function cancel_ev_self_driving(unit_number, reason, options)
   options = options or {}
-  local runtime = ev_autopilot_runtime()
+  local runtime = ev_self_driving_runtime()
   local state = runtime.active[unit_number]
   if not state then return false end
   runtime.active[unit_number] = nil
   if state.path_request_id then runtime.path_requests[state.path_request_id] = nil end
-  destroy_ev_autopilot_rendering(state)
+  destroy_ev_self_driving_rendering(state)
   local vehicle = state.vehicle
   if vehicle and vehicle.valid then
     if not options.manual then
@@ -1963,11 +1964,11 @@ function cancel_ev_autopilot(unit_number, reason, options)
         direction = defines.riding.direction.straight
       }
     end
-    clear_ev_autopilot_status(vehicle)
+    clear_ev_self_driving_status(vehicle)
   end
   local player = state.player_index and game.get_player(state.player_index)
   if player and options.notify ~= false and reason then
-    local prefix = options.completed and "[Biter Motors] " or "[Biter Motors] Autopilot canceled: "
+    local prefix = options.completed and "[Biter Motors] " or "[Biter Motors] Self-driving canceled: "
     player.print(prefix .. reason, options.completed
       and {r = 0.35, g = 1.0, b = 0.55}
       or {r = 1.0, g = 0.65, b = 0.20})
@@ -1985,27 +1986,27 @@ function cancel_ev_autopilot(unit_number, reason, options)
   return true
 end
 
-function request_ev_autopilot_path(state)
+function request_ev_self_driving_path(state)
   local vehicle = state and state.vehicle
   if not vehicle or not vehicle.valid then
-    if state then cancel_ev_autopilot(state.unit_number, "vehicle is no longer available", {notify = true}) end
+    if state then cancel_ev_self_driving(state.unit_number, "vehicle is no longer available", {notify = true}) end
     return false
   end
-  if ev_autopilot_nearest_enemy(
+  if ev_self_driving_nearest_enemy(
     vehicle.surface,
     vehicle.force,
     vehicle.position,
-    EvAutopilot.config.safety_radius
-  ) or ev_autopilot_nearest_enemy(
+    EvSelfDriving.config.safety_radius
+  ) or ev_self_driving_nearest_enemy(
     vehicle.surface,
     vehicle.force,
     state.goal,
-    EvAutopilot.config.safety_radius
+    EvSelfDriving.config.safety_radius
   ) then
-    cancel_ev_autopilot(state.unit_number, "hostile activity makes the route unsafe", {notify = true})
+    cancel_ev_self_driving(state.unit_number, "hostile activity makes the route unsafe", {notify = true})
     return false
   end
-  local runtime = ev_autopilot_runtime()
+  local runtime = ev_self_driving_runtime()
   if state.path_request_id then runtime.path_requests[state.path_request_id] = nil end
   local ok, request_id = pcall(function()
     return vehicle.surface.request_path{
@@ -2021,7 +2022,7 @@ function request_ev_autopilot_path(state)
     }
   end)
   if not ok or not request_id then
-    cancel_ev_autopilot(state.unit_number, "route request failed", {notify = true})
+    cancel_ev_self_driving(state.unit_number, "route request failed", {notify = true})
     return false
   end
   state.path_request_id = request_id
@@ -2029,18 +2030,18 @@ function request_ev_autopilot_path(state)
   state.path = nil
   state.next_path_tick = nil
   runtime.path_requests[request_id] = state.unit_number
-  set_ev_autopilot_status(vehicle, "Autopilot: calculating route", defines.entity_status_diode.yellow)
+  set_ev_self_driving_status(vehicle, "Self-driving: calculating route", defines.entity_status_diode.yellow)
   return true
 end
 
-function activate_ev_autopilot(vehicle, goal, mode, player_index, smoke_test)
-  local runtime = ev_autopilot_runtime()
+function activate_ev_self_driving(vehicle, goal, mode, player_index, smoke_test)
+  local runtime = ev_self_driving_runtime()
   if not runtime.active[vehicle.unit_number]
-    and EvAutopilot.active_count(runtime) >= EvAutopilot.config.max_active then
+    and EvSelfDriving.active_count(runtime) >= EvSelfDriving.config.max_active then
     return false
   end
   if runtime.active[vehicle.unit_number] then
-    cancel_ev_autopilot(vehicle.unit_number, nil, {notify = false, manual = true})
+    cancel_ev_self_driving(vehicle.unit_number, nil, {notify = false, manual = true})
   end
   local state = {
     unit_number = vehicle.unit_number,
@@ -2058,60 +2059,60 @@ function activate_ev_autopilot(vehicle, goal, mode, player_index, smoke_test)
     next_safety_tick = game.tick
   }
   runtime.active[vehicle.unit_number] = state
-  EvAutopilot.track_active(runtime, vehicle.unit_number)
-  draw_ev_autopilot_destination(state)
-  return request_ev_autopilot_path(state)
+  EvSelfDriving.track_active(runtime, vehicle.unit_number)
+  draw_ev_self_driving_destination(state)
+  return request_ev_self_driving_path(state)
 end
 
-function start_ev_autopilot(player, vehicle, goal, mode)
-  if not player or not player.valid or not is_ev_autopilot_eligible(vehicle) then
-    if player then player.print("[Biter Motors] This vehicle does not support Autopilot.") end
+function start_ev_self_driving(player, vehicle, goal, mode)
+  if not player or not player.valid or not is_ev_self_driving_eligible(vehicle) then
+    if player then player.print("[Biter Motors] This vehicle does not support Self-driving.") end
     return false
   end
-  if not researched(player.force, EV_AUTOPILOT_TECH_NAME) then
-    player.print("[Biter Motors] Research Autonomous Logistics to unlock EV Autopilot.")
+  if not researched(player.force, EV_SELF_DRIVING_TECH_NAME) then
+    player.print("[Biter Motors] Research Autonomous Logistics to unlock EV Self-driving.")
     return false
   end
   if player.surface ~= vehicle.surface then
     player.print("[Biter Motors] Vehicle and destination must be on the same surface.")
     return false
   end
-  if mode == "navigate" and not player_is_vehicle_driver(player, vehicle) then
-    player.print("[Biter Motors] Enter an eligible Biter Motors EV before selecting Navigate.")
+  if mode == "route" and not player_is_vehicle_driver(player, vehicle) then
+    player.print("[Biter Motors] Enter an eligible Biter Motors EV before selecting Route.")
     return false
   end
   if mode == "summon" and (vehicle.get_driver() or vehicle.get_passenger()) then
     player.print("[Biter Motors] The selected EV is occupied.")
     return false
   end
-  if ev_autopilot_charge_ratio(vehicle) < EvAutopilot.config.summon_start_charge then
-    player.print("[Biter Motors] EV battery is below 10%; charge it before using Autopilot.")
+  if ev_self_driving_charge_ratio(vehicle) < EvSelfDriving.config.summon_start_charge then
+    player.print("[Biter Motors] EV battery is below 10%; charge it before using Self-driving.")
     return false
   end
-  local runtime = ev_autopilot_runtime()
+  local runtime = ev_self_driving_runtime()
   if not runtime.active[vehicle.unit_number]
-    and EvAutopilot.active_count(runtime) >= EvAutopilot.config.max_active then
-    player.print("[Biter Motors] Autopilot controller is at its 32-vehicle safety limit.")
+    and EvSelfDriving.active_count(runtime) >= EvSelfDriving.config.max_active then
+    player.print("[Biter Motors] Self-driving controller is at its 32-vehicle safety limit.")
     return false
   end
   remember_player_ev(player, vehicle)
-  return activate_ev_autopilot(vehicle, goal, mode, player.index, false)
+  return activate_ev_self_driving(vehicle, goal, mode, player.index, false)
 end
 
 function nearest_recent_ev_for_player(player)
-  local runtime = ev_autopilot_runtime()
+  local runtime = ev_self_driving_runtime()
   local best = nil
   local best_distance = nil
   local saw_low_battery = false
   for _, unit_number in pairs(runtime.recent_by_player[player.index] or {}) do
     local vehicle = electric_vehicle_registry()[unit_number]
     if runtime.owner_by_vehicle[unit_number] == player.index
-      and is_ev_autopilot_eligible(vehicle)
+      and is_ev_self_driving_eligible(vehicle)
       and vehicle.surface == player.surface
       and not vehicle.get_driver()
       and not vehicle.get_passenger() then
-      if ev_autopilot_charge_ratio(vehicle) >= EvAutopilot.config.summon_start_charge then
-        local distance = EvAutopilot.distance_squared(vehicle.position, player.position)
+      if ev_self_driving_charge_ratio(vehicle) >= EvSelfDriving.config.summon_start_charge then
+        local distance = EvSelfDriving.distance_squared(vehicle.position, player.position)
         if not best_distance or distance < best_distance then
           best = vehicle
           best_distance = distance
@@ -2137,68 +2138,68 @@ function summon_recent_ev(player)
       or "[Biter Motors] No unoccupied recent EV is available on this surface.")
     return false
   end
-  local goal = ev_autopilot_safe_goal(vehicle, player.position, 6)
+  local goal = ev_self_driving_safe_goal(vehicle, player.position, 6)
   if not goal then
     player.print("[Biter Motors] No safe parking position was found near you.")
     return false
   end
-  return start_ev_autopilot(player, vehicle, goal, "summon")
+  return start_ev_self_driving(player, vehicle, goal, "summon")
 end
 
-function apply_ev_autopilot_drive(vehicle, decision)
+function apply_ev_self_driving_drive(vehicle, decision)
   local acceleration = defines.riding.acceleration[decision.acceleration]
   local direction = defines.riding.direction[decision.direction]
   vehicle.riding_state = {acceleration = acceleration, direction = direction}
 end
 
-function process_ev_autopilot_state(state)
+function process_ev_self_driving_state(state)
   local vehicle = state.vehicle
   local player = state.player_index and game.get_player(state.player_index)
   if not vehicle or not vehicle.valid then
-    cancel_ev_autopilot(state.unit_number, "vehicle was destroyed", {notify = true})
+    cancel_ev_self_driving(state.unit_number, "vehicle was destroyed", {notify = true})
     return
   end
   if not state.smoke_test and (not player or not player.valid or not player.connected) then
-    cancel_ev_autopilot(state.unit_number, "controlling player disconnected", {notify = false})
+    cancel_ev_self_driving(state.unit_number, "controlling player disconnected", {notify = false})
     return
   end
   if vehicle.surface.index ~= state.surface_index
     or (player and player.surface ~= vehicle.surface) then
-    cancel_ev_autopilot(state.unit_number, "player and EV are no longer on the same surface", {notify = true})
+    cancel_ev_self_driving(state.unit_number, "player and EV are no longer on the same surface", {notify = true})
     return
   end
-  if state.mode == "navigate" and not player_is_vehicle_driver(player, vehicle) then
-    cancel_ev_autopilot(state.unit_number, "player left the EV", {notify = false})
+  if state.mode == "route" and not player_is_vehicle_driver(player, vehicle) then
+    cancel_ev_self_driving(state.unit_number, "player left the EV", {notify = false})
     return
   end
   if state.mode == "summon" and (vehicle.get_driver() or vehicle.get_passenger()) then
-    cancel_ev_autopilot(state.unit_number, "someone entered the summoned EV", {notify = true, manual = true})
+    cancel_ev_self_driving(state.unit_number, "someone entered the summoned EV", {notify = true, manual = true})
     return
   end
   if game.tick >= (state.next_safety_tick or game.tick) then
-    state.next_safety_tick = game.tick + EvAutopilot.config.safety_check_ticks
-    if ev_autopilot_charge_ratio(vehicle) <= EvAutopilot.config.cancel_charge then
-      cancel_ev_autopilot(state.unit_number, "battery reached 3%", {notify = true})
+    state.next_safety_tick = game.tick + EvSelfDriving.config.safety_check_ticks
+    if ev_self_driving_charge_ratio(vehicle) <= EvSelfDriving.config.cancel_charge then
+      cancel_ev_self_driving(state.unit_number, "battery reached 3%", {notify = true})
       return
     end
-    if ev_autopilot_nearest_enemy(
+    if ev_self_driving_nearest_enemy(
       vehicle.surface,
       vehicle.force,
       vehicle.position,
-      EvAutopilot.config.safety_radius
+      EvSelfDriving.config.safety_radius
     ) then
-      cancel_ev_autopilot(state.unit_number, "hostile activity detected within 20 tiles", {notify = true})
+      cancel_ev_self_driving(state.unit_number, "hostile activity detected within 20 tiles", {notify = true})
       return
     end
   end
   if state.status == "retry" then
-    if game.tick >= (state.next_path_tick or game.tick) then request_ev_autopilot_path(state) end
+    if game.tick >= (state.next_path_tick or game.tick) then request_ev_self_driving_path(state) end
     return
   end
   if state.status ~= "driving" or not state.path then return end
 
   while state.waypoint_index < #state.path
-    and EvAutopilot.distance_squared(
+    and EvSelfDriving.distance_squared(
       vehicle.position,
       state.path[state.waypoint_index].position
     ) <= 2.25 do
@@ -2207,46 +2208,46 @@ function process_ev_autopilot_state(state)
   local final_waypoint = state.waypoint_index >= #state.path
   local waypoint = state.path[state.waypoint_index].position
   local stop_distance = state.mode == "summon"
-    and EvAutopilot.config.summon_stop_distance
-    or EvAutopilot.config.navigate_stop_distance
-  local decision = EvAutopilot.drive_decision(vehicle, waypoint, final_waypoint, stop_distance)
+    and EvSelfDriving.config.summon_stop_distance
+    or EvSelfDriving.config.route_stop_distance
+  local decision = EvSelfDriving.drive_decision(vehicle, waypoint, final_waypoint, stop_distance)
   if final_waypoint and decision.distance <= stop_distance and math.abs(vehicle.speed or 0) <= 0.025 then
-    cancel_ev_autopilot(
+    cancel_ev_self_driving(
       state.unit_number,
       state.mode == "summon" and "Summoned EV arrived." or "Destination reached.",
       {notify = true, completed = true}
     )
     return
   end
-  apply_ev_autopilot_drive(vehicle, decision)
+  apply_ev_self_driving_drive(vehicle, decision)
 
-  if EvAutopilot.distance_squared(vehicle.position, state.progress_position) >= 4 then
+  if EvSelfDriving.distance_squared(vehicle.position, state.progress_position) >= 4 then
     state.progress_position = {x = vehicle.position.x, y = vehicle.position.y}
     state.progress_tick = game.tick
-  elseif game.tick - (state.progress_tick or game.tick) >= EvAutopilot.config.stuck_ticks then
+  elseif game.tick - (state.progress_tick or game.tick) >= EvSelfDriving.config.stuck_ticks then
     state.stuck_repaths = (state.stuck_repaths or 0) + 1
-    if state.stuck_repaths > EvAutopilot.config.path_retry_limit then
-      cancel_ev_autopilot(state.unit_number, "EV remained stuck after three route attempts", {notify = true})
+    if state.stuck_repaths > EvSelfDriving.config.path_retry_limit then
+      cancel_ev_self_driving(state.unit_number, "EV remained stuck after three route attempts", {notify = true})
     else
       state.progress_tick = game.tick
       state.progress_position = {x = vehicle.position.x, y = vehicle.position.y}
-      request_ev_autopilot_path(state)
+      request_ev_self_driving_path(state)
     end
   end
 end
 
-function process_ev_autopilots()
-  local runtime = ev_autopilot_runtime()
-  for _ = 1, EvAutopilot.config.updates_per_tick do
-    local unit_number = EvAutopilot.next_active(runtime)
+function process_ev_self_drivings()
+  local runtime = ev_self_driving_runtime()
+  for _ = 1, EvSelfDriving.config.updates_per_tick do
+    local unit_number = EvSelfDriving.next_active(runtime)
     if not unit_number then return end
     local state = runtime.active[unit_number]
-    if state then process_ev_autopilot_state(state) end
+    if state then process_ev_self_driving_state(state) end
   end
 end
 
-function handle_ev_autopilot_path_result(event)
-  local runtime = ev_autopilot_runtime()
+function handle_ev_self_driving_path_result(event)
+  local runtime = ev_self_driving_runtime()
   local unit_number = runtime.path_requests[event.id]
   if not unit_number then return end
   runtime.path_requests[event.id] = nil
@@ -2255,22 +2256,22 @@ function handle_ev_autopilot_path_result(event)
   state.path_request_id = nil
   if event.try_again_later then
     state.path_retry_count = (state.path_retry_count or 0) + 1
-    if state.path_retry_count > EvAutopilot.config.path_retry_limit then
-      cancel_ev_autopilot(unit_number, "pathfinder remained busy after three retries", {notify = true})
+    if state.path_retry_count > EvSelfDriving.config.path_retry_limit then
+      cancel_ev_self_driving(unit_number, "pathfinder remained busy after three retries", {notify = true})
     else
       state.status = "retry"
-      state.next_path_tick = game.tick + EvAutopilot.config.path_retry_ticks
-      set_ev_autopilot_status(state.vehicle, "Autopilot: waiting to retry route", defines.entity_status_diode.yellow)
+      state.next_path_tick = game.tick + EvSelfDriving.config.path_retry_ticks
+      set_ev_self_driving_status(state.vehicle, "Self-driving: waiting to retry route", defines.entity_status_diode.yellow)
     end
     return
   end
   if not event.path or #event.path == 0 then
-    cancel_ev_autopilot(unit_number, "no route found", {notify = true})
+    cancel_ev_self_driving(unit_number, "no route found", {notify = true})
     return
   end
-  local safe, reason = ev_autopilot_path_is_safe(state, event.path)
+  local safe, reason = ev_self_driving_path_is_safe(state, event.path)
   if not safe then
-    cancel_ev_autopilot(unit_number, reason or "no safe route found", {notify = true})
+    cancel_ev_self_driving(unit_number, reason or "no safe route found", {notify = true})
     return
   end
   state.path = event.path
@@ -2278,18 +2279,18 @@ function handle_ev_autopilot_path_result(event)
   state.status = "driving"
   state.progress_position = {x = state.vehicle.position.x, y = state.vehicle.position.y}
   state.progress_tick = game.tick
-  set_ev_autopilot_status(state.vehicle, state.mode == "summon"
-    and "Autopilot: summoning"
-    or "Autopilot: navigating", defines.entity_status_diode.green)
+  set_ev_self_driving_status(state.vehicle, state.mode == "summon"
+    and "Self-driving: summoning"
+    or "Self-driving: routing", defines.entity_status_diode.green)
 end
 
-function handle_ev_autopilot_destination(event)
-  if event.item ~= EV_AUTOPILOT_DESTINATION_ITEM then return end
+function handle_ev_self_driving_destination(event)
+  if event.item ~= EV_SELF_DRIVING_DESTINATION_ITEM then return end
   local player = game.get_player(event.player_index)
   if not player then return end
   local vehicle = player.vehicle
-  if not is_ev_autopilot_eligible(vehicle) then
-    player.print("[Biter Motors] Navigate supports Premium, Mass-market, Megatruck, and Robotaxi EVs. The Prototype Roadster has no Autopilot.")
+  if not is_ev_self_driving_eligible(vehicle) then
+    player.print("[Biter Motors] Route supports Premium, Mass-market, Megatruck, and Bitertaxi EVs. The Prototype Roadster has no Self-driving.")
     player.clear_cursor()
     return
   end
@@ -2298,26 +2299,26 @@ function handle_ev_autopilot_destination(event)
     player.clear_cursor()
     return
   end
-  local requested = EvAutopilot.area_center(event.area)
-  local goal = ev_autopilot_safe_goal(vehicle, requested, 0)
+  local requested = EvSelfDriving.area_center(event.area)
+  local goal = ev_self_driving_safe_goal(vehicle, requested, 0)
   player.clear_cursor()
   if not goal then
     player.print("[Biter Motors] No safe stopping position was found near that destination.")
     return
   end
-  start_ev_autopilot(player, vehicle, goal, "navigate")
+  start_ev_self_driving(player, vehicle, goal, "route")
 end
 
-function cancel_player_ev_autopilot_manual(player)
+function cancel_player_ev_self_driving_manual(player)
   if not player or not player.valid or not player.vehicle or not player.vehicle.unit_number then return end
-  local state = ev_autopilot_runtime().active[player.vehicle.unit_number]
-  if state and state.mode == "navigate" and state.player_index == player.index then
-    cancel_ev_autopilot(state.unit_number, "manual control", {notify = true, manual = true})
+  local state = ev_self_driving_runtime().active[player.vehicle.unit_number]
+  if state and state.mode == "route" and state.player_index == player.index then
+    cancel_ev_self_driving(state.unit_number, "manual control", {notify = true, manual = true})
   end
 end
 
-function ev_autopilot_status(player_index)
-  local runtime = ev_autopilot_runtime()
+function ev_self_driving_status(player_index)
+  local runtime = ev_self_driving_runtime()
   local recent = {}
   for _, unit_number in pairs(runtime.recent_by_player[player_index] or {}) do
     local vehicle = electric_vehicle_registry()[unit_number]
@@ -2538,8 +2539,8 @@ function track_bitermotors_entity(entity)
     PerformanceState.track(PerformanceState.ensure(storage), "stations", entity)
   elseif entity.name == SALES_OFFICE_NAME then
     PerformanceState.track(PerformanceState.ensure(storage), "sales_offices", entity)
-  elseif entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
-    PerformanceState.track(PerformanceState.ensure(storage), "robotaxi_centers", entity)
+  elseif entity.name == BITERTAXI_DEPOT_NAME then
+    PerformanceState.track(PerformanceState.ensure(storage), "bitertaxi_depots", entity)
   elseif AI_EFFICIENCY_MACHINE_NAMES[entity.name] then
     PerformanceState.track(PerformanceState.ensure(storage), "ai_machines", entity)
   end
@@ -2764,12 +2765,12 @@ function rebuild_bitermotors_entity_registries()
   PerformanceState.ensure(storage).registries = {
     stations = {},
     sales_offices = {},
-    robotaxi_centers = {},
+    bitertaxi_depots = {},
     ai_machines = {}
   }
   local names = {
     SALES_OFFICE_NAME,
-    ROBOTAXI_SERVICE_CENTER_NAME,
+    BITERTAXI_DEPOT_NAME,
     "bitermotors-terrestrial-datacenter",
     ORBITAL_DATACENTER_CORE_NAME
   }
@@ -2876,7 +2877,7 @@ function reconcile_bitermotors_entity_registry_step()
       local tracked = unit_number and (
         registries.stations[unit_number]
         or registries.sales_offices[unit_number]
-        or registries.robotaxi_centers[unit_number]
+        or registries.bitertaxi_depots[unit_number]
         or registries.ai_machines[unit_number]
       )
       if unit_number and not tracked then
@@ -2942,7 +2943,7 @@ function rebuild_customer_buyer_queues()
     if entity and entity.valid and home and market_force
       and customer_has_available_vehicle_purchase(unit_number, market_force)
       and not buyer_reserved_by_unit()[unit_number]
-      and not megapack_buyer_reservations()[unit_number] then
+      and not grid_battery_buyer_reservations()[unit_number] then
       enqueue_customer_buyer(unit_number, home)
     end
   end
@@ -3013,32 +3014,32 @@ function office_buyer_reservations()
   return storage.bitermotors_office_buyer_reservations
 end
 
-function megapack_adoption_states()
-  storage.bitermotors_megapack_adoption_states = storage.bitermotors_megapack_adoption_states or {}
-  return storage.bitermotors_megapack_adoption_states
+function grid_battery_adoption_states()
+  storage.bitermotors_grid_battery_adoption_states = storage.bitermotors_grid_battery_adoption_states or {}
+  return storage.bitermotors_grid_battery_adoption_states
 end
 
-function megapack_office_reservations()
-  storage.bitermotors_megapack_office_reservations =
-    storage.bitermotors_megapack_office_reservations or {}
-  return storage.bitermotors_megapack_office_reservations
+function grid_battery_office_reservations()
+  storage.bitermotors_grid_battery_office_reservations =
+    storage.bitermotors_grid_battery_office_reservations or {}
+  return storage.bitermotors_grid_battery_office_reservations
 end
 
-function megapack_buyer_trips()
-  storage.bitermotors_megapack_buyer_trips = storage.bitermotors_megapack_buyer_trips or {}
-  return storage.bitermotors_megapack_buyer_trips
+function grid_battery_buyer_trips()
+  storage.bitermotors_grid_battery_buyer_trips = storage.bitermotors_grid_battery_buyer_trips or {}
+  return storage.bitermotors_grid_battery_buyer_trips
 end
 
-function megapack_buyer_reservations()
-  storage.bitermotors_megapack_buyer_reservations =
-    storage.bitermotors_megapack_buyer_reservations or {}
-  return storage.bitermotors_megapack_buyer_reservations
+function grid_battery_buyer_reservations()
+  storage.bitermotors_grid_battery_buyer_reservations =
+    storage.bitermotors_grid_battery_buyer_reservations or {}
+  return storage.bitermotors_grid_battery_buyer_reservations
 end
 
-function megapack_installation_renderings()
-  storage.bitermotors_megapack_installation_renderings =
-    storage.bitermotors_megapack_installation_renderings or {}
-  return storage.bitermotors_megapack_installation_renderings
+function grid_battery_installation_renderings()
+  storage.bitermotors_grid_battery_installation_renderings =
+    storage.bitermotors_grid_battery_installation_renderings or {}
+  return storage.bitermotors_grid_battery_installation_renderings
 end
 
 function sales_office_market_states()
@@ -3097,12 +3098,12 @@ local function refresh_sales_office_coverage(player)
   local objects = sales_office_coverage_renderings()[player.index]
   for _, surface in pairs(game.surfaces) do
     for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME, force = player.force}) do
-      local megapack_market = current_recipe_name(office) == MEGAPACK_SALE_RECIPE
-      local radius = megapack_market and MEGAPACK_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS
-      local fill_color = megapack_market
+      local grid_battery_market = current_recipe_name(office) == GRID_BATTERY_SALE_RECIPE
+      local radius = grid_battery_market and GRID_BATTERY_SALES_RADIUS or SALES_OFFICE_CUSTOMER_RADIUS
+      local fill_color = grid_battery_market
         and {r = 0.10, g = 0.20, b = 0.08, a = 0.10}
         or {r = 0.03, g = 0.16, b = 0.18, a = 0.18}
-      local edge_color = megapack_market
+      local edge_color = grid_battery_market
         and {r = 0.42, g = 0.72, b = 0.30, a = 0.62}
         or {r = 0.18, g = 0.62, b = 0.58, a = 0.72}
       objects[#objects + 1] = rendering.draw_circle{
@@ -3227,7 +3228,7 @@ function station_stall_power_watts(station)
   if not config then
     return 0
   end
-  local level = continuous_improvement_level(station.force, SUPERCHARGING_TECH_NAME)
+  local level = continuous_improvement_level(station.force, RAPID_CHARGING_TECH_NAME)
   return config.power_per_stall_kw * 1000 * (1 + level * 0.1)
 end
 
@@ -3522,7 +3523,7 @@ function register_customer_unit(entity, settlement, market_force)
     end
     if customer_has_available_vehicle_purchase(entity.unit_number, market_force)
       and not buyer_reserved_by_unit()[entity.unit_number]
-      and not megapack_buyer_reservations()[entity.unit_number] then
+      and not grid_battery_buyer_reservations()[entity.unit_number] then
       enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
     end
     return true
@@ -3545,7 +3546,7 @@ function register_customer_unit(entity, settlement, market_force)
   storage.bitermotors_customer_visible_count = customer_visible_count() + 1
   if customer_has_available_vehicle_purchase(entity.unit_number, market_force)
     and not buyer_reserved_by_unit()[entity.unit_number]
-    and not megapack_buyer_reservations()[entity.unit_number] then
+    and not grid_battery_buyer_reservations()[entity.unit_number] then
     enqueue_customer_buyer(entity.unit_number, customer_home_settlements()[entity.unit_number])
   end
   enqueue_customer_variant_migration(entity.unit_number)
@@ -3587,7 +3588,7 @@ function unregister_customer_unit_number(unit_number)
   local ownership = remove_customer_vehicle_ownership(unit_number)
   local reserved_office = buyer_reserved_by_unit()[unit_number]
 
-  clear_megapack_buyer_trip(unit_number, false)
+  clear_grid_battery_buyer_trip(unit_number, false)
   customer_charging_commutes()[unit_number] = nil
   customer_active_commutes()[unit_number] = nil
   TimingWheel.cancel(customer_commute_timing_wheel(), unit_number)
@@ -3831,7 +3832,7 @@ local function historical_customer_ev_sales(force)
     ["bitermotors-premium-ev"] = 0,
     ["bitermotors-mass-market-ev"] = 0,
     ["bitermotors-megatruck"] = 0,
-    ["bitermotors-robotaxi-fleet"] = 0
+    ["bitermotors-bitertaxi-fleet"] = 0
   }
   for _, surface in pairs(game.surfaces) do
     local statistics = force.get_item_production_statistics(surface)
@@ -3840,13 +3841,13 @@ local function historical_customer_ev_sales(force)
     totals["bitermotors-premium-ev"] = totals["bitermotors-premium-ev"]
       + (statistics.get_input_count("bitermotors-premium-ev") or 0)
     local mass_market_inputs = statistics.get_input_count("bitermotors-mass-market-ev") or 0
-    local robotaxi_manufacturing_inputs = statistics.get_input_count("bitermotors-autonomy-computer") or 0
+    local bitertaxi_manufacturing_inputs = statistics.get_input_count("bitermotors-autonomy-computer") or 0
     totals["bitermotors-mass-market-ev"] = totals["bitermotors-mass-market-ev"]
-      + math.max(0, mass_market_inputs - robotaxi_manufacturing_inputs)
+      + math.max(0, mass_market_inputs - bitertaxi_manufacturing_inputs)
     totals["bitermotors-megatruck"] = totals["bitermotors-megatruck"]
       + (statistics.get_input_count("bitermotors-megatruck") or 0)
-    totals["bitermotors-robotaxi-fleet"] = totals["bitermotors-robotaxi-fleet"]
-      + (statistics.get_input_count("bitermotors-robotaxi-fleet") or 0)
+    totals["bitermotors-bitertaxi-fleet"] = totals["bitermotors-bitertaxi-fleet"]
+      + (statistics.get_input_count("bitermotors-bitertaxi-fleet") or 0)
   end
   return totals
 end
@@ -3936,7 +3937,7 @@ function sync_ev_sales_recipe_gates(force, announce)
           technology_ready and "" or " after its technology is researched"
         ))
         if gate_name == "premium" and technology_ready then
-          force.print("[Biter Motors] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to unlock Gigafactory construction, then scale factory output to 250 vehicles to make Advanced Battery Chemistry research available.")
+          force.print("[Biter Motors] Premium pilot production uses expensive commodity Batteries. Build 100 Premium EVs to unlock Biterfactory construction, then scale factory output to 250 vehicles to make Advanced Battery Chemistry research available.")
         end
       end
     end
@@ -3954,10 +3955,10 @@ function sync_ev_sales_recipe_gates(force, announce)
   return result
 end
 
-function gigafactory_gate_announcements()
-  storage.bitermotors_gigafactory_gate_announcements =
-    storage.bitermotors_gigafactory_gate_announcements or {}
-  return storage.bitermotors_gigafactory_gate_announcements
+function biterfactory_gate_announcements()
+  storage.bitermotors_biterfactory_gate_announcements =
+    storage.bitermotors_biterfactory_gate_announcements or {}
+  return storage.bitermotors_biterfactory_gate_announcements
 end
 
 function advanced_battery_chemistry_gate_announcements()
@@ -3990,13 +3991,13 @@ function sync_advanced_battery_chemistry_gate(force, announce)
   return available
 end
 
-function sync_gigafactory_production_gate(force, announce)
+function sync_biterfactory_production_gate(force, announce)
   if not force or not force.valid then return false end
   local produced = count_item_produced(force, PREMIUM_EV_NAME)
   local unlocked = researched(force, "bitermotors-premium-ev-program")
     and produced >= PREMIUM_PILOT_PRODUCTION_GATE
   for _, recipe_name in pairs({
-    "bitermotors-gigafactory-module", "bitermotors-gigafactory-building"
+    "bitermotors-biterfactory-module", "bitermotors-biterfactory-building"
   }) do
     local recipe = force.recipes and force.recipes[recipe_name]
     if recipe then recipe.enabled = unlocked end
@@ -4005,12 +4006,12 @@ function sync_gigafactory_production_gate(force, announce)
   if solar_batch_recipe then
     solar_batch_recipe.enabled = unlocked and researched(force, "bitermotors-energy-products")
   end
-  local announcements = gigafactory_gate_announcements()
+  local announcements = biterfactory_gate_announcements()
   if unlocked and not announcements[force.name] then
     announcements[force.name] = true
     if announce ~= false then
       force.print(string.format(
-        "[Biter Motors] Premium pilot proven: %d Premium EVs produced. Gigafactory construction is now available; use its scale to reach 250 vehicles and unlock Advanced Battery Chemistry.",
+        "[Biter Motors] Premium pilot proven: %d Premium EVs produced. Biterfactory construction is now available; use its scale to reach 250 vehicles and unlock Advanced Battery Chemistry.",
         PREMIUM_PILOT_PRODUCTION_GATE
       ))
     end
@@ -4026,17 +4027,17 @@ end
 
 function foundry_power_gate_status(force)
   local solar_panels = count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)
-  local megapacks = count_deployed_energy_product(force, MEGAPACK_NAME)
+  local grid_batteries = count_deployed_energy_product(force, GRID_BATTERY_NAME)
   local energy_ready = researched(force, "bitermotors-energy-products") == true
   return {
     solar_panels = solar_panels,
     solar_target = FOUNDRY_POWER_GATE.solar_panels,
-    megapacks = megapacks,
-    megapack_target = FOUNDRY_POWER_GATE.megapacks,
+    grid_batteries = grid_batteries,
+    grid_battery_target = FOUNDRY_POWER_GATE.grid_batteries,
     energy_ready = energy_ready,
     qualified = energy_ready
       and solar_panels >= FOUNDRY_POWER_GATE.solar_panels
-      and megapacks >= FOUNDRY_POWER_GATE.megapacks
+      and grid_batteries >= FOUNDRY_POWER_GATE.grid_batteries
   }
 end
 
@@ -4051,9 +4052,9 @@ function sync_foundry_power_gate(force, announce)
     and announce ~= false then
     announcements[force.name] = true
     force.print(string.format(
-      "[Biter Motors] Industrial power qualified: %d player-built High-density Solar Panels and %d Megapacks deployed. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
+      "[Biter Motors] Industrial power qualified: %d player-built High-density Solar Panels and %d Grid Batteries deployed. Metallurgical Scaling research is now available; budget 2.5 MW per Foundry.",
       FOUNDRY_POWER_GATE.solar_panels,
-      FOUNDRY_POWER_GATE.megapacks
+      FOUNDRY_POWER_GATE.grid_batteries
     ))
   end
   return gate
@@ -4943,7 +4944,7 @@ function player_driven_bitermotors_ev_near(event, victim)
     end
   end
   if vehicle and vehicle.valid and vehicle.unit_number then
-    local state = ev_autopilot_runtime().active[vehicle.unit_number]
+    local state = ev_self_driving_runtime().active[vehicle.unit_number]
     local player = state and state.player_index and game.get_player(state.player_index)
     if state and state.mode == "summon" and player then
       return vehicle, vehicle, player
@@ -5321,9 +5322,9 @@ function process_customer_charging_commutes()
       else
         local power = station_power_service()[station.unit_number] or {}
         local fraction = math.max(0, math.min(1, power.power_fraction or 0))
-        local supercharging = continuous_improvement_level(station.force, SUPERCHARGING_TECH_NAME)
+        local rapid_charging = continuous_improvement_level(station.force, RAPID_CHARGING_TECH_NAME)
         state.charge_progress = (state.charge_progress or 0)
-          + fraction * (1 + supercharging * 0.1) / CUSTOMER_COMMUTE_CHARGE_SECONDS
+          + fraction * (1 + rapid_charging * 0.1) / CUSTOMER_COMMUTE_CHARGE_SECONDS
         if state.charge_progress >= 1 then
           complete_customer_charging_commute(entity, ownership, state)
         end
@@ -5350,7 +5351,7 @@ function process_customer_charging_commutes()
     local ownership = customer_vehicle_owners()[unit_number]
     local entity = customer_unit_registry()[unit_number]
     if ownership and entity and entity.valid then
-      if megapack_buyer_reservations()[unit_number] then
+      if grid_battery_buyer_reservations()[unit_number] then
         schedule_customer_commute(unit_number, game.tick + 60)
         goto continue_customer_commute
       end
@@ -5588,7 +5589,7 @@ function process_customer_vehicle_variant_migration(limit)
     if entity and entity.valid then
       if customer_road_rage_states()[unit_number] then
         -- Restoration requeues migration; replacing now would orphan rage state.
-      elseif megapack_buyer_reservations()[unit_number] then
+      elseif grid_battery_buyer_reservations()[unit_number] then
         -- Restoration/completion requeues migration; replacing now would orphan trip state.
       elseif ownership then
         replace_customer_vehicle_entity(entity, ownership)
@@ -5741,7 +5742,7 @@ local function convert_biter_entity(entity, force)
   end
   if entity.valid and entity.type == "unit" and force.name == CUSTOMER_FORCE_NAME and entity.commandable then
     local commute = entity.unit_number and customer_charging_commutes()[entity.unit_number]
-    if not megapack_buyer_reservations()[entity.unit_number]
+    if not grid_battery_buyer_reservations()[entity.unit_number]
       and (not commute or (commute.phase ~= "to_charger" and commute.phase ~= "charging"
         and commute.phase ~= "returning_home")) then
       give_customer_wander_command(entity)
@@ -6479,13 +6480,13 @@ local function station_next_step(station, covered_settlements, hostile_settlemen
   end
   if station.name == "bitermotors-ev-charging-station-v3" then
     if researched(station.force, "bitermotors-autonomous-logistics") then
-      return "Next: V4 Superchargers are unlocked; craft one from this V3, Solar Arrays, Megapacks, and Dollars."
+      return "Next: V4 Solar Charging Hubs are unlocked; craft one from this V3, Solar Arrays, Grid Batteries, and Dollars."
     end
-    return "Next: research Autonomous Logistics to unlock Robotaxis, V4 fleet charging, and the Robotaxi Service Center."
+    return "Next: research Autonomous Logistics to unlock Bitertaxis, V4 fleet charging, and the Bitertaxi Depot."
   elseif station.name == "bitermotors-ev-charging-station-v4" then
-    return "Next: use this 20-stall solar-canopy site to support Robotaxi-scale charging demand."
+    return "Next: use this 20-stall solar-canopy site to support Bitertaxi-scale charging demand."
   elseif station.name == "bitermotors-ev-charging-station-v2" then
-    return "Next: Mass-market EV Production unlocks V3 Superchargers and Gigafactory V2."
+    return "Next: Mass-market EV Production unlocks V3 Rapid Chargers and Biterfactory V2."
   end
   return "This site serves customer EVs and prints EV Reservations for Sales Offices."
 end
@@ -6816,29 +6817,29 @@ local function sales_office_products_finished()
   return storage.bitermotors_sales_office_products_finished
 end
 
-function robotaxi_service_states()
-  storage.bitermotors_robotaxi_service_states = storage.bitermotors_robotaxi_service_states or {}
-  return storage.bitermotors_robotaxi_service_states
+function bitertaxi_depot_states()
+  storage.bitermotors_bitertaxi_depot_states = storage.bitermotors_bitertaxi_depot_states or {}
+  return storage.bitermotors_bitertaxi_depot_states
 end
 
-function invalidate_robotaxi_customer_allocations(force)
+function invalidate_bitertaxi_customer_allocations(force)
   if not force then return end
-  storage.bitermotors_robotaxi_allocation_cache =
-    storage.bitermotors_robotaxi_allocation_cache or {}
-  storage.bitermotors_robotaxi_allocation_cache[force.index] = nil
+  storage.bitermotors_bitertaxi_allocation_cache =
+    storage.bitermotors_bitertaxi_allocation_cache or {}
+  storage.bitermotors_bitertaxi_allocation_cache[force.index] = nil
 end
 
-function robotaxi_service_power_entities()
-  storage.bitermotors_robotaxi_service_power = storage.bitermotors_robotaxi_service_power or {}
-  return storage.bitermotors_robotaxi_service_power
+function bitertaxi_depot_power_entities()
+  storage.bitermotors_bitertaxi_depot_power = storage.bitermotors_bitertaxi_depot_power or {}
+  return storage.bitermotors_bitertaxi_depot_power
 end
 
-function ensure_robotaxi_service_power(center)
-  local powers = robotaxi_service_power_entities()
+function ensure_bitertaxi_depot_power(center)
+  local powers = bitertaxi_depot_power_entities()
   local power = powers[center.unit_number]
   if power and power.valid then return power end
   local existing = center.surface.find_entities_filtered{
-    name = ROBOTAXI_SERVICE_POWER_NAME,
+    name = BITERTAXI_DEPOT_POWER_NAME,
     position = center.position,
     radius = 0.25,
     force = center.force
@@ -6857,26 +6858,26 @@ function ensure_robotaxi_service_power(center)
     return power
   end
   power = center.surface.create_entity{
-    name = ROBOTAXI_SERVICE_POWER_NAME,
+    name = BITERTAXI_DEPOT_POWER_NAME,
     position = center.position,
     force = center.force,
     quality = center.quality,
     create_build_effect_smoke = false
   }
   if power then
-    pcall(function() power.set_recipe(ROBOTAXI_SERVICE_RECIPE) end)
+    pcall(function() power.set_recipe(BITERTAXI_DEPOT_RECIPE) end)
     powers[center.unit_number] = power
   end
   return power
 end
 
-function robotaxi_service_inventories(center)
-  if not center or not center.valid or center.name ~= ROBOTAXI_SERVICE_CENTER_NAME then
+function bitertaxi_depot_inventories(center)
+  if not center or not center.valid or center.name ~= BITERTAXI_DEPOT_NAME then
     return nil, nil
   end
   local inventory = center.get_inventory(defines.inventory.chest)
   if inventory and inventory.valid and #inventory >= 43 then
-    for slot = 1, 40 do pcall(function() inventory.set_filter(slot, ROBOTAXI_ITEM_NAME) end) end
+    for slot = 1, 40 do pcall(function() inventory.set_filter(slot, BITERTAXI_ITEM_NAME) end) end
     pcall(function() inventory.set_filter(41, DOLLAR_NAME) end)
     pcall(function() inventory.set_filter(42, WRECKED_EV_NAME) end)
     pcall(function() inventory.set_filter(43, DAMAGED_LFP_PACK_NAME) end)
@@ -6884,31 +6885,31 @@ function robotaxi_service_inventories(center)
   return inventory, inventory
 end
 
-function robotaxi_safety_states()
-  storage.bitermotors_robotaxi_safety = storage.bitermotors_robotaxi_safety or {}
-  return storage.bitermotors_robotaxi_safety
+function bitertaxi_safety_states()
+  storage.bitermotors_bitertaxi_safety = storage.bitermotors_bitertaxi_safety or {}
+  return storage.bitermotors_bitertaxi_safety
 end
 
-function robotaxi_safety_snapshot(force)
-  local state = robotaxi_safety_states()[force.index] or {completed_rides = 0}
-  robotaxi_safety_states()[force.index] = state
-  local learning = math.log(1 + state.completed_rides / ROBOTAXI_SAFETY_RIDES_SCALE) / math.log(10)
+function bitertaxi_safety_snapshot(force)
+  local state = bitertaxi_safety_states()[force.index] or {completed_rides = 0}
+  bitertaxi_safety_states()[force.index] = state
+  local learning = math.log(1 + state.completed_rides / BITERTAXI_SAFETY_RIDES_SCALE) / math.log(10)
   local collision_multiplier = 1 / (1 + learning)
-  local retirement_multiplier = ROBOTAXI_ROUTINE_WEAR_FLOOR
-    + (1 - ROBOTAXI_ROUTINE_WEAR_FLOOR) * collision_multiplier
+  local retirement_multiplier = BITERTAXI_ROUTINE_WEAR_FLOOR
+    + (1 - BITERTAXI_ROUTINE_WEAR_FLOOR) * collision_multiplier
   return {
     completed_rides = state.completed_rides,
     collision_multiplier = collision_multiplier,
     retirement_multiplier = retirement_multiplier,
     risk_reduction = 1 - retirement_multiplier,
-    expected_vehicle_hours = ROBOTAXI_ATTRITION_VEHICLE_HOURS / retirement_multiplier
+    expected_vehicle_hours = BITERTAXI_ATTRITION_VEHICLE_HOURS / retirement_multiplier
   }
 end
 
-function robotaxi_customer_allocations(force)
+function bitertaxi_customer_allocations(force)
   if not force then return {} end
-  storage.bitermotors_robotaxi_allocation_cache = storage.bitermotors_robotaxi_allocation_cache or {}
-  local cached = storage.bitermotors_robotaxi_allocation_cache[force.index]
+  storage.bitermotors_bitertaxi_allocation_cache = storage.bitermotors_bitertaxi_allocation_cache or {}
+  local cached = storage.bitermotors_bitertaxi_allocation_cache[force.index]
   if cached and game.tick - cached.tick < 300 then
     return cached.allocations
   end
@@ -6916,7 +6917,7 @@ function robotaxi_customer_allocations(force)
   local customer_force = game.forces[CUSTOMER_FORCE_NAME]
   if not customer_force then return result end
   local centers_by_surface = {}
-  for _, center in pairs(registered_bitermotors_entities("robotaxi_centers", force)) do
+  for _, center in pairs(registered_bitermotors_entities("bitertaxi_depots", force)) do
     centers_by_surface[center.surface.index] = centers_by_surface[center.surface.index] or {}
     centers_by_surface[center.surface.index][#centers_by_surface[center.surface.index] + 1] = center
   end
@@ -6925,8 +6926,8 @@ function robotaxi_customer_allocations(force)
     table.sort(centers, function(a, b) return a.unit_number < b.unit_number end)
     local available = {}
     for _, center in pairs(centers) do
-      local inventory = robotaxi_service_inventories(center)
-      local stored = inventory and math.min(200, inventory.get_item_count(ROBOTAXI_ITEM_NAME)) or 0
+      local inventory = bitertaxi_depot_inventories(center)
+      local stored = inventory and math.min(200, inventory.get_item_count(BITERTAXI_ITEM_NAME)) or 0
       available[center.unit_number] = stored > 0
       result[center.unit_number] = 0
     end
@@ -6939,7 +6940,7 @@ function robotaxi_customer_allocations(force)
             local dx = population.position.x - center.position.x
             local dy = population.position.y - center.position.y
             local distance = dx * dx + dy * dy
-            if distance <= ROBOTAXI_SERVICE_RADIUS * ROBOTAXI_SERVICE_RADIUS
+            if distance <= BITERTAXI_DEPOT_RADIUS * BITERTAXI_DEPOT_RADIUS
               and (not best_distance or distance < best_distance) then
               selected = center
               best_distance = distance
@@ -6955,24 +6956,24 @@ function robotaxi_customer_allocations(force)
     end
   end
   storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
-  storage.bitermotors_perf_counters.robotaxi_allocation_builds =
-    (storage.bitermotors_perf_counters.robotaxi_allocation_builds or 0) + 1
-  storage.bitermotors_robotaxi_allocation_cache[force.index] = {
+  storage.bitermotors_perf_counters.bitertaxi_allocation_builds =
+    (storage.bitermotors_perf_counters.bitertaxi_allocation_builds or 0) + 1
+  storage.bitermotors_bitertaxi_allocation_cache[force.index] = {
     tick = game.tick,
     allocations = result
   }
   return result
 end
 
-function robotaxi_service_power_factor(center)
-  local power = ensure_robotaxi_service_power(center)
+function bitertaxi_depot_power_factor(center)
+  local power = ensure_bitertaxi_depot_power(center)
   if not power then return 0 end
   if power.status == defines.entity_status.no_power then return 0 end
   if power.status == defines.entity_status.low_power then return 0.5 end
   return power.energy and power.energy > 0 and 1 or 0
 end
 
-function robotaxi_dollar_output_blocked(inventory)
+function bitertaxi_dollar_output_blocked(inventory)
   local slot = inventory and inventory[41]
   if not slot then return true end
   if not slot.valid_for_read then return false end
@@ -6981,26 +6982,26 @@ function robotaxi_dollar_output_blocked(inventory)
     or slot.count >= slot.prototype.stack_size
 end
 
-function robotaxi_service_snapshot(center, allocated_customers)
-  local input, output = robotaxi_service_inventories(center)
-  local stored = input and input.get_item_count(ROBOTAXI_ITEM_NAME) or 0
+function bitertaxi_depot_snapshot(center, allocated_customers)
+  local input, output = bitertaxi_depot_inventories(center)
+  local stored = input and input.get_item_count(BITERTAXI_ITEM_NAME) or 0
   local customers = allocated_customers
   if customers == nil then
-    customers = robotaxi_customer_allocations(center.force)[center.unit_number] or 0
+    customers = bitertaxi_customer_allocations(center.force)[center.unit_number] or 0
   end
-  local power_factor = robotaxi_service_power_factor(center)
+  local power_factor = bitertaxi_depot_power_factor(center)
   local audio_level = continuous_improvement_level(center.force, PREMIUM_AUDIO_TECH_NAME)
-  local metrics = RobotaxiService.metrics{
+  local metrics = BitertaxiDepot.metrics{
     max_fleet = 200,
     stored = stored,
     customers = customers,
-    customers_per_vehicle = ROBOTAXI_CUSTOMERS_PER_VEHICLE,
-    vehicle_minutes_per_dollar = ROBOTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,
+    customers_per_vehicle = BITERTAXI_CUSTOMERS_PER_VEHICLE,
+    vehicle_minutes_per_dollar = BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,
     power_factor = power_factor,
     revenue_multiplier = 1 + audio_level * 0.05
   }
-  local state = robotaxi_service_states()[center.unit_number] or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
-  local safety = robotaxi_safety_snapshot(center.force)
+  local state = bitertaxi_depot_states()[center.unit_number] or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
+  local safety = bitertaxi_safety_snapshot(center.force)
   return {
     stored = metrics.fleet,
     allocated = metrics.allocated,
@@ -7009,7 +7010,7 @@ function robotaxi_service_snapshot(center, allocated_customers)
     power_factor = power_factor,
     revenue_per_minute = metrics.revenue_per_minute,
     output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
-    output_blocked = robotaxi_dollar_output_blocked(output),
+    output_blocked = bitertaxi_dollar_output_blocked(output),
     revenue_progress = state.revenue or 0,
     attrition_progress = state.attrition or 0,
     lifetime_dollars = state.dollars or 0,
@@ -7020,10 +7021,10 @@ function robotaxi_service_snapshot(center, allocated_customers)
   }
 end
 
-function process_robotaxi_service_centers()
-  local centers = registered_bitermotors_entities("robotaxi_centers")
-  if #centers == 0 and next(robotaxi_service_states()) == nil
-    and next(robotaxi_service_power_entities()) == nil then
+function process_bitertaxi_depots()
+  local centers = registered_bitermotors_entities("bitertaxi_depots")
+  if #centers == 0 and next(bitertaxi_depot_states()) == nil
+    and next(bitertaxi_depot_power_entities()) == nil then
     return
   end
   local seen = {}
@@ -7034,21 +7035,21 @@ function process_robotaxi_service_centers()
   for _, center in pairs(centers) do
       if center.valid and center.unit_number then
         allocations_by_force[center.force.index] = allocations_by_force[center.force.index]
-          or robotaxi_customer_allocations(center.force)
+          or bitertaxi_customer_allocations(center.force)
         local customer_allocations = allocations_by_force[center.force.index]
         safety_by_force[center.force.index] = safety_by_force[center.force.index]
-          or robotaxi_safety_snapshot(center.force)
+          or bitertaxi_safety_snapshot(center.force)
         seen[center.unit_number] = true
-        local power = ensure_robotaxi_service_power(center)
+        local power = ensure_bitertaxi_depot_power(center)
         if power and power.valid and power.unit_number then
           active_power_units[power.unit_number] = true
         end
-        local input, output = robotaxi_service_inventories(center)
-        local snapshot = robotaxi_service_snapshot(center, customer_allocations[center.unit_number] or 0)
+        local input, output = bitertaxi_depot_inventories(center)
+        local snapshot = bitertaxi_depot_snapshot(center, customer_allocations[center.unit_number] or 0)
         set_bitermotors_runtime_visual_enabled(center, snapshot.allocated > 0 and snapshot.power_factor > 0)
-        local state = robotaxi_service_states()[center.unit_number]
+        local state = bitertaxi_depot_states()[center.unit_number]
           or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
-        robotaxi_service_states()[center.unit_number] = state
+        bitertaxi_depot_states()[center.unit_number] = state
         if snapshot.allocated > 0 and snapshot.power_factor > 0 and not snapshot.output_blocked then
           completed_rides_by_force[center.force.index] = (completed_rides_by_force[center.force.index] or 0)
             + snapshot.allocated * snapshot.power_factor / 60
@@ -7056,7 +7057,7 @@ function process_robotaxi_service_centers()
           state.attrition = state.attrition
             + snapshot.allocated * snapshot.power_factor
               * safety_by_force[center.force.index].retirement_multiplier
-              / (ROBOTAXI_ATTRITION_VEHICLE_HOURS * 3600)
+              / (BITERTAXI_ATTRITION_VEHICLE_HOURS * 3600)
           local dollars = math.floor(state.revenue)
           if dollars > 0 and output then
             local inserted = output.insert{name = DOLLAR_NAME, count = dollars}
@@ -7065,7 +7066,7 @@ function process_robotaxi_service_centers()
             if inserted > 0 then
               local statistics = center.force.get_item_production_statistics(center.surface)
               statistics.set_output_count(DOLLAR_NAME, statistics.get_output_count(DOLLAR_NAME) + inserted)
-              announce_first_robotaxi_service(center.force)
+              announce_first_bitertaxi_depot(center.force)
             end
           end
           local retirements = math.floor(state.attrition)
@@ -7075,7 +7076,7 @@ function process_robotaxi_service_centers()
               math.floor(output.get_insertable_count(DAMAGED_LFP_PACK_NAME) / 16)
             )
             local removed = input.remove{
-              name = ROBOTAXI_ITEM_NAME,
+              name = BITERTAXI_ITEM_NAME,
               count = math.min(retirements, wreck_capacity)
             }
             state.attrition = state.attrition - removed
@@ -7095,20 +7096,20 @@ function process_robotaxi_service_centers()
       end
   end
   for force_index, rides in pairs(completed_rides_by_force) do
-    local state = robotaxi_safety_states()[force_index] or {completed_rides = 0}
+    local state = bitertaxi_safety_states()[force_index] or {completed_rides = 0}
     state.completed_rides = state.completed_rides + rides
-    robotaxi_safety_states()[force_index] = state
+    bitertaxi_safety_states()[force_index] = state
   end
-  for unit_number in pairs(robotaxi_service_states()) do
+  for unit_number in pairs(bitertaxi_depot_states()) do
     if not seen[unit_number] then
-      robotaxi_service_states()[unit_number] = nil
-      local power = robotaxi_service_power_entities()[unit_number]
+      bitertaxi_depot_states()[unit_number] = nil
+      local power = bitertaxi_depot_power_entities()[unit_number]
       if power and power.valid then power.destroy() end
-      robotaxi_service_power_entities()[unit_number] = nil
+      bitertaxi_depot_power_entities()[unit_number] = nil
     end
   end
   for _, surface in pairs(game.surfaces) do
-    for _, power in pairs(surface.find_entities_filtered{name = ROBOTAXI_SERVICE_POWER_NAME}) do
+    for _, power in pairs(surface.find_entities_filtered{name = BITERTAXI_DEPOT_POWER_NAME}) do
       if power.valid and not active_power_units[power.unit_number] then
         power.destroy()
       end
@@ -7131,9 +7132,9 @@ local function first_mass_market_ev_sales()
   return storage.bitermotors_first_mass_market_ev_sales
 end
 
-local function first_robotaxi_sales()
-  storage.bitermotors_first_robotaxi_sales = storage.bitermotors_first_robotaxi_sales or {}
-  return storage.bitermotors_first_robotaxi_sales
+local function first_bitertaxi_sales()
+  storage.bitermotors_first_bitertaxi_sales = storage.bitermotors_first_bitertaxi_sales or {}
+  return storage.bitermotors_first_bitertaxi_sales
 end
 
 local function first_entity_placement_hints()
@@ -7252,7 +7253,7 @@ local function announce_ev_production_line_researched(force)
     return
   end
 
-  force.print("[Biter Motors] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. Build 100 commodity-battery Premium EVs to unlock Gigafactory construction.")
+  force.print("[Biter Motors] EV Production Line researched. Premium EV tooling is ready after 50 completed Prototype Roadster sales. Build 100 commodity-battery Premium EVs to unlock Biterfactory construction.")
 end
 
 local function announce_mass_market_production_researched(force)
@@ -7260,7 +7261,7 @@ local function announce_mass_market_production_researched(force)
     return
   end
 
-  force.print("[Biter Motors] Mass-market EV Production researched. Gigafactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatruck Engineering requires Tank technology and 2,000 Mass-market EV sales.")
+  force.print("[Biter Motors] Mass-market EV Production researched. Biterfactory V2 tooling is ready. Mass-market EVs require 250 Premium EV sales; Megatruck Engineering requires Tank technology and 2,000 Mass-market EV sales.")
 end
 
 local function announce_ev_charging_network_researched(force)
@@ -7282,7 +7283,7 @@ local function announce_first_premium_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[Biter Motors] Premium EV sales are working. Build 100 pilot vehicles to unlock the Gigafactory, then use factory scale to reach 250 vehicles and unlock Advanced Battery Chemistry.")
+  force.print("[Biter Motors] Premium EV sales are working. Build 100 pilot vehicles to unlock the Biterfactory, then use factory scale to reach 250 vehicles and unlock Advanced Battery Chemistry.")
 end
 
 local function announce_first_mass_market_ev_sale(force)
@@ -7296,14 +7297,14 @@ local function announce_first_mass_market_ev_sale(force)
   end
   milestones[force.name] = true
 
-  force.print("[Biter Motors] Mass-market EV sales are online. Build High-density Solar Panels and Megapacks through Energy Products, then research Terrestrial AI.")
+  force.print("[Biter Motors] Mass-market EV sales are online. Build High-density Solar Panels and Grid Batteries through Energy Products, then research Terrestrial AI.")
 end
 
-announce_first_robotaxi_service = function(force)
+announce_first_bitertaxi_depot = function(force)
   if not force or not force.valid then
     return
   end
-  local milestones = first_robotaxi_sales()
+  local milestones = first_bitertaxi_sales()
   if milestones[force.name] then
     return
   end
@@ -7312,20 +7313,20 @@ announce_first_robotaxi_service = function(force)
   if v4_recipe then
     v4_recipe.enabled = true
   end
-  local legacy_robotaxi_sale = force.recipes and force.recipes[ROBOTAXI_SALE_RECIPE]
-  if legacy_robotaxi_sale then legacy_robotaxi_sale.enabled = false end
-  force.print("[Biter Motors] Robotaxi service is producing recurring profit. Next: use vanilla cargo rockets to establish physical AI infrastructure over Nauvis.")
+  local legacy_bitertaxi_sale = force.recipes and force.recipes[BITERTAXI_SALE_RECIPE]
+  if legacy_bitertaxi_sale then legacy_bitertaxi_sale.enabled = false end
+  force.print("[Biter Motors] Bitertaxi service is producing recurring profit. Next: use vanilla cargo rockets to establish physical AI infrastructure over Nauvis.")
 end
 
 local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-sales-office"] = "[Biter Motors] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
-  ["bitermotors-advanced-battery-chemistry"] = "[Biter Motors] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Gigafactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
-  ["bitermotors-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Megapacks for mass-market power demand.",
+  ["bitermotors-advanced-battery-chemistry"] = "[Biter Motors] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Biterfactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
+  ["bitermotors-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Grid Batteries for mass-market power demand.",
   ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
-  ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Navigate and Summon controls for Premium, Mass-market, Megatruck, and Robotaxi EVs. Robotaxi production still requires 5,000 total consumer EV sales.",
+  ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Route and Summon controls for Premium, Mass-market, Megatruck, and Bitertaxi EVs. Bitertaxi production still requires 5,000 total consumer EV sales.",
   ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Launch Datacenter Cores, eight Radiator Panels per core, and enough Space Solar to sustain 250 MW each. Return the physical AI Tokens to Nauvis.",
   ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 25,000 AI Tokens per Dollar.",
-  ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Megapacks into 1 GJ Grid Megapacks; orbital batches now yield 50,000 Tokens per Dollar.",
+  ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 50,000 Tokens per Dollar.",
   ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 100,000 AI Tokens per Dollar. Planetary Energy Grid research is available.",
   ["bitermotors-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 10 GW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
@@ -7341,12 +7342,12 @@ local function announce_research_completion(research)
 end
 
 local ENTITY_PLACEMENT_MESSAGES = {
-  ["bitermotors-gigafactory-building"] = "[Biter Motors] First Gigafactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Run the commodity-cell recipe to reach 250 Premium EVs, then switch to cell-scale packs after Advanced Battery Chemistry.",
-  ["bitermotors-gigafactory-v2"] = "[Biter Motors] First Gigafactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
-  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[Biter Motors] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Gigafactories, and datacenters compete for power.",
-  [MEGAPACK_NAME] = "[Biter Motors] First Megapack online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize Biter Motors loads.",
+  ["bitermotors-biterfactory-building"] = "[Biter Motors] First Biterfactory online. Its 4x crafting speed and 50% built-in productivity make every two Premium EV input sets produce three vehicles. Run the commodity-cell recipe to reach 250 Premium EVs, then switch to cell-scale packs after Advanced Battery Chemistry.",
+  ["bitermotors-biterfactory-v2"] = "[Biter Motors] First Biterfactory V2 online. It runs twice as fast with 150% built-in productivity while drawing 30 MW. Mass-market production appears after 250 Premium EV sales.",
+  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[Biter Motors] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Biterfactories, and datacenters compete for power.",
+  [GRID_BATTERY_NAME] = "[Biter Motors] First Grid Battery online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize Biter Motors loads.",
   [TERRESTRIAL_DATACENTER_NAME] = "[Biter Motors] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
-  [ROBOTAXI_SERVICE_CENTER_NAME] = "[Biter Motors] Robotaxi Service Center online. Load up to 200 Robotaxis; its built-in V4 fleet charging draws 10 MW while Operate Robotaxis converts nearby customer service into recurring profit."
+  [BITERTAXI_DEPOT_NAME] = "[Biter Motors] Bitertaxi Depot online. Load up to 200 Bitertaxis; its built-in V4 fleet charging draws 10 MW while Operate Bitertaxi Fleet converts nearby customer service into recurring profit."
 }
 
 local function announce_first_entity_placement(entity)
@@ -7379,7 +7380,7 @@ local function repair_researched_bitermotors_unlocks(force)
     if is_bitermotors_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
         if effect.type == "unlock-recipe" and is_bitermotors_name(effect.recipe)
-          and effect.recipe ~= ROBOTAXI_SALE_RECIPE
+          and effect.recipe ~= BITERTAXI_SALE_RECIPE
           and not EV_SALES_GATED_RECIPES[effect.recipe] then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
@@ -7403,7 +7404,7 @@ local function progression_integrity_status(force)
     if is_bitermotors_name(technology_name) and technology.researched then
       for _, effect in pairs(technology.prototype.effects or {}) do
         if effect.type == "unlock-recipe" and is_bitermotors_name(effect.recipe)
-          and effect.recipe ~= ROBOTAXI_SALE_RECIPE
+          and effect.recipe ~= BITERTAXI_SALE_RECIPE
           and not EV_SALES_GATED_RECIPES[effect.recipe] then
           local recipe = force.recipes and force.recipes[effect.recipe]
           if recipe and not recipe.enabled then
@@ -7421,7 +7422,7 @@ local function progression_integrity_status(force)
   end
   if researched(force, "bitermotors-premium-ev-program")
     and count_item_produced(force, PREMIUM_EV_NAME) >= PREMIUM_PILOT_PRODUCTION_GATE then
-    for _, recipe_name in pairs({"bitermotors-gigafactory-module", "bitermotors-gigafactory-building"}) do
+    for _, recipe_name in pairs({"bitermotors-biterfactory-module", "bitermotors-biterfactory-building"}) do
       local recipe = force.recipes and force.recipes[recipe_name]
       if recipe and not recipe.enabled then table.insert(disabled, recipe_name) end
     end
@@ -7443,7 +7444,7 @@ local function sync_force_unlocks(force)
     logistic_system.enabled = true
   end
   sync_advanced_battery_chemistry_gate(force, false)
-  sync_gigafactory_production_gate(force, false)
+  sync_biterfactory_production_gate(force, false)
   sync_foundry_power_gate(force, false)
   sync_agi_training_unlock(force, false)
   local v4_recipe = force.recipes and force.recipes["bitermotors-ev-charging-station-v4"]
@@ -7584,7 +7585,7 @@ function clear_office_buyer_reservation(office_unit_number)
         local home = customer_home_settlements()[buyer]
         local force = home and game.forces[home.market_force_name]
         if force and customer_has_available_vehicle_purchase(buyer, force)
-          and not megapack_buyer_reservations()[buyer] then
+          and not grid_battery_buyer_reservations()[buyer] then
           enqueue_customer_buyer(buyer, home)
         end
       end
@@ -7706,14 +7707,14 @@ function customer_population_size(population)
   return math.max(0, math.floor(total))
 end
 
-function ensure_megapack_adoption_state(key, population)
+function ensure_grid_battery_adoption_state(key, population)
   local total = customer_population_size(population)
   if total <= 0 then return nil end
-  local states = megapack_adoption_states()
+  local states = grid_battery_adoption_states()
   local state = states[key]
   if not state then
     state = {
-      eligible = math.max(1, math.ceil(total * MEGAPACK_INITIAL_ADOPTION_FRACTION)),
+      eligible = math.max(1, math.ceil(total * GRID_BATTERY_INITIAL_ADOPTION_FRACTION)),
       installed = 0,
       reserved = 0
     }
@@ -7731,24 +7732,24 @@ function ensure_megapack_adoption_state(key, population)
   return state
 end
 
-function population_in_megapack_office_market(office, population)
+function population_in_grid_battery_office_market(office, population)
   return population and population.market_force_name == office.force.name
     and population.surface_index == office.surface.index
-    and within_radius(office, {position = population.position}, MEGAPACK_SALES_RADIUS)
+    and within_radius(office, {position = population.position}, GRID_BATTERY_SALES_RADIUS)
 end
 
-function destroy_megapack_installation_rendering(key)
-  local rendering_state = megapack_installation_renderings()[key]
+function destroy_grid_battery_installation_rendering(key)
+  local rendering_state = grid_battery_installation_renderings()[key]
   if not rendering_state then return end
   for _, object in pairs(rendering_state) do
     if object and object.valid then object.destroy() end
   end
-  megapack_installation_renderings()[key] = nil
+  grid_battery_installation_renderings()[key] = nil
 end
 
-function refresh_megapack_installation_rendering(key)
-  destroy_megapack_installation_rendering(key)
-  local adoption = megapack_adoption_states()[key]
+function refresh_grid_battery_installation_rendering(key)
+  destroy_grid_battery_installation_rendering(key)
+  local adoption = grid_battery_adoption_states()[key]
   local population = customer_settlement_populations()[key]
   if not adoption or (adoption.installed or 0) <= 0 or not population then return end
   local surface = game.surfaces[population.surface_index]
@@ -7757,9 +7758,9 @@ function refresh_megapack_installation_rendering(key)
     x = population.position.x + 3.25,
     y = population.position.y + 1.75
   }
-  megapack_installation_renderings()[key] = {
+  grid_battery_installation_renderings()[key] = {
     rendering.draw_sprite{
-      sprite = "item/" .. MEGAPACK_NAME,
+      sprite = "item/" .. GRID_BATTERY_NAME,
       surface = surface,
       target = position,
       x_scale = 0.55,
@@ -7778,34 +7779,34 @@ function refresh_megapack_installation_rendering(key)
   }
 end
 
-function sync_megapack_adoption_waves()
+function sync_grid_battery_adoption_waves()
   for _, office in pairs(registered_bitermotors_entities("sales_offices")) do
-    if office.valid and current_recipe_name(office) == MEGAPACK_SALE_RECIPE then
+    if office.valid and current_recipe_name(office) == GRID_BATTERY_SALE_RECIPE then
       for key, population in pairs(customer_settlement_populations()) do
-        if population_in_megapack_office_market(office, population) then
-          ensure_megapack_adoption_state(key, population)
+        if population_in_grid_battery_office_market(office, population) then
+          ensure_grid_battery_adoption_state(key, population)
         end
       end
     end
   end
-  for key, state in pairs(megapack_adoption_states()) do
+  for key, state in pairs(grid_battery_adoption_states()) do
     local population = customer_settlement_populations()[key]
     if not population then
-      destroy_megapack_installation_rendering(key)
-      megapack_adoption_states()[key] = nil
+      destroy_grid_battery_installation_rendering(key)
+      grid_battery_adoption_states()[key] = nil
     else
-      state = ensure_megapack_adoption_state(key, population)
+      state = ensure_grid_battery_adoption_state(key, population)
       local total = customer_population_size(population)
       if state and (state.installed or 0) > 0 and state.eligible < total then
         state.next_referral_tick = state.next_referral_tick
-          or (game.tick + MEGAPACK_REFERRAL_WAVE_TICKS)
+          or (game.tick + GRID_BATTERY_REFERRAL_WAVE_TICKS)
         if game.tick >= state.next_referral_tick then
           local remaining = total - state.eligible
           state.eligible = math.min(
             total,
-            state.eligible + math.max(1, math.ceil(remaining * MEGAPACK_REFERRAL_FRACTION))
+            state.eligible + math.max(1, math.ceil(remaining * GRID_BATTERY_REFERRAL_FRACTION))
           )
-          state.next_referral_tick = game.tick + MEGAPACK_REFERRAL_WAVE_TICKS
+          state.next_referral_tick = game.tick + GRID_BATTERY_REFERRAL_WAVE_TICKS
         end
       elseif state then
         state.next_referral_tick = nil
@@ -7814,7 +7815,7 @@ function sync_megapack_adoption_waves()
   end
 end
 
-function megapack_office_status(office)
+function grid_battery_office_status(office)
   local status = {
     settlements = 0,
     population = 0,
@@ -7829,8 +7830,8 @@ function megapack_office_status(office)
   }
   if not office or not office.valid then return status end
   for key, population in pairs(customer_settlement_populations()) do
-    if population_in_megapack_office_market(office, population) then
-      local state = ensure_megapack_adoption_state(key, population)
+    if population_in_grid_battery_office_market(office, population) then
+      local state = ensure_grid_battery_adoption_state(key, population)
       if state then
         status.settlements = status.settlements + 1
         status.population = status.population + customer_population_size(population)
@@ -7847,7 +7848,7 @@ function megapack_office_status(office)
       end
     end
   end
-  for _, trip in pairs(megapack_buyer_trips()) do
+  for _, trip in pairs(grid_battery_buyer_trips()) do
     if trip.force_name == office.force.name and trip.office_unit_number == office.unit_number then
       if trip.phase == "to_office" then status.to_office = status.to_office + 1
       elseif trip.phase == "waiting_product" then
@@ -7862,7 +7863,7 @@ function megapack_office_status(office)
   return status
 end
 
-function megapack_adoption_summary(force)
+function grid_battery_adoption_summary(force)
   local summary = {
     settlements = 0,
     population = 0,
@@ -7876,10 +7877,10 @@ function megapack_adoption_summary(force)
     returning_home = 0
   }
   if not force then return summary end
-  for key, state in pairs(megapack_adoption_states()) do
+  for key, state in pairs(grid_battery_adoption_states()) do
     local population = customer_settlement_populations()[key]
     if population and population.market_force_name == force.name then
-      state = ensure_megapack_adoption_state(key, population)
+      state = ensure_grid_battery_adoption_state(key, population)
       summary.settlements = summary.settlements + 1
       summary.population = summary.population + customer_population_size(population)
       summary.eligible = summary.eligible + state.eligible
@@ -7889,7 +7890,7 @@ function megapack_adoption_summary(force)
         + math.max(0, state.eligible - state.installed - state.reserved)
     end
   end
-  for _, trip in pairs(megapack_buyer_trips()) do
+  for _, trip in pairs(grid_battery_buyer_trips()) do
     if trip.force_name == force.name then
       if trip.phase == "to_office" then
         summary.to_office = summary.to_office + 1
@@ -7907,18 +7908,18 @@ function megapack_adoption_summary(force)
   return summary
 end
 
-function clear_megapack_buyer_trip(unit_number, resume_wandering)
-  local trips = megapack_buyer_trips()
+function clear_grid_battery_buyer_trip(unit_number, resume_wandering)
+  local trips = grid_battery_buyer_trips()
   local trip = trips[unit_number]
   if not trip then return false end
   if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end
   if trip.carry_icon and trip.carry_icon.valid then trip.carry_icon.destroy() end
-  local office_reservations = megapack_office_reservations()
+  local office_reservations = grid_battery_office_reservations()
   if office_reservations[trip.office_unit_number] == unit_number then
     office_reservations[trip.office_unit_number] = nil
   end
-  megapack_buyer_reservations()[unit_number] = nil
-  local adoption = megapack_adoption_states()[trip.settlement_key]
+  grid_battery_buyer_reservations()[unit_number] = nil
+  local adoption = grid_battery_adoption_states()[trip.settlement_key]
   if adoption then
     adoption.reserved = math.max(0, (adoption.reserved or 0) - 1)
     adoption.retry_tick = game.tick + 30 * 60
@@ -7935,7 +7936,7 @@ function clear_megapack_buyer_trip(unit_number, resume_wandering)
   return true
 end
 
-function megapack_buyer_destination(entity, target, radius, salt)
+function grid_battery_buyer_destination(entity, target, radius, salt)
   local angle = ((entity.unit_number or 0) * 0.61803398875 + (salt or 0)) % (2 * math.pi)
   local position = {
     x = target.x + math.cos(angle) * radius,
@@ -7945,10 +7946,10 @@ function megapack_buyer_destination(entity, target, radius, salt)
     or position
 end
 
-function ensure_megapack_buyer_icon(trip, entity)
+function ensure_grid_battery_buyer_icon(trip, entity)
   if not entity or not entity.valid or (trip.buyer_icon and trip.buyer_icon.valid) then return end
   trip.buyer_icon = rendering.draw_sprite{
-    sprite = "item/" .. MEGAPACK_NAME,
+    sprite = "item/" .. GRID_BATTERY_NAME,
     surface = entity.surface,
     target = entity,
     target_offset = {0, -1.6},
@@ -7958,11 +7959,11 @@ function ensure_megapack_buyer_icon(trip, entity)
   }
 end
 
-function begin_megapack_buyer_trip(office, key, population, unit_number)
+function begin_grid_battery_buyer_trip(office, key, population, unit_number)
   local entity = customer_unit_registry()[unit_number]
-  local adoption = ensure_megapack_adoption_state(key, population)
+  local adoption = ensure_grid_battery_adoption_state(key, population)
   if not entity or not entity.valid or not entity.commandable or not adoption then return false end
-  local destination = megapack_buyer_destination(entity, office.position, 4.5, office.unit_number)
+  local destination = grid_battery_buyer_destination(entity, office.position, 4.5, office.unit_number)
   entity.commandable.set_command{
     type = defines.command.go_to_location,
     destination = destination,
@@ -7980,15 +7981,15 @@ function begin_megapack_buyer_trip(office, key, population, unit_number)
     showroom_position = destination,
     command_started_tick = game.tick
   }
-  ensure_megapack_buyer_icon(trip, entity)
-  megapack_buyer_trips()[unit_number] = trip
-  megapack_buyer_reservations()[unit_number] = office.unit_number
-  megapack_office_reservations()[office.unit_number] = unit_number
+  ensure_grid_battery_buyer_icon(trip, entity)
+  grid_battery_buyer_trips()[unit_number] = trip
+  grid_battery_buyer_reservations()[unit_number] = office.unit_number
+  grid_battery_office_reservations()[office.unit_number] = unit_number
   adoption.reserved = (adoption.reserved or 0) + 1
   return true
 end
 
-function available_megapack_representatives()
+function available_grid_battery_representatives()
   local by_settlement = {}
   for unit_number, entity in pairs(customer_unit_registry()) do
     local home = customer_home_settlements()[unit_number]
@@ -7999,7 +8000,7 @@ function available_megapack_representatives()
       or commute.phase == "returning_home"
     )
     if entity and entity.valid and home and entity.force.name == CUSTOMER_FORCE_NAME
-      and not megapack_buyer_reservations()[unit_number]
+      and not grid_battery_buyer_reservations()[unit_number]
       and not buyer_reserved_by_unit()[unit_number]
       and not customer_road_rage_states()[unit_number]
       and not commute_busy then
@@ -8010,11 +8011,11 @@ function available_megapack_representatives()
   return by_settlement
 end
 
-function reserve_megapack_buyer(office, representatives)
+function reserve_grid_battery_buyer(office, representatives)
   local candidates = {}
   for key, population in pairs(customer_settlement_populations()) do
-    if population_in_megapack_office_market(office, population) then
-      local adoption = ensure_megapack_adoption_state(key, population)
+    if population_in_grid_battery_office_market(office, population) then
+      local adoption = ensure_grid_battery_adoption_state(key, population)
       local waiting = adoption
         and math.max(0, adoption.eligible - adoption.installed - adoption.reserved) or 0
       local units = representatives[key]
@@ -8038,7 +8039,7 @@ function reserve_megapack_buyer(office, representatives)
   local candidate = candidates[1]
   if not candidate then return false end
   table.remove(representatives[candidate.key])
-  return begin_megapack_buyer_trip(
+  return begin_grid_battery_buyer_trip(
     office,
     candidate.key,
     candidate.population,
@@ -8046,14 +8047,14 @@ function reserve_megapack_buyer(office, representatives)
   )
 end
 
-function send_megapack_buyer_home(trip)
+function send_grid_battery_buyer_home(trip)
   local entity = customer_unit_registry()[trip.unit_number]
   local population = customer_settlement_populations()[trip.settlement_key]
   if not entity or not entity.valid or not entity.commandable or not population
     or entity.surface.index ~= population.surface_index then
     return false
   end
-  local destination = megapack_buyer_destination(
+  local destination = grid_battery_buyer_destination(
     entity,
     population.position,
     8 + ((trip.unit_number * 7) % 13),
@@ -8071,7 +8072,7 @@ function send_megapack_buyer_home(trip)
   if trip.buyer_icon and trip.buyer_icon.valid then trip.buyer_icon.destroy() end
   trip.buyer_icon = nil
   trip.carry_icon = rendering.draw_sprite{
-    sprite = "item/" .. MEGAPACK_NAME,
+    sprite = "item/" .. GRID_BATTERY_NAME,
     surface = entity.surface,
     target = entity,
     target_offset = {0, -1.6},
@@ -8082,12 +8083,12 @@ function send_megapack_buyer_home(trip)
   return true
 end
 
-function hold_megapack_buyer_at_showroom(trip, entity)
+function hold_grid_battery_buyer_at_showroom(trip, entity)
   local office = trip.office
   if not office or not office.valid or not entity or not entity.valid or not entity.commandable then
     return false
   end
-  local target = trip.showroom_position or megapack_buyer_destination(
+  local target = trip.showroom_position or grid_battery_buyer_destination(
     entity,
     office.position,
     4.5,
@@ -8115,25 +8116,25 @@ function hold_megapack_buyer_at_showroom(trip, entity)
   return true
 end
 
-function complete_megapack_sale(office)
-  local unit_number = megapack_office_reservations()[office.unit_number]
-  local trip = unit_number and megapack_buyer_trips()[unit_number]
+function complete_grid_battery_sale(office)
+  local unit_number = grid_battery_office_reservations()[office.unit_number]
+  local trip = unit_number and grid_battery_buyer_trips()[unit_number]
   if not trip or trip.phase ~= "waiting_product" then return false end
-  megapack_office_reservations()[office.unit_number] = nil
+  grid_battery_office_reservations()[office.unit_number] = nil
   office.disabled_by_script = true
-  if not send_megapack_buyer_home(trip) then
-    clear_megapack_buyer_trip(unit_number, true)
+  if not send_grid_battery_buyer_home(trip) then
+    clear_grid_battery_buyer_trip(unit_number, true)
     return false
   end
   return true
 end
 
-function install_megapack_at_settlement(unit_number)
-  local trip = megapack_buyer_trips()[unit_number]
+function install_grid_battery_at_settlement(unit_number)
+  local trip = grid_battery_buyer_trips()[unit_number]
   if not trip then return false end
-  local adoption = megapack_adoption_states()[trip.settlement_key]
+  local adoption = grid_battery_adoption_states()[trip.settlement_key]
   if not adoption then
-    clear_megapack_buyer_trip(unit_number, true)
+    clear_grid_battery_buyer_trip(unit_number, true)
     return false
   end
   if trip.carry_icon and trip.carry_icon.valid then trip.carry_icon.destroy() end
@@ -8141,10 +8142,10 @@ function install_megapack_at_settlement(unit_number)
   adoption.installed = math.min(adoption.eligible, (adoption.installed or 0) + 1)
   adoption.retry_tick = nil
   adoption.next_referral_tick = adoption.next_referral_tick
-    or (game.tick + MEGAPACK_REFERRAL_WAVE_TICKS)
-  megapack_buyer_reservations()[unit_number] = nil
-  megapack_buyer_trips()[unit_number] = nil
-  refresh_megapack_installation_rendering(trip.settlement_key)
+    or (game.tick + GRID_BATTERY_REFERRAL_WAVE_TICKS)
+  grid_battery_buyer_reservations()[unit_number] = nil
+  grid_battery_buyer_trips()[unit_number] = nil
+  refresh_grid_battery_installation_rendering(trip.settlement_key)
   local entity = customer_unit_registry()[unit_number]
   if entity and entity.valid then
     give_customer_wander_command(entity, true)
@@ -8156,8 +8157,8 @@ function install_megapack_at_settlement(unit_number)
   return true
 end
 
-function complete_megapack_buyer_arrival(unit_number)
-  local trip = megapack_buyer_trips()[unit_number]
+function complete_grid_battery_buyer_arrival(unit_number)
+  local trip = grid_battery_buyer_trips()[unit_number]
   local entity = customer_unit_registry()[unit_number]
   if not trip or not entity or not entity.valid or not trip.destination then return false end
   local dx = entity.position.x - trip.destination.x
@@ -8168,65 +8169,65 @@ function complete_megapack_buyer_arrival(unit_number)
     trip.phase = "waiting_product"
     trip.showroom_position = trip.showroom_position or trip.destination
     trip.destination = nil
-    return hold_megapack_buyer_at_showroom(trip, entity)
+    return hold_grid_battery_buyer_at_showroom(trip, entity)
   elseif trip.phase == "returning_home" then
-    install_megapack_at_settlement(unit_number)
+    install_grid_battery_at_settlement(unit_number)
     return true
   end
   return false
 end
 
-function handle_megapack_buyer_command_completed(event)
-  local trip = event.unit_number and megapack_buyer_trips()[event.unit_number]
+function handle_grid_battery_buyer_command_completed(event)
+  local trip = event.unit_number and grid_battery_buyer_trips()[event.unit_number]
   if not trip then return false end
   local entity = customer_unit_registry()[event.unit_number]
   if not entity or not entity.valid then
-    clear_megapack_buyer_trip(event.unit_number, false)
+    clear_grid_battery_buyer_trip(event.unit_number, false)
     return true
   end
   if trip.phase == "waiting_product" then
-    if not hold_megapack_buyer_at_showroom(trip, entity) then
-      clear_megapack_buyer_trip(event.unit_number, true)
+    if not hold_grid_battery_buyer_at_showroom(trip, entity) then
+      clear_grid_battery_buyer_trip(event.unit_number, true)
     end
     return true
   end
-  if not complete_megapack_buyer_arrival(event.unit_number) then
-    clear_megapack_buyer_trip(event.unit_number, true)
+  if not complete_grid_battery_buyer_arrival(event.unit_number) then
+    clear_grid_battery_buyer_trip(event.unit_number, true)
   end
   return true
 end
 
-function process_megapack_buyer_trips()
+function process_grid_battery_buyer_trips()
   local active = 0
-  for unit_number, trip in pairs(megapack_buyer_trips()) do
+  for unit_number, trip in pairs(grid_battery_buyer_trips()) do
     local entity = customer_unit_registry()[unit_number]
     local office = trip.office
     local invalid = not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
       or not customer_settlement_populations()[trip.settlement_key]
     if trip.phase == "to_office" or trip.phase == "waiting_product" then
       invalid = invalid or not office or not office.valid
-        or current_recipe_name(office) ~= MEGAPACK_SALE_RECIPE
+        or current_recipe_name(office) ~= GRID_BATTERY_SALE_RECIPE
     end
     if not invalid and (trip.phase == "to_office" or trip.phase == "waiting_product") then
-      ensure_megapack_buyer_icon(trip, entity)
+      ensure_grid_battery_buyer_icon(trip, entity)
     end
     if invalid then
-      clear_megapack_buyer_trip(unit_number, true)
+      clear_grid_battery_buyer_trip(unit_number, true)
     elseif trip.phase == "waiting_product" then
       local showroom_position = trip.showroom_position
       local dx = showroom_position and entity.position.x - showroom_position.x or math.huge
       local dy = showroom_position and entity.position.y - showroom_position.y or math.huge
       if dx * dx + dy * dy > 16 then
-        hold_megapack_buyer_at_showroom(trip, entity)
+        hold_grid_battery_buyer_at_showroom(trip, entity)
       end
       active = active + 1
     elseif (trip.phase == "to_office" or trip.phase == "returning_home")
-      and complete_megapack_buyer_arrival(unit_number) then
-      if megapack_buyer_trips()[unit_number] then active = active + 1 end
+      and complete_grid_battery_buyer_arrival(unit_number) then
+      if grid_battery_buyer_trips()[unit_number] then active = active + 1 end
     elseif (trip.phase == "to_office" or trip.phase == "returning_home")
       and game.tick - (trip.command_started_tick or game.tick)
-        >= MEGAPACK_BUYER_PATH_TIMEOUT_TICKS then
-      clear_megapack_buyer_trip(unit_number, true)
+        >= GRID_BATTERY_BUYER_PATH_TIMEOUT_TICKS then
+      clear_grid_battery_buyer_trip(unit_number, true)
     else
       active = active + 1
     end
@@ -8234,10 +8235,10 @@ function process_megapack_buyer_trips()
   return active
 end
 
-function sync_megapack_sales_offices()
-  sync_megapack_adoption_waves()
-  local active = process_megapack_buyer_trips()
-  local representatives = available_megapack_representatives()
+function sync_grid_battery_sales_offices()
+  sync_grid_battery_adoption_waves()
+  local active = process_grid_battery_buyer_trips()
+  local representatives = available_grid_battery_representatives()
   local starts = 0
   storage.bitermotors_sales_office_coverage_recipes =
     storage.bitermotors_sales_office_coverage_recipes or {}
@@ -8247,27 +8248,27 @@ function sync_megapack_sales_offices()
     if office.valid and office.unit_number then
       seen_offices[office.unit_number] = true
       local recipe_name = current_recipe_name(office)
-      local megapack_market = recipe_name == MEGAPACK_SALE_RECIPE
-      if coverage_recipes[office.unit_number] ~= megapack_market then
-        coverage_recipes[office.unit_number] = megapack_market
+      local grid_battery_market = recipe_name == GRID_BATTERY_SALE_RECIPE
+      if coverage_recipes[office.unit_number] ~= grid_battery_market then
+        coverage_recipes[office.unit_number] = grid_battery_market
         mark_sales_office_coverage_dirty()
       end
-      local reserved_unit = megapack_office_reservations()[office.unit_number]
-      local trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
-      if recipe_name ~= MEGAPACK_SALE_RECIPE then
+      local reserved_unit = grid_battery_office_reservations()[office.unit_number]
+      local trip = reserved_unit and grid_battery_buyer_trips()[reserved_unit]
+      if recipe_name ~= GRID_BATTERY_SALE_RECIPE then
         if trip and trip.phase ~= "returning_home" then
-          clear_megapack_buyer_trip(reserved_unit, true)
+          clear_grid_battery_buyer_trip(reserved_unit, true)
         end
       else
-        if not trip and starts < MEGAPACK_BUYER_STARTS_PER_SECOND
-          and active + starts < MEGAPACK_BUYER_MAX_ACTIVE
-          and reserve_megapack_buyer(office, representatives) then
-          reserved_unit = megapack_office_reservations()[office.unit_number]
-          trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
+        if not trip and starts < GRID_BATTERY_BUYER_STARTS_PER_SECOND
+          and active + starts < GRID_BATTERY_BUYER_MAX_ACTIVE
+          and reserve_grid_battery_buyer(office, representatives) then
+          reserved_unit = grid_battery_office_reservations()[office.unit_number]
+          trip = reserved_unit and grid_battery_buyer_trips()[reserved_unit]
           starts = starts + 1
         end
         office.disabled_by_script = not trip or trip.phase ~= "waiting_product"
-        local status = megapack_office_status(office)
+        local status = grid_battery_office_status(office)
         local label
         local diode
         if trip and trip.phase == "to_office" then
@@ -8303,7 +8304,7 @@ function dequeue_available_buyer(queue, office, expected_settlement_key, vehicle
     local available = valid_customer
       and customer_can_purchase_vehicle(unit_number, vehicle)
       and not buyer_reserved_by_unit()[unit_number]
-      and not megapack_buyer_reservations()[unit_number]
+      and not grid_battery_buyer_reservations()[unit_number]
     if available then
       return true, false
     end
@@ -8724,7 +8725,7 @@ function sync_sales_office_buyers()
         local recipe_name = recipe and recipe.name
         local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
         local reservation = office_buyer_reservations()[office.unit_number]
-        if recipe_name == MEGAPACK_SALE_RECIPE then
+        if recipe_name == GRID_BATTERY_SALE_RECIPE then
           clear_office_buyer_reservation(office.unit_number)
         elseif not sale then
           clear_office_buyer_reservation(office.unit_number)
@@ -8767,7 +8768,7 @@ function sync_sales_office_buyers()
             office.disabled_by_script = not valid_reservation
           end
         end
-        if recipe_name ~= MEGAPACK_SALE_RECIPE then
+        if recipe_name ~= GRID_BATTERY_SALE_RECIPE then
           update_sales_office_market_feedback(office, sales_office_buyer_status(office))
         end
       end
@@ -8775,7 +8776,7 @@ function sync_sales_office_buyers()
   for unit_number in pairs(sales_office_market_states()) do
     if not seen[unit_number] then sales_office_market_states()[unit_number] = nil end
   end
-  sync_megapack_sales_offices()
+  sync_grid_battery_sales_offices()
 end
 
 function accelerate_consumer_ev_sales()
@@ -8791,17 +8792,17 @@ function accelerate_consumer_ev_sales()
   end
 end
 
-function robotaxi_audio_revenue_progress()
-  storage.bitermotors_robotaxi_audio_revenue_progress = storage.bitermotors_robotaxi_audio_revenue_progress or {}
-  return storage.bitermotors_robotaxi_audio_revenue_progress
+function bitertaxi_audio_revenue_progress()
+  storage.bitermotors_bitertaxi_audio_revenue_progress = storage.bitermotors_bitertaxi_audio_revenue_progress or {}
+  return storage.bitermotors_bitertaxi_audio_revenue_progress
 end
 
-function award_robotaxi_audio_revenue(office, completed_crafts)
+function award_bitertaxi_audio_revenue(office, completed_crafts)
   local level = continuous_improvement_level(office.force, PREMIUM_AUDIO_TECH_NAME)
   if level <= 0 or completed_crafts <= 0 then
     return 0
   end
-  local progress = robotaxi_audio_revenue_progress()
+  local progress = bitertaxi_audio_revenue_progress()
   local accumulated = (progress[office.unit_number] or 0) + completed_crafts * level * 0.05
   local whole_dollars = math.floor(accumulated)
   if whole_dollars <= 0 then
@@ -8938,7 +8939,7 @@ function complete_reserved_vehicle_sale(office, recipe_name)
       }
       enqueue_customer_commute(owner_unit_number)
       if customer_has_available_vehicle_purchase(owner_unit_number, office.force)
-        and not megapack_buyer_reservations()[owner_unit_number] then
+        and not grid_battery_buyer_reservations()[owner_unit_number] then
         enqueue_customer_buyer(
           owner_unit_number,
           customer_home_settlements()[owner_unit_number]
@@ -8979,8 +8980,8 @@ local function check_first_prototype_sales()
         local recipe_name = current_recipe_name(office)
         local completed_crafts = math.max(0, products - previous_products)
         if completed_crafts > 0 then
-          if recipe_name == MEGAPACK_SALE_RECIPE then
-            complete_megapack_sale(office)
+          if recipe_name == GRID_BATTERY_SALE_RECIPE then
+            complete_grid_battery_sale(office)
           else
             complete_reserved_vehicle_sale(office, recipe_name)
           end
@@ -8995,9 +8996,9 @@ local function check_first_prototype_sales()
           announce_first_premium_ev_sale(office.force)
         elseif recipe_name == MASS_MARKET_EV_SALE_RECIPE and completed_crafts > 0 then
           announce_first_mass_market_ev_sale(office.force)
-        elseif recipe_name == ROBOTAXI_SALE_RECIPE and completed_crafts > 0 then
-          award_robotaxi_audio_revenue(office, completed_crafts)
-          announce_first_robotaxi_service(office.force)
+        elseif recipe_name == BITERTAXI_SALE_RECIPE and completed_crafts > 0 then
+          award_bitertaxi_audio_revenue(office, completed_crafts)
+          announce_first_bitertaxi_depot(office.force)
         end
         products_by_unit[office.unit_number] = products
       end
@@ -9057,7 +9058,7 @@ local function progress_snapshot(force)
   local commutes = customer_commute_summary(force)
   local sales_gates = sync_ev_sales_recipe_gates(force, false)
   local sold = sold_customer_evs(force)
-  local megapack_adoption = megapack_adoption_summary(force)
+  local grid_battery_adoption = grid_battery_adoption_summary(force)
   local premium_evs_produced = count_item_produced(force, PREMIUM_EV_NAME)
   local advanced_battery_chemistry_available = sync_advanced_battery_chemistry_gate(force, false)
   local foundry_gate = sync_foundry_power_gate(force, false)
@@ -9088,7 +9089,7 @@ local function progress_snapshot(force)
     first_sale_complete = first_sale_complete,
     premium_sale_complete = premium_sale_complete,
     mass_market_sale_complete = first_mass_market_ev_sales()[force.name] == true,
-    robotaxi_sale_complete = first_robotaxi_sales()[force.name] == true,
+    bitertaxi_sale_complete = first_bitertaxi_sales()[force.name] == true,
     sales_offices = count_entities(force, SALES_OFFICE_NAME),
     big_mining_drills = count_entities(force, "big-mining-drill"),
     foundries = count_entities(force, "foundry"),
@@ -9124,7 +9125,7 @@ local function progress_snapshot(force)
     premium_ev_gate = sales_gates.premium,
     mass_market_ev_gate = sales_gates.mass_market,
     megatruck_gate = sales_gates.megatruck,
-    robotaxi_gate = sales_gates.robotaxi,
+    bitertaxi_gate = sales_gates.bitertaxi,
     customer_commutes_en_route = commutes.en_route,
     customer_commutes_charging = commutes.charging,
     customer_commutes_completed = commutes.completed,
@@ -9136,23 +9137,23 @@ local function progress_snapshot(force)
     customer_prospects = market.customer_prospects,
     reservation_prospects = market.reservation_prospects,
     reservation_stock = market.charger_reservation_stock,
-    gigafactories = count_entities(force, "bitermotors-gigafactory-building"),
-    gigafactories_v2 = count_entities(force, "bitermotors-gigafactory-v2"),
+    biterfactories = count_entities(force, "bitermotors-biterfactory-building"),
+    biterfactories_v2 = count_entities(force, "bitermotors-biterfactory-v2"),
     chargers_v1 = count_entities(force, "bitermotors-ev-charging-station"),
     chargers_v2 = count_entities(force, "bitermotors-ev-charging-station-v2"),
     chargers_v3 = count_entities(force, "bitermotors-ev-charging-station-v3"),
     chargers_v4 = count_entities(force, "bitermotors-ev-charging-station-v4"),
     solar_arrays = count_entities(force, HIGH_DENSITY_SOLAR_ARRAY_NAME),
     tandem_solar_arrays = count_entities(force, TANDEM_SOLAR_ARRAY_NAME),
-    megapacks = count_entities(force, MEGAPACK_NAME),
-    grid_megapacks = count_entities(force, GRID_MEGAPACK_NAME),
-    megapack_energy_settlements = megapack_adoption.settlements,
-    megapack_energy_population = megapack_adoption.population,
-    megapack_believers_waiting = megapack_adoption.waiting,
-    megapack_buyers_reserved = megapack_adoption.reserved,
-    megapack_buyers_in_transit = megapack_adoption.in_transit,
-    megapacks_installed_by_customers = megapack_adoption.installed,
-    megapack_adoption_percent = megapack_adoption.adoption_percent,
+    grid_batteries = count_entities(force, GRID_BATTERY_NAME),
+    grid_battery_arrays = count_entities(force, GRID_BATTERY_ARRAY_NAME),
+    grid_battery_energy_settlements = grid_battery_adoption.settlements,
+    grid_battery_energy_population = grid_battery_adoption.population,
+    grid_battery_believers_waiting = grid_battery_adoption.waiting,
+    grid_battery_buyers_reserved = grid_battery_adoption.reserved,
+    grid_battery_buyers_in_transit = grid_battery_adoption.in_transit,
+    grid_batteries_installed_by_customers = grid_battery_adoption.installed,
+    grid_battery_adoption_percent = grid_battery_adoption.adoption_percent,
     datacenters = count_entities(force, TERRESTRIAL_DATACENTER_NAME),
     orbital_datacenter_cores = orbital_cooling.cores,
     cooled_orbital_datacenter_cores = orbital_cooling.cooled_cores,
@@ -9178,14 +9179,14 @@ local function progress_snapshot(force)
     premium_pilot_production_gate = PREMIUM_PILOT_PRODUCTION_GATE,
     advanced_battery_chemistry_production_gate = ADVANCED_BATTERY_CHEMISTRY_PRODUCTION_GATE,
     mass_market_evs_produced = count_item_produced(force, "bitermotors-mass-market-ev"),
-    robotaxi_fleets_produced = count_item_produced(force, "bitermotors-robotaxi-fleet"),
-    robotaxi_service_centers = count_entities(force, ROBOTAXI_SERVICE_CENTER_NAME),
-    supercharging_level = improvements.supercharging,
+    bitertaxi_fleets_produced = count_item_produced(force, "bitermotors-bitertaxi-fleet"),
+    bitertaxi_depots = count_entities(force, BITERTAXI_DEPOT_NAME),
+    rapid_charging_level = improvements.rapid_charging,
     battery_level = improvements.battery,
     audio_level = improvements.audio,
     referral_level = improvements.referrals,
     solar_productivity_level = improvements.solar_productivity,
-    megapack_productivity_level = improvements.megapack_productivity,
+    grid_battery_productivity_level = improvements.grid_battery_productivity,
     victory = victory_forces()[force.name] == true
   }
 end
@@ -9212,22 +9213,22 @@ local function current_progress_objective(snapshot)
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
     return "Premium pilot production", string.format("Build %d Premium EVs with commodity Batteries.", snapshot.premium_pilot_production_gate), string.format(
-      "Pilot vehicles produced: %d / %d. Each early vehicle consumes 48 conventional Batteries; completing the pilot unlocks Gigafactory construction.",
+      "Pilot vehicles produced: %d / %d. Each early vehicle consumes 48 conventional Batteries; completing the pilot unlocks Biterfactory construction.",
       snapshot.premium_evs_produced,
       snapshot.premium_pilot_production_gate
     )
-  elseif snapshot.gigafactories == 0 and snapshot.gigafactories_v2 == 0 then
-    return "Premium production", "Construct the first Gigafactory.",
-      "Build 10 Gigafactory Modules, add 2 Substations, then place the 9x9, 20 MW factory. Its first job is scaling the commodity-cell Premium EV."
+  elseif snapshot.biterfactories == 0 and snapshot.biterfactories_v2 == 0 then
+    return "Premium production", "Construct the first Biterfactory.",
+      "Build 10 Biterfactory Modules, add 2 Substations, then place the 9x9, 20 MW factory. Its first job is scaling the commodity-cell Premium EV."
   elseif not snapshot.premium_sale_complete then
     return "Premium production", "Produce and sell a Premium EV.",
-      "Select the commodity-cell Premium EV in the Gigafactory and route the vehicle plus one EV Reservation to a Sales Office."
+      "Select the commodity-cell Premium EV in the Biterfactory and route the vehicle plus one EV Reservation to a Sales Office."
   elseif snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then
-    return "Gigafactory scale", string.format(
+    return "Biterfactory scale", string.format(
       "Produce %d Premium EVs before changing battery technology.",
       snapshot.advanced_battery_chemistry_production_gate
     ), string.format(
-      "Factory-scale vehicles produced: %d / %d. Keep the conventional Battery supply running until its cost and throughput limits are proven at Gigafactory scale.",
+      "Factory-scale vehicles produced: %d / %d. Keep the conventional Battery supply running until its cost and throughput limits are proven at Biterfactory scale.",
       snapshot.premium_evs_produced,
       snapshot.advanced_battery_chemistry_production_gate
     )
@@ -9245,21 +9246,21 @@ local function current_progress_objective(snapshot)
       "Use Chemical Plants. Route Acidic Tailings into tanks, then neutralize it with Calcite instead of allowing byproduct backpressure to stop refining."
   elseif snapshot.high_nickel_cells_produced == 0 then
     return "Battery cells", "Manufacture the first High-nickel Cells.",
-      "Use High-nickel cells (Chemical Plant) for a four-cell batch, or High-nickel cells (Gigafactory) for five. Both consume Nickel Sulfate, Lithium Carbonate, Battery Graphite, and the Cobalt Concentrate from dirty refining."
+      "Use High-nickel cells (Chemical Plant) for a four-cell batch, or High-nickel cells (Biterfactory) for five. Both consume Nickel Sulfate, Lithium Carbonate, Battery Graphite, and the Cobalt Concentrate from dirty refining."
   elseif snapshot.high_energy_battery_packs_produced == 0 then
     return "Battery packs", "Assemble the first High-energy Battery Pack.",
-      "Combine four High-nickel Cells, four Steel Plates, and two Advanced Circuits. One Chemical Plant cell batch fills one pack; the Gigafactory route yields one spare cell per cycle."
+      "Combine four High-nickel Cells, four Steel Plates, and two Advanced Circuits. One Chemical Plant cell batch fills one pack; the Biterfactory route yields one spare cell per cycle."
   elseif not snapshot.energy_products_researched then
     return "Energy products", "Research Energy Products for industrial expansion.",
-      "Charging demand grows with every customer EV. Unlock High-density Solar Panels, LFP chemistry, and Megapacks before Foundry and mass-market expansion."
+      "Charging demand grows with every customer EV. Unlock High-density Solar Panels, LFP chemistry, and Grid Batteries before Foundry and mass-market expansion."
   elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then
     local gate = snapshot.foundry_power_gate
     return "Industrial electrification", "Prove a 5 MW solar industrial block.", string.format(
-      "Produce %d / %d High-density Solar Panels and %d / %d Megapacks. Landing-kit equipment does not count; this milestone proves new Energy Products manufacturing before Foundries arrive.",
+      "Produce %d / %d High-density Solar Panels and %d / %d Grid Batteries. Landing-kit equipment does not count; this milestone proves new Energy Products manufacturing before Foundries arrive.",
       gate.solar_panels,
       gate.solar_target,
-      gate.megapacks,
-      gate.megapack_target
+      gate.grid_batteries,
+      gate.grid_battery_target
     )
   elseif not snapshot.foundry_researched then
     return "Metallurgical scaling", "Research Metallurgical Scaling.",
@@ -9271,37 +9272,37 @@ local function current_progress_objective(snapshot)
   elseif snapshot.chargers_v2 == 0 then
     return "Charging network", "Craft and place a V2 charger.", "In an Assembling Machine 2 or 3, craft it from 1 V1 charger, 2 Substations, and 20 Processing Units."
   elseif not snapshot.mass_market_researched then
-    return "Mass-market scale", "Research Mass-market EV Production.", "Invest 1,000 cycles through purple and yellow science plus Dollars to unlock Gigacast, Gigafactory V2, mass-market EVs, and V3 charging."
-  elseif snapshot.gigafactories_v2 == 0 then
-    return "Mass-market scale", "Upgrade a Gigafactory to V2.", "Craft V2 in an Assembling Machine or Gigafactory from 1 Gigafactory item, 1 Gigacast, and 100 Dollars, then place it directly over a V1."
+    return "Mass-market scale", "Research Mass-market EV Production.", "Invest 1,000 cycles through purple and yellow science plus Dollars to unlock Structural Casting, Biterfactory V2, mass-market EVs, and V3 charging."
+  elseif snapshot.biterfactories_v2 == 0 then
+    return "Mass-market scale", "Upgrade a Biterfactory to V2.", "Craft V2 in an Assembling Machine or Biterfactory from 1 Biterfactory item, 1 Structural Casting, and 100 Dollars, then place it directly over a V1."
   elseif not snapshot.mass_market_sale_complete then
-    return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Gigafactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
+    return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Biterfactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
   elseif not snapshot.megatruck_gate.market_ready then
     return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Megatruck production.", snapshot.mass_market_evs_sold)
   elseif not snapshot.megatruck_gate.technology_ready then
     return "Megatruck engineering", "Research Megatruck Engineering.", "Develop Tank technology, then invest science and Dollars to adapt armored-vehicle engineering for the Megatruck."
   elseif snapshot.chargers_v3 == 0 then
-    return "Supercharging", "Craft and place a V3 Supercharger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
-  elseif snapshot.solar_arrays == 0 or snapshot.megapacks == 0 then
-    return "Energy products", "Build a High-density Solar Panel and a Megapack.", "Upgrade a conventional panel in an assembler; Gigafactories can mass-produce panels more cheaply. Build Megapacks in either Gigafactory tier."
+    return "Rapid Charging", "Craft and place a V3 Rapid Charger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
+  elseif snapshot.solar_arrays == 0 or snapshot.grid_batteries == 0 then
+    return "Energy products", "Build a High-density Solar Panel and a Grid Battery.", "Upgrade a conventional panel in an assembler; Biterfactories can mass-produce panels more cheaply. Build Grid Batteries in either Biterfactory tier."
   elseif not snapshot.terrestrial_ai_researched then
     return "Terrestrial AI", "Research Terrestrial AI.", "Unlock Datacenter Racks, Autonomy Computers, and an 8 MW Terrestrial Datacenter that converts electricity into AI Tokens."
   elseif snapshot.datacenters == 0 then
-    return "Terrestrial AI", "Build a Terrestrial Datacenter.", "Combine 4 Datacenter Racks, a Gigafactory Module, 4 Substations, and 100 Refined Concrete."
+    return "Terrestrial AI", "Build a Terrestrial Datacenter.", "Combine 4 Datacenter Racks, a Biterfactory Module, 4 Substations, and 100 Refined Concrete."
   elseif snapshot.ai_tokens_produced < 1000 then
     return "Terrestrial AI", "Generate 1,000 AI Tokens.", "Supply 20 Dollars per cycle; one 8 MW datacenter produces 20 tokens every 30 seconds."
   elseif not snapshot.autonomous_logistics_researched then
-    return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Robotaxi Fleets."
-  elseif not snapshot.robotaxi_gate.market_ready then
+    return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Bitertaxi Fleets."
+  elseif not snapshot.bitertaxi_gate.market_ready then
     return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Megatruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
-  elseif snapshot.robotaxi_fleets_produced == 0 then
-    return "Autonomy", "Build the first Robotaxi Fleet in Gigafactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
+  elseif snapshot.bitertaxi_fleets_produced == 0 then
+    return "Autonomy", "Build the first Bitertaxi Fleet in Biterfactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
   elseif snapshot.chargers_v4 == 0 then
-    return "Supercharging", "Craft and place a solar-canopy V4 Supercharger.", "Craft it from 1 V3 Supercharger, 4 High-density Solar Panels, 4 Megapacks, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
-  elseif snapshot.robotaxi_service_centers == 0 then
-    return "Autonomy", "Build a Robotaxi Service Center.", "Combine a V4 Supercharger, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Robotaxis and draws 10 MW."
-  elseif not snapshot.robotaxi_sale_complete then
-    return "Autonomy", "Operate the Robotaxi service.", "Load Robotaxis into the 40-slot fleet inventory. Each vehicle serves five nearby mobile customers; recurring profit completes the terrestrial business loop."
+    return "Rapid Charging", "Craft and place a solar-canopy V4 Solar Charging Hub.", "Craft it from 1 V3 Rapid Charger, 4 High-density Solar Panels, 4 Grid Batteries, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
+  elseif snapshot.bitertaxi_depots == 0 then
+    return "Autonomy", "Build a Bitertaxi Depot.", "Combine a V4 Solar Charging Hub, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Bitertaxis and draws 10 MW."
+  elseif not snapshot.bitertaxi_sale_complete then
+    return "Autonomy", "Operate the Bitertaxi service.", "Load Bitertaxis into the 40-slot fleet inventory. Each vehicle serves five nearby mobile customers; recurring profit completes the terrestrial business loop."
   elseif not snapshot.orbital_compute_researched then
     return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", "Use the vanilla Rocket Silo and a stationary platform over Nauvis, then invest 2,000 cycles through space science plus AI Tokens and Dollars."
   elseif snapshot.orbital_datacenter_cores == 0 then
@@ -9331,11 +9332,11 @@ local function current_progress_objective(snapshot)
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.grid_scale_energy_researched then
-    return "Grid-scale energy", "Research Grid-scale Energy.", "Invest 15,000 Dollars plus science to unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Megapacks, and 50,000-token orbital batches."
+    return "Grid-scale energy", "Research Grid-scale Energy.", "Invest 15,000 Dollars plus science to unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 50,000-token orbital batches."
   elseif snapshot.tandem_solar_arrays == 0 then
     return "Grid-scale energy", "Upgrade an HD panel into a Tandem Solar Array.", "Each 3 MW array replaces ten HD panels of generation in the same footprint and is required to make a 10 GW grid practical."
-  elseif snapshot.grid_megapacks == 0 then
-    return "Grid-scale energy", "Upgrade a Megapack into a Grid Megapack.", "Each Grid Megapack stores 1 GJ and can charge or discharge at 50 MW."
+  elseif snapshot.grid_battery_arrays == 0 then
+    return "Grid-scale energy", "Upgrade a Grid Battery into a Grid Battery Array.", "Each Grid Battery Array stores 1 GJ and can charge or discharge at 50 MW."
   elseif snapshot.orbital_ai_tokens_generated < 100000000 then
     return "Hyperscale AI", "Generate 100 million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens per Dollar.",
@@ -9350,7 +9351,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Tokens.", "Terrestrial compute can begin the climb, but orbital compute is required to reach this scale. Tokens already spent still count."
   elseif not snapshot.victory then
-    return "AGI training", "Complete the AGI Training Run.", "Package 1B AI Tokens into 20,000 datasets and 50,000 Dollars into 100 allocations; add 100 Grid Megapacks and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
+    return "AGI training", "Complete the AGI Training Run.", "Package 1B AI Tokens into 20,000 datasets and 50,000 Dollars into 100 allocations; add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
   end
   return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end
@@ -9360,9 +9361,9 @@ local function progress_stages(snapshot)
     {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = snapshot.first_sale_complete},
     {name = "Premium EVs", sprite = "item/bitermotors-premium-ev", complete = snapshot.premium_sale_complete
       and snapshot.premium_evs_produced >= snapshot.premium_pilot_production_gate
-      and snapshot.gigafactories + snapshot.gigafactories_v2 > 0},
+      and snapshot.biterfactories + snapshot.biterfactories_v2 > 0},
     {name = "Mass-market EVs", sprite = "item/bitermotors-mass-market-ev", complete = snapshot.mass_market_sale_complete},
-    {name = "AI and autonomy", sprite = "item/bitermotors-ai-token", complete = snapshot.robotaxi_sale_complete},
+    {name = "AI and autonomy", sprite = "item/bitermotors-ai-token", complete = snapshot.bitertaxi_sale_complete},
     {name = "Orbital AI", sprite = "item/bitermotors-orbital-datacenter-core", complete = snapshot.orbital_ai_tokens_generated > 0},
     {name = "AGI", sprite = "item/bitermotors-agi-model", complete = snapshot.victory}
   }
@@ -9383,7 +9384,7 @@ function progress_objective_icon(stage)
     ["Battery cells"] = "item/bitermotors-high-nickel-cell",
     ["Battery packs"] = "item/bitermotors-high-energy-battery-pack",
     ["Premium pilot production"] = "item/bitermotors-premium-ev",
-    ["Gigafactory scale"] = "item/bitermotors-gigafactory-building",
+    ["Biterfactory scale"] = "item/bitermotors-biterfactory-building",
     ["Premium production"] = "item/bitermotors-premium-ev",
     ["Premium market scale"] = "item/bitermotors-premium-ev",
     ["Energy products"] = "item/bitermotors-high-density-solar-array",
@@ -9392,10 +9393,10 @@ function progress_objective_icon(stage)
     ["Charging network"] = "item/bitermotors-ev-charging-station-v2",
     ["Mass-market scale"] = "item/bitermotors-mass-market-ev",
     ["Megatruck engineering"] = "item/bitermotors-megatruck",
-    ["Supercharging"] = "item/bitermotors-ev-charging-station-v3",
+    ["Rapid Charging"] = "item/bitermotors-ev-charging-station-v3",
     ["Terrestrial AI"] = "item/bitermotors-terrestrial-datacenter",
-    ["Autonomy"] = "item/bitermotors-robotaxi-fleet",
-    ["Autonomy market scale"] = "item/bitermotors-robotaxi-fleet",
+    ["Autonomy"] = "item/bitermotors-bitertaxi-fleet",
+    ["Autonomy market scale"] = "item/bitermotors-bitertaxi-fleet",
     ["Orbital AI"] = "item/bitermotors-orbital-datacenter-core",
     ["Orbital scale"] = "item/bitermotors-ai-token",
     ["Grid-scale energy"] = "item/bitermotors-tandem-solar-array",
@@ -9464,7 +9465,7 @@ function current_progress_measure(snapshot)
   if snapshot.agi_training_unlocked and not snapshot.victory then
     return "AGI training", snapshot.agi_training_progress, 1, true
   end
-  if snapshot.autonomous_logistics_researched and not snapshot.robotaxi_gate.market_ready then
+  if snapshot.autonomous_logistics_researched and not snapshot.bitertaxi_gate.market_ready then
     return "Consumer EV sales", snapshot.consumer_evs_sold, 5000
   end
   if snapshot.terrestrial_ai_researched and snapshot.ai_tokens_produced < 1000 then
@@ -9477,9 +9478,9 @@ function current_progress_measure(snapshot)
     and snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
     return "Premium pilot production", snapshot.premium_evs_produced, snapshot.premium_pilot_production_gate
   end
-  if snapshot.gigafactories + snapshot.gigafactories_v2 > 0
+  if snapshot.biterfactories + snapshot.biterfactories_v2 > 0
     and snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate then
-    return "Gigafactory scale", snapshot.premium_evs_produced, snapshot.advanced_battery_chemistry_production_gate
+    return "Biterfactory scale", snapshot.premium_evs_produced, snapshot.advanced_battery_chemistry_production_gate
   end
   if snapshot.advanced_battery_chemistry_researched then
     if snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
@@ -9701,13 +9702,13 @@ local function refresh_progress_panel(player)
         "%d/%d panels; %d/%d packs",
         gate.solar_panels,
         gate.solar_target,
-        gate.megapacks,
-        gate.megapack_target
+        gate.grid_batteries,
+        gate.grid_battery_target
       ),
       color = BITERMOTORS_STATE_COLORS.warning,
       tooltip = gate.qualified
         and "New Energy Products manufacturing has demonstrated a 5 MW solar industrial block. Research Metallurgical Scaling to unlock Foundries."
-        or "Deploy 25 player-built High-density Solar Panels and 5 player-built Megapacks. Legendary starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
+        or "Deploy 25 player-built High-density Solar Panels and 5 player-built Grid Batteries. Legendary starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
     }
   end
   if snapshot.logistic_system_available or snapshot.logistic_system_researched then
@@ -9718,7 +9719,7 @@ local function refresh_progress_panel(player)
         or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.logistic_system_researched
         and "Requester chests and full logistics are available for multi-ingredient Biter Motors production."
-        or "Logistic System is available to research. It simplifies supplying Sales Offices and Gigafactories."
+        or "Logistic System is available to research. It simplifies supplying Sales Offices and Biterfactories."
     }
   end
   add_progress_section(content, "Terrestrial industry", industry_rows)
@@ -9883,7 +9884,7 @@ local function refresh_progress_panel(player)
       color = snapshot.premium_evs_sold >= 250 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate
         and string.format(
-          "Build %d more Premium EVs with the commodity-battery pilot line to unlock Gigafactory construction.",
+          "Build %d more Premium EVs with the commodity-battery pilot line to unlock Biterfactory construction.",
           math.max(0, snapshot.premium_pilot_production_gate - snapshot.premium_evs_produced)
         )
         or snapshot.premium_evs_produced < snapshot.advanced_battery_chemistry_production_gate
@@ -9909,12 +9910,12 @@ local function refresh_progress_panel(player)
   end
   if snapshot.autonomous_logistics_researched then
     market_rows[#market_rows + 1] = {
-      sprite = "item/bitermotors-robotaxi-fleet", label = "Consumer EV scale",
+      sprite = "item/bitermotors-bitertaxi-fleet", label = "Consumer EV scale",
       value = string.format("%d / 5,000 sold", snapshot.consumer_evs_sold),
       color = snapshot.consumer_evs_sold >= 5000 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.consumer_evs_sold >= 5000
-        and "Consumer market scale is sufficient for Robotaxi deployment."
-        or string.format("Sell %d more consumer EVs of any type to unlock the Robotaxi market gate.", math.max(0, 5000 - snapshot.consumer_evs_sold))
+        and "Consumer market scale is sufficient for Bitertaxi deployment."
+        or string.format("Sell %d more consumer EVs of any type to unlock the Bitertaxi market gate.", math.max(0, 5000 - snapshot.consumer_evs_sold))
     }
   end
   if snapshot.first_sale_complete then
@@ -9998,33 +9999,33 @@ local function refresh_progress_panel(player)
     }
   end
   if snapshot.energy_products_researched
-    and (snapshot.megapack_energy_settlements > 0
-      or snapshot.megapacks_installed_by_customers > 0) then
+    and (snapshot.grid_battery_energy_settlements > 0
+      or snapshot.grid_batteries_installed_by_customers > 0) then
     market_rows[#market_rows + 1] = {
-      sprite = "item/bitermotors-megapack",
-      label = "Megapack adoption",
+      sprite = "item/bitermotors-grid-battery",
+      label = "Grid Battery adoption",
       value = string.format(
         "%d / %d installed (%.1f%%)",
-        snapshot.megapacks_installed_by_customers,
-        snapshot.megapack_energy_population,
-        snapshot.megapack_adoption_percent
+        snapshot.grid_batteries_installed_by_customers,
+        snapshot.grid_battery_energy_population,
+        snapshot.grid_battery_adoption_percent
       ),
-      color = snapshot.megapack_adoption_percent >= 99.9 and BITERMOTORS_STATE_COLORS.good
+      color = snapshot.grid_battery_adoption_percent >= 99.9 and BITERMOTORS_STATE_COLORS.good
         or BITERMOTORS_STATE_COLORS.warning,
-      tooltip = "Households inside the 384-tile Megapack market buy once. After the first installation, referrals make another 5% of remaining households eligible every five minutes."
+      tooltip = "Households inside the 384-tile Grid Battery market buy once. After the first installation, referrals make another 5% of remaining households eligible every five minutes."
     }
     market_rows[#market_rows + 1] = {
       sprite = "entity/small-biter",
       label = "Energy buyers",
       value = string.format(
         "%d waiting; %d reserved; %d travelling",
-        snapshot.megapack_believers_waiting,
-        snapshot.megapack_buyers_reserved,
-        snapshot.megapack_buyers_in_transit
+        snapshot.grid_battery_believers_waiting,
+        snapshot.grid_battery_buyers_reserved,
+        snapshot.grid_battery_buyers_in_transit
       ),
-      color = snapshot.megapack_believers_waiting > 0 and BITERMOTORS_STATE_COLORS.good
+      color = snapshot.grid_battery_believers_waiting > 0 and BITERMOTORS_STATE_COLORS.good
         or BITERMOTORS_STATE_COLORS.neutral,
-      tooltip = "The physical biter is the Megapack reservation. Buyers walk to the Sales Office, wait for product, then carry it home before the installation is counted."
+      tooltip = "The physical biter is the Grid Battery reservation. Buyers walk to the Sales Office, wait for product, then carry it home before the installation is counted."
     }
   end
   if snapshot.planetary_grid_researched then
@@ -10115,8 +10116,8 @@ end
 local function is_bitermotors_manufacturer(entity)
   return entity and entity.valid
     and (entity.name == SALES_OFFICE_NAME
-      or entity.name == ROBOTAXI_SERVICE_CENTER_NAME
-      or GIGAFACTORY_CONFIGS[entity.name] ~= nil)
+      or entity.name == BITERTAXI_DEPOT_NAME
+      or BITERFACTORY_CONFIGS[entity.name] ~= nil)
 end
 
 local function entity_status_text(entity)
@@ -10251,10 +10252,10 @@ local function show_manufacturer_info_panel(player, entity)
   state_row.add{type = "label", caption = "State: "}
   add_station_info_label(state_row, state_text, state_color)
 
-  if entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
-    local snapshot = robotaxi_service_snapshot(entity)
+  if entity.name == BITERTAXI_DEPOT_NAME then
+    local snapshot = bitertaxi_depot_snapshot(entity)
     add_station_info_label(panel, string.format(
-      "Fleet: %d / 200 Robotaxis; %d allocated",
+      "Fleet: %d / 200 Bitertaxis; %d allocated",
       snapshot.stored,
       snapshot.allocated
     ))
@@ -10262,7 +10263,7 @@ local function show_manufacturer_info_panel(player, entity)
       "Customers: %d / %d served within %d tiles",
       snapshot.served,
       snapshot.customers,
-      ROBOTAXI_SERVICE_RADIUS
+      BITERTAXI_DEPOT_RADIUS
     ))
     add_station_info_label(panel, string.format(
       "Built-in V4 charging: %.0f%% power; rated demand 10 MW",
@@ -10285,12 +10286,12 @@ local function show_manufacturer_info_panel(player, entity)
       snapshot.safety_risk_reduction * 100
     ), snapshot.safety_risk_reduction > 0.25 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning)
     add_station_info_label(panel, string.format(
-      "Expected retirement: one per %.0f operating Robotaxi-hours",
+      "Expected retirement: one per %.0f operating Bitertaxi-hours",
       snapshot.expected_vehicle_hours
     ))
-    add_station_info_label(panel, "One Robotaxi serves five customers. Premium Audio increases trip revenue.")
+    add_station_info_label(panel, "One Bitertaxi serves five customers. Premium Audio increases trip revenue.")
     if snapshot.stored == 0 then
-      add_station_info_label(panel, "Next: deliver Robotaxis to the 40-slot fleet inventory.")
+      add_station_info_label(panel, "Next: deliver Bitertaxis to the 40-slot fleet inventory.")
     elseif snapshot.customers == 0 then
       add_station_info_label(panel, "Blocked: no mobile biter customers are inside service coverage.")
     elseif snapshot.power_factor == 0 then
@@ -10305,10 +10306,10 @@ local function show_manufacturer_info_panel(player, entity)
 
   if entity.name == SALES_OFFICE_NAME then
     local recipe = entity.get_recipe()
-    if recipe and recipe.name == MEGAPACK_SALE_RECIPE then
-      local energy = megapack_office_status(entity)
-      local reserved_unit = megapack_office_reservations()[entity.unit_number]
-      local trip = reserved_unit and megapack_buyer_trips()[reserved_unit]
+    if recipe and recipe.name == GRID_BATTERY_SALE_RECIPE then
+      local energy = grid_battery_office_status(entity)
+      local reserved_unit = grid_battery_office_reservations()[entity.unit_number]
+      local trip = reserved_unit and grid_battery_buyer_trips()[reserved_unit]
       local trip_text = "None"
       local trip_color = BITERMOTORS_STATE_COLORS.neutral
       if trip and trip.phase == "to_office" then
@@ -10336,8 +10337,8 @@ local function show_manufacturer_info_panel(player, entity)
           color = energy.settlements > 0 and BITERMOTORS_STATE_COLORS.good
             or BITERMOTORS_STATE_COLORS.bad,
           tooltip = string.format(
-            "Megapack buyers may travel up to %d tiles, three times the normal EV sales radius.",
-            MEGAPACK_SALES_RADIUS
+            "Grid Battery buyers may travel up to %d tiles, three times the normal EV sales radius.",
+            GRID_BATTERY_SALES_RADIUS
           )
         },
         {
@@ -10346,22 +10347,22 @@ local function show_manufacturer_info_panel(player, entity)
           value = string.format("%d waiting; %d reserved", energy.waiting, energy.reserved),
           color = energy.waiting > 0 and BITERMOTORS_STATE_COLORS.good
             or BITERMOTORS_STATE_COLORS.neutral,
-          tooltip = "Believers are eligible households that have not installed a Megapack. The first 5% are seeded immediately; referrals add 5% of remaining households every five minutes after the first installation."
+          tooltip = "Believers are eligible households that have not installed a Grid Battery. The first 5% are seeded immediately; referrals add 5% of remaining households every five minutes after the first installation."
         },
         {
-          sprite = "item/bitermotors-megapack",
+          sprite = "item/bitermotors-grid-battery",
           label = "Buyer trip",
           value = trip_text,
           color = trip_color,
           tooltip = "The physical buyer is the reservation. The contract starts only after the buyer reaches this Sales Office."
         },
         {
-          sprite = "item/bitermotors-megapack",
+          sprite = "item/bitermotors-grid-battery",
           label = "Installed",
           value = string.format("%d / %d households", energy.installed, energy.population),
           color = energy.installed > 0 and BITERMOTORS_STATE_COLORS.good
             or BITERMOTORS_STATE_COLORS.warning,
-          tooltip = "A sale counts as installed only after the buyer carries the Megapack home. Each household buys once."
+          tooltip = "A sale counts as installed only after the buyer carries the Grid Battery home. Each household buys once."
         },
         {
           sprite = "item/bitermotors-dollar",
@@ -10391,9 +10392,9 @@ local function show_manufacturer_info_panel(player, entity)
         summary, summary_color = "Energy buyer is travelling to the showroom.", BITERMOTORS_STATE_COLORS.warning
       elseif trip and trip.phase == "waiting_product" then
         if office_has_all_sale_inputs(entity, recipe) then
-          summary, summary_color = "Buyer present. Megapack sale active.", BITERMOTORS_STATE_COLORS.good
+          summary, summary_color = "Buyer present. Grid Battery sale active.", BITERMOTORS_STATE_COLORS.good
         else
-          summary, summary_color = "Buyer present. Deliver one Megapack.", BITERMOTORS_STATE_COLORS.warning
+          summary, summary_color = "Buyer present. Deliver one Grid Battery.", BITERMOTORS_STATE_COLORS.warning
         end
       elseif energy.installed >= energy.population and energy.population > 0 then
         summary, summary_color = "Energy market fully adopted.", BITERMOTORS_STATE_COLORS.good
@@ -10559,7 +10560,7 @@ local function show_manufacturer_info_panel(player, entity)
     add_bitermotors_status_strip(panel, summary, summary_color)
     return
   else
-    local config = GIGAFACTORY_CONFIGS[entity.name]
+    local config = BITERFACTORY_CONFIGS[entity.name]
     add_station_info_label(panel, "Rated demand: " .. config.power)
     if config.productivity then
       add_station_info_label(panel, config.productivity)
@@ -10623,7 +10624,7 @@ local function show_manufacturer_info_panel(player, entity)
 
   local recipe = entity.get_recipe()
   if not recipe then
-    local config = GIGAFACTORY_CONFIGS[entity.name]
+    local config = BITERFACTORY_CONFIGS[entity.name]
     local next_step = entity.name == SALES_OFFICE_NAME
       and "Next: select the available sales contract for the product you are supplying."
       or config.recipe_prompt
@@ -10759,26 +10760,26 @@ local function show_customer_settlement_info_panel(player, settlement)
   if researched(force, "bitermotors-energy-products") then
     local energy_covered = false
     for _, office in pairs(offices) do
-      if current_recipe_name(office) == MEGAPACK_SALE_RECIPE
-        and within_radius(office, settlement, MEGAPACK_SALES_RADIUS) then
+      if current_recipe_name(office) == GRID_BATTERY_SALE_RECIPE
+        and within_radius(office, settlement, GRID_BATTERY_SALES_RADIUS) then
         energy_covered = true
         break
       end
     end
-    local adoption = megapack_adoption_states()[key]
-    if energy_covered then adoption = ensure_megapack_adoption_state(key, population) end
+    local adoption = grid_battery_adoption_states()[key]
+    if energy_covered then adoption = ensure_grid_battery_adoption_state(key, population) end
     if adoption then
       local waiting = math.max(
         0,
         (adoption.eligible or 0) - (adoption.installed or 0) - (adoption.reserved or 0)
       )
       add_station_info_label(panel, string.format(
-        "Megapack adoption: %d / %d households installed; %d believers waiting",
+        "Grid Battery adoption: %d / %d households installed; %d believers waiting",
         adoption.installed or 0,
         settlement_population,
         waiting
       ))
-      add_station_info_label(panel, "Megapack energy market: " .. (
+      add_station_info_label(panel, "Grid Battery energy market: " .. (
         energy_covered and "inside 384-tile sales radius" or "outside current coverage"
       ))
       if adoption.next_referral_tick then
@@ -10935,8 +10936,8 @@ end
 
 function refresh_bitermotors_infrastructure_change(entity)
   if not entity or not entity.valid or not entity.force then return end
-  if entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
-    invalidate_robotaxi_customer_allocations(entity.force)
+  if entity.name == BITERTAXI_DEPOT_NAME then
+    invalidate_bitertaxi_customer_allocations(entity.force)
   end
   -- The build/remove handlers invalidate the market before reaching here.
   -- Keep this path bounded: the scheduled diplomacy pass performs the global
@@ -11002,7 +11003,7 @@ local function sync_biter_customer_diplomacy()
 end
 
 script.on_init(function()
-  storage.bitermotors_ev_autopilot = EvAutopilot.ensure(nil)
+  storage.bitermotors_ev_self_driving = EvSelfDriving.ensure(nil)
   configure_bitermotors_new_game()
   apply_bitermotors_enemy_pressure_settings()
   cleanup_legacy_station_grid_connections()
@@ -11043,7 +11044,8 @@ script.on_init(function()
 end)
 
 script.on_configuration_changed(function()
-  reset_active_ev_autopilots()
+  NamespaceMigration.migrate(storage)
+  reset_active_ev_self_drivings()
   apply_bitermotors_enemy_pressure_settings()
   reset_charger_hover_overlays()
   cleanup_legacy_station_grid_connections()
@@ -11093,7 +11095,7 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
     open_progress_panel(player)
     return
   end
-  if event.prototype_name == EV_AUTOPILOT_SUMMON_SHORTCUT then
+  if event.prototype_name == EV_SELF_DRIVING_SUMMON_SHORTCUT then
     summon_recent_ev(player)
     return
   end
@@ -11147,16 +11149,16 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
   local vehicle = player and player.vehicle
   local changed_vehicle = event.entity
   if changed_vehicle and changed_vehicle.valid and changed_vehicle.unit_number then
-    local state = ev_autopilot_runtime().active[changed_vehicle.unit_number]
+    local state = ev_self_driving_runtime().active[changed_vehicle.unit_number]
     if state and state.mode == "summon" and vehicle == changed_vehicle then
-      cancel_ev_autopilot(state.unit_number, nil, {notify = false, manual = true})
-    elseif state and state.mode == "navigate"
+      cancel_ev_self_driving(state.unit_number, nil, {notify = false, manual = true})
+    elseif state and state.mode == "route"
       and state.player_index == player.index
       and vehicle ~= changed_vehicle then
-      cancel_ev_autopilot(state.unit_number, nil, {notify = false})
+      cancel_ev_self_driving(state.unit_number, nil, {notify = false})
     end
   end
-  if is_ev_autopilot_eligible(vehicle) and player_is_vehicle_driver(player, vehicle) then
+  if is_ev_self_driving_eligible(vehicle) and player_is_vehicle_driver(player, vehicle) then
     remember_player_ev(player, vehicle)
   end
   if vehicle then
@@ -11221,7 +11223,7 @@ script.on_event(defines.events.on_chunk_generated, function(event)
 end)
 
 script.on_event(defines.events.on_ai_command_completed, function(event)
-  if not handle_megapack_buyer_command_completed(event) then
+  if not handle_grid_battery_buyer_command_completed(event) then
     handle_customer_commute_command_completed(event)
   end
 end)
@@ -11235,7 +11237,7 @@ script.on_event(defines.events.on_player_joined_game, function(event)
 end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
-  cancel_player_ev_autopilots(event.player_index, "controlling player disconnected", false)
+  cancel_player_ev_self_drivings(event.player_index, "controlling player disconnected", false)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_bitermotors_entities()[event.player_index] = nil
@@ -11243,7 +11245,7 @@ script.on_event(defines.events.on_player_left_game, function(event)
 end)
 
 script.on_event(defines.events.on_player_removed, function(event)
-  remove_player_ev_autopilot_history(event.player_index)
+  remove_player_ev_self_driving_history(event.player_index)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_bitermotors_entities()[event.player_index] = nil
@@ -11259,22 +11261,22 @@ end)
 
 script.on_event(defines.events.on_player_changed_force, function(event)
   local player = game.get_player(event.player_index)
-  cancel_player_ev_autopilots(event.player_index, "player changed force", true)
+  cancel_player_ev_self_drivings(event.player_index, "player changed force", true)
   refresh_sales_office_coverage(player)
   refresh_progress_panel(player)
 end)
 
 script.on_event(defines.events.on_player_changed_surface, function(event)
-  cancel_player_ev_autopilots(event.player_index, "player changed surface", true)
+  cancel_player_ev_self_drivings(event.player_index, "player changed surface", true)
 end)
 
-script.on_event(defines.events.on_player_selected_area, handle_ev_autopilot_destination)
-script.on_event(defines.events.on_player_alt_selected_area, handle_ev_autopilot_destination)
-script.on_event(defines.events.on_script_path_request_finished, handle_ev_autopilot_path_result)
+script.on_event(defines.events.on_player_selected_area, handle_ev_self_driving_destination)
+script.on_event(defines.events.on_player_alt_selected_area, handle_ev_self_driving_destination)
+script.on_event(defines.events.on_script_path_request_finished, handle_ev_self_driving_path_result)
 
-for input_name in pairs(EV_AUTOPILOT_MANUAL_INPUTS) do
+for input_name in pairs(EV_SELF_DRIVING_MANUAL_INPUTS) do
   script.on_event(input_name, function(event)
-    cancel_player_ev_autopilot_manual(game.get_player(event.player_index))
+    cancel_player_ev_self_driving_manual(game.get_player(event.player_index))
   end)
 end
 
@@ -11346,7 +11348,7 @@ for _, event_name in pairs({
 	      track_bitermotors_entity(entity)
 	      if entity and entity.valid and (is_station(entity)
 	        or entity.name == SALES_OFFICE_NAME
-	        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME) then
+	        or entity.name == BITERTAXI_DEPOT_NAME) then
 	        mark_bitermotors_market_dirty(entity.force, "infrastructure-built")
 	      end
 		      handle_station_built(entity, event)
@@ -11358,16 +11360,16 @@ for _, event_name in pairs({
 	      track_cybertrain_runtime(entity, true)
 	      attach_bitermotors_runtime_visual(entity)
 	      announce_first_entity_placement(entity)
-	      if entity and entity.valid and entity.name == ROBOTAXI_SERVICE_CENTER_NAME then
-	        robotaxi_service_inventories(entity)
-	        ensure_robotaxi_service_power(entity)
+	      if entity and entity.valid and entity.name == BITERTAXI_DEPOT_NAME then
+	        bitertaxi_depot_inventories(entity)
+	        ensure_bitertaxi_depot_power(entity)
 	      end
 	      if entity and entity.valid and entity.name == SALES_OFFICE_NAME then
 	        mark_sales_office_coverage_dirty()
 	      end
 	      if entity and entity.valid and (is_station(entity)
 	        or entity.name == SALES_OFFICE_NAME
-	        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME) then
+	        or entity.name == BITERTAXI_DEPOT_NAME) then
 	        refresh_bitermotors_infrastructure_change(entity)
 	      end
 	    end)
@@ -11406,7 +11408,7 @@ for _, event_name in pairs({
 	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
-        or entity.name == ROBOTAXI_SERVICE_CENTER_NAME)
+        or entity.name == BITERTAXI_DEPOT_NAME)
       if event_name == defines.events.on_player_mined_entity
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
@@ -11426,7 +11428,7 @@ for _, event_name in pairs({
         unregister_customer_unit(entity)
       end
       if entity and entity.unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
-        remove_ev_from_autopilot_history(entity.unit_number)
+        remove_ev_from_self_driving_history(entity.unit_number)
         electric_vehicle_registry()[entity.unit_number] = nil
         if storage.bitermotors_vehicle_charge_activity then
           storage.bitermotors_vehicle_charge_activity[entity.unit_number] = nil
@@ -11469,17 +11471,17 @@ for _, event_name in pairs({
         customer_growth_states()[entity.unit_number] = nil
         remove_station_support_entities(entity)
       elseif entity and entity.name == SALES_OFFICE_NAME then
-        local megapack_unit = megapack_office_reservations()[entity.unit_number]
-        if megapack_unit then clear_megapack_buyer_trip(megapack_unit, true) end
+        local grid_battery_unit = grid_battery_office_reservations()[entity.unit_number]
+        if grid_battery_unit then clear_grid_battery_buyer_trip(grid_battery_unit, true) end
         clear_office_buyer_reservation(entity.unit_number)
         sales_office_market_states()[entity.unit_number] = nil
-        robotaxi_audio_revenue_progress()[entity.unit_number] = nil
+        bitertaxi_audio_revenue_progress()[entity.unit_number] = nil
         mark_sales_office_coverage_dirty()
-      elseif entity and entity.name == ROBOTAXI_SERVICE_CENTER_NAME and entity.unit_number then
-        robotaxi_service_states()[entity.unit_number] = nil
-        local power = robotaxi_service_power_entities()[entity.unit_number]
+      elseif entity and entity.name == BITERTAXI_DEPOT_NAME and entity.unit_number then
+        bitertaxi_depot_states()[entity.unit_number] = nil
+        local power = bitertaxi_depot_power_entities()[entity.unit_number]
         if power and power.valid then power.destroy() end
-        robotaxi_service_power_entities()[entity.unit_number] = nil
+        bitertaxi_depot_power_entities()[entity.unit_number] = nil
       end
       if refresh_infrastructure and entity.valid then
         refresh_bitermotors_infrastructure_change(entity)
@@ -11508,7 +11510,7 @@ end)
 
 script.on_nth_tick(1, function()
   reset_underpowered_compute_progress()
-  process_ev_autopilots()
+  process_ev_self_drivings()
 end)
 
 script.on_nth_tick(6, update_ev_battery_popups)
@@ -11533,7 +11535,7 @@ script.on_nth_tick(60, function()
   process_customer_road_rage()
   ensure_native_station_power_model()
   track_ai_efficiency_progress()
-  process_robotaxi_service_centers()
+  process_bitertaxi_depots()
   process_customer_vehicle_variant_migration(50)
   if storage.bitermotors_sales_office_coverage_dirty then
     refresh_all_sales_office_coverage()
@@ -11543,7 +11545,7 @@ script.on_nth_tick(60, function()
       sync_foundry_power_gate(force, true)
       process_customer_growth(force)
       sync_advanced_battery_chemistry_gate(force, true)
-      sync_gigafactory_production_gate(force, true)
+      sync_biterfactory_production_gate(force, true)
     end
   end
   sync_sales_office_buyers()
@@ -11614,6 +11616,9 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("bitermotors", {
+  internal_namespace_status = function()
+    return NamespaceMigration.audit(storage)
+  end,
   relieve_enemy_pressure = function(max_evolution)
     return relieve_bitermotors_enemy_pressure(max_evolution)
   end,
@@ -11636,22 +11641,22 @@ remote.add_interface("bitermotors", {
     local force = game.forces[force_name or "player"]
     return force and premium_ev_production_history_status(force) or nil
   end,
-  ev_autopilot_status = function(player_index)
-    return ev_autopilot_status(player_index or 1)
+  ev_self_driving_status = function(player_index)
+    return ev_self_driving_status(player_index or 1)
   end,
-  test_ev_autopilot_start = function(player_index, unit_number, goal, mode)
+  test_ev_self_driving_start = function(player_index, unit_number, goal, mode)
     if not script.active_mods["bitermotors_smoke"] then return false end
     local vehicle = electric_vehicle_registry()[unit_number]
-    if not is_ev_autopilot_eligible(vehicle) or not goal then return false end
-    return activate_ev_autopilot(vehicle, goal, mode or "summon", player_index, true)
+    if not is_ev_self_driving_eligible(vehicle) or not goal then return false end
+    return activate_ev_self_driving(vehicle, goal, mode or "summon", player_index, true)
   end,
-  test_ev_autopilot_remember = function(player_index, unit_number)
+  test_ev_self_driving_remember = function(player_index, unit_number)
     if not script.active_mods["bitermotors_smoke"] then return false end
     local player = game.get_player(player_index or 1)
     local vehicle = electric_vehicle_registry()[unit_number]
     return remember_player_ev(player, vehicle)
   end,
-  test_ev_autopilot_summon = function(player_index)
+  test_ev_self_driving_summon = function(player_index)
     if not script.active_mods["bitermotors_smoke"] then return false end
     return summon_recent_ev(game.get_player(player_index or 1))
   end,
@@ -11725,13 +11730,13 @@ remote.add_interface("bitermotors", {
     local chest = grant_bitermotors_energy_jumpstart(player)
     return chest and chest.valid or false
   end,
-  robotaxi_service_status = function(force_name)
+  bitertaxi_depot_status = function(force_name)
     local force = game.forces[force_name or "player"]
     if not force then return nil end
     local centers = {}
-    local allocations = robotaxi_customer_allocations(force)
-    for _, center in pairs(registered_bitermotors_entities("robotaxi_centers", force)) do
-        local snapshot = robotaxi_service_snapshot(center, allocations[center.unit_number] or 0)
+    local allocations = bitertaxi_customer_allocations(force)
+    for _, center in pairs(registered_bitermotors_entities("bitertaxi_depots", force)) do
+        local snapshot = bitertaxi_depot_snapshot(center, allocations[center.unit_number] or 0)
         snapshot.unit_number = center.unit_number
         snapshot.surface = center.surface.name
         snapshot.position = center.position
@@ -11865,9 +11870,9 @@ remote.add_interface("bitermotors", {
     local force = game.forces[force_name or "player"]
     return force and customer_commute_summary(force) or nil
   end,
-  megapack_adoption_status = function(force_name)
+  grid_battery_adoption_status = function(force_name)
     local force = game.forces[force_name or "player"]
-    return force and megapack_adoption_summary(force) or nil
+    return force and grid_battery_adoption_summary(force) or nil
   end,
   performance_status = function(force_name)
     local force = game.forces[force_name or "player"]
@@ -11886,7 +11891,7 @@ remote.add_interface("bitermotors", {
       counters = storage.bitermotors_perf_counters or {},
       registered_stations = #registered_bitermotors_entities("stations", force),
       registered_sales_offices = #registered_bitermotors_entities("sales_offices", force),
-      registered_robotaxi_centers = #registered_bitermotors_entities("robotaxi_centers", force),
+      registered_bitertaxi_depots = #registered_bitermotors_entities("bitertaxi_depots", force),
       queued_buyers = buyer_units,
       visible_customers = customer_visible_count(),
       visible_customer_limit = CUSTOMER_VISIBLE_GLOBAL_LIMIT,
@@ -11895,9 +11900,9 @@ remote.add_interface("bitermotors", {
       customer_population_records = population_records,
       market_invalidations = performance_state.invalidations,
       compute_queue_size = #bitermotors_compute_queue().units,
-      robotaxi_cache_tick = storage.bitermotors_robotaxi_allocation_cache
-        and storage.bitermotors_robotaxi_allocation_cache[force.index]
-        and storage.bitermotors_robotaxi_allocation_cache[force.index].tick or nil
+      bitertaxi_cache_tick = storage.bitermotors_bitertaxi_allocation_cache
+        and storage.bitermotors_bitertaxi_allocation_cache[force.index]
+        and storage.bitermotors_bitertaxi_allocation_cache[force.index].tick or nil
     }
   end,
   repair_customer_populations = function()

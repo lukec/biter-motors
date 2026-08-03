@@ -10,7 +10,7 @@ tmp="$(mktemp -d /tmp/bitermotors-playtest-benchmark.XXXXXX)"
 mods="$tmp/mods"
 
 mkdir -p "$mods"
-ln -sfn "$repo_root/mod/bitermotors_0.1.0" "$mods/bitermotors_0.1.0"
+ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
 cat > "$tmp/config.ini" <<EOF
 [path]
 read-data=$read_data

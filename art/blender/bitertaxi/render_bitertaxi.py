@@ -6,7 +6,7 @@ import bpy
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from vehicle_common import add_shadow, cube, material, parent_parts, render_vehicle, wedge, wheel
 
-GOLD = material("Working robotaxi gold", (0.52, 0.28, 0.018, 1), 0.58, 0.43, 0.12, {
+GOLD = material("Working bitertaxi gold", (0.52, 0.28, 0.018, 1), 0.58, 0.43, 0.12, {
     "dark": (0.16, 0.075, 0.008, 1), "scale": 9.0
 })
 GOLD_LIT = material("Gold body highlight", (0.75, 0.43, 0.045, 1), 0.5, 0.38, 0.14, {
@@ -24,7 +24,7 @@ SHADOW.surface_render_method = "DITHERED"
 
 
 def build():
-    root = bpy.data.objects.new("Robotaxi", None)
+    root = bpy.data.objects.new("Bitertaxi", None)
     bpy.context.collection.objects.link(root)
     parts = [
         cube("Compact autonomy floor", (0, 0, 0.49), (1.78, 0.88, 0.16), GOLD, 0.2),
@@ -54,4 +54,4 @@ def build():
     return root
 
 
-render_vehicle(__file__, build, "robotaxi", "robotaxi.blend", 6.2)
+render_vehicle(__file__, build, "bitertaxi", "bitertaxi.blend", 6.2)

@@ -6,12 +6,12 @@ function PerformanceState.ensure(storage)
   state.registries = state.registries or {
     stations = {},
     sales_offices = {},
-    robotaxi_centers = {},
+    bitertaxi_depots = {},
     ai_machines = {}
   }
   state.registries.stations = state.registries.stations or {}
   state.registries.sales_offices = state.registries.sales_offices or {}
-  state.registries.robotaxi_centers = state.registries.robotaxi_centers or {}
+  state.registries.bitertaxi_depots = state.registries.bitertaxi_depots or {}
   state.registries.ai_machines = state.registries.ai_machines or {}
   state.market_cache = state.market_cache or {}
   state.market_generation = state.market_generation or {}

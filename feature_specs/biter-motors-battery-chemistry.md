@@ -34,16 +34,16 @@ References:
 | --- | --- |
 | Prototype Roadster | Continues using ordinary Batteries, representing purchased commodity cells. |
 | EV Production Line + 50 Roadster sales | Unlocks Electric Drivetrains and an expensive Premium EV pilot recipe using 48 conventional Batteries per vehicle. Nickel, lithium, and engineered cells are not available yet. |
-| 100 Premium EV pilot | Proves the product and unlocks Gigafactory Modules and Gigafactory construction. |
-| Gigafactory V1 | Scales the commodity-cell Premium EV line. Producing 250 Premium EVs makes Advanced Battery Chemistry researchable. |
+| 100 Premium EV pilot | Proves the product and unlocks Biterfactory Modules and Biterfactory construction. |
+| Biterfactory V1 | Scales the commodity-cell Premium EV line. Producing 250 Premium EVs makes Advanced Battery Chemistry researchable. |
 | Advanced Battery Chemistry | Unlocks nickel and lithium extraction, dirty refining, High-Nickel Cells, High-Energy Battery Packs, cell-scale High-Nickel Manufacturing, and a faster cell-scale Premium EV recipe. |
-| Energy Products | Builds on Advanced Battery Chemistry and unlocks LFP chemistry and LFP Battery Packs for Megapacks. |
-| Capital Scaling / Gigafactory V2 | Unlocks clean refining and dry-electrode recipes with lower acid, waste, power and craft time. |
+| Energy Products | Builds on Advanced Battery Chemistry and unlocks LFP chemistry and LFP Battery Packs for Grid Batteries. |
+| Capital Scaling / Biterfactory V2 | Unlocks clean refining and dry-electrode recipes with lower acid, waste, power and craft time. |
 | First chemistry-specific battery scrap + Recycling | Makes Battery Material Recovery researchable. It does not auto-complete the research. |
 
 After the 50-Roadster market gate, the Progress panel first asks for a
 100-Premium-EV pilot using conventional Batteries. That pilot unlocks
-Gigafactory construction. The player then scales the same constrained
+Biterfactory construction. The player then scales the same constrained
 commodity-cell line to 250 produced Premium EVs. Only after factory scale
 exposes the supply bottleneck does the panel ask the player to research
 Advanced Battery Chemistry, extract both minerals, refine both precursors,
@@ -53,7 +53,7 @@ Battery Packs.
 When an older Biter Motors save loads this progression, configuration migration
 revokes the chemistry recipes that EV Production Line used to unlock. The
 recipes remain disabled until Advanced Battery Chemistry is researched, so old
-saves follow the same 100-vehicle Gigafactory and 250-vehicle chemistry
+saves follow the same 100-vehicle Biterfactory and 250-vehicle chemistry
 transitions as new saves.
 
 Premium EV production milestones use a persistent monotonic lifetime counter,
@@ -63,7 +63,7 @@ Premium EV sales plus surviving stocked and placed vehicles. It stores the
 offset from native statistics so later production continues from the repaired
 lifetime total without recurring full-factory scans.
 
-Mass-Market EVs and Robotaxis use LFP packs. Premium EVs use high-energy
+Mass-Market EVs and Bitertaxis use LFP packs. Premium EVs use high-energy
 packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
 packs, giving them both a large total pack count and the long-range chemistry.
 
@@ -85,7 +85,7 @@ guaranteed starting-area patch.
 Existing resources supply the rest: coal becomes Battery Graphite, stone
 becomes Phosphate, and iron supplies LFP cathodes. Early nickel refining emits
 a small Cobalt Concentrate byproduct. Both initial cell routes consume that
-cobalt so choosing the Gigafactory recipe cannot jam dirty refining. Later
+cobalt so choosing the Biterfactory recipe cannot jam dirty refining. Later
 clean refining and dry-electrode cells remove cobalt from the flow. Both
 natural resources must appear in map preview and be generated on new Biter Motors
 worlds. No save migration is required.
@@ -108,15 +108,15 @@ Quantities are balance targets for the first implementation pass.
 | Phosphate extraction | 10 Stone + 50 Sulfuric Acid | 4 Phosphate + 100 Acidic Tailings | 8 s |
 | Tailings neutralization | 100 Acidic Tailings + 2 Calcite | 2 Stone | 5 s |
 | High-nickel cells (Chemical Plant) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 4 High-Nickel Cells | 8 s |
-| High-nickel cells (Gigafactory) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 5 High-Nickel Cells | 6 s |
+| High-nickel cells (Biterfactory) | 4 Nickel Sulfate + 1 Lithium Carbonate + 2 Battery Graphite + 1 Cobalt Concentrate | 5 High-Nickel Cells | 6 s |
 | Commodity-cell Premium EV pilot | 1 Car + 48 Batteries + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 30 s |
 | Cell-scale Premium EV | 1 Car + 8 High-Energy Battery Packs + 2 Electric Drivetrains + 10 Advanced Circuits | 1 Premium EV | 20 s |
 | LFP cells (Chemical Plant) | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 4 LFP Cells | 6 s |
-| LFP cells (Gigafactory) | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
+| LFP cells (Biterfactory) | 2 Lithium Carbonate + 4 Iron Plates + 2 Phosphate | 5 LFP Cells | 5 s |
 | High-Energy Battery Pack | 4 High-Nickel Cells + 4 Steel Plates + 2 Advanced Circuits | 1 pack | 8 s |
 | LFP Battery Pack | 4 LFP Cells + 4 Steel Plates + 2 Electronic Circuits | 1 pack | 6 s |
 
-Gigafactory V2's clean recipes are capped at these yields:
+Biterfactory V2's clean recipes are capped at these yields:
 
 - 10 Nickel Ore + 75 Sulfuric Acid -> 5 Nickel Sulfate + 50 Acidic Tailings.
 - 100 Lithium Brine + 4 Calcite -> 5 Lithium Carbonate + 25 Acidic Tailings.
@@ -131,13 +131,13 @@ Vehicle and energy-product pack counts after Advanced Battery Chemistry:
   saves retain their selected recipe.
 - Mass-Market EV: 4 LFP Battery Packs.
 - Megatruck: 2 Mass-Market EVs + 20 Steel Plates + 4 High-Energy Battery Packs.
-- Robotaxi Fleet: inherits 16 LFP packs through its four Mass-Market EVs.
-- Megapack: 12 LFP Battery Packs + 4 Accumulators + 1 Substation.
+- Bitertaxi Fleet: inherits 16 LFP packs through its four Mass-Market EVs.
+- Grid Battery: 12 LFP Battery Packs + 4 Accumulators + 1 Substation.
 
 Chemistry effects stay attached to vehicle classes, not individual customer
 records. Premium and Megatruck customers go roughly 50% longer between
 charges. LFP Mass-Market EVs charge somewhat more often but retire at roughly
-one-third the high-nickel attrition rate. Robotaxis inherit the LFP retirement
+one-third the high-nickel attrition rate. Bitertaxis inherit the LFP retirement
 benefit. The existing drivable-vehicle battery counts continue to provide the
 player-visible range differences without another per-vehicle chemistry script.
 
@@ -159,7 +159,7 @@ created by battery recovery.
 Vehicle retirement produces damaged packs according to the packs embodied in
 that vehicle class. The existing Wrecked EV remains chassis salvage. Killing
 customer biters does not drop battery scrap; scheduled vehicle retirement,
-Robotaxi attrition, charger-generated end-of-life events, and destruction of a
+Bitertaxi attrition, charger-generated end-of-life events, and destruction of a
 player-owned EV are the supported sources. This prevents deliberate customer
 farming from accelerating the recycling loop.
 
@@ -185,7 +185,7 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
   productivity because they produce physical intermediates. Pack recipes cap
   total productivity at 10%; combined with 90% cell recovery, that can rebuild
   at most 99% of the original packs and cannot create a positive material loop.
-  Recovery recipes remain non-productive. Finished vehicles, Megapacks, and
+  Recovery recipes remain non-productive. Finished vehicles, Grid Batteries, and
   other final products continue to reject productivity.
 - Recycling recovers exactly 90% of cells in ten-pack batches and zero fresh
   electronics, steel or vehicle parts. No probabilistic output can
@@ -200,7 +200,7 @@ high-nickel cells, and high-nickel scrap cannot become LFP cells.
 ## Implementation Slices
 
 1. Add map resources, dirty refining, high-nickel cells and Premium EV packs.
-2. Add LFP cells, LFP packs, Megapack and mass-market recipe conversion.
+2. Add LFP cells, LFP packs, Grid Battery and mass-market recipe conversion.
 3. Add chemistry-specific damaged packs and deterministic 90% recycling.
 4. Add clean refining, cell-scale and dry-electrode recipes.
 5. Remove the superseded SpaceX branch and rebalance the terrestrial endgame.

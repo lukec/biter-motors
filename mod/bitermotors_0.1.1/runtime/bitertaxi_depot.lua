@@ -1,13 +1,13 @@
-local RobotaxiService = {}
+local BitertaxiDepot = {}
 
-function RobotaxiService.consider_nearest(selected_by_unit, unit_number, center, distance)
+function BitertaxiDepot.consider_nearest(selected_by_unit, unit_number, center, distance)
   local previous = selected_by_unit[unit_number]
   if not previous or distance < previous.distance then
     selected_by_unit[unit_number] = {center = center, distance = distance}
   end
 end
 
-function RobotaxiService.metrics(args)
+function BitertaxiDepot.metrics(args)
   local fleet = math.min(args.max_fleet, args.stored)
   local allocated = math.min(fleet, math.ceil(args.customers / args.customers_per_vehicle))
   local served = math.min(args.customers, allocated * args.customers_per_vehicle)
@@ -20,4 +20,4 @@ function RobotaxiService.metrics(args)
   }
 end
 
-return RobotaxiService
+return BitertaxiDepot

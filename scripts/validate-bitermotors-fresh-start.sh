@@ -11,7 +11,7 @@ save="$tmp/fresh.zip"
 report="$tmp/script-output/bitermotors-fresh-start.jsonl"
 
 mkdir -p "$mods" "$helper" "$tmp/script-output"
-ln -sfn "$repo_root/mod/bitermotors_0.1.0" "$mods/bitermotors_0.1.0"
+ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
 
 cat > "$tmp/config.ini" <<EOF
 [path]
@@ -22,7 +22,7 @@ cat > "$mods/mod-list.json" <<'EOF'
 {"mods":[{"name":"base","enabled":true},{"name":"space-age","enabled":true},{"name":"bitermotors","enabled":true},{"name":"bitermotors_fresh_start_test","enabled":true}]}
 EOF
 cat > "$helper/info.json" <<'EOF'
-{"name":"bitermotors_fresh_start_test","version":"0.1.0","title":"Biter Motors Fresh Start Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","bitermotors >= 0.1.0"]}
+{"name":"bitermotors_fresh_start_test","version":"0.1.1","title":"Biter Motors Fresh Start Test","author":"Codex","factorio_version":"2.1","dependencies":["base >= 2.1.0","space-age >= 2.1.0","bitermotors >= 0.1.0"]}
 EOF
 cat > "$helper/control.lua" <<'EOF'
 script.on_init(function()
