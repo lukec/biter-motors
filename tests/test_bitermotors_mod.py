@@ -2356,12 +2356,20 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('name = "bitermotors-lfp-cell", amount = 36', lfp_recovery)
         self.assertIn('allow_productivity = false', high_recovery)
         self.assertIn('allow_productivity = false', lfp_recovery)
+        for damaged_pack in [
+            "bitermotors-damaged-high-energy-battery-pack",
+            "bitermotors-damaged-lfp-battery-pack",
+        ]:
+            item_start = data.index(f'item("{damaged_pack}"')
+            self.assertIn('flags = {"always-show"}', data[item_start:item_start + 350])
         locale = (MOD / "locale" / "en" / "bitermotors.cfg").read_text()
         self.assertIn("bitermotors-high-nickel-cell=High-nickel cells (Chemical Plant)", locale)
         self.assertIn("bitermotors-cell-scale-high-nickel=High-nickel cells (Biterfactory)", locale)
         self.assertIn("bitermotors-lfp-cell=LFP cells (Chemical Plant)", locale)
         self.assertIn("bitermotors-cell-scale-lfp=LFP cells (Biterfactory)", locale)
         self.assertIn("one four-cell batch fills one High-energy Battery Pack", locale)
+        self.assertIn("Advanced damaged battery packs are recovered as separate items", locale)
+        self.assertIn("process ten packs in a Recycler", locale)
         self.assertIn("same dirty-refining precursors and cobalt", locale)
         self.assertIn("bitermotors-lithium-extraction=Dirty lithium extraction", locale)
         self.assertIn("bitermotors-phosphate-extraction=Dirty phosphate extraction", locale)

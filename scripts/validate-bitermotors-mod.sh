@@ -1786,6 +1786,13 @@ if "always-show" not in wrecked_ev.get("flags", []):
     raise SystemExit("Wrecked EV must remain requestable before Recycling is unlocked")
 if wrecked_ev["stack_size"] != 1:
     raise SystemExit(f"Wrecked EV stack size mismatch: {wrecked_ev['stack_size']}")
+for damaged_pack_name in (
+    "bitermotors-damaged-high-energy-battery-pack",
+    "bitermotors-damaged-lfp-battery-pack",
+):
+    damaged_pack = data["item"][damaged_pack_name]
+    if damaged_pack.get("hidden", False) or "always-show" not in damaged_pack.get("flags", []):
+        raise SystemExit(f"{damaged_pack_name} must remain visible in logistics filter pickers")
 
 expected_recipe_subgroups = {
     "bitermotors-prototype-roadster": "transport",
