@@ -2414,6 +2414,27 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertTrue(path.exists(), path)
             with Image.open(path) as image:
                 self.assertEqual(image.size, (256, 256))
+
+        pack_colors = {}
+        for slug in ["high-energy-battery-pack", "lfp-battery-pack"]:
+            with Image.open(MOD / "graphics" / "icons" / f"{slug}.png") as image:
+                belt_icon = image.convert("RGBA").resize((32, 32), Image.Resampling.LANCZOS)
+            visible = [pixel for pixel in belt_icon.get_flattened_data() if pixel[3] > 64]
+            bright_colored = [
+                pixel for pixel in visible
+                if max(pixel[:3]) - min(pixel[:3]) > 20
+                and sum(pixel[:3]) / 3 > 125
+            ]
+            self.assertGreater(len(bright_colored) / len(visible), 0.32, slug)
+            pack_colors[slug] = tuple(
+                sum(pixel[channel] for pixel in bright_colored) / len(bright_colored)
+                for channel in range(3)
+            )
+        high_energy_color = pack_colors["high-energy-battery-pack"]
+        lfp_color = pack_colors["lfp-battery-pack"]
+        self.assertGreater(high_energy_color[2] - high_energy_color[0], 25)
+        self.assertGreater(lfp_color[0] - lfp_color[2], 25)
+
         self.assertIn('nickel_ore.icon = "__bitermotors__/graphics/icons/nickel-ore.png"', data)
         self.assertIn('lithium_brine.icon = "__bitermotors__/graphics/icons/lithium-brine.png"', data)
         self.assertIn('acidic_tailings.icon = "__bitermotors__/graphics/icons/acidic-tailings.png"', data)

@@ -20,6 +20,10 @@ TEAL = material("High nickel teal", (0.08, 0.42, 0.36, 1), 0.48, 0.36)
 TEAL_LIGHT = material("High nickel highlight", (0.28, 0.78, 0.65, 1), 0.35, 0.3)
 ORANGE = material("LFP orange", (0.72, 0.25, 0.055, 1), 0.34, 0.43)
 ORANGE_LIGHT = material("LFP highlight", (0.96, 0.56, 0.12, 1), 0.24, 0.34)
+PACK_TEAL = material("High nickel pack deck", (0.025, 0.58, 0.68, 1), 0.32, 0.34)
+PACK_TEAL_LIGHT = material("High nickel pack rail", (0.58, 0.94, 1.0, 1), 0.24, 0.28)
+PACK_ORANGE = material("LFP pack deck", (0.96, 0.34, 0.025, 1), 0.3, 0.36)
+PACK_ORANGE_LIGHT = material("LFP pack rail", (1.0, 0.78, 0.24, 1), 0.2, 0.3)
 SILVER = material("Cybertrain alloy", (0.34, 0.38, 0.4, 1), 0.74, 0.34, variation={
     "dark": (0.09, 0.11, 0.12, 1), "scale": 8.0
 })
@@ -136,8 +140,8 @@ def pack(name, body, accent, damaged=False):
     root = bpy.data.objects.new(name, None)
     bpy.context.collection.objects.link(root)
     parts = [
-        cube(name + " enclosure", (0, 0, 0.5), (1.65, 1.14, 0.34), body, 0.12),
-        cube(name + " top plate", (0, 0, 0.88), (1.48, 0.97, 0.06), DARK, 0.05),
+        cube(name + " enclosure", (0, 0, 0.5), (1.65, 1.14, 0.34), DARK, 0.12),
+        cube(name + " top plate", (0, 0, 0.88), (1.48, 0.97, 0.06), body, 0.05),
     ]
     for x in (-1.08, -0.36, 0.36, 1.08):
         parts.append(cube(name + " cell seam", (x, 0, 0.96), (0.035, 0.82, 0.035), accent, 0.01))
@@ -197,10 +201,10 @@ def build_icon(slug):
     if slug == "acidic-tailings": return fluid_drum(slug, TAILINGS)
     if slug == "high-nickel-cell": return cells(slug, TEAL, TEAL_LIGHT)
     if slug == "lfp-cell": return cells(slug, ORANGE, ORANGE_LIGHT)
-    if slug == "high-energy-battery-pack": return [pack(slug, TEAL, TEAL_LIGHT)]
-    if slug == "lfp-battery-pack": return [pack(slug, ORANGE, ORANGE_LIGHT)]
-    if slug == "damaged-high-energy-battery-pack": return [pack(slug, TEAL, TEAL_LIGHT, True)]
-    if slug == "damaged-lfp-battery-pack": return [pack(slug, ORANGE, ORANGE_LIGHT, True)]
+    if slug == "high-energy-battery-pack": return [pack(slug, PACK_TEAL, PACK_TEAL_LIGHT)]
+    if slug == "lfp-battery-pack": return [pack(slug, PACK_ORANGE, PACK_ORANGE_LIGHT)]
+    if slug == "damaged-high-energy-battery-pack": return [pack(slug, PACK_TEAL, PACK_TEAL_LIGHT, True)]
+    if slug == "damaged-lfp-battery-pack": return [pack(slug, PACK_ORANGE, PACK_ORANGE_LIGHT, True)]
     if slug == "cybertrain-drive-charge": return cells(slug, SILVER, CYAN)
     if slug == "cybertrain-charging-stop": return charging_stop_icon()
     raise ValueError(slug)
@@ -305,6 +309,8 @@ def render_charging_stop():
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "battery-cybertrain.blend"))
 
 
-render_icons()
-render_cybertrain()
-render_charging_stop()
+if __name__ == "__main__":
+    render_icons()
+    if "--icons-only" not in sys.argv:
+        render_cybertrain()
+        render_charging_stop()
