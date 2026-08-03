@@ -1544,6 +1544,19 @@ expected_battery_recovery = {
         "bitermotors-damaged-lfp-battery-pack", "bitermotors-lfp-cell", 36,
     ),
 }
+
+dirty_recipe_icons = data["recipe"]["bitermotors-dirty-nickel-refining"]["icons"]
+dirty_product_icon, dirty_tailings_badge = dirty_recipe_icons
+if dirty_product_icon.get("tint") is not None or dirty_tailings_badge.get("tint") is not None:
+    raise SystemExit(f"Dirty battery recipe icons must preserve their source colors: {dirty_recipe_icons}")
+dirty_badge_pixels = dirty_tailings_badge["icon_size"] * dirty_tailings_badge.get("scale", 1)
+clean_badge = data["recipe"]["bitermotors-clean-nickel-refining"]["icons"][1]
+clean_badge_pixels = clean_badge["icon_size"] * clean_badge.get("scale", 1)
+if not math.isclose(dirty_badge_pixels, clean_badge_pixels, rel_tol=0, abs_tol=0.01):
+    raise SystemExit(
+        f"Dirty and clean battery recipe badges must render at the same size: "
+        f"dirty={dirty_badge_pixels}, clean={clean_badge_pixels}"
+    )
 for recipe_name, (damaged_pack, cell_name, cell_count) in expected_battery_recovery.items():
     recipe = data["recipe"][recipe_name]
     ingredients = {row["name"]: row["amount"] for row in recipe["ingredients"]}

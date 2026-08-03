@@ -2384,6 +2384,13 @@ class BiterMotorsModTest(unittest.TestCase):
             )
         self.assertIn('icon = "__bitermotors__/graphics/icons/acidic-tailings.png"', data)
         self.assertIn('icon = "__base__/graphics/icons/efficiency-module-3.png"', data)
+        icon_helper = data[
+            data.index("local function battery_process_recipe_icon"):
+            data.index("local function sale_icon")
+        ]
+        self.assertIn("icon_size = 256,\n      scale = 0.105", icon_helper)
+        self.assertNotIn("icons[1].tint", icon_helper)
+        self.assertNotIn("tint =", icon_helper)
         self.assertIn("Legacy process: produces 4 Nickel Sulfate", locale)
         self.assertIn("Improved process: produces 5 Nickel Sulfate", locale)
         self.assertIn('battery_process_recipe_icon("high-nickel-cell", true)', data)

@@ -59,13 +59,11 @@ local function battery_process_recipe_icon(product_slug, clean_process)
       shift = {8, 8}
     })
   else
-    icons[1].tint = {r = 0.92, g = 0.72, b = 0.52, a = 1}
     table.insert(icons, {
       icon = "__bitermotors__/graphics/icons/acidic-tailings.png",
       icon_size = 256,
-      scale = 0.42,
-      shift = {8, 8},
-      tint = {r = 1, g = 0.58, b = 0.30, a = 1}
+      scale = 0.105,
+      shift = {8, 8}
     })
   end
   return icons
