@@ -439,28 +439,6 @@ data:extend({
   }
 })
 
-local function shifted_half_scale_sprite_layer(source, x, y)
-  local layer = table.deepcopy(source)
-  local shift = layer.shift or {0, 0}
-  local shift_x = shift.x or shift[1] or 0
-  local shift_y = shift.y or shift[2] or 0
-  layer.scale = (layer.scale or 1) * 0.5
-  layer.shift = {x + shift_x * 0.5, y + shift_y * 0.5}
-  return layer
-end
-
-local function tiled_high_density_solar_sprite(source)
-  local tiled = {layers = {}}
-  for _, y in pairs({-0.75, 0.75}) do
-    for _, x in pairs({-0.75, 0.75}) do
-      for _, source_layer in pairs(source.layers or {}) do
-        tiled.layers[#tiled.layers + 1] = shifted_half_scale_sprite_layer(source_layer, x, y)
-      end
-    end
-  end
-  return tiled
-end
-
 local function hidden_grid_connection_pole()
   local prototype = table.deepcopy(data.raw["electric-pole"]["medium-electric-pole"])
   prototype.name = "bitermotors-ev-charging-grid-connection"
@@ -604,22 +582,24 @@ local high_density_space_solar_panel_icon = layered_icon64(
   {r = 0.55, g = 0.86, b = 1.0, a = 1.0}
 )
 local planetary_grid_controller_icon = generated_icon("planetary-grid-controller")
-local high_density_solar_array_icon = layered_icon64(
-  "__base__/graphics/icons/solar-panel.png",
-  "__base__/graphics/icons/processing-unit.png",
-  {r = 0.65, g = 0.9, b = 1.0, a = 1.0}
-)
-local tandem_solar_array_icon = layered_icon64(
-  "__base__/graphics/icons/solar-panel.png",
-  "__base__/graphics/icons/productivity-module-3.png",
-  {r = 0.55, g = 1.0, b = 0.78, a = 1.0}
-)
+local high_density_solar_array_icon = generated_icon("high-density-solar-array")
+local tandem_solar_array_icon = generated_icon("high-density-solar-array")
+table.insert(tandem_solar_array_icon, {
+  icon = "__base__/graphics/icons/productivity-module-3.png",
+  icon_size = 64,
+  scale = 0.35,
+  shift = {8, 8},
+  tint = {r = 0.55, g = 1.0, b = 0.78, a = 1.0}
+})
 local grid_battery_icon = generated_icon("grid-battery")
-local grid_battery_array_icon = layered_icon64(
-  "__bitermotors__/graphics/icons/grid-battery.png",
-  "__base__/graphics/icons/processing-unit.png",
-  {r = 0.62, g = 0.92, b = 1.0, a = 1.0}
-)
+local grid_battery_array_icon = generated_icon("grid-battery")
+table.insert(grid_battery_array_icon, {
+  icon = "__base__/graphics/icons/processing-unit.png",
+  icon_size = 64,
+  scale = 0.35,
+  shift = {8, 8},
+  tint = {r = 0.62, g = 0.92, b = 1.0, a = 1.0}
+})
 local bitertaxi_depot_icon = generated_icon("bitertaxi-depot")
 local megatruck_icon = generated_icon("megatruck")
 
@@ -1126,8 +1106,27 @@ high_density_solar_array.fast_replaceable_group = "solar-panel"
 high_density_solar_array.next_upgrade = "bitermotors-tandem-solar-array"
 high_density_solar_array.collision_box = {{-1.35, -1.35}, {1.35, 1.35}}
 high_density_solar_array.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
-high_density_solar_array.picture = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].picture)
-high_density_solar_array.overlay = tiled_high_density_solar_sprite(data.raw["solar-panel"]["solar-panel"].overlay)
+high_density_solar_array.picture = {
+  layers = {
+    {
+      filename = "__bitermotors__/graphics/entity/high-density-solar-array/high-density-solar-array.png",
+      priority = "high",
+      width = 512,
+      height = 512,
+      scale = 0.1875
+    },
+    {
+      filename = "__bitermotors__/graphics/entity/high-density-solar-array/high-density-solar-array-shadow.png",
+      priority = "high",
+      width = 512,
+      height = 512,
+      scale = 0.1875,
+      draw_as_shadow = true
+    }
+  }
+}
+high_density_solar_array.overlay = nil
+high_density_solar_array.water_reflection = nil
 data.raw["solar-panel"]["solar-panel"].fast_replaceable_group = "solar-panel"
 data.raw["solar-panel"]["solar-panel"].next_upgrade = "bitermotors-high-density-solar-array"
 
@@ -1152,7 +1151,93 @@ grid_battery.energy_source.output_flow_limit = "5MW"
 grid_battery.fast_replaceable_group = "bitermotors-grid-battery"
 grid_battery.next_upgrade = "bitermotors-grid-battery-array"
 grid_battery.chargable_graphics = {
-  picture = generated_entity_picture("grid-battery", nil, 0.14)
+  picture = {
+    layers = {
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        scale = 0.14
+      },
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery-shadow.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        scale = 0.14,
+        draw_as_shadow = true
+      }
+    }
+  },
+  charge_animation = {
+    layers = {
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        repeat_count = 8,
+        scale = 0.14
+      },
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery-shadow.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        repeat_count = 8,
+        scale = 0.14,
+        draw_as_shadow = true
+      },
+      {
+        filename = "__bitermotors__/graphics/animation/grid-battery-charge.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        frame_count = 8,
+        line_length = 8,
+        animation_speed = 0.22,
+        scale = 0.14,
+        blend_mode = "additive",
+        draw_as_glow = true
+      }
+    }
+  },
+  charge_cooldown = 30,
+  discharge_animation = {
+    layers = {
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        repeat_count = 8,
+        scale = 0.14
+      },
+      {
+        filename = "__bitermotors__/graphics/entity/grid-battery/grid-battery-shadow.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        repeat_count = 8,
+        scale = 0.14,
+        draw_as_shadow = true
+      },
+      {
+        filename = "__bitermotors__/graphics/animation/grid-battery-discharge.png",
+        priority = "high",
+        width = 512,
+        height = 512,
+        frame_count = 8,
+        line_length = 8,
+        animation_speed = 0.22,
+        scale = 0.14,
+        blend_mode = "additive",
+        draw_as_glow = true
+      }
+    }
+  },
+  discharge_cooldown = 60
 }
 grid_battery.water_reflection = nil
 

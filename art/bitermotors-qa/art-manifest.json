@@ -7,10 +7,10 @@
     "V4 Solar Charging Hub",
     "Biterfactory",
     "Biterfactory V2",
+    "High-density Solar Panel",
     "Grid Battery",
     "Terrestrial Datacenter",
     "Bitertaxi Depot",
-    "Orbital Compute Array",
     "Planetary Grid Controller"
   ],
   "vehicles": [
@@ -41,6 +41,7 @@
     "ev-reservation.png",
     "grid-battery.png",
     "ground-station-network.png",
+    "high-density-solar-array.png",
     "high-energy-battery-pack.png",
     "high-nickel-cell.png",
     "lfp-battery-pack.png",
@@ -80,7 +81,9 @@
     "Biterfactory loading bays",
     "Datacenter cooling fans",
     "Bitertaxi dispatch lights",
-    "Grid charge stages"
+    "Grid charge stages",
+    "Grid Battery charging",
+    "Grid Battery discharging"
   ],
   "technology": [
     "achieving-agi.png",

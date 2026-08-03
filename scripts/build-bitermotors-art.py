@@ -35,11 +35,22 @@ ENTITY_ICON_SOURCES = {
     "ev-charging-station-v3": "ev-charging-station-v3/ev-charging-station-v3.png",
     "ev-charging-station-v4": "ev-charging-station-v4/ev-charging-station-v4.png",
     "biterfactory": "biterfactory/biterfactory.png",
+    "high-density-solar-array": "high-density-solar-array/high-density-solar-array.png",
     "grid-battery": "grid-battery/grid-battery.png",
     "terrestrial-datacenter": "terrestrial-datacenter/terrestrial-datacenter.png",
     "bitertaxi-depot": "bitertaxi-depot/bitertaxi-depot.png",
-    "orbital-compute-array": "orbital-compute-array/orbital-compute-array.png",
     "planetary-grid-controller": "planetary-grid-controller/planetary-grid-controller.png",
+}
+
+ENERGY_PRODUCT_SOURCES = {
+    "high-density-solar-array": {
+        "source": "high-density-solar-panel-transparent.png",
+        "subject_size": 474,
+    },
+    "grid-battery": {
+        "source": "grid-battery-v2-transparent.png",
+        "subject_size": 462,
+    },
 }
 
 def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, int] | None:
@@ -66,10 +77,105 @@ def normalized_icon(image: Image.Image, subject_size: int = 216) -> Image.Image:
     return canvas
 
 
+def normalized_entity(image: Image.Image, subject_size: int) -> Image.Image:
+    image = image.convert("RGBA")
+    bbox = alpha_bbox(image)
+    if not bbox:
+        raise RuntimeError("Generated entity source has no visible subject")
+    subject = image.crop(bbox)
+    scale = min(subject_size / subject.width, subject_size / subject.height)
+    size = (
+        max(1, round(subject.width * scale)),
+        max(1, round(subject.height * scale)),
+    )
+    subject = subject.resize(size, Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (512, 512))
+    canvas.alpha_composite(subject, ((512 - size[0]) // 2, (512 - size[1]) // 2))
+    return canvas
+
+
+def entity_shadow(entity: Image.Image) -> Image.Image:
+    alpha = entity.getchannel("A")
+    shadow_alpha = alpha.filter(ImageFilter.GaussianBlur(radius=4)).point(
+        lambda value: round(value * 0.34)
+    )
+    shadow = Image.new("RGBA", entity.size, (0, 0, 0, 0))
+    shadow.putalpha(shadow_alpha)
+    shifted = Image.new("RGBA", entity.size)
+    shifted.alpha_composite(shadow, (5, 5))
+    return shifted
+
+
+def add_glow(
+    canvas: Image.Image,
+    box: tuple[int, int, int, int],
+    color: tuple[int, int, int],
+    opacity: int,
+) -> None:
+    glow_layer = Image.new("RGBA", canvas.size)
+    glow_draw = ImageDraw.Draw(glow_layer, "RGBA")
+    glow_draw.rounded_rectangle(box, radius=4, fill=(*color, opacity))
+    canvas.alpha_composite(glow_layer.filter(ImageFilter.GaussianBlur(radius=7)))
+    canvas.alpha_composite(glow_layer)
+
+
+def grid_battery_activity_frames(
+    color: tuple[int, int, int], charging: bool
+) -> Image.Image:
+    sheet = Image.new("RGBA", (512 * 8, 512))
+    gauge_left, gauge_right = 237, 276
+    gauge_top, gauge_bottom = 174, 278
+    segment_height = 9
+    segment_gap = 3
+    indicator_boxes = (
+        (75, 202, 164, 217),
+        (348, 202, 437, 217),
+        (75, 392, 164, 407),
+        (348, 392, 437, 407),
+    )
+    for frame_index in range(8):
+        frame = Image.new("RGBA", (512, 512))
+        active_segments = frame_index + 1 if charging else 8 - frame_index
+        for segment in range(active_segments):
+            if charging:
+                y2 = gauge_bottom - segment * (segment_height + segment_gap)
+            else:
+                y2 = gauge_top + (segment + 1) * (segment_height + segment_gap)
+            y1 = y2 - segment_height
+            add_glow(frame, (gauge_left, y1, gauge_right, y2), color, 210)
+        pulse = 90 + ((frame_index * 37) % 120)
+        for box in indicator_boxes:
+            add_glow(frame, box, color, pulse)
+        sheet.alpha_composite(frame, (frame_index * 512, 0))
+    return sheet
+
+
+def build_energy_product_art() -> None:
+    for slug, config in ENERGY_PRODUCT_SOURCES.items():
+        source = MASTER_DIR.parent / "sources" / config["source"]
+        entity = normalized_entity(Image.open(source), config["subject_size"])
+        entity_dir = MOD_GRAPHICS / "entity" / slug
+        entity_dir.mkdir(parents=True, exist_ok=True)
+        entity.save(entity_dir / f"{slug}.png", optimize=True)
+        entity_shadow(entity).save(entity_dir / f"{slug}-shadow.png", optimize=True)
+
+    grid_battery_activity_frames((72, 224, 255), charging=True).save(
+        ANIMATION_DIR / "grid-battery-charge.png", optimize=True
+    )
+    grid_battery_activity_frames((255, 165, 48), charging=False).save(
+        ANIMATION_DIR / "grid-battery-discharge.png", optimize=True
+    )
+
+
 def derive_and_normalize_icons() -> None:
     for slug, relative_source in ENTITY_ICON_SOURCES.items():
         source = MOD_GRAPHICS / "entity" / relative_source
-        normalized_icon(Image.open(source), 218).save(ICON_DIR / f"{slug}.png", optimize=True)
+        destination = ICON_DIR / f"{slug}.png"
+        if not source.exists():
+            if destination.exists():
+                continue
+            raise FileNotFoundError(f"No entity source or retained icon for {slug}: {source}")
+        normalized_icon(Image.open(source), 218).save(destination, optimize=True)
 
     for source in sorted(ICON_SOURCE_DIR.glob("*.png")):
         if source.stem in VEHICLE_ICON_NAMES:
@@ -550,6 +656,7 @@ def build_technology_icons() -> None:
 
 
 def main() -> int:
+    build_energy_product_art()
     derive_and_normalize_icons()
     build_sales_office_showroom_vehicles()
     build_sales_office_showroom_animations()

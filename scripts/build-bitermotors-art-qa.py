@@ -20,10 +20,10 @@ ENTITIES = [
     ("V4 Solar Charging Hub", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 512, 0.38, "aligned-final"),
     ("Biterfactory", "biterfactory/biterfactory.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
     ("Biterfactory V2", "biterfactory/biterfactory-v2.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
+    ("High-density Solar Panel", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 512, 0.1875, "generated-final"),
     ("Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 512, 0.14, "aligned-final"),
     ("Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 512, 0.36, "generated-final"),
     ("Bitertaxi Depot", "bitertaxi-depot/bitertaxi-depot.png", "bitertaxi-depot.png", 8, 512, 0.48, "aligned-final"),
-    ("Orbital Compute Array", "orbital-compute-array/orbital-compute-array.png", "orbital-compute-array.png", 3, 512, 0.18, "playtest"),
     ("Planetary Grid Controller", "planetary-grid-controller/planetary-grid-controller.png", "planetary-grid-controller.png", 3, 512, 0.19, "aligned-final"),
 ]
 
@@ -41,6 +41,8 @@ ANIMATIONS = [
     ("Datacenter cooling fans", "datacenter-cooling-fans.png", 128, 64, "Compute active"),
     ("Bitertaxi dispatch lights", "bitertaxi-dispatch-lights.png", 128, 64, "Fleet allocated"),
     ("Grid charge stages", "grid-charge-stages.png", 128, 128, "Charging only"),
+    ("Grid Battery charging", "grid-battery-charge.png", 512, 512, "Cyan charge sequence"),
+    ("Grid Battery discharging", "grid-battery-discharge.png", 512, 512, "Amber discharge sequence"),
 ]
 
 VEHICLES = [

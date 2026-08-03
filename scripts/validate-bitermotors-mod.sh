@@ -1959,17 +1959,12 @@ normal_solar = data["solar-panel"]["solar-panel"]
 if normal_solar.get("next_upgrade") != "bitermotors-high-density-solar-array" or solar_array.get("fast_replaceable_group") != "solar-panel":
     raise SystemExit(f"High-density Solar Panel upgrade path mismatch: normal={normal_solar} hd={solar_array}")
 solar_layers = solar_array["picture"]["layers"]
-solar_overlays = solar_array["overlay"]["layers"]
-if len(solar_layers) != 8 or len(solar_overlays) != 4:
-    raise SystemExit(f"High-density Solar Panel should tile four panel sprites: picture={len(solar_layers)} overlay={len(solar_overlays)}")
-expected_panel_scale = 1 / 4
-if any(not math.isclose(layer.get("scale", 0), expected_panel_scale) for layer in solar_layers + solar_overlays):
-    raise SystemExit(f"High-density Solar Panel tiles do not fit its 3x3 footprint: {solar_layers} {solar_overlays}")
-panel_layers = [layer for layer in solar_layers if not layer.get("draw_as_shadow")]
-panel_x = sorted({layer["shift"][0] for layer in panel_layers})
-panel_y = sorted({layer["shift"][1] for layer in panel_layers})
-if len(panel_x) != 2 or len(panel_y) != 2 or not math.isclose(panel_x[1] - panel_x[0], 1.5) or not math.isclose(panel_y[1] - panel_y[0], 1.5):
-    raise SystemExit(f"High-density Solar Panel centers do not tile edge-to-edge: {panel_layers}")
+if len(solar_layers) != 2 or solar_array.get("overlay") is not None:
+    raise SystemExit(f"High-density Solar Panel should use one custom sprite and shadow: {solar_array}")
+if solar_layers[0].get("filename") != "__bitermotors__/graphics/entity/high-density-solar-array/high-density-solar-array.png":
+    raise SystemExit(f"High-density Solar Panel retained vanilla artwork: {solar_layers}")
+if not math.isclose(solar_layers[0].get("scale", 0), 0.1875) or not solar_layers[1].get("draw_as_shadow"):
+    raise SystemExit(f"High-density Solar Panel custom art does not fit its 3x3 footprint: {solar_layers}")
 if solar_array["production"] != "300kW":
     raise SystemExit(f"High-density Solar Panel native production mismatch: {solar_array['production']}")
 if data["item"]["bitermotors-high-density-solar-array"]["stack_size"] != 10:
@@ -1985,6 +1980,14 @@ if solar_batch["categories"] != ["bitermotors-energy-products-batch"] or batch_i
 energy = grid_battery["energy_source"]
 if energy["buffer_capacity"] != "100MJ" or energy["input_flow_limit"] != "5MW" or energy["output_flow_limit"] != "5MW":
     raise SystemExit(f"Grid Battery energy source mismatch: {energy}")
+charge_graphics = grid_battery["chargable_graphics"]
+for mode, expected_file in (
+    ("charge_animation", "__bitermotors__/graphics/animation/grid-battery-charge.png"),
+    ("discharge_animation", "__bitermotors__/graphics/animation/grid-battery-discharge.png"),
+):
+    activity = charge_graphics[mode]["layers"][-1]
+    if activity.get("filename") != expected_file or activity.get("frame_count") != 8 or not activity.get("draw_as_glow"):
+        raise SystemExit(f"Grid Battery {mode} mismatch: {activity}")
 print("Energy Products engine prototypes OK.")
 if prototype_roadster["categories"] != ["advanced-crafting"]:
     raise SystemExit(f"Prototype Roadster recipe category mismatch: {prototype_roadster}")
