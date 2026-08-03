@@ -20,7 +20,7 @@ ENTITIES = [
     ("V4 Solar Charging Hub", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 512, 0.38, "aligned-final"),
     ("Biterfactory", "biterfactory/biterfactory.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
     ("Biterfactory V2", "biterfactory/biterfactory-v2.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
-    ("High-density Solar Panel", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 512, 0.1875, "generated-final"),
+    ("High-density Solar Panel", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 512, 0.19, "generated-final"),
     ("Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 512, 0.14, "aligned-final"),
     ("Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 512, 0.36, "generated-final"),
     ("Bitertaxi Depot", "bitertaxi-depot/bitertaxi-depot.png", "bitertaxi-depot.png", 8, 512, 0.48, "aligned-final"),

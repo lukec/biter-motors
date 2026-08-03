@@ -1113,14 +1113,14 @@ high_density_solar_array.picture = {
       priority = "high",
       width = 512,
       height = 512,
-      scale = 0.1875
+      scale = 0.19
     },
     {
       filename = "__bitermotors__/graphics/entity/high-density-solar-array/high-density-solar-array-shadow.png",
       priority = "high",
       width = 512,
       height = 512,
-      scale = 0.1875,
+      scale = 0.19,
       draw_as_shadow = true
     }
   }

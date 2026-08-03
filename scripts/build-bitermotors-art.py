@@ -45,7 +45,10 @@ ENTITY_ICON_SOURCES = {
 ENERGY_PRODUCT_SOURCES = {
     "high-density-solar-array": {
         "source": "high-density-solar-panel-transparent.png",
-        "subject_size": 474,
+        "subject_size": 496,
+        "shadow_blur": 3,
+        "shadow_offset": (1, 2),
+        "shadow_alpha_floor": 8,
     },
     "grid-battery": {
         "source": "grid-battery-v2-transparent.png",
@@ -94,15 +97,20 @@ def normalized_entity(image: Image.Image, subject_size: int) -> Image.Image:
     return canvas
 
 
-def entity_shadow(entity: Image.Image) -> Image.Image:
+def entity_shadow(
+    entity: Image.Image,
+    blur_radius: int = 4,
+    offset: tuple[int, int] = (5, 5),
+    alpha_floor: int = 0,
+) -> Image.Image:
     alpha = entity.getchannel("A")
-    shadow_alpha = alpha.filter(ImageFilter.GaussianBlur(radius=4)).point(
-        lambda value: round(value * 0.34)
+    shadow_alpha = alpha.filter(ImageFilter.GaussianBlur(radius=blur_radius)).point(
+        lambda value: 0 if value < alpha_floor else round(value * 0.34)
     )
     shadow = Image.new("RGBA", entity.size, (0, 0, 0, 0))
     shadow.putalpha(shadow_alpha)
     shifted = Image.new("RGBA", entity.size)
-    shifted.alpha_composite(shadow, (5, 5))
+    shifted.alpha_composite(shadow, offset)
     return shifted
 
 
@@ -157,7 +165,12 @@ def build_energy_product_art() -> None:
         entity_dir = MOD_GRAPHICS / "entity" / slug
         entity_dir.mkdir(parents=True, exist_ok=True)
         entity.save(entity_dir / f"{slug}.png", optimize=True)
-        entity_shadow(entity).save(entity_dir / f"{slug}-shadow.png", optimize=True)
+        entity_shadow(
+            entity,
+            config.get("shadow_blur", 4),
+            config.get("shadow_offset", (5, 5)),
+            config.get("shadow_alpha_floor", 0),
+        ).save(entity_dir / f"{slug}-shadow.png", optimize=True)
 
     grid_battery_activity_frames((72, 224, 255), charging=True).save(
         ANIMATION_DIR / "grid-battery-charge.png", optimize=True

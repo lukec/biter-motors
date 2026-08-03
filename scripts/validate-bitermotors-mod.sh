@@ -1963,7 +1963,7 @@ if len(solar_layers) != 2 or solar_array.get("overlay") is not None:
     raise SystemExit(f"High-density Solar Panel should use one custom sprite and shadow: {solar_array}")
 if solar_layers[0].get("filename") != "__bitermotors__/graphics/entity/high-density-solar-array/high-density-solar-array.png":
     raise SystemExit(f"High-density Solar Panel retained vanilla artwork: {solar_layers}")
-if not math.isclose(solar_layers[0].get("scale", 0), 0.1875) or not solar_layers[1].get("draw_as_shadow"):
+if not math.isclose(solar_layers[0].get("scale", 0), 0.19) or not solar_layers[1].get("draw_as_shadow"):
     raise SystemExit(f"High-density Solar Panel custom art does not fit its 3x3 footprint: {solar_layers}")
 if solar_array["production"] != "300kW":
     raise SystemExit(f"High-density Solar Panel native production mismatch: {solar_array['production']}")
