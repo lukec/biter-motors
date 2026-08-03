@@ -6,6 +6,19 @@ stationary platforms in Nauvis orbit.
 The mod id is `bitermotors`; custom prototypes use the `bitermotors-` prefix.
 The retired private-development namespace is not retained as an alias.
 
+## Why Play
+
+- Drive five electric vehicles with distinct performance, range, durability,
+  charging, and advanced Autopilot behavior.
+- Turn biter settlements into physical markets with prospects, reservations,
+  cars, customer ownership, charging demand, and Dollars on belts.
+- Retool from small production lines into Gigafactories, Robotaxi fleets, and
+  extreme-speed Cybertrain freight.
+- Build a strategic battery economy with dirty and clean refining, industrial
+  waste, cell recycling, high-density solar, and Megapacks.
+- Manage the central feedback loop: more sales create more customers, more
+  charging load, more grid pressure, and a need for the next scale of factory.
+
 ## Campaign Loop
 
 1. Recover the finite solar, storage, robotics, and industrial equipment from

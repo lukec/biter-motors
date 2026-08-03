@@ -267,7 +267,15 @@ Status: **functional, not final**
 - [ ] Final icon/readability audit at 16, 32, and 64 pixels.
 - [ ] Animation and footprint audit for every placeable Biter Motors entity.
 - [ ] Remove obsolete launch-business art from generated QA pages.
-- [ ] Capture release screenshots without late-game spoilers.
+- [x] Add benefit-led marketing copy while preserving the illustrated campaign
+      narrative.
+- [x] Add an unretouched live-save factory-floor capture to the repository
+      README.
+- [ ] Build a separate, physically plausible showcase save for repeatable media
+      capture. Review each staged scene with Luke before recording.
+- [ ] Capture spoiler-light native gameplay screenshots and short loops for EV
+      driving and charging, the biter customer economy, and Gigafactory scale.
+- [ ] Verify final media readability at GitHub desktop and mobile widths.
 
 ### Gate 6: Compatibility Contract
 
@@ -298,6 +306,10 @@ Status: **not started**
 
 - [ ] Create the mods.factorio.com listing as an alpha.
 - [ ] Use the marketing README and spoiler-light screenshots.
+- [ ] Upload and verify the selected gameplay images in the mod portal gallery.
+- [x] Write a spoiler-light gameplay trailer storyboard and capture contract.
+- [ ] Record, edit, caption, and publish the gameplay trailer on YouTube; link it
+      from the repository README and mod portal.
 - [ ] Publish requirements, compatibility, known issues, and feedback channel.
 - [ ] Upload the exact validated archive.
 - [ ] Verify the portal download installs and loads independently.

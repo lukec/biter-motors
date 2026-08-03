@@ -29,6 +29,34 @@ The customers are not friendly.
 
 Yet.
 
+## Why Play Biter Motors?
+
+- **Drive five electric vehicles.** The Prototype Roadster, Premium EV,
+  Mass-market EV, Megatruck, and Robotaxi each trade speed, range, braking,
+  durability, and battery capacity differently. Advanced models can Navigate
+  and Summon themselves. The Cybertrain brings the same idea to rail.
+- **Sell cars to biters.** Prospects, reservations, vehicles, and Dollars are
+  physical parts of the factory. Successful sales assign products to real
+  customers instead of incrementing an invisible market counter.
+- **Build markets without making Nauvis safe.** Charging coverage and service
+  keep settlements cooperative. Neglect has local consequences, and worms never
+  signed the customer agreement.
+- **Scale from pilot line to Gigafactory.** Product generations force real
+  retooling, larger machines, vertical integration, and much higher throughput.
+- **Own the battery and energy stack.** Mine strategic minerals, choose dirty or
+  clean refining, recycle cells, deploy dense solar and Megapacks, and discover
+  that commercial success can outrun the grid.
+- **Automate the next order of magnitude.** Robotaxi fleets, electric freight,
+  terrestrial compute, and a focused Nauvis-orbit endgame keep opening larger
+  factory problems.
+
+## From A Real Playtest
+
+![A live Biter Motors factory floor with Gigafactory V2 production blocks, belts, bots, and supporting industry](docs/gameplay-gigafactory-floor.jpg)
+
+*Unretouched alpha gameplay from a live campaign save. The illustrated chapter
+art below sets the tone; this is what the factory floor actually looks like.*
+
 ## The Brief Was Wrong
 
 Recover what survived. Rebuild the industrial capabilities the landing party
@@ -90,17 +118,6 @@ Biter Motors keeps the Space Age fantasy focused: one planet, its orbital
 frontier, and the increasingly strange economics connecting them. The endgame
 is there to be discovered, not itemized in this README.
 
-## What Changes
-
-- A purpose-built Nauvis-and-orbit campaign with a new industrial progression.
-- Physical markets: products go in, Dollars come out, and both belong on belts.
-- Biter settlements that can become customers without making the world safe.
-- New drivable electric vehicles, charging networks, battery chemistry,
-  factories, energy systems, fleet services, and terrestrial industry.
-- A power curve that turns commercial success into an infrastructure problem.
-- A fresh-start landing scene and recovered equipment that skip some familiar
-  burner-era repetition without skipping the work of building a real factory.
-
 Biter Motors is designed for a new world. The public save and mod-compatibility
 contract is documented in [COMPATIBILITY.md](COMPATIBILITY.md).
 
@@ -155,6 +172,8 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 - `COMPATIBILITY.md` defines supported worlds, upgrades, and mod boundaries.
 - `docs/economy-balance.md` contains the reproducible progression and endgame
   economy simulations.
+- `docs/gameplay-showcase-plan.md` defines the reviewed screenshot, short-loop,
+  and gameplay-trailer production workflow.
 - `feature_specs/biter-motors-battery-chemistry.md` specifies the battery
   chemistry branch.
 - `art/` contains source models, master renders, and QA pages.
