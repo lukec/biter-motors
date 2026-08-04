@@ -800,6 +800,13 @@ class BiterMotorsModTest(unittest.TestCase):
                     self.assertGreaterEqual(bottom - top, image.height * 0.84)
                     self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.05)
                     self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.05)
+                if slug == "terrestrial-datacenter":
+                    self.assertEqual(image.size, (512, 512))
+                    left, top, right, bottom = alpha.getbbox()
+                    self.assertGreaterEqual(right - left, image.width * 0.84)
+                    self.assertGreaterEqual(bottom - top, image.height * 0.96)
+                    self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.03)
+                    self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.03)
 
     def test_bitermotors_free_art_pipeline_is_wired_and_reviewable(self):
         data = (MOD / "data.lua").read_text()

@@ -56,6 +56,14 @@ ENERGY_PRODUCT_SOURCES = {
     },
 }
 
+STATIC_ENTITY_SOURCES = {
+    "terrestrial-datacenter": {
+        "source": "terrestrial-datacenter.png",
+        "subject_size": 508,
+    },
+}
+
+
 def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, int] | None:
     alpha = image.getchannel("A").point(lambda value: 255 if value > threshold else 0)
     return alpha.getbbox()
@@ -178,6 +186,16 @@ def build_energy_product_art() -> None:
     grid_battery_activity_frames((255, 165, 48), charging=False).save(
         ANIMATION_DIR / "grid-battery-discharge.png", optimize=True
     )
+
+
+def build_static_entity_art() -> None:
+    for slug, config in STATIC_ENTITY_SOURCES.items():
+        entity = normalized_entity(
+            Image.open(MASTER_DIR / config["source"]), config["subject_size"]
+        )
+        entity_dir = MOD_GRAPHICS / "entity" / slug
+        entity_dir.mkdir(parents=True, exist_ok=True)
+        entity.save(entity_dir / f"{slug}.png", optimize=True)
 
 
 def derive_and_normalize_icons() -> None:
@@ -670,6 +688,7 @@ def build_technology_icons() -> None:
 
 def main() -> int:
     build_energy_product_art()
+    build_static_entity_art()
     derive_and_normalize_icons()
     build_sales_office_showroom_vehicles()
     build_sales_office_showroom_animations()
