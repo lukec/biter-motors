@@ -165,7 +165,7 @@ local ADVANCED_BATTERY_CHEMISTRY_RECIPES = {
 PLAYER_VEHICLE_BATTERY_SCRAP = {
   [PREMIUM_EV_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
   ["bitermotors-mass-market-ev"] = {[DAMAGED_LFP_PACK_NAME] = 4},
-  ["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 4, [DAMAGED_LFP_PACK_NAME] = 8},
+  ["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
   [BITERTAXI_ITEM_NAME] = {[DAMAGED_LFP_PACK_NAME] = 16},
   [CYBERTRAIN_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}
 }
@@ -481,7 +481,7 @@ ELECTRIC_VEHICLE_BATTERIES = {
   ["bitermotors-prototype-roadster"] = 1,
   ["bitermotors-premium-ev"] = 2,
   ["bitermotors-mass-market-ev"] = 1,
-  ["bitermotors-megatruck"] = 4,
+  ["bitermotors-megatruck"] = 6,
   ["bitermotors-bitertaxi-fleet"] = 2
 }
 ELECTRIC_DRIVE_FUEL_NAME = "bitermotors-electric-drive-charge"
@@ -6715,8 +6715,8 @@ end
 function insert_battery_retirement_scrap(inventory, force, wrecks)
   if not inventory or wrecks <= 0 then return 0 end
   local sales = sold_customer_evs(force)
-  local high_weight = (sales[PREMIUM_EV_NAME] or 0) * 8 + (sales["bitermotors-megatruck"] or 0) * 4
-  local lfp_weight = (sales["bitermotors-mass-market-ev"] or 0) * 4 + (sales["bitermotors-megatruck"] or 0) * 8
+  local high_weight = (sales[PREMIUM_EV_NAME] or 0) * 8 + (sales["bitermotors-megatruck"] or 0) * 8
+  local lfp_weight = (sales["bitermotors-mass-market-ev"] or 0) * 4
   local total_weight = high_weight + lfp_weight
   if total_weight <= 0 then return 0 end
   local inserted = 0

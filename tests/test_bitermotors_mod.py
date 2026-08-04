@@ -507,9 +507,11 @@ class BiterMotorsModTest(unittest.TestCase):
             block = data[start:start + 700]
             self.assertIn(f'}}, {seconds}', block, recipe_name)
         megatruck = data[data.index('recipe("bitermotors-megatruck"'):data.index('recipe("bitermotors-high-density-solar-array"')]
-        self.assertIn('name = "bitermotors-mass-market-ev", amount = 2', megatruck)
-        self.assertIn('name = "steel-plate", amount = 20', megatruck)
-        self.assertIn('name = "bitermotors-high-energy-battery-pack", amount = 4', megatruck)
+        self.assertIn('name = "car", amount = 1', megatruck)
+        self.assertIn('name = "steel-plate", amount = 40', megatruck)
+        self.assertIn('name = "bitermotors-high-energy-battery-pack", amount = 8', megatruck)
+        self.assertIn('name = "bitermotors-electric-drivetrain", amount = 2', megatruck)
+        self.assertNotIn("bitermotors-mass-market-ev", megatruck)
         self.assertNotIn("low-density-structure", megatruck)
         self.assertNotIn("processing-unit", megatruck)
         megatruck_sale = data[data.index('recipe("bitermotors-sell-megatruck"'):data.index('recipe("bitermotors-sell-grid-battery"')]
@@ -526,6 +528,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('unlock("bitermotors-megatruck")', capital_tech)
         self.assertIn('technology = "bitermotors-megatruck-engineering"', control)
         self.assertIn('Research Megatruck Engineering.', control)
+        self.assertIn('["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}', control)
+        self.assertNotIn('["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 4, [DAMAGED_LFP_PACK_NAME] = 8}', control)
+        self.assertIn('(sales["bitermotors-megatruck"] or 0) * 8', control)
+        self.assertNotIn('(sales["bitermotors-megatruck"] or 0) * 4', control)
         self.assertIn("Megatruck", locale)
         self.assertIn("Dollars of profit", locale)
 
@@ -580,7 +586,7 @@ class BiterMotorsModTest(unittest.TestCase):
             '{consumption = "600kW", weight = 450, max_health = 240',
             '{consumption = "540kW", weight = 750, max_health = 550',
             '{consumption = "240kW", weight = 800, max_health = 500',
-            '{consumption = "600kW", weight = 1800, max_health = 1400',
+            '{consumption = "1.4MW", weight = 1200, max_health = 1400',
             '{consumption = "270kW", weight = 850, max_health = 650',
             'equipment_grid = "large-equipment-grid"',
             '{type = "impact", decrease = 150, percent = 70}',
@@ -589,6 +595,9 @@ class BiterMotorsModTest(unittest.TestCase):
         for braking in ["8.0", "6.4", "5.5", "4.5", "6.0"]:
             self.assertIn(f"braking_multiplier = {braking}", data)
         self.assertEqual(540 / 1.8, 0.8 * (600 / 1.6))
+        self.assertGreaterEqual((1400 / 1200) / (600 / 450), 0.85)
+        self.assertLess(1400 / 1200, 600 / 450)
+        self.assertGreater(6 / 1400, max(1 / 600, 2 / 540, 1 / 240))
         vehicle_table = data.index("local electric_vehicles")
         roadster = data[data.index('"bitermotors-prototype-roadster", generated_icon("prototype-roadster")', vehicle_table):
                         data.index('"bitermotors-premium-ev", generated_icon("premium-ev")', vehicle_table)]
@@ -597,7 +606,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-prototype-roadster": 1,
             "bitermotors-premium-ev": 2,
             "bitermotors-mass-market-ev": 1,
-            "bitermotors-megatruck": 4,
+            "bitermotors-megatruck": 6,
             "bitermotors-bitertaxi-fleet": 2,
         }.items():
             self.assertIn(f'["{name}"] = {batteries}', control)

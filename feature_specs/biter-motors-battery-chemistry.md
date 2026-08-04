@@ -63,9 +63,9 @@ Premium EV sales plus surviving stocked and placed vehicles. It stores the
 offset from native statistics so later production continues from the repaired
 lifetime total without recurring full-factory scans.
 
-Mass-Market EVs and Bitertaxis use LFP packs. Premium EVs use high-energy
-packs. Megatrucks retain two Mass-Market EV chassis and add four high-energy
-packs, giving them both a large total pack count and the long-range chemistry.
+Mass-Market EVs and Bitertaxis use LFP packs. Premium EVs and Megatrucks use
+high-energy packs. Megatrucks use a purpose-built steel chassis rather than
+embedding completed LFP vehicles.
 
 ## Resources And Items
 
@@ -130,7 +130,8 @@ Vehicle and energy-product pack counts after Advanced Battery Chemistry:
   recipe remains available as an expensive fallback so existing assemblers and
   saves retain their selected recipe.
 - Mass-Market EV: 4 LFP Battery Packs.
-- Megatruck: 2 Mass-Market EVs + 20 Steel Plates + 4 High-Energy Battery Packs.
+- Megatruck: 1 Car + 40 Steel Plates + 8 High-Energy Battery Packs +
+  2 Electric Drivetrains.
 - Bitertaxi Fleet: inherits 16 LFP packs through its four Mass-Market EVs.
 - Grid Battery: 12 LFP Battery Packs + 4 Accumulators + 1 Substation.
 

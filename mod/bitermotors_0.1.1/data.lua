@@ -1512,7 +1512,7 @@ local electric_vehicles = {
   copied_electric_vehicle(
     "bitermotors-megatruck", megatruck_icon,
     {r = 0.58, g = 0.62, b = 0.66, a = 1}, {r = 0.90, g = 0.93, b = 0.96, a = 1},
-    {consumption = "600kW", weight = 1800, max_health = 1400, rotation_multiplier = 0.72,
+    {consumption = "1.4MW", weight = 1200, max_health = 1400, rotation_multiplier = 0.72,
       braking_multiplier = 4.5, friction_force = 1.5e-3, energy_per_hit_point = 0.35, inventory_size = 100,
       artwork = "megatruck", sprite_scale = 0.76,
       equipment_grid = "large-equipment-grid", resistances = {
@@ -1862,9 +1862,10 @@ data:extend({
   ),
   recipe("bitermotors-megatruck", {"bitermotors-mass-vehicle-assembly"}, "transport", "bitermotors-d[megatruck]",
     {
-      {type = "item", name = "bitermotors-mass-market-ev", amount = 2},
-      {type = "item", name = "steel-plate", amount = 20},
-      {type = "item", name = "bitermotors-high-energy-battery-pack", amount = 4}
+      {type = "item", name = "car", amount = 1},
+      {type = "item", name = "steel-plate", amount = 40},
+      {type = "item", name = "bitermotors-high-energy-battery-pack", amount = 8},
+      {type = "item", name = "bitermotors-electric-drivetrain", amount = 2}
     },
     {{type = "item", name = "bitermotors-megatruck", amount = 1}}, 15
   ),
