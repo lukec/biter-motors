@@ -2677,6 +2677,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("load < capacity", buyer_selection)
         self.assertIn("vehicle_count - powered_capacity", control)
         self.assertIn("Underserved vehicles: %d", control)
+        self.assertIn("function charging_capacity_recommendation(force, missing)", control)
+        self.assertIn("Fix: add %d powered %s%s within %d tiles", control)
+        self.assertIn("at most one stall from each nearby charger", control)
         self.assertIn('return "Customers hostile", BITERMOTORS_STATE_COLORS.bad', control)
 
     def test_worms_remain_hostile_inside_customer_coverage(self):
@@ -3130,9 +3133,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("update_customer_settlement_alerts(force, service)", control)
         self.assertIn("if vehicle_count > powered_capacity then", control)
         self.assertIn('power_missing > 0 and "mixed" or "capacity"', control)
-        self.assertIn("Place or upgrade an EV charger near this settlement.", control)
+        self.assertIn("EVs without charging capacity.", control)
         self.assertIn("EVs lack powered charging service. Restore grid power.", control)
-        self.assertIn("Add or upgrade a charger and restore grid power.", control)
+        self.assertIn("and restore grid power.", control)
         self.assertIn('{type = "item", name = "bitermotors-ev-charging-station"}', control)
         self.assertIn('{type = "item", name = "accumulator"}', control)
         self.assertIn('{type = "virtual", name = "signal-red"}', control)
@@ -3140,9 +3143,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("player.remove_alert{entity = settlement", control)
         self.assertIn("function update_customer_settlement_map_tags(force, disrupted)", control)
         self.assertIn("force.add_chart_tag(disruption.settlement.surface", control)
-        self.assertIn("EVs underserved - add charger", control)
-        self.assertIn("EVs underserved - restore power", control)
-        self.assertIn("EVs underserved - charger + power", control)
+        self.assertIn("EVs underserved here - add", control)
+        self.assertIn("EVs underserved here - restore power", control)
+        self.assertIn("EVs underserved here - charger + power", control)
+        self.assertIn("recommendation_name", control)
         self.assertIn("if tag and tag.valid then tag.destroy() end", control)
         alert_logic = control[
             control.index("function update_customer_settlement_alerts(force, service)"):

@@ -5768,6 +5768,29 @@ function customer_settlement_map_tag_states()
   return storage.bitermotors_customer_settlement_map_tag_states
 end
 
+function charging_capacity_recommendation(force, missing)
+  if not force or missing <= 0 then return nil end
+  local battery_level = continuous_improvement_level(force, LONG_RANGE_BATTERY_TECH_NAME)
+  for index = #STATION_NAMES, 1, -1 do
+    local name = STATION_NAMES[index]
+    local recipe = force.recipes and force.recipes[name]
+    local config = STATION_CONFIGS[name]
+    if recipe and recipe.enabled and config then
+      local evs_per_stall = math.floor(
+        config.evs_per_stall * (1 + battery_level * 0.05) + 0.5
+      )
+      return {
+        name = name,
+        display_name = config.display_name,
+        count = math.max(1, math.ceil(missing / evs_per_stall)),
+        evs_per_stall = evs_per_stall,
+        radius = config.customer_radius
+      }
+    end
+  end
+  return nil
+end
+
 function update_customer_settlement_map_tags(force, disrupted)
   local states_by_force = customer_settlement_map_tag_states()
   states_by_force[force.index] = states_by_force[force.index] or {}
@@ -5784,12 +5807,38 @@ function update_customer_settlement_map_tags(force, disrupted)
   for key, disruption in pairs(disrupted) do
     local text
     if disruption.kind == "capacity" then
-      text = string.format("%d EVs underserved - add charger", disruption.missing)
+      if disruption.recommendation then
+        text = string.format(
+          "%d EVs underserved here - add %d %s%s",
+          disruption.missing,
+          disruption.recommendation.count,
+          disruption.recommendation.display_name,
+          disruption.recommendation.count == 1 and "" or "s"
+        )
+      else
+        text = string.format("%d EVs underserved here - add charger", disruption.missing)
+      end
     elseif disruption.kind == "power" then
-      text = string.format("%d EVs underserved - restore power", disruption.missing)
+      text = string.format("%d EVs underserved here - restore power", disruption.missing)
     else
-      text = string.format("%d EVs underserved - charger + power", disruption.missing)
+      if disruption.recommendation then
+        text = string.format(
+          "%d EVs underserved here - add %d %s%s + restore power",
+          disruption.missing,
+          disruption.recommendation.count,
+          disruption.recommendation.display_name,
+          disruption.recommendation.count == 1 and "" or "s"
+        )
+      else
+        text = string.format("%d EVs underserved here - charger + power", disruption.missing)
+      end
     end
+
+    local icon = disruption.kind == "power"
+      and {type = "item", name = "accumulator"}
+      or disruption.recommendation
+        and {type = "item", name = disruption.recommendation.name}
+        or {type = "virtual", name = "signal-red"}
 
     local state = states[key]
     local tag = type(state) == "table" and state.tag or state
@@ -5797,17 +5846,27 @@ function update_customer_settlement_map_tags(force, disrupted)
       or type(state) ~= "table"
       or state.kind ~= disruption.kind
       or state.missing ~= disruption.missing
+      or state.recommendation_name ~= (
+        disruption.recommendation and disruption.recommendation.name or nil
+      )
+      or state.recommendation_count ~= (
+        disruption.recommendation and disruption.recommendation.count or nil
+      )
     if changed then
       if tag and tag.valid then tag.destroy() end
       tag = force.add_chart_tag(disruption.settlement.surface, {
         position = disruption.settlement.position,
-        icon = {type = "virtual", name = "signal-red"},
+        icon = icon,
         text = text
       })
       states[key] = tag and {
         tag = tag,
         kind = disruption.kind,
-        missing = disruption.missing
+        missing = disruption.missing,
+        recommendation_name = disruption.recommendation
+          and disruption.recommendation.name or nil,
+        recommendation_count = disruption.recommendation
+          and disruption.recommendation.count or nil
       } or nil
     end
   end
@@ -5834,7 +5893,8 @@ function update_customer_settlement_alerts(force, service)
             and (power_missing > 0 and "mixed" or "capacity") or "power",
           missing = vehicle_count - powered_capacity,
           capacity_missing = capacity_missing,
-          power_missing = power_missing
+          power_missing = power_missing,
+          recommendation = charging_capacity_recommendation(force, capacity_missing)
         }
       end
     end
@@ -5861,14 +5921,22 @@ function update_customer_settlement_alerts(force, service)
         player.remove_alert{entity = settlement, type = defines.alert_type.custom}
       end
       if disruption.kind == "capacity" then
+        local recommendation = disruption.recommendation
         player.add_custom_alert(
           settlement,
-          {type = "item", name = "bitermotors-ev-charging-station"},
+          recommendation
+            and {type = "item", name = recommendation.name}
+            or {type = "item", name = "bitermotors-ev-charging-station"},
           {
             "",
-            "Customer settlement needs charging capacity for ",
+            "Customer settlement has ",
             disruption.missing,
-            " more EVs. Place or upgrade an EV charger near this settlement."
+            " EVs without charging capacity. ",
+            recommendation and "Add " or "Place or upgrade an EV charger near this settlement.",
+            recommendation and recommendation.count or "",
+            recommendation and " powered " or "",
+            recommendation and recommendation.display_name or "",
+            recommendation and (recommendation.count == 1 and "." or "s.") or ""
           },
           true
         )
@@ -5884,16 +5952,24 @@ function update_customer_settlement_alerts(force, service)
           true
         )
       else
+        local recommendation = disruption.recommendation
         player.add_custom_alert(
           settlement,
-          {type = "virtual", name = "signal-red"},
+          recommendation
+            and {type = "item", name = recommendation.name}
+            or {type = "virtual", name = "signal-red"},
           {
             "",
             "Customer settlement is short charging capacity for ",
             disruption.capacity_missing,
             " EVs and powered service for ",
             disruption.power_missing,
-            " more. Add or upgrade a charger and restore grid power."
+            " more. ",
+            recommendation and "Add " or "Add or upgrade a charger and restore grid power.",
+            recommendation and recommendation.count or "",
+            recommendation and " powered " or "",
+            recommendation and recommendation.display_name or "",
+            recommendation and (recommendation.count == 1 and " and restore grid power." or "s and restore grid power.") or ""
           },
           true
         )
@@ -10738,7 +10814,13 @@ local function show_customer_settlement_info_panel(player, settlement)
   panel.style.width = 380
 
   local local_powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
+  local local_assigned_capacity = service.capacity_by_settlement_key[key] or 0
   local local_underserved = math.max(0, settlement_vehicles - local_powered_capacity)
+  local local_capacity_missing = math.max(0, settlement_vehicles - local_assigned_capacity)
+  local local_power_missing = math.max(
+    0,
+    math.min(settlement_vehicles, local_assigned_capacity) - local_powered_capacity
+  )
   local status = friendly and (local_underserved > 0 and "customer - charging underserved" or "customer")
     or "hostile"
   add_station_info_label(panel, "Status: " .. status)
@@ -10750,10 +10832,34 @@ local function show_customer_settlement_info_panel(player, settlement)
   ))
   add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
   add_station_info_label(panel, string.format(
+    "Allocated charging capacity: %d (at most one stall from each nearby charger)",
+    local_assigned_capacity
+  ))
+  add_station_info_label(panel, string.format(
     "Powered charging capacity at this settlement: %d",
     local_powered_capacity
   ))
   add_station_info_label(panel, string.format("Underserved vehicles: %d", local_underserved))
+  if local_capacity_missing > 0 then
+    local recommendation = charging_capacity_recommendation(force, local_capacity_missing)
+    if recommendation then
+      add_station_info_label(panel, string.format(
+        "Fix: add %d powered %s%s within %d tiles of this settlement and inside Sales Office coverage.",
+        recommendation.count,
+        recommendation.display_name,
+        recommendation.count == 1 and "" or "s",
+        recommendation.radius
+      ))
+    else
+      add_station_info_label(panel, "Fix: add powered charging capacity near this settlement.")
+    end
+  end
+  if local_power_missing > 0 then
+    add_station_info_label(panel, string.format(
+      "Fix: restore charger grid power for %d EVs at this settlement.",
+      local_power_missing
+    ))
+  end
   add_station_info_label(panel, string.format("Active customer vehicles network-wide: %d", vehicle_summary.total))
   add_station_info_label(panel, string.format("Network vehicle capacity: %d", service.supported_ev_capacity))
 
