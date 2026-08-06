@@ -9138,39 +9138,48 @@ function sales_office_buyer_status(office)
   local service_blocked = 0
   local new_prospects = 0
   local replacement_buyers = 0
+  local missing_populations = 0
   for key in pairs(eligible_keys) do
     local population = customer_settlement_populations()[key]
-    local key_owned = vehicle_summary.by_settlement[key] or 0
-    local key_customers = (population.physical or 0) + (population.virtual_unowned or 0)
-    for _, count in pairs(population.virtual_by_vehicle or {}) do
-      key_customers = key_customers + count
-    end
-    local key_new_prospects = math.max(0, key_customers - key_owned)
-    local key_prospects = sale and math.max(
-      0,
-      key_customers - customer_population_purchase_count(population, sale.item)
-    ) or key_new_prospects
-    local key_assigned = math.min(
-      key_prospects,
-      reserved_by_settlement[key] or 0
-    )
-    local key_unassigned = math.max(0, key_prospects - key_assigned)
-    assigned = assigned + key_assigned
-    if service.served_keys[key] then
-      available = available + key_unassigned
-      friendly_settlements = friendly_settlements + 1
+    if population then
+      local key_owned = vehicle_summary.by_settlement[key] or 0
+      local key_customers = (population.physical or 0) + (population.virtual_unowned or 0)
+      for _, count in pairs(population.virtual_by_vehicle or {}) do
+        key_customers = key_customers + count
+      end
+      local key_new_prospects = math.max(0, key_customers - key_owned)
+      local key_prospects = sale and math.max(
+        0,
+        key_customers - customer_population_purchase_count(population, sale.item)
+      ) or key_new_prospects
+      local key_assigned = math.min(
+        key_prospects,
+        reserved_by_settlement[key] or 0
+      )
+      local key_unassigned = math.max(0, key_prospects - key_assigned)
+      assigned = assigned + key_assigned
+      if service.served_keys[key] then
+        available = available + key_unassigned
+        friendly_settlements = friendly_settlements + 1
+      else
+        service_blocked = service_blocked + key_unassigned
+      end
+      owned = owned + key_owned
+      customers = customers + key_customers
+      new_prospects = new_prospects + math.min(key_prospects, key_new_prospects)
+      replacement_buyers = replacement_buyers + math.max(
+        0,
+        key_prospects - key_new_prospects
+      )
+      capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
+      powered_capacity = powered_capacity + (service.powered_capacity_by_settlement_key[key] or 0)
     else
-      service_blocked = service_blocked + key_unassigned
+      missing_populations = missing_populations + 1
     end
-    owned = owned + key_owned
-    customers = customers + key_customers
-    new_prospects = new_prospects + math.min(key_prospects, key_new_prospects)
-    replacement_buyers = replacement_buyers + math.max(
-      0,
-      key_prospects - key_new_prospects
-    )
-    capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
-    powered_capacity = powered_capacity + (service.powered_capacity_by_settlement_key[key] or 0)
+  end
+  if missing_populations > 0 then
+    settlements = math.max(0, settlements - missing_populations)
+    mark_bitermotors_market_dirty(office.force, "missing-market-population")
   end
   return {
     available = available,

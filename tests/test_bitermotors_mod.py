@@ -640,6 +640,7 @@ class BiterMotorsModTest(unittest.TestCase):
         dequeue = control[control.index("function dequeue_available_buyer"):control.index("function eligible_customer_buyers")]
         self.assertNotIn("within_radius(office, entity", dequeue)
         self.assertIn("function sales_office_buyer_status(office)", control)
+        self.assertIn('mark_bitermotors_market_dirty(office.force, "missing-market-population")', control)
         self.assertIn('label = "Prospects"', control)
         self.assertIn("every remaining prospect is reserved by a sale already in progress", control)
         self.assertIn("function rebuild_customer_settlement_population_cache()", control)
