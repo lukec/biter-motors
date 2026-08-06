@@ -13,6 +13,8 @@ development namespace migration.
 - Added the eSpider: a native remote-controlled electric SpiderVehicle with
   four Tesla guns, factory-installed Battery MK3s and exoskeletons, charger
   support, 8 MW traction, and a low-speed limp-home reserve.
+- Replaced module-badged clean battery recipe icons with dedicated refining,
+  extraction, and dry-electrode process artwork.
 - Added Biterfactory production, battery chemistry, recycling, High-density
   Solar Panels, Grid Batteries, and terrestrial AI compute.
 - Added orbital AI infrastructure, physical AI Token return, and the AGI

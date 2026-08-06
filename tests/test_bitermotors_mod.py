@@ -2560,26 +2560,38 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("bitermotors-phosphate-extraction=Dirty phosphate extraction", locale)
         for product_slug in ["nickel-sulfate", "lithium-carbonate", "phosphate"]:
             self.assertIn(
-                f'battery_process_recipe_icon("{product_slug}", false)',
-                data,
-            )
-            self.assertIn(
-                f'battery_process_recipe_icon("{product_slug}", true)',
+                f'dirty_battery_process_recipe_icon("{product_slug}")',
                 data,
             )
         self.assertIn('icon = "__bitermotors__/graphics/icons/acidic-tailings.png"', data)
-        self.assertIn('icon = "__base__/graphics/icons/efficiency-module-3.png"', data)
+        self.assertNotIn('icon = "__base__/graphics/icons/efficiency-module-3.png"', data)
         icon_helper = data[
-            data.index("local function battery_process_recipe_icon"):
+            data.index("local function dirty_battery_process_recipe_icon"):
             data.index("local function sale_icon")
         ]
-        self.assertIn("icon_size = 256,\n      scale = 0.105", icon_helper)
+        self.assertIn("icon_size = 256", icon_helper)
+        self.assertIn("scale = 0.105", icon_helper)
         self.assertNotIn("icons[1].tint", icon_helper)
         self.assertNotIn("tint =", icon_helper)
         self.assertIn("Legacy process: produces 4 Nickel Sulfate", locale)
         self.assertIn("Improved process: produces 5 Nickel Sulfate", locale)
-        self.assertIn('battery_process_recipe_icon("high-nickel-cell", true)', data)
-        self.assertIn('battery_process_recipe_icon("lfp-cell", true)', data)
+        clean_process_art_slugs = [
+            "clean-nickel-refining",
+            "clean-lithium-extraction",
+            "clean-phosphate-extraction",
+            "dry-high-nickel-cell",
+            "dry-lfp-cell",
+        ]
+        for slug in clean_process_art_slugs:
+            self.assertIn(f'icons = generated_icon("{slug}")', data)
+            path = MOD / "graphics" / "icons" / f"{slug}.png"
+            self.assertTrue(path.exists(), path)
+            with Image.open(path) as image:
+                self.assertEqual(image.size, (256, 256))
+                self.assertEqual(image.mode, "RGBA")
+                self.assertEqual(image.getchannel("A").getextrema(), (0, 255))
+            source = ROOT / "art/bitermotors-masters/sources/clean-process-icons" / f"{slug}.png"
+            self.assertTrue(source.exists(), source)
         self.assertIn("legacy cell recipes still require cobalt", locale)
         self.assertIn("Pair it with Clean nickel refining", locale)
         item_art_slugs = [

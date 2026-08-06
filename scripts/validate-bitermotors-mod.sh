@@ -1814,14 +1814,18 @@ dirty_recipe_icons = data["recipe"]["bitermotors-dirty-nickel-refining"]["icons"
 dirty_product_icon, dirty_tailings_badge = dirty_recipe_icons
 if dirty_product_icon.get("tint") is not None or dirty_tailings_badge.get("tint") is not None:
     raise SystemExit(f"Dirty battery recipe icons must preserve their source colors: {dirty_recipe_icons}")
-dirty_badge_pixels = dirty_tailings_badge["icon_size"] * dirty_tailings_badge.get("scale", 1)
-clean_badge = data["recipe"]["bitermotors-clean-nickel-refining"]["icons"][1]
-clean_badge_pixels = clean_badge["icon_size"] * clean_badge.get("scale", 1)
-if not math.isclose(dirty_badge_pixels, clean_badge_pixels, rel_tol=0, abs_tol=0.01):
-    raise SystemExit(
-        f"Dirty and clean battery recipe badges must render at the same size: "
-        f"dirty={dirty_badge_pixels}, clean={clean_badge_pixels}"
-    )
+expected_clean_recipe_icons = {
+    "bitermotors-clean-nickel-refining": "clean-nickel-refining",
+    "bitermotors-clean-lithium-extraction": "clean-lithium-extraction",
+    "bitermotors-clean-phosphate-extraction": "clean-phosphate-extraction",
+    "bitermotors-dry-high-nickel-cell": "dry-high-nickel-cell",
+    "bitermotors-dry-lfp-cell": "dry-lfp-cell",
+}
+for recipe_name, icon_slug in expected_clean_recipe_icons.items():
+    icons = data["recipe"][recipe_name]["icons"]
+    expected_icon = f"__bitermotors__/graphics/icons/{icon_slug}.png"
+    if len(icons) != 1 or icons[0].get("icon") != expected_icon or icons[0].get("icon_size") != 256:
+        raise SystemExit(f"{recipe_name} must use dedicated clean-process artwork: {icons}")
 for recipe_name, (damaged_pack, cell_name, cell_count) in expected_battery_recovery.items():
     recipe = data["recipe"][recipe_name]
     ingredients = {row["name"]: row["amount"] for row in recipe["ingredients"]}

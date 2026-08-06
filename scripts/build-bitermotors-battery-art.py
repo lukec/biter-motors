@@ -6,6 +6,7 @@ from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "art/blender/battery-cybertrain/renders"
+CLEAN_PROCESS_SOURCE = ROOT / "art/bitermotors-masters/sources/clean-process-icons"
 GRAPHICS = ROOT / "mod/bitermotors_0.1.1/graphics"
 ICON_OUTPUT = GRAPHICS / "icons"
 TRAIN_OUTPUT = GRAPHICS / "entity/cybertrain"
@@ -64,6 +65,9 @@ def main() -> None:
     for source in sorted((SOURCE / "icons").glob("*.png")):
         crop_icon(source, ICON_OUTPUT / source.name)
         print(f"Built icon {source.stem}")
+    for source in sorted(CLEAN_PROCESS_SOURCE.glob("*.png")):
+        crop_icon(source, ICON_OUTPUT / source.name)
+        print(f"Built clean-process icon {source.stem}")
     crop_icon(SOURCE / "cybertrain-master.png", ICON_OUTPUT / "cybertrain.png")
     build_train_sheet(False)
     build_train_sheet(True)
