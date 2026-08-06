@@ -32,8 +32,9 @@ Yet.
 ## Why Play Biter Motors?
 
 - **Drive super fast EVs!** Launch a twitchy Roadster, hammer through the wilds
-  in a Megatruck, dispatch a Bitertaxi, or let Self-driving bring your latest EV
-  back to you. They are products, transportation, and occasionally weapons.
+  in a Megatruck, dispatch a Bitertaxi, command an electric eSpider, or let
+  Self-driving bring your latest car back to you. They are products,
+  transportation, and occasionally weapons.
 - **Kill biters... or make them your customers!** Put reservations and cars on
   belts, collect Dollars on the other side, and watch actual biter customers
   drive away with what you sold them.
@@ -98,8 +99,10 @@ durability matter.
 
 Eventually the small production line is no longer enough. Heavy manufacturing,
 autonomous logistics, fleet services, high-density energy systems, and
-electric freight change the shape of the base. The game keeps asking the same
-Factorio question at a larger scale:
+electric freight change the shape of the base. Late terrestrial engineering
+also turns the native Spidertron idea into a much faster battery-electric
+eSpider with Tesla armament. The game keeps asking the same Factorio question
+at a larger scale:
 
 > Can you make the next order of magnitude routine?
 

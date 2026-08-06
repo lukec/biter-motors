@@ -600,6 +600,12 @@ table.insert(grid_battery_array_icon, {
 })
 local bitertaxi_depot_icon = generated_icon("bitertaxi-depot")
 local megatruck_icon = generated_icon("megatruck")
+local espider_icon = layered_icon64(
+  "__base__/graphics/icons/spidertron.png",
+  "__space-age__/graphics/icons/battery-mk3-equipment.png",
+  nil,
+  {r = 0.35, g = 0.95, b = 1.0, a = 1.0}
+)
 
 local runtime_visual_sprites = {}
 for frame_index = 1, 8 do
@@ -857,6 +863,10 @@ data:extend({
   {
     type = "fuel-category",
     name = "bitermotors-cybertrain-drive"
+  },
+  {
+    type = "fuel-category",
+    name = "bitermotors-espider-drive"
   }
 })
 
@@ -906,6 +916,16 @@ data:extend({
   lithium_brine_resource
 })
 
+local espider_item = table.deepcopy(data.raw["item-with-entity-data"].spidertron)
+espider_item.name = "bitermotors-espider"
+espider_item.icon = nil
+espider_item.icon_tintable = nil
+espider_item.icon_tintable_mask = nil
+espider_item.icons = espider_icon
+espider_item.order = "bitermotors-h[espider]"
+espider_item.place_result = "bitermotors-espider"
+espider_item.stack_size = 1
+
 data:extend({
   item("bitermotors-dollar", dollar_icon, "bitermotors-capital", "a[dollar]", 100000, {
     flags = {"always-show"}
@@ -949,6 +969,7 @@ data:extend({
   item("bitermotors-megatruck", megatruck_icon, "transport", "bitermotors-d[megatruck]", 1, {place_result = "bitermotors-megatruck"}),
   item("bitermotors-autonomy-computer", layered_icon64("__base__/graphics/icons/processing-unit.png", "__base__/graphics/icons/speed-module.png"), "bitermotors-components", "e[autonomy-computer]", 50),
   item("bitermotors-bitertaxi-fleet", generated_icon("bitertaxi-fleet"), "transport", "bitermotors-e[bitertaxi-fleet]", 5, {place_result = "bitermotors-bitertaxi-fleet"}),
+  espider_item,
 
   item("bitermotors-electric-drive-charge", icon64("__base__/graphics/icons/battery.png"), "other", "z[bitermotors-electric-drive-charge]", 1, {
     hidden = true,
@@ -963,6 +984,20 @@ data:extend({
     fuel_value = "1MJ",
     fuel_acceleration_multiplier = 2.0,
     fuel_top_speed_multiplier = 1.5
+  }),
+  item("bitermotors-espider-drive-charge", icon64("__space-age__/graphics/icons/battery-mk3-equipment.png"), "other", "z[bitermotors-espider-drive-charge]", 1, {
+    hidden = true,
+    fuel_category = "bitermotors-espider-drive",
+    fuel_value = "10MJ",
+    fuel_acceleration_multiplier = 1,
+    fuel_top_speed_multiplier = 1
+  }),
+  item("bitermotors-espider-reserve-charge", icon64("__base__/graphics/icons/battery.png", {r = 1.0, g = 0.55, b = 0.18, a = 1.0}), "other", "z[bitermotors-espider-reserve-charge]", 1, {
+    hidden = true,
+    fuel_category = "bitermotors-espider-drive",
+    fuel_value = "10MJ",
+    fuel_acceleration_multiplier = 0.2,
+    fuel_top_speed_multiplier = 0.1
   }),
 
   item("bitermotors-datacenter-rack", generated_icon("datacenter-rack"), "bitermotors-components", "f[datacenter-rack]", 50),
@@ -1490,6 +1525,42 @@ planetary_grid_controller.graphics_set = generated_entity_animation("planetary-g
   working_animation("grid-charge-stages", 128, 128, 0.42, {0, -0.25}, 0.12, true)
 })
 
+local espider_legs = {}
+for index = 1, 8 do
+  local leg = table.deepcopy(data.raw["spider-leg"]["spidertron-leg-" .. index])
+  leg.name = "bitermotors-espider-leg-" .. index
+  leg.initial_movement_speed = leg.initial_movement_speed * 1.6
+  leg.movement_acceleration = leg.movement_acceleration * 2
+  espider_legs[#espider_legs + 1] = leg
+end
+data:extend(espider_legs)
+
+local espider = table.deepcopy(data.raw["spider-vehicle"].spidertron)
+espider.name = "bitermotors-espider"
+espider.icon = nil
+espider.icons = espider_icon
+espider.minable = {mining_time = 1, result = "bitermotors-espider"}
+espider.factoriopedia_simulation = nil
+espider.guns = {"teslagun", "teslagun", "teslagun", "teslagun"}
+espider.energy_source = {
+  type = "burner",
+  fuel_categories = {"bitermotors-espider-drive"},
+  effectivity = 1,
+  fuel_inventory_size = 1,
+  emissions_per_minute = {}
+}
+espider.movement_energy_consumption = "8MW"
+espider.torso_rotation_speed = 0.012
+espider.spider_engine.walking_group_overlap = 0.25
+for index, leg in ipairs(espider.spider_engine.legs) do
+  leg.leg = "bitermotors-espider-leg-" .. index
+end
+tint_animation_masks(
+  espider.graphics_set,
+  {r = 0.08, g = 0.72, b = 0.88, a = 1.0},
+  {r = 0.18, g = 0.95, b = 1.0, a = 1.0}
+)
+
 local electric_vehicles = {
   copied_electric_vehicle(
     "bitermotors-prototype-roadster", generated_icon("prototype-roadster"),
@@ -1564,6 +1635,7 @@ data:extend({
   orbital_radiator_panel,
   high_density_space_solar_panel,
   planetary_grid_controller,
+  espider,
   electric_vehicles[1],
   electric_vehicles[2],
   electric_vehicles[3],
@@ -1987,6 +2059,16 @@ data:extend({
       {type = "item", name = "bitermotors-dollar", amount = 50}
     },
     {{type = "item", name = "bitermotors-cybertrain-charging-stop", amount = 1}}, 30,
+    {allow_productivity = false}
+  ),
+  recipe("bitermotors-espider", {"bitermotors-mass-vehicle-assembly"}, "transport", "bitermotors-h[espider]",
+    {
+      {type = "item", name = "bitermotors-megatruck", amount = 1},
+      {type = "item", name = "battery-mk3-equipment", amount = 4},
+      {type = "item", name = "exoskeleton-equipment", amount = 4},
+      {type = "item", name = "processing-unit", amount = 20}
+    },
+    {{type = "item", name = "bitermotors-espider", amount = 1}}, 120,
     {allow_productivity = false}
   ),
 
@@ -2446,6 +2528,30 @@ data:extend({
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
       {"bitermotors-dollar", 1}
+    },
+    60
+  ),
+  tech("bitermotors-espider-engineering",
+    "__base__/graphics/technology/spidertron.png",
+    {
+      "bitermotors-autonomous-logistics",
+      "bitermotors-megatruck-engineering",
+      "battery-mk3-equipment",
+      "exoskeleton-equipment",
+      "tesla-weapons"
+    },
+    {
+      unlock("bitermotors-espider")
+    },
+    1000,
+    {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"production-science-pack", 1},
+      {"utility-science-pack", 1},
+      {"bitermotors-ai-token", 1},
+      {"bitermotors-dollar", 2}
     },
     60
   ),

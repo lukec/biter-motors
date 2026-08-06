@@ -381,19 +381,15 @@ These are candidates only after the release gates above:
   current explicit radiator-capacity contract.
 - Alternative post-victory scorecards for autonomous abundance or sustained
   compute civilization.
-- **Fast electric Spidertron replacement:** clone the native SpiderVehicle and
-  its eight leg prototypes, then increase native leg speed and acceleration
-  rather than moving it from Lua. Target roughly 90 km/h without exoskeletons
-  and 140-160 km/h when fully upgraded, subject to an isolated pathing and
-  animation benchmark. The prototype must use a burner source because Factorio
-  SpiderVehicles accept only burner or void energy sources; Biter Motors can
-  reuse its hidden electric-drive charge item, battery-equipment storage, and
-  nearby charger loop. Start it with four Battery MK3 units and provisionally
-  draw 8 MW at full stride, giving roughly two minutes of sustained high-speed
-  travel before charging. Make an empty pack stop the native engine, retain
-  standard Spidertron remote control and logistics, and avoid per-tick forced
-  movement. Decide later whether its armament is vanilla rockets, Tesla
-  weapons, or a noncombat logistics fit.
+- [x] **Fast electric eSpider:** clones the native SpiderVehicle and all eight
+  leg prototypes, with faster native stepping instead of Lua-forced movement.
+  Its factory configuration installs four Battery MK3 units, four exoskeletons,
+  and four Tesla guns; draws 8 MW before equipment load; works with every Biter
+  Motors charger; and uses the standard Spidertron remote and logistics UI. A
+  hidden low-speed reserve lets a depleted unit limp home. The isolated engine
+  benchmark measured 443.8 tiles in ten seconds versus vanilla Spidertron's
+  130.0, or about 3.41x the travel and roughly 160 km/h. Battery endurance is
+  approximately two minutes at sustained full stride.
 
 ## Explicit Non-Goals For Public Alpha
 

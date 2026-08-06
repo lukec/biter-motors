@@ -10,6 +10,9 @@ development namespace migration.
   reservations, charging coverage, customer ownership, and Dollar profit.
 - Added drivable Roadster, Premium EV, Mass-market EV, Megatruck, Bitertaxi,
   and Cybertrain vehicles with charging and bounded customer simulation.
+- Added the eSpider: a native remote-controlled electric SpiderVehicle with
+  four Tesla guns, factory-installed Battery MK3s and exoskeletons, charger
+  support, 8 MW traction, and a low-speed limp-home reserve.
 - Added Biterfactory production, battery chemistry, recycling, High-density
   Solar Panels, Grid Batteries, and terrestrial AI compute.
 - Added orbital AI infrastructure, physical AI Token return, and the AGI

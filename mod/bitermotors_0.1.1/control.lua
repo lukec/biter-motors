@@ -526,10 +526,25 @@ ELECTRIC_VEHICLE_BATTERIES = {
   ["bitermotors-premium-ev"] = 2,
   ["bitermotors-mass-market-ev"] = 1,
   ["bitermotors-megatruck"] = 6,
-  ["bitermotors-bitertaxi-fleet"] = 2
+  ["bitermotors-bitertaxi-fleet"] = 2,
+  ["bitermotors-espider"] = 4
 }
 ELECTRIC_DRIVE_FUEL_NAME = "bitermotors-electric-drive-charge"
 ELECTRIC_DRIVE_FUEL_JOULES = 1000000
+ESPIDER_NAME = "bitermotors-espider"
+ESPIDER_DRIVE_FUEL_NAME = "bitermotors-espider-drive-charge"
+ESPIDER_RESERVE_FUEL_NAME = "bitermotors-espider-reserve-charge"
+ESPIDER_DRIVE_FUEL_JOULES = 10000000
+ELECTRIC_VEHICLE_BATTERY_EQUIPMENT = {
+  [ESPIDER_NAME] = "battery-mk3-equipment"
+}
+ELECTRIC_VEHICLE_DRIVE_CONFIGS = {
+  [ESPIDER_NAME] = {
+    fuel_name = ESPIDER_DRIVE_FUEL_NAME,
+    fuel_joules = ESPIDER_DRIVE_FUEL_JOULES,
+    reserve_fuel_name = ESPIDER_RESERVE_FUEL_NAME
+  }
+}
 EV_BATTERY_POPUP_TICKS = 2 * 60
 EV_BATTERY_POPUP_FADE_TICKS = 60
 RAPID_CHARGING_TECH_NAME = "bitermotors-rapid-charging-power-electronics"
@@ -1639,35 +1654,54 @@ function electric_vehicle_battery_target(entity)
   return ELECTRIC_VEHICLE_BATTERIES[entity.name] + math.floor(quality_level / 2)
 end
 
+function electric_vehicle_battery_equipment(entity)
+  return ELECTRIC_VEHICLE_BATTERY_EQUIPMENT[entity.name] or "battery-equipment"
+end
+
+function electric_vehicle_drive_config(entity)
+  return ELECTRIC_VEHICLE_DRIVE_CONFIGS[entity.name] or {
+    fuel_name = ELECTRIC_DRIVE_FUEL_NAME,
+    fuel_joules = ELECTRIC_DRIVE_FUEL_JOULES
+  }
+end
+
+function put_vehicle_equipment(entity, equipment_name)
+  for y = 0, entity.grid.height - 1 do
+    for x = 0, entity.grid.width - 1 do
+      local equipment = entity.grid.put{name = equipment_name, position = {x, y}}
+      if equipment then return equipment end
+    end
+  end
+  return nil
+end
+
 function install_vehicle_batteries(entity, charge_new_batteries)
   if not is_electric_vehicle(entity) or not entity.grid then
     return
   end
-  local existing = {}
+  local battery_name = electric_vehicle_battery_equipment(entity)
+  local existing = 0
   for _, equipment in pairs(entity.grid.equipment) do
-    if equipment.name == "battery-equipment" then
-      existing[#existing + 1] = equipment
-    end
+    if equipment.name == battery_name then existing = existing + 1 end
   end
   local target = electric_vehicle_battery_target(entity)
-  table.sort(existing, function(left, right) return left.energy > right.energy end)
-  for index = #existing, target + 1, -1 do
-    entity.grid.take{equipment = existing[index]}
-  end
-  local needed = target - math.min(#existing, target)
-  for y = 0, entity.grid.height - 2, 2 do
-    for x = 0, entity.grid.width - 2, 2 do
-      if needed <= 0 then
-        return
-      end
-      local equipment = entity.grid.put{name = "battery-equipment", position = {x, y}}
-      if equipment then
-        if charge_new_batteries then
-          equipment.energy = equipment.max_energy
-        end
-        needed = needed - 1
-      end
+  for _ = existing + 1, target do
+    local equipment = put_vehicle_equipment(entity, battery_name)
+    if not equipment then return end
+    if charge_new_batteries then
+      equipment.energy = equipment.max_energy
     end
+  end
+end
+
+function install_espider_exoskeletons(entity)
+  if not entity or entity.name ~= ESPIDER_NAME or not entity.grid then return end
+  local existing = 0
+  for _, equipment in pairs(entity.grid.equipment) do
+    if equipment.name == "exoskeleton-equipment" then existing = existing + 1 end
+  end
+  for _ = existing + 1, 4 do
+    if not put_vehicle_equipment(entity, "exoskeleton-equipment") then return end
   end
 end
 
@@ -1676,6 +1710,7 @@ function track_electric_vehicle(entity, charge_new_batteries)
     return
   end
   install_vehicle_batteries(entity, charge_new_batteries)
+  install_espider_exoskeletons(entity)
   electric_vehicle_registry()[entity.unit_number] = entity
 end
 
@@ -1708,10 +1743,14 @@ end
 function vehicle_total_charge_energy(entity)
   local energy, capacity = vehicle_battery_energy(entity)
   if not is_electric_vehicle(entity) or not entity.burner then return energy, capacity end
-  energy = energy + (entity.burner.remaining_burning_fuel or 0)
+  local config = electric_vehicle_drive_config(entity)
+  local burning = entity.burner.currently_burning
+  if burning and burning.name == config.fuel_name then
+    energy = energy + (entity.burner.remaining_burning_fuel or 0)
+  end
   local inventory = entity.burner.inventory
   if inventory and inventory.valid then
-    energy = energy + inventory.get_item_count(ELECTRIC_DRIVE_FUEL_NAME) * ELECTRIC_DRIVE_FUEL_JOULES
+    energy = energy + inventory.get_item_count(config.fuel_name) * config.fuel_joules
   end
   return math.min(capacity, energy), capacity
 end
@@ -1776,10 +1815,14 @@ function feed_electric_drive_from_batteries(entity)
   if not fuel_inventory or not fuel_inventory.is_empty() then
     return
   end
+  local config = electric_vehicle_drive_config(entity)
   local battery_level = continuous_improvement_level(entity.force, LONG_RANGE_BATTERY_TECH_NAME)
-  local required_energy = ELECTRIC_DRIVE_FUEL_JOULES * math.max(0.25, 1 - battery_level * 0.08)
+  local required_energy = config.fuel_joules * math.max(0.25, 1 - battery_level * 0.08)
   local energy = vehicle_battery_energy(entity)
   if energy < required_energy then
+    if config.reserve_fuel_name then
+      fuel_inventory.insert{name = config.reserve_fuel_name, count = 1}
+    end
     return
   end
   local remaining = required_energy
@@ -1791,7 +1834,7 @@ function feed_electric_drive_from_batteries(entity)
     end
   end
   if remaining == 0 then
-    fuel_inventory.insert{name = ELECTRIC_DRIVE_FUEL_NAME, count = 1}
+    fuel_inventory.insert{name = config.fuel_name, count = 1}
   end
 end
 
@@ -12224,9 +12267,15 @@ for _, event_name in pairs({
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
         if event.buffer then
-          local hidden_charge_count = event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)
-          if hidden_charge_count > 0 then
-            event.buffer.remove{name = ELECTRIC_DRIVE_FUEL_NAME, count = hidden_charge_count}
+          for _, fuel_name in pairs({
+            ELECTRIC_DRIVE_FUEL_NAME,
+            ESPIDER_DRIVE_FUEL_NAME,
+            ESPIDER_RESERVE_FUEL_NAME
+          }) do
+            local hidden_charge_count = event.buffer.get_item_count(fuel_name)
+            if hidden_charge_count > 0 then
+              event.buffer.remove{name = fuel_name, count = hidden_charge_count}
+            end
           end
           local cybertrain_charge_count = event.buffer.get_item_count(CYBERTRAIN_FUEL_NAME)
           if cybertrain_charge_count > 0 then

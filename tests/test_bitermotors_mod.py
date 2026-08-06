@@ -550,7 +550,8 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertIn(f'place_result = "{name}"', data[item_start:item_start + 300])
             self.assertIn(f'"{name}"', control[control.index("ELECTRIC_VEHICLE_BATTERIES ="):control.index("ELECTRIC_DRIVE_FUEL_NAME =")])
         self.assertIn("install_vehicle_batteries", control)
-        self.assertIn("entity.grid.take{equipment = existing[index]}", control)
+        self.assertIn("put_vehicle_equipment(entity, battery_name)", control)
+        self.assertNotIn("entity.grid.take{equipment = existing[index]}", control)
         self.assertIn("install_vehicle_batteries(entity, charge_new_batteries)", control)
         self.assertIn("equipment.energy = equipment.max_energy", control)
         self.assertIn("track_electric_vehicle(entity, true)", control)
@@ -559,7 +560,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("nearby_uncharged_vehicles", control)
         self.assertIn("charge_station_vehicles(station)", control)
         self.assertIn("capacity * 0.03", control)
-        self.assertIn("event.buffer.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
+        self.assertIn("event.buffer.get_item_count(fuel_name)", control)
         self.assertIn("if hidden_charge_count > 0 then", control)
         self.assertIn("braking_multiplier = 8.0", data)
         self.assertIn("customer_requested_stalls", control)
@@ -691,7 +692,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function show_ev_battery_popup(player, vehicle)", control)
         self.assertIn("function vehicle_total_charge_energy(entity)", control)
         self.assertIn("entity.burner.remaining_burning_fuel", control)
-        self.assertIn("inventory.get_item_count(ELECTRIC_DRIVE_FUEL_NAME)", control)
+        self.assertIn("inventory.get_item_count(config.fuel_name)", control)
         self.assertIn('text = string.format("BATTERY %d%%", percent)', control)
         self.assertIn("players = {player}", control)
         self.assertIn("local prior_vehicle = prior_state and prior_state.vehicle", control)
@@ -699,6 +700,57 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("else\n    show_ev_battery_popup(player, prior_vehicle)", control)
         self.assertIn("local alpha = math.min(1, remaining / EV_BATTERY_POPUP_FADE_TICKS)", control)
         self.assertIn("script.on_nth_tick(6, update_ev_battery_popups)", control)
+
+    def test_espider_is_a_fast_electric_native_spider_vehicle(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/bitermotors.cfg").read_text()
+        self_driving = (MOD / "runtime/ev_self_driving.lua").read_text()
+
+        prototype = data[
+            data.index("local espider_legs = {}"):
+            data.index("local electric_vehicles = {")
+        ]
+        recipe = data[
+            data.index('recipe("bitermotors-espider"'):
+            data.index('recipe("bitermotors-datacenter-rack"')
+        ]
+        technology = data[
+            data.index('tech("bitermotors-espider-engineering"'):
+            data.index('tech("bitermotors-planetary-energy-grid"')
+        ]
+
+        self.assertIn('table.deepcopy(data.raw["spider-vehicle"].spidertron)', prototype)
+        self.assertIn('data.raw["spider-leg"]["spidertron-leg-" .. index]', prototype)
+        self.assertIn("leg.initial_movement_speed * 1.6", prototype)
+        self.assertIn("leg.movement_acceleration * 2", prototype)
+        self.assertIn("walking_group_overlap = 0.25", prototype)
+        self.assertIn('{"teslagun", "teslagun", "teslagun", "teslagun"}', prototype)
+        self.assertIn('movement_energy_consumption = "8MW"', prototype)
+        self.assertIn('fuel_categories = {"bitermotors-espider-drive"}', prototype)
+        self.assertIn('data.raw["item-with-entity-data"].spidertron', data)
+        self.assertIn('name = "bitermotors-megatruck", amount = 1', recipe)
+        self.assertIn('name = "battery-mk3-equipment", amount = 4', recipe)
+        self.assertIn('name = "exoskeleton-equipment", amount = 4', recipe)
+        self.assertIn('name = "processing-unit", amount = 20', recipe)
+        self.assertIn('{"bitermotors-mass-vehicle-assembly"}', recipe)
+        for prerequisite in [
+            "bitermotors-autonomous-logistics",
+            "bitermotors-megatruck-engineering",
+            "battery-mk3-equipment",
+            "exoskeleton-equipment",
+            "tesla-weapons",
+        ]:
+            self.assertIn(f'"{prerequisite}"', technology)
+        self.assertIn('unlock("bitermotors-espider")', technology)
+        self.assertIn('["bitermotors-espider"] = 4', control)
+        self.assertIn('[ESPIDER_NAME] = "battery-mk3-equipment"', control)
+        self.assertIn('install_espider_exoskeletons(entity)', control)
+        self.assertIn('reserve_fuel_name = ESPIDER_RESERVE_FUEL_NAME', control)
+        self.assertIn('fuel_top_speed_multiplier = 0.1', data)
+        self.assertNotIn('"bitermotors-espider"', self_driving)
+        self.assertIn("bitermotors-espider=eSpider", locale)
+        self.assertIn("four Tesla guns", locale)
 
     def test_quality_scales_physical_assets_not_abstract_outputs(self):
         data = (MOD / "data.lua").read_text()

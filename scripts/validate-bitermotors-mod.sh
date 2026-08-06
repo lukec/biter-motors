@@ -109,6 +109,9 @@ local TERRESTRIAL_DATACENTER = "bitermotors-terrestrial-datacenter"
 local TERRESTRIAL_AI_RECIPE = "bitermotors-terrestrial-ai-token"
 local CYBERTRAIN = "bitermotors-cybertrain"
 local CYBERTRAIN_CHARGING_STOP = "bitermotors-cybertrain-charging-stop"
+local ESPIDER = "bitermotors-espider"
+local ESPIDER_RESERVE_FUEL = "bitermotors-espider-reserve-charge"
+local find_unit
 
 local function output_inventory_id()
   return defines.inventory.crafter_output or defines.inventory.assembling_machine_output
@@ -143,6 +146,19 @@ local function create_named(surface, name, position, force)
   return surface.create_entity{name = name, position = found, force = force}
 end
 
+local function equipment_snapshot(entity)
+  local snapshot = {battery_mk3 = 0, exoskeletons = 0, energy = 0, capacity = 0}
+  for _, equipment in pairs(entity and entity.grid and entity.grid.equipment or {}) do
+    if equipment.name == "battery-mk3-equipment" then snapshot.battery_mk3 = snapshot.battery_mk3 + 1 end
+    if equipment.name == "exoskeleton-equipment" then snapshot.exoskeletons = snapshot.exoskeletons + 1 end
+    if equipment.type == "battery-equipment" then
+      snapshot.energy = snapshot.energy + equipment.energy
+      snapshot.capacity = snapshot.capacity + equipment.max_energy
+    end
+  end
+  return snapshot
+end
+
 script.on_init(function()
   game.tick_paused = false
   local surface = game.surfaces.nauvis or game.surfaces[1]
@@ -156,6 +172,7 @@ script.on_init(function()
     "bitermotors-terrestrial-ai",
     "bitermotors-autonomous-logistics",
     "bitermotors-cybertrain-logistics",
+    "bitermotors-espider-engineering",
     "bitermotors-orbital-compute",
     "bitermotors-planetary-energy-grid"
   }) do
@@ -312,6 +329,28 @@ script.on_init(function()
   }
   if self_driving_ev then self_driving_ev.destructible = false end
   if blocked_self_driving_ev then blocked_self_driving_ev.destructible = false end
+  surface.request_to_generate_chunks({1000, 220}, 18)
+  surface.force_generate_chunk_requests()
+  local espider_test_tiles = {}
+  for x = 500, 1500 do
+    for y = 205, 230 do
+      espider_test_tiles[#espider_test_tiles + 1] = {name = "landfill", position = {x, y}}
+    end
+  end
+  surface.set_tiles(espider_test_tiles)
+  for _, existing_entity in pairs(surface.find_entities_filtered{
+    area = {{495, 200}, {1505, 235}}
+  }) do
+    existing_entity.destroy()
+  end
+  local vanilla_spider = surface.create_entity{
+    name = "spidertron", position = {510, 212}, force = force
+  }
+  local espider = surface.create_entity{
+    name = ESPIDER, position = {510, 225}, force = force
+  }
+  if vanilla_spider then vanilla_spider.destructible = false end
+  if espider then espider.destructible = false end
   for index, count in pairs({41, 41, 40}) do
     local premium_history_chest =
       create_named(surface, "steel-chest", {258 + index * 2, 100}, force)
@@ -373,19 +412,26 @@ script.on_init(function()
     bitertaxi_power.power_usage = 0
     bitertaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not vanilla_spider or not espider or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, biterfactory = biterfactory ~= nil, biterfactory_v2 = biterfactory_v2 ~= nil, solar_array = solar_array ~= nil, grid_battery = grid_battery ~= nil}
     return
   end
 
   for _, entity in pairs({
     milestone_office, reservation_office, bitertaxi_office, grid_battery_office,
-    station, station_v2, bitertaxi_center, roadster, self_driving_ev, blocked_self_driving_ev
+    station, station_v2, bitertaxi_center, roadster, self_driving_ev, blocked_self_driving_ev,
+    espider
   }) do
     script.raise_script_built{entity = entity}
   end
   if cybertrain then script.raise_script_built{entity = cybertrain} end
   if cybertrain_stop then script.raise_script_built{entity = cybertrain_stop} end
+  storage.vanilla_spider_unit_number = vanilla_spider.unit_number
+  storage.espider_unit_number = espider.unit_number
+  storage.vanilla_spider_start = {x = vanilla_spider.position.x, y = vanilla_spider.position.y}
+  storage.espider_start = {x = espider.position.x, y = espider.position.y}
+  vanilla_spider.add_autopilot_destination({x = 1490, y = vanilla_spider.position.y})
+  espider.add_autopilot_destination({x = 1490, y = espider.position.y})
 
   commanded_biter.commandable.set_command{
     type = defines.command.attack,
@@ -690,7 +736,76 @@ script.on_nth_tick(300, function()
   end
 end)
 
-local function find_unit(surface, name, unit_number)
+script.on_nth_tick(600, function()
+  if game.tick < 600 or storage.espider_speed_checked then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local vanilla_spider = find_unit(surface, "spidertron", storage.vanilla_spider_unit_number)
+  local espider = find_unit(surface, ESPIDER, storage.espider_unit_number)
+  if not vanilla_spider or not espider then return end
+  local vanilla_distance = math.abs(vanilla_spider.position.x - storage.vanilla_spider_start.x)
+  local espider_distance = math.abs(espider.position.x - storage.espider_start.x)
+  local equipment = equipment_snapshot(espider)
+  write_report{
+    tick = game.tick,
+    status = "espider_speed",
+    vanilla_distance = vanilla_distance,
+    espider_distance = espider_distance,
+    speed_ratio = vanilla_distance > 0 and espider_distance / vanilla_distance or 0,
+    equipment = equipment,
+    recipe_enabled = game.forces.player.recipes[ESPIDER].enabled
+  }
+
+  espider.autopilot_destination = nil
+  for _, grid_equipment in pairs(espider.grid.equipment) do
+    if grid_equipment.type == "battery-equipment" then grid_equipment.energy = 0 end
+  end
+  espider.burner.inventory.clear()
+  espider.burner.currently_burning = nil
+  storage.espider_reserve_start = {x = espider.position.x, y = espider.position.y}
+  espider.add_autopilot_destination({x = espider.position.x + 100, y = espider.position.y})
+  storage.espider_speed_checked = true
+end)
+
+script.on_nth_tick(780, function()
+  if game.tick < 780 or storage.espider_reserve_checked then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local espider = find_unit(surface, ESPIDER, storage.espider_unit_number)
+  local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
+  if not espider or not station_v2 then return end
+  local burning = espider.burner.currently_burning
+  local reserve_count = espider.burner.inventory.get_item_count(ESPIDER_RESERVE_FUEL)
+  local dx = espider.position.x - storage.espider_reserve_start.x
+  local dy = espider.position.y - storage.espider_reserve_start.y
+  write_report{
+    tick = game.tick,
+    status = "espider_reserve",
+    reserve_active = (burning and burning.name == ESPIDER_RESERVE_FUEL) or reserve_count > 0,
+    distance = math.sqrt(dx * dx + dy * dy)
+  }
+  espider.autopilot_destination = nil
+  espider.teleport({x = station_v2.position.x + 5, y = station_v2.position.y})
+  for _, grid_equipment in pairs(espider.grid.equipment) do
+    if grid_equipment.type == "battery-equipment" then grid_equipment.energy = 0 end
+  end
+  espider.burner.inventory.clear()
+  espider.burner.currently_burning = nil
+  storage.espider_reserve_checked = true
+end)
+
+script.on_nth_tick(900, function()
+  if game.tick < 900 or storage.espider_charger_checked then return end
+  local surface = game.get_surface(storage.surface_index or 1)
+  local espider = find_unit(surface, ESPIDER, storage.espider_unit_number)
+  if not espider then return end
+  write_report{
+    tick = game.tick,
+    status = "espider_charger",
+    equipment = equipment_snapshot(espider)
+  }
+  storage.espider_charger_checked = true
+end)
+
+find_unit = function(surface, name, unit_number)
   for _, entity in pairs(surface.find_entities_filtered{name = name}) do
     if entity.unit_number == unit_number then
       return entity
@@ -2291,6 +2406,42 @@ for vehicle_name in (
     if vehicle.get("turret_animation") is not None or vehicle.get("light_animation") is not None:
         raise SystemExit(f"{vehicle_name} retained mismatched vanilla overlay art")
 print("Biter Motors custom vehicle engine sprites OK.")
+espider = data["spider-vehicle"]["bitermotors-espider"]
+espider_item = data["item-with-entity-data"]["bitermotors-espider"]
+espider_recipe = data["recipe"]["bitermotors-espider"]
+espider_technology = data["technology"]["bitermotors-espider-engineering"]
+if espider["movement_energy_consumption"] != "8MW":
+    raise SystemExit(f"eSpider traction draw mismatch: {espider}")
+if espider["guns"] != ["teslagun"] * 4:
+    raise SystemExit(f"eSpider Tesla armament mismatch: {espider['guns']}")
+if espider["energy_source"].get("fuel_categories") != ["bitermotors-espider-drive"]:
+    raise SystemExit(f"eSpider electric fuel category mismatch: {espider['energy_source']}")
+if espider["spider_engine"].get("walking_group_overlap") != 0.25:
+    raise SystemExit(f"eSpider walking group overlap mismatch: {espider['spider_engine']}")
+if not espider.get("allow_remote_driving"):
+    raise SystemExit(f"eSpider native remote driving is disabled: {espider}")
+for index in range(1, 9):
+    leg = data["spider-leg"][f"bitermotors-espider-leg-{index}"]
+    if not math.isclose(leg["initial_movement_speed"], 0.096):
+        raise SystemExit(f"eSpider leg {index} speed mismatch: {leg}")
+    if not math.isclose(leg["movement_acceleration"], 0.06):
+        raise SystemExit(f"eSpider leg {index} acceleration mismatch: {leg}")
+if espider_item.get("place_result") != "bitermotors-espider" or espider_item.get("stack_size") != 1:
+    raise SystemExit(f"eSpider item-with-entity-data mismatch: {espider_item}")
+espider_ingredients = {row["name"]: row["amount"] for row in espider_recipe["ingredients"]}
+if espider_recipe.get("categories") != ["bitermotors-mass-vehicle-assembly"] or espider_ingredients != {
+    "bitermotors-megatruck": 1,
+    "battery-mk3-equipment": 4,
+    "exoskeleton-equipment": 4,
+    "processing-unit": 20,
+}:
+    raise SystemExit(f"eSpider recipe mismatch: {espider_recipe}")
+if espider_technology.get("effects") != [{"type": "unlock-recipe", "recipe": "bitermotors-espider"}]:
+    raise SystemExit(f"eSpider technology unlock mismatch: {espider_technology}")
+reserve_fuel = data["item"]["bitermotors-espider-reserve-charge"]
+if reserve_fuel.get("fuel_top_speed_multiplier") != 0.1:
+    raise SystemExit(f"eSpider limp-home fuel speed mismatch: {reserve_fuel}")
+print("eSpider native vehicle prototypes OK.")
 PY
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/bitermotors-create.log 2>&1
 if grep -qE ' errored when running|Error:|Error while loading|Modifications: ' /tmp/bitermotors-create.log; then
@@ -2316,12 +2467,34 @@ from pathlib import Path
 report = Path(sys.argv[1])
 records = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
 checked = next((record for record in records if record.get("status") == "checked"), None)
+espider_speed = next((record for record in records if record.get("status") == "espider_speed"), None)
+espider_reserve = next((record for record in records if record.get("status") == "espider_reserve"), None)
+espider_charger = next((record for record in records if record.get("status") == "espider_charger"), None)
 grid_battery_sale = next(
     (record for record in records if record.get("status") == "grid_battery_sale"),
     None,
 )
 if checked is None:
     raise SystemExit("smoke report missing checked record")
+if espider_speed is None or espider_reserve is None or espider_charger is None:
+    raise SystemExit(
+        f"eSpider smoke records missing: speed={espider_speed}, reserve={espider_reserve}, "
+        f"charger={espider_charger}"
+    )
+equipment = espider_speed.get("equipment") or {}
+if equipment.get("battery_mk3") != 4 or equipment.get("exoskeletons") != 4:
+    raise SystemExit(f"factory-new eSpider equipment mismatch: {espider_speed}")
+if equipment.get("capacity") != 1_000_000_000 or equipment.get("energy", 0) <= 0:
+    raise SystemExit(f"factory-new eSpider battery mismatch: {espider_speed}")
+if not espider_speed.get("recipe_enabled"):
+    raise SystemExit(f"eSpider research did not unlock its recipe: {espider_speed}")
+if espider_speed.get("speed_ratio", 0) < 1.8:
+    raise SystemExit(f"factory eSpider was not substantially faster than vanilla Spidertron: {espider_speed}")
+if not espider_reserve.get("reserve_active") or espider_reserve.get("distance", 0) <= 0.5:
+    raise SystemExit(f"depleted eSpider did not limp under reserve propulsion: {espider_reserve}")
+charger_equipment = espider_charger.get("equipment") or {}
+if charger_equipment.get("energy", 0) <= 0:
+    raise SystemExit(f"powered EV charger did not recharge the eSpider: {espider_charger}")
 road_rage_test = checked.get("road_rage_test") or {}
 if not road_rage_test.get("enraged") or road_rage_test.get("force") != "bitermotors-road-rage":
     raise SystemExit(f"customer road rage did not move the struck customer to its temporary force: {checked}")

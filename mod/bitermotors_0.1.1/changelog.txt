@@ -6,7 +6,8 @@ Version: 0.1.1
     - Turns biter settlements into customers for EVs, Grid Batteries, and Bitertaxi service.
     - Adds terrestrial and orbital AI compute with physical power, cooling, and token logistics.
   Features:
-    - Adds five drivable EV products plus the battery-electric Cybertrain.
+    - Adds five drivable EV products, the battery-electric Cybertrain, and the remote-controlled eSpider.
+    - The eSpider includes four Tesla guns, four Battery MK3 units, four exoskeletons, charger support, and limp-home reserve propulsion.
     - Adds Biterfactories, battery chemistry, recycling, high-density solar power, and Grid Batteries.
     - Adds bounded customer populations, charging commutes, Self-driving, and Summon EV.
     - Restores belt-capacity research, Battery MK3, and advanced asteroid crushing without removed planetary science.

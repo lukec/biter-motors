@@ -10,7 +10,8 @@ The retired private-development namespace is not retained as an alias.
 
 - **Drive super fast EVs!** Roadsters, Premium EVs, Mass-market EVs,
   Megatrucks, and Bitertaxis have distinct speed, range, braking, durability,
-  charging, and Self-driving behavior.
+  charging, and Self-driving behavior. The eSpider adds native remote control,
+  Tesla guns, and extreme all-terrain electric mobility.
 - **Kill biters... or make them your customers!** Reservations and vehicles go
   into Sales Offices. Dollars and newly motorized biter customers come out.
 - **Scale up and rebuild!** Retool small pilot lines into vertically integrated
@@ -33,7 +34,8 @@ The retired private-development namespace is not retained as an alias.
 8. Establish nickel, lithium, high-nickel, LFP, waste, and recycling loops.
 9. Scale High-density Solar Panels, Grid Batteries, advanced chargers, Biterfactories,
    and Mass-market EVs.
-10. Add Bitertaxi service, autonomous logistics, and Cybertrain freight.
+10. Add Bitertaxi service, autonomous logistics, Cybertrain freight, and the
+    late terrestrial eSpider.
 11. Fund Terrestrial Datacenters with continuous power and Dollars.
 12. Launch physical orbital AI infrastructure and return AI Tokens to Nauvis.
 13. Sustain a 10-gigawatt final training run to produce an AGI Model.
@@ -74,9 +76,13 @@ The retired private-development namespace is not retained as an alias.
 - Bitertaxi: efficient long-duty fleet vehicle.
 - Cybertrain: extreme-speed battery-electric locomotive with acceleration draw,
   regenerative braking, reserve crawl, and 50 MW station charging.
+- eSpider: roughly 160 km/h in its factory configuration, with four Tesla guns,
+  four Battery MK3 units, four exoskeletons, 8 MW traction, charger support, and
+  a depleted-battery limp-home reserve.
 
 Premium, Mass-market, Megatruck, and Bitertaxi vehicles support Route and
 Summon after Autonomous Logistics. The deliberately raw Roadster does not.
+eSpider uses Factorio's standard Spidertron remote and logistics controls.
 
 ## Physical Orbital Endgame
 
