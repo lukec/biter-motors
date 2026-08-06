@@ -3246,7 +3246,9 @@ local function nearby_real_power_pole(station)
   local unit_number = station.unit_number
   local cached = unit_number and cache[unit_number]
   if cached and cached.resolved then
-    if not cached.pole or cached.pole.valid then return cached.pole end
+    if not cached.pole or cached.pole.valid then
+      return cached.pole, cached.connection_position
+    end
     cache[unit_number] = nil
   end
   local position = station.position
@@ -3257,25 +3259,42 @@ local function nearby_real_power_pole(station)
   }
 
   local nearest = nil
+  local nearest_connection_position = nil
   local nearest_distance_squared = nil
+  local station_box = station.bounding_box
   for _, pole in pairs(station.surface.find_entities_filtered{type = "electric-pole", force = station.force, area = area}) do
     if pole.valid and pole.name ~= STATION_GRID_CONNECTION_NAME then
       local dx = pole.position.x - position.x
       local dy = pole.position.y - position.y
       local supply_distance = pole.prototype.get_supply_area_distance(pole.quality)
+      local supply_left = pole.position.x - supply_distance
+      local supply_right = pole.position.x + supply_distance
+      local supply_top = pole.position.y - supply_distance
+      local supply_bottom = pole.position.y + supply_distance
       local distance_squared = dx * dx + dy * dy
-      if math.abs(dx) <= supply_distance + 0.001
-        and math.abs(dy) <= supply_distance + 0.001
+      if station_box.right_bottom.x >= supply_left
+        and station_box.left_top.x <= supply_right
+        and station_box.right_bottom.y >= supply_top
+        and station_box.left_top.y <= supply_bottom
         and (not nearest_distance_squared or distance_squared < nearest_distance_squared) then
         nearest = pole
+        local margin = math.min(0.05, supply_distance * 0.1)
+        nearest_connection_position = {
+          x = math.max(supply_left + margin, math.min(supply_right - margin, position.x)),
+          y = math.max(supply_top + margin, math.min(supply_bottom - margin, position.y))
+        }
         nearest_distance_squared = distance_squared
       end
     end
   end
   if unit_number then
-    cache[unit_number] = {resolved = true, pole = nearest}
+    cache[unit_number] = {
+      resolved = true,
+      pole = nearest,
+      connection_position = nearest_connection_position
+    }
   end
-  return nearest
+  return nearest, nearest_connection_position
 end
 
 function invalidate_station_power_pole_cache_near(entity)
@@ -3354,16 +3373,24 @@ local function ensure_station_power_sinks(station, active_stalls)
     return nil
   end
   local stalls = math.max(0, math.min(config.stalls, math.floor(active_stalls or 0)))
+  local _, connection_position = nearby_real_power_pole(station)
+  connection_position = connection_position or station.position
   local power_state = station_power_service()[station.unit_number] or {power_fraction = 1}
   power_state.requested_stalls = stalls
   station_power_service()[station.unit_number] = power_state
   for stall = 1, config.stalls do
     local existing = station_sinks[stall]
     if stall <= stalls then
+      if existing and existing.valid
+        and (math.abs(existing.position.x - connection_position.x) > 0.01
+          or math.abs(existing.position.y - connection_position.y) > 0.01) then
+        destroy_power_sink(existing)
+        existing = nil
+      end
       if not existing or not existing.valid then
         station_sinks[stall] = station.surface.create_entity{
           name = config.power_sink_name,
-          position = station.position,
+          position = connection_position,
           force = station.force
         }
       end
