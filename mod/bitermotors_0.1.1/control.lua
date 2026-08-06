@@ -482,7 +482,7 @@ CHARGER_STALL_VISUAL_LAYOUTS = {
   ["bitermotors-ev-charging-station-v4"] = {columns = 5, spacing_x = 0.9, spacing_y = 0.78, offset_y = 0, scale = 0.78}
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
-local STATION_POWER_MODEL = "native-footprint-supply-area-v2"
+STATION_POWER_MODEL = "native-footprint-supply-area-v2"
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
 GRID_BATTERY_SALES_RADIUS = 384
 GRID_BATTERY_INITIAL_ADOPTION_FRACTION = 0.05
