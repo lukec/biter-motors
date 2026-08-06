@@ -1266,6 +1266,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('flags = {"always-show"}', wrecked_ev)
         self.assertIn('"z[wrecked-ev]", 1', wrecked_ev)
 
+        ai_token_start = data.index('item("bitermotors-ai-token"')
+        ai_token = data[ai_token_start:ai_token_start + 300]
+        self.assertIn('flags = {"always-show"}', ai_token)
+        self.assertIn('"h[bitermotors-ai-token]", 1000000', ai_token)
+
         for name, subgroup in [
             ("bitermotors-prototype-roadster", "transport"),
             ("bitermotors-high-density-solar-array", "energy"),
@@ -2176,8 +2181,10 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_ai_tokens_are_dense_capital_funded_and_improvable(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        token_line = next(line for line in data.splitlines() if 'item("bitermotors-ai-token"' in line)
-        self.assertIn(", 1000000, {weight = 1})", token_line)
+        token_start = data.index('item("bitermotors-ai-token"')
+        token_item = data[token_start:token_start + 300]
+        self.assertIn('"h[bitermotors-ai-token]", 1000000', token_item)
+        self.assertIn("weight = 1", token_item)
         self.assertIn("ai_efficiency_thresholds = {1000, 10000, 100000, 1000000, 10000000, 100000000}", data)
         self.assertIn('+10% AI Tokens per cycle', data)
         self.assertIn('recipe("bitermotors-terrestrial-ai-token"', data)

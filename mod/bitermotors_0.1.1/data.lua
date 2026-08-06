@@ -914,7 +914,10 @@ data:extend({
   }),
   item("bitermotors-biterfactory-module", biterfactory_module_icon, "bitermotors-components", "c[biterfactory-module]", 1),
   item("bitermotors-structural-casting", structural_casting_icon, "bitermotors-components", "d[structural-casting]", 10),
-  item("bitermotors-ai-token", ai_token_icon, "science-pack", "h[bitermotors-ai-token]", 1000000, {weight = 1}),
+  item("bitermotors-ai-token", ai_token_icon, "science-pack", "h[bitermotors-ai-token]", 1000000, {
+    flags = {"always-show"},
+    weight = 1
+  }),
   item("bitermotors-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 10000),
   item("bitermotors-capital-allocation", dollar_icon, "bitermotors-capital", "b[capital-allocation]", 10000),
   item("bitermotors-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1),
