@@ -9,6 +9,8 @@ Version: 0.1.1
     - Adds five drivable EV products plus the battery-electric Cybertrain.
     - Adds Biterfactories, battery chemistry, recycling, high-density solar power, and Grid Batteries.
     - Adds bounded customer populations, charging commutes, Self-driving, and Summon EV.
+    - Restores belt-capacity research, Battery MK3, and advanced asteroid crushing without removed planetary science.
+    - Rehomes late Tesla weapon damage upgrades onto the Biter Motors AI Token economy.
   Info:
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.

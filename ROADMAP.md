@@ -120,6 +120,8 @@ gate.
 - Prototype Roadster, Premium EV, Mass-market EV, Megatruck, and Bitertaxi.
 - Drivable battery simulation, nearby charging, range, braking, collision
   behavior, Self-driving, and Summon.
+- Terrestrial Stack Inserters followed by reachable space-era belt-capacity
+  research for three- and four-high belt stacks.
 - Biterfactory V1 and the fast-replaceable V2 upgrade.
 - Bitertaxi Depots turn fleet utilization into recurring profit.
 - Cybertrain provides extreme-speed battery-electric rail freight with
@@ -131,6 +133,8 @@ gate.
 - 100 MJ, 5 MW Grid Batteries.
 - Nickel, lithium, high-nickel, and LFP supply chains.
 - Dirty early refining, cleaner later recipes, and 90% battery-cell recovery.
+- Battery MK3 equipment built from Battery MK2 equipment and Biter Motors
+  high-energy packs instead of inaccessible Fulgora supercapacitors.
 - Infinite improvements for charging, range, audio, referrals, solar output,
   and Grid Battery output.
 
@@ -161,6 +165,11 @@ platforms.
 - **High-density Space Solar Panel**
   - Space-only 50 MW solar panel.
   - Competes with compute, cooling, cargo, and defenses for platform area.
+- **Advanced Asteroid Processing**
+  - Follows Orbital AI Infrastructure.
+  - Provides renewable copper, sulfur, and calcite through advanced crushing.
+  - Infinite Asteroid Productivity uses AI Tokens instead of removed
+    agricultural science.
 
 Every orbital training batch resets to zero on low power or inadequate cooling.
 AI Tokens must physically return to Nauvis by cargo pod. Space does not beam
@@ -372,6 +381,19 @@ These are candidates only after the release gates above:
   current explicit radiator-capacity contract.
 - Alternative post-victory scorecards for autonomous abundance or sustained
   compute civilization.
+- **Fast electric Spidertron replacement:** clone the native SpiderVehicle and
+  its eight leg prototypes, then increase native leg speed and acceleration
+  rather than moving it from Lua. Target roughly 90 km/h without exoskeletons
+  and 140-160 km/h when fully upgraded, subject to an isolated pathing and
+  animation benchmark. The prototype must use a burner source because Factorio
+  SpiderVehicles accept only burner or void energy sources; Biter Motors can
+  reuse its hidden electric-drive charge item, battery-equipment storage, and
+  nearby charger loop. Start it with four Battery MK3 units and provisionally
+  draw 8 MW at full stride, giving roughly two minutes of sustained high-speed
+  travel before charging. Make an empty pack stop the native engine, retain
+  standard Spidertron remote control and logistics, and avoid per-tick forced
+  movement. Decide later whether its armament is vanilla rockets, Tesla
+  weapons, or a noncombat logistics fit.
 
 ## Explicit Non-Goals For Public Alpha
 

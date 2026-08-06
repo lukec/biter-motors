@@ -1461,7 +1461,9 @@ bitermotors_technologies = {
     if name.startswith("bitermotors-")
 } | {
     "big-mining-drill", "foundry", "recycling", "tesla-weapons",
-    "stack-inserter",
+    "stack-inserter", "transport-belt-capacity-1", "transport-belt-capacity-2",
+    "battery-mk3-equipment", "advanced-asteroid-processing", "asteroid-productivity",
+    "electric-weapons-damage-3", "electric-weapons-damage-4",
     "speed-module-2", "productivity-module-2", "efficiency-module-2", "quality-module-2",
     "speed-module-3", "productivity-module-3", "efficiency-module-3", "quality-module-3",
 }
@@ -1981,6 +1983,84 @@ if stack_inserter_ingredients != {
     "low-density-structure": 5,
 }:
     raise SystemExit(f"Stack Inserter terrestrial recipe mismatch: {stack_inserter_ingredients}")
+
+removed_planet_science = {
+    "metallurgic-science-pack", "electromagnetic-science-pack",
+    "agricultural-science-pack", "cryogenic-science-pack", "promethium-science-pack",
+}
+for technology_name, technology in data["technology"].items():
+    if technology.get("enabled", True) is False or technology.get("hidden", False):
+        continue
+    science = {ingredient[0] for ingredient in technology.get("unit", {}).get("ingredients", [])}
+    unavailable = science & removed_planet_science
+    if unavailable:
+        raise SystemExit(
+            f"Visible technology {technology_name} requires removed science: {sorted(unavailable)}"
+        )
+
+for technology_name, expected_count in {
+    "transport-belt-capacity-1": 2000,
+    "transport-belt-capacity-2": 3000,
+}.items():
+    technology = data["technology"][technology_name]
+    science = {ingredient[0] for ingredient in technology["unit"]["ingredients"]}
+    if technology.get("enabled") is not True or technology.get("hidden", False):
+        raise SystemExit(f"Belt capacity technology remains unavailable: {technology}")
+    if technology["unit"]["count"] != expected_count or science != {
+        "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+        "production-science-pack", "utility-science-pack", "space-science-pack",
+    }:
+        raise SystemExit(f"Belt capacity research mismatch: {technology}")
+
+battery_mk3_technology = data["technology"]["battery-mk3-equipment"]
+if battery_mk3_technology.get("enabled") is not True or battery_mk3_technology.get("hidden", False):
+    raise SystemExit(f"Battery MK3 technology remains unavailable: {battery_mk3_technology}")
+if set(battery_mk3_technology.get("prerequisites", [])) != {
+    "battery-mk2-equipment", "bitermotors-advanced-battery-chemistry",
+}:
+    raise SystemExit(f"Battery MK3 prerequisites mismatch: {battery_mk3_technology}")
+if {row[0] for row in battery_mk3_technology["unit"]["ingredients"]} != {
+    "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+    "utility-science-pack", "bitermotors-dollar",
+} or battery_mk3_technology["unit"]["count"] != 500:
+    raise SystemExit(f"Battery MK3 research mismatch: {battery_mk3_technology}")
+if {
+    ingredient["name"]: ingredient["amount"]
+    for ingredient in data["recipe"]["battery-mk3-equipment"]["ingredients"]
+} != {
+    "battery-mk2-equipment": 2,
+    "bitermotors-high-energy-battery-pack": 4,
+    "processing-unit": 10,
+}:
+    raise SystemExit("Battery MK3 terrestrial recipe mismatch")
+
+advanced_asteroid = data["technology"]["advanced-asteroid-processing"]
+if advanced_asteroid.get("enabled") is not True or advanced_asteroid.get("hidden", False):
+    raise SystemExit(f"Advanced Asteroid Processing remains unavailable: {advanced_asteroid}")
+if advanced_asteroid.get("prerequisites") != ["bitermotors-orbital-compute"]:
+    raise SystemExit(f"Advanced Asteroid Processing prerequisites mismatch: {advanced_asteroid}")
+if {effect.get("recipe") for effect in advanced_asteroid.get("effects", [])} != {
+    "advanced-metallic-asteroid-crushing",
+    "advanced-carbonic-asteroid-crushing",
+    "advanced-oxide-asteroid-crushing",
+}:
+    raise SystemExit(f"Advanced Asteroid Processing effects mismatch: {advanced_asteroid}")
+if {row[0] for row in advanced_asteroid["unit"]["ingredients"]} != {
+    "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+    "production-science-pack", "utility-science-pack", "space-science-pack",
+    "bitermotors-ai-token",
+} or advanced_asteroid["unit"]["count"] != 1000:
+    raise SystemExit(f"Advanced Asteroid Processing research mismatch: {advanced_asteroid}")
+
+asteroid_productivity = data["technology"]["asteroid-productivity"]
+if asteroid_productivity.get("enabled") is not True or asteroid_productivity.get("hidden", False):
+    raise SystemExit(f"Asteroid productivity remains unavailable: {asteroid_productivity}")
+if {row[0] for row in asteroid_productivity["unit"]["ingredients"]} != {
+    "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+    "production-science-pack", "utility-science-pack", "space-science-pack",
+    "bitermotors-ai-token",
+}:
+    raise SystemExit(f"Asteroid productivity research mismatch: {asteroid_productivity}")
 
 expected_recipe_subgroups = {
     "bitermotors-prototype-roadster": "transport",

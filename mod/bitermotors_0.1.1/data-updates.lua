@@ -204,6 +204,30 @@ tesla_tech.unit = science(500, {
   "military-science-pack"
 }, 45)
 
+-- Tesla Weapons are terrestrial, so their late damage upgrades must not ask
+-- for Fulgora's removed electromagnetic science. AI Tokens represent the
+-- control and targeting improvements at this stage of Biter Motors.
+for _, technology_name in ipairs({"electric-weapons-damage-3", "electric-weapons-damage-4"}) do
+  local technology = data.raw.technology[technology_name]
+  local research_ingredients = {}
+  for _, ingredient in ipairs(technology.unit.ingredients or {}) do
+    local ingredient_name = ingredient.name or ingredient[1]
+    if ingredient_name == "electromagnetic-science-pack" then
+      research_ingredients[#research_ingredients + 1] = {"bitermotors-ai-token", ingredient.amount or ingredient[2] or 1}
+    else
+      research_ingredients[#research_ingredients + 1] = ingredient
+    end
+  end
+  technology.unit.ingredients = research_ingredients
+  technology.enabled = true
+  technology.hidden = false
+  technology.hidden_in_factoriopedia = false
+  mark_bitermotors_technology(
+    technology,
+    "__space-age__/graphics/technology/electric-weapons-damage.png"
+  )
+end
+
 -- Requester logistics supports the complex terrestrial supply chains that
 -- begin with Biter Motors. Keep it terrestrial and available before EV sales.
 local logistic_system_tech = data.raw.technology["logistic-system"]
@@ -247,6 +271,30 @@ stack_inserter_tech.unit = science(750, {
 }, 45)
 stack_inserter_tech.enabled = true
 stack_inserter_tech.hidden = false
+
+-- Belt stacking remains a late space-era throughput upgrade, but agricultural
+-- science does not exist in the Nauvis-and-orbit campaign.
+for _, specification in ipairs({
+  {name = "transport-belt-capacity-1", count = 2000},
+  {name = "transport-belt-capacity-2", count = 3000}
+}) do
+  local technology = data.raw.technology[specification.name]
+  technology.unit = science(specification.count, {
+    "automation-science-pack",
+    "logistic-science-pack",
+    "chemical-science-pack",
+    "production-science-pack",
+    "utility-science-pack",
+    "space-science-pack"
+  }, 60)
+  technology.enabled = true
+  technology.hidden = false
+  technology.hidden_in_factoriopedia = false
+  mark_bitermotors_technology(
+    technology,
+    "__space-age__/graphics/technology/transport-belt-capacity.png"
+  )
+end
 
 -- Tier 2 modules are terrestrial Biter Motors capital investments. Space Age
 -- normally gates them on the first orbital science pack even though their
@@ -360,6 +408,37 @@ energy_shield_mk2.unit = science(200, {
   "chemical-science-pack", "military-science-pack"
 }, 30)
 
+-- Advanced cell chemistry provides a terrestrial replacement for Fulgora's
+-- supercapacitor path to compact personal energy storage.
+rewrite_recipe("battery-mk3-equipment", {
+  categories = {"advanced-crafting"},
+  ingredients = ingredients(
+    {"battery-mk2-equipment", 2},
+    {"bitermotors-high-energy-battery-pack", 4},
+    {"processing-unit", 10}
+  ),
+  energy_required = 10
+})
+local battery_mk3 = data.raw.technology["battery-mk3-equipment"]
+mark_bitermotors_technology(
+  battery_mk3,
+  "__space-age__/graphics/technology/battery-mk3-equipment.png"
+)
+battery_mk3.prerequisites = {
+  "battery-mk2-equipment",
+  "bitermotors-advanced-battery-chemistry"
+}
+battery_mk3.unit = science(500, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "utility-science-pack",
+  "bitermotors-dollar"
+}, 45)
+battery_mk3.enabled = true
+battery_mk3.hidden = false
+battery_mk3.hidden_in_factoriopedia = false
+
 rewrite_recipe("cliff-explosives", {
   ingredients = ingredients(
     {"explosives", 10},
@@ -409,6 +488,54 @@ artillery.unit = science(2000, {
   "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
   "military-science-pack", "utility-science-pack"
 }, 30)
+
+-- Orbital compute can turn local asteroid collection into a renewable source
+-- of copper, sulfur, and calcite without restoring planetary travel.
+local advanced_asteroid_processing = data.raw.technology["advanced-asteroid-processing"]
+mark_bitermotors_technology(
+  advanced_asteroid_processing,
+  "__space-age__/graphics/technology/advanced-asteroid-processing.png"
+)
+advanced_asteroid_processing.prerequisites = {"bitermotors-orbital-compute"}
+advanced_asteroid_processing.effects = {
+  unlock("advanced-metallic-asteroid-crushing"),
+  unlock("advanced-carbonic-asteroid-crushing"),
+  unlock("advanced-oxide-asteroid-crushing")
+}
+advanced_asteroid_processing.unit = science(1000, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "production-science-pack",
+  "utility-science-pack",
+  "space-science-pack",
+  "bitermotors-ai-token"
+}, 60)
+advanced_asteroid_processing.enabled = true
+advanced_asteroid_processing.hidden = false
+advanced_asteroid_processing.hidden_in_factoriopedia = false
+
+-- Restoring advanced processing would otherwise expose an infinite follow-on
+-- that still asks for agricultural science. Keep the useful productivity
+-- research and fund it with the orbital economy instead.
+local asteroid_productivity = data.raw.technology["asteroid-productivity"]
+mark_bitermotors_technology(
+  asteroid_productivity,
+  "__space-age__/graphics/technology/asteroid-productivity.png"
+)
+asteroid_productivity.prerequisites = {"advanced-asteroid-processing"}
+asteroid_productivity.unit.ingredients = {
+  {"automation-science-pack", 1},
+  {"logistic-science-pack", 1},
+  {"chemical-science-pack", 1},
+  {"production-science-pack", 1},
+  {"utility-science-pack", 1},
+  {"space-science-pack", 1},
+  {"bitermotors-ai-token", 1}
+}
+asteroid_productivity.enabled = true
+asteroid_productivity.hidden = false
+asteroid_productivity.hidden_in_factoriopedia = false
 
 -- Sparse calcite makes terrestrial casting finite initially; asteroid
 -- processing remains the renewable space source later.

@@ -422,6 +422,14 @@ BITERMOTORS_START_TECHNOLOGIES = {
   "night-vision-equipment",
   "personal-roboport-equipment"
 }
+
+RESTORED_VANILLA_TECHNOLOGIES = {
+  "transport-belt-capacity-1",
+  "transport-belt-capacity-2",
+  "battery-mk3-equipment",
+  "advanced-asteroid-processing",
+  "asteroid-productivity"
+}
 BITERMOTORS_START_SHIP_ITEMS = {
   ["steel-plate"] = 100,
   ["electronic-circuit"] = 100,
@@ -8102,6 +8110,12 @@ end
 
 local function sync_force_unlocks(force)
   repair_researched_bitermotors_unlocks(force)
+  for _, technology_name in pairs(RESTORED_VANILLA_TECHNOLOGIES) do
+    local technology = force.technologies and force.technologies[technology_name]
+    if technology and not technology.researched then
+      technology.enabled = true
+    end
+  end
   local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
   if logistic_system and not logistic_system.researched then
     logistic_system.enabled = true

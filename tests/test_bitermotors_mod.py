@@ -1411,6 +1411,70 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('"carbon-fiber"', block)
         self.assertNotIn('"jelly"', block)
 
+    def test_stranded_space_age_upgrades_have_reachable_bitermotors_paths(self):
+        updates = (MOD / "data-updates.lua").read_text()
+        final_fixes = (MOD / "data-final-fixes.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+
+        belt_capacity = updates[
+            updates.index("-- Belt stacking remains a late space-era throughput upgrade"):
+            updates.index("-- Tier 2 modules are terrestrial Biter Motors capital investments")
+        ]
+        self.assertIn('{name = "transport-belt-capacity-1", count = 2000}', belt_capacity)
+        self.assertIn('{name = "transport-belt-capacity-2", count = 3000}', belt_capacity)
+        self.assertIn('"space-science-pack"', belt_capacity)
+        self.assertNotIn('"agricultural-science-pack"', belt_capacity)
+
+        battery_mk3 = updates[
+            updates.index("-- Advanced cell chemistry provides a terrestrial replacement"):
+            updates.index('rewrite_recipe("cliff-explosives"')
+        ]
+        for ingredient in [
+            '{"battery-mk2-equipment", 2}',
+            '{"bitermotors-high-energy-battery-pack", 4}',
+            '{"processing-unit", 10}',
+        ]:
+            self.assertIn(ingredient, battery_mk3)
+        self.assertIn('"bitermotors-advanced-battery-chemistry"', battery_mk3)
+        self.assertIn('"bitermotors-dollar"', battery_mk3)
+        self.assertNotIn('"electromagnetic-science-pack"', battery_mk3)
+        self.assertNotIn('"supercapacitor"', battery_mk3)
+
+        asteroid_processing = updates[
+            updates.index("-- Orbital compute can turn local asteroid collection"):
+            updates.index("-- Sparse calcite makes terrestrial casting finite initially")
+        ]
+        self.assertIn('prerequisites = {"bitermotors-orbital-compute"}', asteroid_processing)
+        for recipe in [
+            "advanced-metallic-asteroid-crushing",
+            "advanced-carbonic-asteroid-crushing",
+            "advanced-oxide-asteroid-crushing",
+        ]:
+            self.assertIn(f'unlock("{recipe}")', asteroid_processing)
+        self.assertIn('local asteroid_productivity = data.raw.technology["asteroid-productivity"]', asteroid_processing)
+        self.assertIn('"bitermotors-ai-token"', asteroid_processing)
+        self.assertNotIn('"agricultural-science-pack"', asteroid_processing)
+        self.assertNotIn('unlock("advanced-thruster-fuel")', asteroid_processing)
+        self.assertNotIn('unlock("advanced-thruster-oxidizer")', asteroid_processing)
+
+        tesla_damage = updates[
+            updates.index("-- Tesla Weapons are terrestrial"):
+            updates.index("-- Requester logistics supports the complex terrestrial supply chains")
+        ]
+        self.assertIn('"electric-weapons-damage-3"', tesla_damage)
+        self.assertIn('"electric-weapons-damage-4"', tesla_damage)
+        self.assertIn('"bitermotors-ai-token"', tesla_damage)
+
+        for technology in [
+            "transport-belt-capacity-1",
+            "transport-belt-capacity-2",
+            "battery-mk3-equipment",
+            "advanced-asteroid-processing",
+            "asteroid-productivity",
+        ]:
+            self.assertIn(f'["{technology}"] = true', final_fixes)
+            self.assertIn(f'"{technology}"', control)
+
     def test_biterfactory_v2_is_a_faster_more_efficient_structural_casting_upgrade(self):
         data = (MOD / "data.lua").read_text()
         entity = data[data.index('local biterfactory_v2 = copied_assembler('):data.index('local terrestrial_datacenter = copied_assembler(')]

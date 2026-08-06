@@ -29,7 +29,12 @@ local retained_planet_overrides = {
   ["energy-shield-mk2-equipment"] = true,
   ["cliff-explosives"] = true,
   ["coal-liquefaction"] = true,
-  ["artillery"] = true
+  ["artillery"] = true,
+  ["transport-belt-capacity-1"] = true,
+  ["transport-belt-capacity-2"] = true,
+  ["battery-mk3-equipment"] = true,
+  ["advanced-asteroid-processing"] = true,
+  ["asteroid-productivity"] = true
 }
 
 local removed_technologies = {
