@@ -7,12 +7,14 @@ function PerformanceState.ensure(storage)
     stations = {},
     sales_offices = {},
     bitertaxi_depots = {},
-    ai_machines = {}
+    ai_machines = {},
+    energy_products = {}
   }
   state.registries.stations = state.registries.stations or {}
   state.registries.sales_offices = state.registries.sales_offices or {}
   state.registries.bitertaxi_depots = state.registries.bitertaxi_depots or {}
   state.registries.ai_machines = state.registries.ai_machines or {}
+  state.registries.energy_products = state.registries.energy_products or {}
   state.market_cache = state.market_cache or {}
   state.market_generation = state.market_generation or {}
   state.invalidations = state.invalidations or {}
@@ -26,9 +28,11 @@ function PerformanceState.track(state, kind, entity)
   end
 end
 
-function PerformanceState.untrack(state, entity)
-  if not entity or not entity.unit_number then return end
-  for _, registry in pairs(state.registries) do registry[entity.unit_number] = nil end
+function PerformanceState.untrack(state, entity_or_unit_number)
+  local unit_number = type(entity_or_unit_number) == "number" and entity_or_unit_number
+    or entity_or_unit_number and entity_or_unit_number.valid and entity_or_unit_number.unit_number
+  if not unit_number then return end
+  for _, registry in pairs(state.registries) do registry[unit_number] = nil end
 end
 
 function PerformanceState.entities(state, kind, force, surface)

@@ -160,6 +160,22 @@ scripts/validate-bitermotors-mod.sh
 
 Additional focused validators and scale benchmarks live in `scripts/`.
 
+## Build A Release Archive
+
+Build the deterministic Factorio archive into `dist/`:
+
+```bash
+python3 scripts/package-bitermotors.py
+python3 scripts/check-bitermotors-release.py \
+  dist/bitermotors_0.1.1.zip \
+  --source mod/bitermotors_0.1.1
+```
+
+The archive contains one Factorio-compatible root directory,
+`bitermotors_0.1.1/`, plus the source and asset licensing documents. The
+packager excludes development and runtime output. GitHub Actions runs the
+same release-contract checks without requiring a Factorio binary.
+
 ## Project Notes
 
 - `Biter Motors` is the official player-facing title. The stable internal
@@ -176,4 +192,7 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 - `art/` contains source models, master renders, and QA pages.
 - `mod/bitermotors_0.1.1/README.md` documents implemented gameplay in detail.
 
-This is a private development repository. No public license is granted.
+Biter Motors is currently an alpha release. Source code is MIT-licensed;
+original Biter Motors media is covered by the separate asset license in
+`ASSET-LICENSE.md`. See `ATTRIBUTION.md` for third-party boundaries and
+`CHANGELOG.md` for the current alpha scope.

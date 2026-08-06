@@ -55,6 +55,11 @@ local STATION_CONFIGS = {
     power_sink_name = "bitermotors-ev-charging-v4-power-sink"
   }
 }
+
+function clear_table(values)
+  for key in pairs(values or {}) do values[key] = nil end
+  return values
+end
 local STATION_GRID_CONNECTION_NAME = "bitermotors-ev-charging-grid-connection"
 local SALES_OFFICE_COVERAGE_SHORTCUT = "bitermotors-toggle-sales-office-coverage"
 local BITERMOTORS_PROGRESS_SHORTCUT = "bitermotors-open-progress"
@@ -252,6 +257,8 @@ local PROSPECT_RESERVATION_RETRY_MINUTES = 5
 local RESERVATION_SAMPLES_PER_PRINT = 60
 local CUSTOMER_GROWTH_STALL_MINUTES = 4
 local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
+CUSTOMER_GROWTH_PLACEMENT_ATTEMPTS = 32
+CUSTOMER_GROWTH_PLACEMENT_RETRY_TICKS = 30 * 60
 CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS = 15 * 60 * 60
 CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER = 3
 CUSTOMER_REPLACEMENT_WRECK_FRACTION = 0.05
@@ -263,6 +270,26 @@ CUSTOMER_SERVICE_GRACE_TICKS = 3 * 60 * 60
 CUSTOMER_MOOD_CHECK_TICKS = 60 * 60
 CUSTOMER_MOOD_BASE_ANGER_CHANCE = 0.05
 CUSTOMER_MOOD_MAX_ANGER_CHANCE = 0.25
+BITERMOTORS_DYNAMIC_MARKET_INVALIDATIONS = {
+  ["customer-registered"] = true,
+  ["customer-removed"] = true,
+  ["customer-lifecycle-repaired"] = true,
+  ["settlement-seed-customer"] = true,
+  ["organic-customer-growth"] = true,
+  ["vehicle-sale"] = true,
+  ["station-built"] = true,
+  ["station-removed"] = true,
+  ["settlement-built"] = true,
+  ["settlement-removed"] = true,
+  ["settlement-growth"] = true
+}
+BITERMOTORS_CANDIDATE_CACHE_PRESERVING_INVALIDATIONS = {
+  ["station-built"] = true,
+  ["station-removed"] = true,
+  ["settlement-built"] = true,
+  ["settlement-removed"] = true,
+  ["settlement-growth"] = true
+}
 BITERMOTORS_ENEMY_PRESSURE_VERSION = 2
 BITERMOTORS_ENEMY_ATTACK_POLLUTION_COST = 4
 BITERMOTORS_MAX_GATHERING_ATTACK_GROUPS = 10
@@ -272,7 +299,7 @@ BITERMOTORS_MAX_EXPANSION_COOLDOWN_TICKS = 60 * 60 * 60
 BITERMOTORS_POLLUTION_EVOLUTION_FACTOR = 3e-7
 CUSTOMER_COMMUTE_MAX_ACTIVE = 512
 CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8
-CUSTOMER_COMMUTE_SCHEDULER_BATCH = 256
+CUSTOMER_COMMUTE_SCHEDULER_BATCH = 64
 CUSTOMER_COMMUTE_CHARGE_SECONDS = 30
 CUSTOMER_COMMUTE_FIRST_VISIT_TICKS = 60 * 60
 CUSTOMER_COMMUTE_RETRY_BASE_TICKS = 30 * 60
@@ -330,7 +357,11 @@ local AI_EFFICIENCY_MACHINE_NAMES = {
   ["bitermotors-terrestrial-datacenter"] = true,
   [ORBITAL_DATACENTER_CORE_NAME] = true
 }
-BITERMOTORS_REGISTRY_RECONCILIATION_VERSION = 1
+ENERGY_PRODUCT_ENTITY_NAMES = {
+  [HIGH_DENSITY_SOLAR_ARRAY_NAME] = true,
+  [GRID_BATTERY_NAME] = true
+}
+BITERMOTORS_REGISTRY_RECONCILIATION_VERSION = 2
 BITERMOTORS_REGISTRY_RECONCILIATION_CHUNKS_PER_STEP = 2
 BITERMOTORS_REGISTRY_ENTITY_NAMES = {
   "bitermotors-ev-charging-station",
@@ -340,6 +371,8 @@ BITERMOTORS_REGISTRY_ENTITY_NAMES = {
   "bitermotors-sales-office",
   "bitermotors-bitertaxi-depot",
   "bitermotors-terrestrial-datacenter",
+  HIGH_DENSITY_SOLAR_ARRAY_NAME,
+  GRID_BATTERY_NAME,
   ORBITAL_DATACENTER_CORE_NAME
 }
 BITERMOTORS_START_TECHNOLOGIES = {
@@ -1559,17 +1592,18 @@ local function count_entities(force, entity_name)
 end
 
 function count_deployed_energy_product(force, entity_name)
-  local total = count_entities(force, entity_name)
+  local total = 0
+  local starter_quality_count = 0
+  for _, entity in pairs(registered_bitermotors_entities("energy_products", force)) do
+    if entity.name == entity_name then
+      total = total + 1
+      if entity.quality and entity.quality.name == BITERMOTORS_ENERGY_JUMPSTART_QUALITY then
+        starter_quality_count = starter_quality_count + 1
+      end
+    end
+  end
   local starter_count = BITERMOTORS_ENERGY_JUMPSTART_ITEMS[entity_name] or 0
   if starter_count <= 0 then return total end
-  local starter_quality_count = 0
-  for _, surface in pairs(game.surfaces) do
-    starter_quality_count = starter_quality_count + #surface.find_entities_filtered{
-      name = entity_name,
-      force = force,
-      quality = BITERMOTORS_ENERGY_JUMPSTART_QUALITY
-    }
-  end
   return math.max(0, total - math.min(starter_count, starter_quality_count))
 end
 
@@ -2536,6 +2570,11 @@ end
 function track_bitermotors_entity(entity)
   if not entity or not entity.valid or not entity.unit_number then return end
   if STATION_CONFIGS[entity.name] then
+    local stations = PerformanceState.ensure(storage).registries.stations
+    if stations[entity.unit_number] ~= entity then
+      storage.bitermotors_station_spatial_index_version =
+        (storage.bitermotors_station_spatial_index_version or 0) + 1
+    end
     PerformanceState.track(PerformanceState.ensure(storage), "stations", entity)
   elseif entity.name == SALES_OFFICE_NAME then
     PerformanceState.track(PerformanceState.ensure(storage), "sales_offices", entity)
@@ -2543,12 +2582,21 @@ function track_bitermotors_entity(entity)
     PerformanceState.track(PerformanceState.ensure(storage), "bitertaxi_depots", entity)
   elseif AI_EFFICIENCY_MACHINE_NAMES[entity.name] then
     PerformanceState.track(PerformanceState.ensure(storage), "ai_machines", entity)
+  elseif ENERGY_PRODUCT_ENTITY_NAMES[entity.name] then
+    PerformanceState.track(PerformanceState.ensure(storage), "energy_products", entity)
   end
 end
 
-function untrack_bitermotors_entity(entity)
-  if not entity or not entity.unit_number then return end
-  PerformanceState.untrack(PerformanceState.ensure(storage), entity)
+function untrack_bitermotors_entity(entity_or_unit_number)
+  local unit_number = type(entity_or_unit_number) == "number" and entity_or_unit_number
+    or entity_or_unit_number and entity_or_unit_number.valid and entity_or_unit_number.unit_number
+  if not unit_number then return end
+  local state = PerformanceState.ensure(storage)
+  if state.registries.stations[unit_number] then
+    storage.bitermotors_station_spatial_index_version =
+      (storage.bitermotors_station_spatial_index_version or 0) + 1
+  end
+  PerformanceState.untrack(state, unit_number)
 end
 
 function registered_bitermotors_entities(kind, force, surface)
@@ -2766,12 +2814,15 @@ function rebuild_bitermotors_entity_registries()
     stations = {},
     sales_offices = {},
     bitertaxi_depots = {},
-    ai_machines = {}
+    ai_machines = {},
+    energy_products = {}
   }
   local names = {
     SALES_OFFICE_NAME,
     BITERTAXI_DEPOT_NAME,
     "bitermotors-terrestrial-datacenter",
+    HIGH_DENSITY_SOLAR_ARRAY_NAME,
+    GRID_BATTERY_NAME,
     ORBITAL_DATACENTER_CORE_NAME
   }
   for _, name in pairs(STATION_NAMES) do names[#names + 1] = name end
@@ -2879,6 +2930,7 @@ function reconcile_bitermotors_entity_registry_step()
         or registries.sales_offices[unit_number]
         or registries.bitertaxi_depots[unit_number]
         or registries.ai_machines[unit_number]
+        or registries.energy_products[unit_number]
       )
       if unit_number and not tracked then
         track_bitermotors_entity(entity)
@@ -2908,6 +2960,14 @@ end
 function mark_bitermotors_market_dirty(force, reason)
   if not force then return end
   PerformanceState.invalidate(PerformanceState.ensure(storage), force.index, reason)
+  if not BITERMOTORS_DYNAMIC_MARKET_INVALIDATIONS[reason] then
+    storage.bitermotors_market_topology_cache = storage.bitermotors_market_topology_cache or {}
+    storage.bitermotors_market_topology_cache[force.index] = nil
+    if not BITERMOTORS_CANDIDATE_CACHE_PRESERVING_INVALIDATIONS[reason] then
+      storage.bitermotors_market_candidate_cache = storage.bitermotors_market_candidate_cache or {}
+      storage.bitermotors_market_candidate_cache[force.index] = nil
+    end
+  end
   storage.bitermotors_vehicle_summary_cache = storage.bitermotors_vehicle_summary_cache or {}
   storage.bitermotors_vehicle_summary_cache[force.index] = nil
 end
@@ -3181,8 +3241,9 @@ local function nearby_real_power_pole(station)
   local cache = storage.bitermotors_station_power_pole_cache
   local unit_number = station.unit_number
   local cached = unit_number and cache[unit_number]
-  if cached and cached.tick == game.tick then
-    return cached.pole and cached.pole.valid and cached.pole or nil
+  if cached and cached.resolved then
+    if not cached.pole or cached.pole.valid then return cached.pole end
+    cache[unit_number] = nil
   end
   local position = station.position
   local radius = STATION_GRID_CONNECTION_DISTANCE
@@ -3208,9 +3269,25 @@ local function nearby_real_power_pole(station)
     end
   end
   if unit_number then
-    cache[unit_number] = {tick = game.tick, pole = nearest}
+    cache[unit_number] = {resolved = true, pole = nearest}
   end
   return nearest
+end
+
+function invalidate_station_power_pole_cache_near(entity)
+  if not entity or not entity.valid or entity.type ~= "electric-pole" then return end
+  local cache = storage.bitermotors_station_power_pole_cache
+  if not cache then return end
+  local radius = STATION_GRID_CONNECTION_DISTANCE
+  for unit_number, station in pairs(bitermotors_entity_registries().stations) do
+    if not station or not station.valid then
+      cache[unit_number] = nil
+    elseif station.surface == entity.surface and station.force == entity.force
+      and math.abs(station.position.x - entity.position.x) <= radius
+      and math.abs(station.position.y - entity.position.y) <= radius then
+      cache[unit_number] = nil
+    end
+  end
 end
 
 local function station_has_grid_access(station)
@@ -4029,7 +4106,7 @@ function foundry_power_gate_status(force)
   local solar_panels = count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)
   local grid_batteries = count_deployed_energy_product(force, GRID_BATTERY_NAME)
   local energy_ready = researched(force, "bitermotors-energy-products") == true
-  return {
+  local status = {
     solar_panels = solar_panels,
     solar_target = FOUNDRY_POWER_GATE.solar_panels,
     grid_batteries = grid_batteries,
@@ -4039,12 +4116,27 @@ function foundry_power_gate_status(force)
       and solar_panels >= FOUNDRY_POWER_GATE.solar_panels
       and grid_batteries >= FOUNDRY_POWER_GATE.grid_batteries
   }
+  storage.bitermotors_foundry_power_gate_status = storage.bitermotors_foundry_power_gate_status or {}
+  storage.bitermotors_foundry_power_gate_status[force.index] = status
+  return status
 end
 
 function sync_foundry_power_gate(force, announce)
   if not force or not force.valid then return nil end
   local technology = force.technologies and force.technologies.foundry
   if not technology then return nil end
+  if technology.researched then
+    technology.enabled = true
+    local statuses = storage.bitermotors_foundry_power_gate_status or {}
+    return statuses[force.index] or {
+      solar_panels = FOUNDRY_POWER_GATE.solar_panels,
+      solar_target = FOUNDRY_POWER_GATE.solar_panels,
+      grid_batteries = FOUNDRY_POWER_GATE.grid_batteries,
+      grid_battery_target = FOUNDRY_POWER_GATE.grid_batteries,
+      energy_ready = true,
+      qualified = true
+    }
+  end
   local gate = foundry_power_gate_status(force)
   technology.enabled = technology.researched or gate.qualified
   local announcements = foundry_power_gate_announcements()
@@ -4095,6 +4187,157 @@ local function position_has_sales_coverage(surface, position, offices)
   return false
 end
 
+function market_candidate_matches_settlement(candidate, settlement)
+  if not candidate or not settlement then return false end
+  if candidate == settlement then return true end
+  local candidate_entity = type(candidate) == "table" and candidate.settlement or candidate
+  return candidate_entity and candidate_entity.valid and settlement.unit_number
+    and candidate_entity.unit_number == settlement.unit_number
+end
+
+function market_station_candidate(station, settlement)
+  local config = station_config(station)
+  if not config or not settlement.valid or settlement.surface ~= station.surface
+    or not within_radius(station, settlement, config.customer_radius) then
+    return nil
+  end
+  local dx = settlement.position.x - station.position.x
+  local dy = settlement.position.y - station.position.y
+  return {
+    key = settlement_key(station.surface, settlement),
+    settlement = settlement,
+    distance = dx * dx + dy * dy
+  }
+end
+
+function sort_market_station_candidates(candidates)
+  table.sort(candidates, function(left, right)
+    if left.distance ~= right.distance then return left.distance < right.distance end
+    return left.key < right.key
+  end)
+end
+
+function add_bitermotors_market_station(force, station)
+  if not force or not station or not station.valid or not is_station(station) then return end
+  local topology = storage.bitermotors_market_topology_cache
+    and storage.bitermotors_market_topology_cache[force.index]
+  if not topology then return end
+  for _, spec in pairs(topology.station_specs or {}) do
+    if spec.station == station or spec.key == station.unit_number then return end
+  end
+  if not position_has_sales_coverage(station.surface, station.position, topology.offices or {}) then
+    return
+  end
+  local config = station_config(station)
+  local candidates = {}
+  for _, settlement in pairs(topology.candidates or {}) do
+    local candidate = market_station_candidate(station, settlement)
+    if candidate then candidates[#candidates + 1] = candidate end
+  end
+  sort_market_station_candidates(candidates)
+  topology.station_specs[#topology.station_specs + 1] = {
+    key = station.unit_number,
+    station = station,
+    stalls = config.stalls,
+    evs_per_stall = config.evs_per_stall,
+    candidates = candidates
+  }
+  table.sort(topology.station_specs, function(left, right)
+    if left.station.surface.index ~= right.station.surface.index then
+      return left.station.surface.index < right.station.surface.index
+    end
+    return left.key < right.key
+  end)
+end
+
+function remove_bitermotors_market_station(force, station)
+  if not force or not station then return end
+  local topology = storage.bitermotors_market_topology_cache
+    and storage.bitermotors_market_topology_cache[force.index]
+  if not topology then return end
+  for index = #(topology.station_specs or {}), 1, -1 do
+    local spec = topology.station_specs[index]
+    if spec.station == station or spec.key == station.unit_number then
+      table.remove(topology.station_specs, index)
+    end
+  end
+end
+
+function add_bitermotors_market_candidate(force, settlement)
+  if not force or not settlement or not settlement.valid then return end
+  local caches = storage.bitermotors_market_candidate_cache
+  local snapshot = caches and caches[force.index]
+  if not snapshot then return end
+  for _, office in pairs(snapshot.offices or {}) do
+    if not office or not office.valid then
+      caches[force.index] = nil
+      return
+    end
+  end
+  if not position_has_sales_coverage(
+    settlement.surface,
+    settlement.position,
+    snapshot.offices or {}
+  ) then
+    return
+  end
+  for _, candidate in pairs(snapshot.candidates or {}) do
+    if candidate == settlement
+      or (candidate.valid and candidate.unit_number == settlement.unit_number) then
+      return
+    end
+  end
+  snapshot.candidates = snapshot.candidates or {}
+  snapshot.candidates[#snapshot.candidates + 1] = settlement
+  sorted_entities(snapshot.candidates)
+  local topology = storage.bitermotors_market_topology_cache
+    and storage.bitermotors_market_topology_cache[force.index]
+  if topology then
+    if topology.candidates ~= snapshot.candidates then
+      topology.candidates[#topology.candidates + 1] = settlement
+      sorted_entities(topology.candidates)
+    end
+    for _, spec in pairs(topology.station_specs or {}) do
+      local candidate = market_station_candidate(spec.station, settlement)
+      if candidate then
+        spec.candidates[#spec.candidates + 1] = candidate
+        sort_market_station_candidates(spec.candidates)
+      end
+    end
+  end
+end
+
+function remove_bitermotors_market_candidate(force, settlement)
+  if not force or not settlement then return end
+  local caches = storage.bitermotors_market_candidate_cache
+  local snapshot = caches and caches[force.index]
+  if not snapshot then return end
+  for index = #(snapshot.candidates or {}), 1, -1 do
+    local candidate = snapshot.candidates[index]
+    if market_candidate_matches_settlement(candidate, settlement) then
+      table.remove(snapshot.candidates, index)
+    end
+  end
+  local topology = storage.bitermotors_market_topology_cache
+    and storage.bitermotors_market_topology_cache[force.index]
+  if topology then
+    if topology.candidates ~= snapshot.candidates then
+      for index = #(topology.candidates or {}), 1, -1 do
+        if market_candidate_matches_settlement(topology.candidates[index], settlement) then
+          table.remove(topology.candidates, index)
+        end
+      end
+    end
+    for _, spec in pairs(topology.station_specs or {}) do
+      for index = #(spec.candidates or {}), 1, -1 do
+        if market_candidate_matches_settlement(spec.candidates[index], settlement) then
+          table.remove(spec.candidates, index)
+        end
+      end
+    end
+  end
+end
+
 local function office_covered_settlements(offices)
   local enemy = game.forces.enemy
   local customers = customer_force()
@@ -4115,6 +4358,118 @@ local function office_covered_settlements(offices)
     settlements[#settlements + 1] = settlement
   end
   return sorted_entities(settlements)
+end
+
+function customer_market_topology_for_force(force)
+  storage.bitermotors_market_topology_cache = storage.bitermotors_market_topology_cache or {}
+  local cache = storage.bitermotors_market_topology_cache
+  local topology = cache[force.index]
+  if topology then
+    local valid = true
+    for _, entity in pairs(topology.offices or {}) do
+      if not entity or not entity.valid then valid = false break end
+    end
+    if valid then
+      for _, entity in pairs(topology.candidates or {}) do
+        if not entity or not entity.valid then valid = false break end
+      end
+    end
+    if valid then
+      for _, spec in pairs(topology.station_specs or {}) do
+        if not spec.station or not spec.station.valid then valid = false break end
+      end
+    end
+    if valid then
+      storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+      storage.bitermotors_perf_counters.market_topology_cache_hits =
+        (storage.bitermotors_perf_counters.market_topology_cache_hits or 0) + 1
+      return topology
+    end
+    cache[force.index] = nil
+  end
+
+  storage.bitermotors_market_candidate_cache = storage.bitermotors_market_candidate_cache or {}
+  local candidate_cache = storage.bitermotors_market_candidate_cache
+  local candidate_snapshot = candidate_cache[force.index]
+  local candidate_snapshot_valid = candidate_snapshot ~= nil
+  if candidate_snapshot_valid then
+    for _, entity in pairs(candidate_snapshot.offices or {}) do
+      if not entity or not entity.valid then candidate_snapshot_valid = false break end
+    end
+  end
+  if candidate_snapshot_valid then
+    local candidates = candidate_snapshot.candidates or {}
+    for index = #candidates, 1, -1 do
+      local entity = candidates[index]
+      if not entity or not entity.valid then
+        table.remove(candidates, index)
+        storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+        storage.bitermotors_perf_counters.market_candidate_stale_prunes =
+          (storage.bitermotors_perf_counters.market_candidate_stale_prunes or 0) + 1
+      end
+    end
+  end
+  if not candidate_snapshot_valid then
+    local offices = force_sales_offices(force)
+    candidate_snapshot = {
+      offices = offices,
+      candidates = office_covered_settlements(offices)
+    }
+    candidate_cache[force.index] = candidate_snapshot
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.market_candidate_builds =
+      (storage.bitermotors_perf_counters.market_candidate_builds or 0) + 1
+  else
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.market_candidate_cache_hits =
+      (storage.bitermotors_perf_counters.market_candidate_cache_hits or 0) + 1
+  end
+  local offices = candidate_snapshot.offices
+  local candidates = candidate_snapshot.candidates
+  local station_specs = {}
+  for _, surface in pairs(game.surfaces) do
+    for _, station in pairs(find_stations(surface, force)) do
+      if station.valid and position_has_sales_coverage(surface, station.position, offices) then
+        local config = station_config(station)
+        local station_candidates = {}
+        for _, settlement in pairs(candidates) do
+          if settlement.valid and settlement.surface == station.surface
+            and within_radius(station, settlement, config.customer_radius) then
+            local dx = settlement.position.x - station.position.x
+            local dy = settlement.position.y - station.position.y
+            station_candidates[#station_candidates + 1] = {
+              key = settlement_key(station.surface, settlement),
+              settlement = settlement,
+              distance = dx * dx + dy * dy
+            }
+          end
+        end
+        table.sort(station_candidates, function(left, right)
+          if left.distance ~= right.distance then return left.distance < right.distance end
+          return left.key < right.key
+        end)
+        station_specs[#station_specs + 1] = {
+          key = station.unit_number,
+          station = station,
+          stalls = config.stalls,
+          evs_per_stall = config.evs_per_stall,
+          candidates = station_candidates
+        }
+      end
+    end
+  end
+  table.sort(station_specs, function(left, right)
+    if left.station.surface.index ~= right.station.surface.index then
+      return left.station.surface.index < right.station.surface.index
+    end
+    return left.key < right.key
+  end)
+  topology = {offices = offices, candidates = candidates, station_specs = station_specs}
+  cache[force.index] = topology
+  storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+  storage.bitermotors_perf_counters.market_topology_builds =
+    (storage.bitermotors_perf_counters.market_topology_builds or 0) + 1
+  return topology
 end
 
 function build_sales_office_market_topology(
@@ -4151,6 +4506,36 @@ function build_sales_office_market_topology(
   end
 
   return SalesOfficeMarket.classify(specs)
+end
+
+function sales_office_market_for_service(topology, capacity_by_settlement_key)
+  local signature_parts = {}
+  for _, settlement in pairs(topology.candidates or {}) do
+    if settlement and settlement.valid then
+      local key = settlement_key(settlement.surface, settlement)
+      if (capacity_by_settlement_key[key] or 0) > 0 then
+        signature_parts[#signature_parts + 1] = key
+      end
+    end
+  end
+  local signature = table.concat(signature_parts, "|")
+  if topology.sales_office_market
+    and topology.sales_office_market_signature == signature then
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.sales_office_market_cache_hits =
+      (storage.bitermotors_perf_counters.sales_office_market_cache_hits or 0) + 1
+    return topology.sales_office_market
+  end
+  topology.sales_office_market = build_sales_office_market_topology(
+    topology.offices,
+    topology.candidates,
+    capacity_by_settlement_key
+  )
+  topology.sales_office_market_signature = signature
+  storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+  storage.bitermotors_perf_counters.sales_office_market_builds =
+    (storage.bitermotors_perf_counters.sales_office_market_builds or 0) + 1
+  return topology.sales_office_market
 end
 
 function customer_settlement_moods(force)
@@ -4281,22 +4666,12 @@ customer_service_for_force = function(force, advance_mood)
     return service
   end
 
-  local offices = force_sales_offices(force)
-  local candidates = office_covered_settlements(offices)
+  local topology = customer_market_topology_for_force(force)
+  local offices = topology.offices
+  local candidates = topology.candidates
   service.candidate_settlements = candidates
   local vehicle_summary = active_customer_vehicle_summary(force)
   service.vehicle_summary = vehicle_summary
-  local stations = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, station in pairs(find_stations(surface, force)) do
-      if station.valid and station_has_grid_access(station)
-        and position_has_sales_coverage(surface, station.position, offices) then
-        stations[#stations + 1] = station
-      end
-    end
-  end
-  sorted_entities(stations)
-
   local demand_by_settlement_key = {}
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
@@ -4314,32 +4689,10 @@ customer_service_for_force = function(force, advance_mood)
   end
 
   local station_specs = {}
-  for _, station in pairs(stations) do
-    local config = station_config(station)
-    local station_candidates = {}
-    for _, settlement in pairs(candidates) do
-      if settlement.valid and settlement.surface == station.surface
-        and within_radius(station, settlement, config.customer_radius) then
-        local dx = settlement.position.x - station.position.x
-        local dy = settlement.position.y - station.position.y
-        station_candidates[#station_candidates + 1] = {
-          key = settlement_key(station.surface, settlement),
-          settlement = settlement,
-          distance = dx * dx + dy * dy
-        }
-      end
+  for _, spec in pairs(topology.station_specs) do
+    if spec.station.valid and station_has_grid_access(spec.station) then
+      station_specs[#station_specs + 1] = spec
     end
-    table.sort(station_candidates, function(left, right)
-      if left.distance ~= right.distance then return left.distance < right.distance end
-      return left.key < right.key
-    end)
-    station_specs[#station_specs + 1] = {
-      key = station.unit_number,
-      station = station,
-      stalls = config.stalls,
-      evs_per_stall = config.evs_per_stall,
-      candidates = station_candidates
-    }
   end
 
   local allocation = ChargerAllocator.allocate(station_specs, demand_by_settlement_key)
@@ -4418,9 +4771,8 @@ customer_service_for_force = function(force, advance_mood)
       service.supported_ev_capacity / service.powered_stall_capacity + 0.5
     )
   end
-  service.sales_office_market = build_sales_office_market_topology(
-    offices,
-    candidates,
+  service.sales_office_market = sales_office_market_for_service(
+    topology,
     service.capacity_by_settlement_key
   )
   storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
@@ -4436,8 +4788,8 @@ end
 
 function refresh_customer_service_power_capacity(force, service)
   if not force or not service then return service end
-  service.powered_capacity_by_settlement_key = {}
-  service.operational_keys = {}
+  clear_table(service.powered_capacity_by_settlement_key)
+  clear_table(service.operational_keys)
   service.accessible_stall_capacity = 0
   service.powered_stall_capacity = 0
   service.supported_ev_capacity = 0
@@ -4568,54 +4920,155 @@ local function next_customer_charging_step(service, office)
   }
 end
 
-local function calculate_station_utilization(force)
-  local service = customer_service_for_force(force)
-  local stations = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, station in pairs(find_stations(surface, force)) do
-      if station.valid and station_has_grid_access(station) then
-        stations[#stations + 1] = station
+function rebuild_station_spatial_index(force, scratch)
+  clear_table(scratch.all_stations)
+  clear_table(scratch.spatial_index)
+  local station_registry = bitermotors_entity_registries().stations
+  for unit_number, station in pairs(station_registry) do
+    if not station or not station.valid then
+      station_registry[unit_number] = nil
+    elseif station.force == force then
+      scratch.all_stations[#scratch.all_stations + 1] = station
+      local surface_buckets = scratch.spatial_index[station.surface.index]
+      if not surface_buckets then
+        surface_buckets = {}
+        scratch.spatial_index[station.surface.index] = surface_buckets
       end
+      local cell_x = math.floor(station.position.x / 32)
+      local cell_y = math.floor(station.position.y / 32)
+      local column = surface_buckets[cell_x]
+      if not column then
+        column = {}
+        surface_buckets[cell_x] = column
+      end
+      local bucket = column[cell_y]
+      if not bucket then
+        bucket = {}
+        column[cell_y] = bucket
+      end
+      bucket[#bucket + 1] = station
     end
   end
-  table.sort(stations, function(left, right)
+  table.sort(scratch.all_stations, function(left, right)
     if left.surface.index ~= right.surface.index then
       return left.surface.index < right.surface.index
     end
     return (left.unit_number or 0) < (right.unit_number or 0)
   end)
+  scratch.spatial_index_version = storage.bitermotors_station_spatial_index_version or 0
+end
 
-  local allocations = {}
-  local assigned_vehicles = {}
-  local vehicle_assignments = {}
+local function calculate_station_utilization(force)
+  local service = customer_service_for_force(force)
+  storage.bitermotors_station_allocations_by_force =
+    storage.bitermotors_station_allocations_by_force or {}
+  storage.bitermotors_station_vehicle_assignments =
+    storage.bitermotors_station_vehicle_assignments or {}
+  storage.bitermotors_station_utilization_scratch =
+    storage.bitermotors_station_utilization_scratch or {}
+
+  local allocations = storage.bitermotors_station_allocations_by_force[force.index] or {}
+  local vehicle_assignments =
+    storage.bitermotors_station_vehicle_assignments[force.index] or {}
+  local scratch = storage.bitermotors_station_utilization_scratch[force.index] or {
+    stations = {},
+    all_stations = {},
+    spare_stalls = {},
+    spatial_index = {}
+  }
+  storage.bitermotors_station_allocations_by_force[force.index] = allocations
+  storage.bitermotors_station_vehicle_assignments[force.index] = vehicle_assignments
+  storage.bitermotors_station_utilization_scratch[force.index] = scratch
+
+  clear_table(allocations)
+  clear_table(scratch.stations)
+  clear_table(scratch.spare_stalls)
+
+  if scratch.spatial_index_version ~= (storage.bitermotors_station_spatial_index_version or 0) then
+    rebuild_station_spatial_index(force, scratch)
+  end
+  for _, station in ipairs(scratch.all_stations) do
+    if station.valid and station.force == force and station_has_grid_access(station) then
+      scratch.stations[#scratch.stations + 1] = station
+    elseif not station.valid or station.force ~= force then
+      scratch.spatial_index_version = nil
+    end
+  end
+
   local total_active = 0
-  for _, station in pairs(stations) do
+  for _, station in ipairs(scratch.stations) do
     local config = station_config(station)
     local assignment = service.assignments[station.unit_number]
     local customer_requested = math.min(config.stalls, assignment and assignment.requested_stalls or 0)
-    local charging_vehicles = {}
-    local spare_stalls = config.stalls - customer_requested
-    for _, vehicle in pairs(nearby_uncharged_vehicles(station)) do
-      if spare_stalls <= 0 then
-        break
+    local vehicle_assignment = vehicle_assignments[station.unit_number]
+    if not vehicle_assignment then
+      vehicle_assignment = {vehicles = {}}
+      vehicle_assignments[station.unit_number] = vehicle_assignment
+    end
+    clear_table(vehicle_assignment.vehicles)
+    vehicle_assignment.customer_requested_stalls = customer_requested
+    scratch.spare_stalls[station.unit_number] = config.stalls - customer_requested
+    allocations[station.unit_number] = customer_requested
+    total_active = total_active + customer_requested
+  end
+
+  local electric_vehicles = electric_vehicle_registry()
+  for unit_number, vehicle in pairs(electric_vehicles) do
+    if not vehicle or not vehicle.valid then
+      electric_vehicles[unit_number] = nil
+    elseif vehicle.force == force and vehicle_needs_charge(vehicle) then
+      local selected
+      local selected_distance
+      local surface_buckets = scratch.spatial_index[vehicle.surface.index]
+      local vehicle_cell_x = math.floor(vehicle.position.x / 32)
+      local vehicle_cell_y = math.floor(vehicle.position.y / 32)
+      if surface_buckets then
+        for offset_x = -1, 1 do
+          local column = surface_buckets[vehicle_cell_x + offset_x]
+          if column then
+            for offset_y = -1, 1 do
+              local bucket = column[vehicle_cell_y + offset_y]
+              if bucket then
+                for _, station in ipairs(bucket) do
+                  local spare_stalls = scratch.spare_stalls[station.unit_number] or 0
+                  if spare_stalls > 0 and station.valid then
+                    local config = station_config(station)
+                    local dx = vehicle.position.x - station.position.x
+                    local dy = vehicle.position.y - station.position.y
+                    local distance = dx * dx + dy * dy
+                    if distance <= config.vehicle_charge_radius * config.vehicle_charge_radius
+                      and (not selected_distance or distance < selected_distance
+                        or (distance == selected_distance and station.unit_number < selected.unit_number)) then
+                      selected = station
+                      selected_distance = distance
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
       end
-      if vehicle.unit_number and not assigned_vehicles[vehicle.unit_number] then
-        assigned_vehicles[vehicle.unit_number] = true
-        charging_vehicles[#charging_vehicles + 1] = vehicle
-        spare_stalls = spare_stalls - 1
+      if selected then
+        local selected_unit = selected.unit_number
+        local assignment = vehicle_assignments[selected_unit]
+        assignment.vehicles[#assignment.vehicles + 1] = vehicle
+        scratch.spare_stalls[selected_unit] = scratch.spare_stalls[selected_unit] - 1
+        allocations[selected_unit] = allocations[selected_unit] + 1
+        total_active = total_active + 1
       end
     end
-    local active = customer_requested + #charging_vehicles
-    allocations[station.unit_number] = active
-    vehicle_assignments[station.unit_number] = {
-      customer_requested_stalls = customer_requested,
-      vehicles = charging_vehicles
-    }
-    total_active = total_active + active
   end
-  storage.bitermotors_station_vehicle_assignments = storage.bitermotors_station_vehicle_assignments or {}
-  storage.bitermotors_station_vehicle_assignments[force.index] = vehicle_assignments
+
+  for unit_number in pairs(vehicle_assignments) do
+    if allocations[unit_number] == nil then vehicle_assignments[unit_number] = nil end
+  end
   return allocations, total_active
+end
+
+function cached_station_utilization(force)
+  local by_force = storage.bitermotors_station_allocations_by_force or {}
+  return by_force[force.index] or calculate_station_utilization(force)
 end
 
 function charge_station_vehicles(station)
@@ -6251,22 +6704,27 @@ local function hostile_worm_name(evolution)
   return "small-worm-turret"
 end
 
-local function deterministic_growth_position(station, entity_name, minimum_distance, maximum_distance, salt)
+local function deterministic_growth_position(
+  station,
+  entity_name,
+  minimum_distance,
+  maximum_distance,
+  salt,
+  attempt
+)
   local offices = force_sales_offices(station.force)
   local span = math.max(1, maximum_distance - minimum_distance)
-  for attempt = 0, 31 do
-    local seed = (station.unit_number or 1) * 37 + (salt or 0) * 83 + attempt * 47
-    local angle = math.rad(seed % 360)
-    local distance = minimum_distance + (seed % span)
-    local target = {
-      x = station.position.x + math.cos(angle) * distance,
-      y = station.position.y + math.sin(angle) * distance
-    }
-    local position = station.surface.find_non_colliding_position(entity_name, target, 8, 1)
-    if position and within_radius(station, {position = position}, station_config(station).customer_radius)
-      and position_has_sales_coverage(station.surface, position, offices) then
-      return position
-    end
+  local seed = (station.unit_number or 1) * 37 + (salt or 0) * 83 + attempt * 47
+  local angle = math.rad(seed % 360)
+  local distance = minimum_distance + (seed % span)
+  local target = {
+    x = station.position.x + math.cos(angle) * distance,
+    y = station.position.y + math.sin(angle) * distance
+  }
+  local position = station.surface.find_non_colliding_position(entity_name, target, 8, 1)
+  if position and within_radius(station, {position = position}, station_config(station).customer_radius)
+    and position_has_sales_coverage(station.surface, position, offices) then
+    return position
   end
   return nil
 end
@@ -6278,16 +6736,28 @@ local function grow_customer_settlement(station, state)
   end
   local colony_number = (state.colonies or 0) + 1
   local spawner_name = colony_number % 2 == 0 and "spitter-spawner" or "biter-spawner"
+  local placement_attempt = state.placement_attempt or 0
   local spawner_position = deterministic_growth_position(
     station,
     spawner_name,
     20,
     math.max(28, config.customer_radius - 8),
-    colony_number
+    colony_number,
+    placement_attempt
   )
   if not spawner_position then
+    placement_attempt = placement_attempt + 1
+    if placement_attempt >= CUSTOMER_GROWTH_PLACEMENT_ATTEMPTS then
+      placement_attempt = 0
+      state.next_placement_attempt_tick = game.tick + CUSTOMER_GROWTH_PLACEMENT_RETRY_TICKS
+    else
+      state.next_placement_attempt_tick = game.tick + 60
+    end
+    state.placement_attempt = placement_attempt
     return nil
   end
+  state.placement_attempt = 0
+  state.next_placement_attempt_tick = nil
 
   local settlement = station.surface.create_entity{
     name = spawner_name,
@@ -6298,6 +6768,7 @@ local function grow_customer_settlement(station, state)
     return nil
   end
   customer_settlement_market_forces()[settlement_key(settlement.surface, settlement)] = station.force.name
+  add_bitermotors_market_candidate(station.force, settlement)
   mark_bitermotors_market_dirty(station.force, "settlement-growth")
   draw_customer_marker(settlement)
 
@@ -6331,6 +6802,7 @@ local function process_customer_growth(force)
     math.floor(CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS / referral_multiplier)
   )
   local organic_growth = 0
+  local placement_candidates = {}
   for unit_number, assignment in pairs(service.assignments) do
     local station = assignment.station
     if station and station.valid then
@@ -6345,12 +6817,13 @@ local function process_customer_growth(force)
         (assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)
       if local_service_healthy and active_stalls > 0 and spare_stalls > 0 then
         state.progress = (state.progress or 0) + active_stalls * referral_multiplier
-        if state.progress >= CUSTOMER_GROWTH_PROGRESS_REQUIRED then
-          if grow_customer_settlement(station, state) then
-            state.progress = state.progress - CUSTOMER_GROWTH_PROGRESS_REQUIRED
-          else
-            state.progress = CUSTOMER_GROWTH_PROGRESS_REQUIRED
-          end
+        if state.progress >= CUSTOMER_GROWTH_PROGRESS_REQUIRED
+          and game.tick >= (state.next_placement_attempt_tick or 0) then
+          placement_candidates[#placement_candidates + 1] = {
+            unit_number = unit_number,
+            station = station,
+            state = state
+          }
         end
       end
       for _, settlement in pairs(assignment.settlements or {}) do
@@ -6378,6 +6851,26 @@ local function process_customer_growth(force)
           end
         end
       end
+    end
+  end
+  if #placement_candidates > 0 then
+    table.sort(placement_candidates, function(left, right)
+      return left.unit_number < right.unit_number
+    end)
+    storage.bitermotors_customer_growth_cursors = storage.bitermotors_customer_growth_cursors or {}
+    local cursor = storage.bitermotors_customer_growth_cursors[force.index] or 0
+    local selected = placement_candidates[1]
+    for _, candidate in ipairs(placement_candidates) do
+      if candidate.unit_number > cursor then
+        selected = candidate
+        break
+      end
+    end
+    storage.bitermotors_customer_growth_cursors[force.index] = selected.unit_number
+    if grow_customer_settlement(selected.station, selected.state) then
+      selected.state.progress = selected.state.progress - CUSTOMER_GROWTH_PROGRESS_REQUIRED
+    else
+      selected.state.progress = CUSTOMER_GROWTH_PROGRESS_REQUIRED
     end
   end
   if organic_growth > 0 then
@@ -6415,7 +6908,7 @@ local function active_station_stalls(station, allocations)
     return 0
   end
   if not allocations then
-    allocations = calculate_station_utilization(station.force)
+    allocations = cached_station_utilization(station.force)
   end
   local requested = allocations[station.unit_number] or 0
   return powered_station_stalls(station, requested)
@@ -6466,7 +6959,7 @@ local function count_active_customer_stalls(force)
     return count_powered_stations(force)
   end
 
-  local allocations = calculate_station_utilization(force)
+  local allocations = cached_station_utilization(force)
   local service = customer_service_for_force(force)
   local count = 0
   for _, surface in pairs(game.surfaces) do
@@ -6580,7 +7073,7 @@ local function show_station_info_panel(player, station)
   local grid_connected = station_has_grid_access(station)
   local covered_settlements = count_biter_settlements_near_station(station)
   local hostile_settlements = count_hostile_biter_settlements_near_station(station)
-  local allocations = calculate_station_utilization(station.force)
+  local allocations = cached_station_utilization(station.force)
   local active_stalls = active_station_stalls(station, allocations)
   local service = customer_growth_summary(station.force)
   local waiting_prospects = waiting_market_buyers_at_station(station, service)
@@ -8785,7 +9278,61 @@ function reserve_office_buyers(office, recipe_name, sale)
   return true
 end
 
-function sync_sales_office_buyers()
+function sync_sales_office_buyer(office)
+  if not office.valid or not office.unit_number then return end
+  local recipe = office.get_recipe()
+  local recipe_name = recipe and recipe.name
+  local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
+  local reservation = office_buyer_reservations()[office.unit_number]
+  if recipe_name == GRID_BATTERY_SALE_RECIPE then
+    clear_office_buyer_reservation(office.unit_number)
+  elseif not sale then
+    clear_office_buyer_reservation(office.unit_number)
+    office.disabled_by_script = false
+  else
+    local valid_reservation = reservation and reservation.recipe_name == recipe_name
+      and #reservation.buyers == sale.vehicles
+    if valid_reservation then
+      for _, buyer in pairs(reservation.buyers) do
+        if type(buyer) == "table" and buyer.virtual then
+          local population = customer_settlement_populations()[buyer.settlement_key]
+          if not population
+            or (population.virtual_reserved_by_vehicle
+              and population.virtual_reserved_by_vehicle[sale.item] or 0) <= 0
+            or customer_population_purchase_count(population, sale.item)
+              >= customer_virtual_population(population) then
+            valid_reservation = false
+            break
+          end
+        else
+          local entity = customer_unit_registry()[buyer]
+          if not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
+            or not customer_can_purchase_vehicle(buyer, sale.item) then
+            valid_reservation = false
+            break
+          end
+        end
+      end
+    end
+    if not valid_reservation then
+      if office_has_all_sale_inputs(office, recipe) or (office.crafting_progress or 0) > 0 then
+        valid_reservation = reserve_office_buyers(office, recipe_name, sale)
+      else
+        clear_office_buyer_reservation(office.unit_number)
+        office.disabled_by_script = false
+        valid_reservation = nil
+      end
+    end
+    if valid_reservation ~= nil then
+      office.disabled_by_script = not valid_reservation
+    end
+  end
+  if recipe_name ~= GRID_BATTERY_SALE_RECIPE then
+    update_sales_office_market_feedback(office, sales_office_buyer_status(office))
+  end
+end
+
+function sync_sales_office_buyers(limit, skip_grid_battery)
   ensure_customer_settlement_population_cache()
   if not storage.bitermotors_last_reservation_reconcile_tick
     or game.tick - storage.bitermotors_last_reservation_reconcile_tick
@@ -8793,66 +9340,29 @@ function sync_sales_office_buyers()
     reconcile_office_buyer_reservations()
     storage.bitermotors_last_reservation_reconcile_tick = game.tick
   end
+  local offices = sorted_entities(registered_bitermotors_entities("sales_offices"))
   local seen = {}
-  for _, office in pairs(registered_bitermotors_entities("sales_offices")) do
-      if office.valid and office.unit_number then
-        seen[office.unit_number] = true
-        local recipe = office.get_recipe()
-        local recipe_name = recipe and recipe.name
-        local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
-        local reservation = office_buyer_reservations()[office.unit_number]
-        if recipe_name == GRID_BATTERY_SALE_RECIPE then
-          clear_office_buyer_reservation(office.unit_number)
-        elseif not sale then
-          clear_office_buyer_reservation(office.unit_number)
-          office.disabled_by_script = false
-        else
-          local valid_reservation = reservation and reservation.recipe_name == recipe_name
-            and #reservation.buyers == sale.vehicles
-          if valid_reservation then
-            for _, buyer in pairs(reservation.buyers) do
-              if type(buyer) == "table" and buyer.virtual then
-                local population = customer_settlement_populations()[buyer.settlement_key]
-                if not population
-                  or (population.virtual_reserved_by_vehicle
-                    and population.virtual_reserved_by_vehicle[sale.item] or 0) <= 0
-                  or customer_population_purchase_count(population, sale.item)
-                    >= customer_virtual_population(population) then
-                  valid_reservation = false
-                  break
-                end
-              else
-                local entity = customer_unit_registry()[buyer]
-                if not entity or not entity.valid or entity.force.name ~= CUSTOMER_FORCE_NAME
-                  or not customer_can_purchase_vehicle(buyer, sale.item) then
-                  valid_reservation = false
-                  break
-                end
-              end
-            end
-          end
-          if not valid_reservation then
-            if office_has_all_sale_inputs(office, recipe) or (office.crafting_progress or 0) > 0 then
-              valid_reservation = reserve_office_buyers(office, recipe_name, sale)
-            else
-              clear_office_buyer_reservation(office.unit_number)
-              office.disabled_by_script = false
-              valid_reservation = nil
-            end
-          end
-          if valid_reservation ~= nil then
-            office.disabled_by_script = not valid_reservation
-          end
-        end
-        if recipe_name ~= GRID_BATTERY_SALE_RECIPE then
-          update_sales_office_market_feedback(office, sales_office_buyer_status(office))
-        end
-      end
+  for _, office in pairs(offices) do
+    seen[office.unit_number] = true
+  end
+  if limit and limit > 0 and #offices > 0 then
+    local cursor = storage.bitermotors_sales_office_sync_cursor or 1
+    if cursor > #offices then cursor = 1 end
+    local processed = 0
+    while processed < math.min(limit, #offices) do
+      sync_sales_office_buyer(offices[cursor])
+      cursor = cursor % #offices + 1
+      processed = processed + 1
+    end
+    storage.bitermotors_sales_office_sync_cursor = cursor
+  else
+    for _, office in pairs(offices) do sync_sales_office_buyer(office) end
+    storage.bitermotors_sales_office_sync_cursor = 1
   end
   for unit_number in pairs(sales_office_market_states()) do
     if not seen[unit_number] then sales_office_market_states()[unit_number] = nil end
   end
-  sync_grid_battery_sales_offices()
+  if not skip_grid_battery then sync_grid_battery_sales_offices() end
 end
 
 function accelerate_consumer_ev_sales()
@@ -10902,7 +11412,7 @@ local function show_customer_settlement_info_panel(player, settlement)
     local config = station_config(assigned_station)
     local assignment = service.assignments[assigned_station.unit_number]
     local assigned_count = assignment and #assignment.settlements or 0
-    local allocations = calculate_station_utilization(force)
+    local allocations = cached_station_utilization(force)
     local active_stalls = active_station_stalls(assigned_station, allocations)
     add_station_info_label(panel, "Assigned charger: " .. config.display_name)
     add_station_info_label(panel, string.format(
@@ -11451,11 +11961,16 @@ for _, event_name in pairs({
   if event_name then
 	    script.on_event(event_name, function(event)
 	      local entity = event.entity or event.created_entity
+	      invalidate_station_power_pole_cache_near(entity)
 	      track_bitermotors_entity(entity)
 	      if entity and entity.valid and (is_station(entity)
 	        or entity.name == SALES_OFFICE_NAME
 	        or entity.name == BITERTAXI_DEPOT_NAME) then
-	        mark_bitermotors_market_dirty(entity.force, "infrastructure-built")
+	        if is_station(entity) then add_bitermotors_market_station(entity.force, entity) end
+	        local reason = is_station(entity) and "station-built"
+	          or entity.name == SALES_OFFICE_NAME and "sales-office-built"
+	          or "infrastructure-built"
+	        mark_bitermotors_market_dirty(entity.force, reason)
 	      end
 		      handle_station_built(entity, event)
 		      track_grid_controller(entity)
@@ -11507,10 +12022,13 @@ for _, event_name in pairs({
   if event_name then
 	    script.on_event(event_name, function(event)
 	      local entity = event.entity
+	      if not entity or not entity.valid then return end
+	      local unit_number = entity.unit_number
+	      invalidate_station_power_pole_cache_near(entity)
 	      local removed_customer_settlement =
-	        entity and entity.valid and BITER_SETTLEMENT_NAMES[entity.name] or false
-      local removed_customer_unit = entity and entity.valid and entity.unit_number
-        and customer_unit_registry()[entity.unit_number] ~= nil or false
+	        BITER_SETTLEMENT_NAMES[entity.name] or false
+      local removed_customer_unit = unit_number
+	        and customer_unit_registry()[unit_number] ~= nil or false
 	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
@@ -11533,32 +12051,32 @@ for _, event_name in pairs({
         destroy_customer_marker(entity)
         unregister_customer_unit(entity)
       end
-      if entity and entity.unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
-        remove_ev_from_self_driving_history(entity.unit_number)
-        electric_vehicle_registry()[entity.unit_number] = nil
-        if storage.bitermotors_vehicle_charge_activity then
-          storage.bitermotors_vehicle_charge_activity[entity.unit_number] = nil
-        end
-      end
-	      if entity and entity.unit_number then
-	        local cybertrain_runtime = cybertrain_runtime()
-	        cybertrain_runtime.semis[entity.unit_number] = nil
-	        cybertrain_runtime.batteries[entity.unit_number] = nil
-	        cybertrain_runtime.stops[entity.unit_number] = nil
-	        cybertrain_runtime.stop_ticks[entity.unit_number] = nil
-	        local cybertrain_power = cybertrain_runtime.stop_power[entity.unit_number]
-	        if cybertrain_power and cybertrain_power.valid then cybertrain_power.destroy() end
-	        cybertrain_runtime.stop_power[entity.unit_number] = nil
-        untrack_bitermotors_entity(entity)
-        destroy_bitermotors_runtime_visual(entity.unit_number)
-        destroy_charger_stall_visuals(entity.unit_number)
-        destroy_sales_office_showroom_rendering(entity.unit_number)
-	        bitermotors_compute_machines()[entity.unit_number] = nil
-	        bitermotors_compute_power_failures()[entity.unit_number] = nil
-	        bitermotors_compute_queue().members[entity.unit_number] = nil
-	        if orbital_radiator_panels()[entity.unit_number] then
-	          orbital_radiator_panels()[entity.unit_number] = nil
-	          mark_orbital_cooling_dirty()
+	      if unit_number and ELECTRIC_VEHICLE_BATTERIES[entity.name] then
+	        remove_ev_from_self_driving_history(unit_number)
+	        electric_vehicle_registry()[unit_number] = nil
+	        if storage.bitermotors_vehicle_charge_activity then
+	          storage.bitermotors_vehicle_charge_activity[unit_number] = nil
+	        end
+	      end
+		      if unit_number then
+		        local cybertrain_runtime = cybertrain_runtime()
+		        cybertrain_runtime.semis[unit_number] = nil
+		        cybertrain_runtime.batteries[unit_number] = nil
+		        cybertrain_runtime.stops[unit_number] = nil
+		        cybertrain_runtime.stop_ticks[unit_number] = nil
+		        local cybertrain_power = cybertrain_runtime.stop_power[unit_number]
+		        if cybertrain_power and cybertrain_power.valid then cybertrain_power.destroy() end
+		        cybertrain_runtime.stop_power[unit_number] = nil
+	        untrack_bitermotors_entity(unit_number)
+	        destroy_bitermotors_runtime_visual(unit_number)
+	        destroy_charger_stall_visuals(unit_number)
+	        destroy_sales_office_showroom_rendering(unit_number)
+		        bitermotors_compute_machines()[unit_number] = nil
+		        bitermotors_compute_power_failures()[unit_number] = nil
+		        bitermotors_compute_queue().members[unit_number] = nil
+		        if orbital_radiator_panels()[unit_number] then
+		          orbital_radiator_panels()[unit_number] = nil
+		          mark_orbital_cooling_dirty()
 	        elseif entity.name == ORBITAL_DATACENTER_CORE_NAME then
 	          mark_orbital_cooling_dirty()
 	        end
@@ -11566,11 +12084,16 @@ for _, event_name in pairs({
       if removed_customer_settlement then
         for _, force in pairs(game.forces) do
           if player_market_force(force) then
+            remove_bitermotors_market_candidate(force, entity)
             mark_bitermotors_market_dirty(force, "settlement-removed")
           end
         end
-      elseif refresh_infrastructure then
-        mark_bitermotors_market_dirty(entity.force, "infrastructure-removed")
+	      elseif refresh_infrastructure then
+	        if is_station(entity) then remove_bitermotors_market_station(entity.force, entity) end
+	        local reason = is_station(entity) and "station-removed"
+	          or entity.name == SALES_OFFICE_NAME and "sales-office-removed"
+	          or "infrastructure-removed"
+	        mark_bitermotors_market_dirty(entity.force, reason)
       end
       if is_station(entity) then
         reservation_print_progress()[entity.unit_number] = nil
@@ -11608,6 +12131,7 @@ script.on_event(defines.events.on_biter_base_built, function(event)
   if not entity or not entity.valid or not BITER_SETTLEMENT_NAMES[entity.name] then return end
   for _, force in pairs(game.forces) do
     if player_market_force(force) then
+      add_bitermotors_market_candidate(force, entity)
       mark_bitermotors_market_dirty(force, "settlement-built")
     end
   end
@@ -11637,7 +12161,7 @@ script.on_nth_tick(30, function()
   end
 end)
 
-script.on_nth_tick(60, function()
+function process_bitermotors_second_housekeeping()
   process_customer_road_rage()
   ensure_native_station_power_model()
   track_ai_efficiency_progress()
@@ -11654,32 +12178,65 @@ script.on_nth_tick(60, function()
       sync_biterfactory_production_gate(force, true)
     end
   end
-  sync_sales_office_buyers()
-  local allocations_by_force = {}
-  local services_by_force = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, station in pairs(find_stations(surface)) do
-      local force_index = station.force.index
-      if not allocations_by_force[force_index] then
-        allocations_by_force[force_index] = calculate_station_utilization(station.force)
-        services_by_force[force_index] = customer_service_for_force(station.force)
-      end
-      refresh_station_power_state(station, allocations_by_force[force_index])
-      sample_station_power_service(station)
-      charge_station_vehicles(station)
-      update_station_alerts(station)
-      if not first_prototype_sale_unlocked(station.force)
-        and station.valid and count_biter_settlements_near_station(station) > 0 then
-        unlock_roadster_sales(station.force)
-      end
+end
+
+function process_bitermotors_second_station_power()
+  storage.bitermotors_station_allocations_by_force =
+    storage.bitermotors_station_allocations_by_force or {}
+  local allocations_by_force = storage.bitermotors_station_allocations_by_force
+  local calculated_forces = {}
+  for _, station in pairs(registered_bitermotors_entities("stations")) do
+    local force_index = station.force.index
+    if not calculated_forces[force_index] then
+      allocations_by_force[force_index] = calculate_station_utilization(station.force)
+      calculated_forces[force_index] = true
+    end
+    refresh_station_power_state(station, allocations_by_force[force_index])
+    sample_station_power_service(station)
+    charge_station_vehicles(station)
+    update_station_alerts(station)
+    if not first_prototype_sale_unlocked(station.force)
+      and station.valid and count_biter_settlements_near_station(station) > 0 then
+      unlock_roadster_sales(station.force)
     end
   end
+end
+
+function process_bitermotors_second_capacity()
+  local allocations_by_force = storage.bitermotors_station_allocations_by_force or {}
   for force_index in pairs(allocations_by_force) do
     local force = game.forces[force_index]
-    refresh_customer_service_power_capacity(force, services_by_force[force_index])
-    generate_station_reservations(force, services_by_force[force_index])
+    if force then
+      local service = customer_service_for_force(force)
+      refresh_customer_service_power_capacity(force, service)
+      generate_station_reservations(force, service)
+    end
   end
+end
+
+function process_bitermotors_second_market()
+  sync_grid_battery_sales_offices()
   process_customer_charging_commutes()
+end
+
+function process_bitermotors_sales_office_buyer_chunk()
+  local office_count = #registered_bitermotors_entities("sales_offices")
+  local chunk_size = math.max(1, math.ceil(office_count / 4))
+  sync_sales_office_buyers(chunk_size, true)
+end
+
+script.on_nth_tick(15, function()
+  local phase = game.tick % 60
+  if phase == 0 then
+    process_bitermotors_second_housekeeping()
+  elseif phase == 15 then
+    process_bitermotors_second_station_power()
+  elseif phase == 30 then
+    process_bitermotors_second_capacity()
+  else
+    process_bitermotors_second_market()
+  end
+  process_bitermotors_sales_office_buyer_chunk()
 end)
 
 script.on_nth_tick(UiRefresh.interval_ticks, function()

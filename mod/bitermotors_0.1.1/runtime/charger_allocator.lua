@@ -9,6 +9,38 @@ local function stable_less(left, right)
   return tostring(left) < tostring(right)
 end
 
+local function heap_push(heap, value, less)
+  local index = #heap + 1
+  heap[index] = value
+  while index > 1 do
+    local parent = math.floor(index / 2)
+    if not less(heap[index], heap[parent]) then break end
+    heap[index], heap[parent] = heap[parent], heap[index]
+    index = parent
+  end
+end
+
+local function heap_pop(heap, less)
+  if #heap == 0 then return nil end
+  local result = heap[1]
+  local tail = table.remove(heap)
+  if #heap > 0 then
+    heap[1] = tail
+    local index = 1
+    while true do
+      local left = index * 2
+      local right = left + 1
+      local best = index
+      if left <= #heap and less(heap[left], heap[best]) then best = left end
+      if right <= #heap and less(heap[right], heap[best]) then best = right end
+      if best == index then break end
+      heap[index], heap[best] = heap[best], heap[index]
+      index = best
+    end
+  end
+  return result
+end
+
 local function assignment_available(assignment, key)
   return #assignment.settlements < assignment.spec.stalls
     and not assignment.assigned_keys[key]
@@ -130,47 +162,48 @@ function ChargerAllocator.allocate(station_specs, demand)
   end
   table.sort(candidate_keys, stable_less)
 
-  while true do
-    local best_key
-    local pair
-    for _, key in ipairs(candidate_keys) do
-      if (demand[key] or 0) > (requested_capacity[key] or 0) then
-        local available = best_available_station(
-          candidate_pairs_by_key[key], key, demand_station_less
-        )
-        if available and (not best_key
-          or demand_key_less(key, best_key, requested_capacity, demand)) then
-          best_key = key
-          pair = available
-        end
+  local function demand_less(left, right)
+    return demand_key_less(left, right, requested_capacity, demand)
+  end
+  local demand_heap = {}
+  for _, key in ipairs(candidate_keys) do
+    if (demand[key] or 0) > 0 then heap_push(demand_heap, key, demand_less) end
+  end
+  while #demand_heap > 0 do
+    local best_key = heap_pop(demand_heap, demand_less)
+    local pair = best_available_station(
+      candidate_pairs_by_key[best_key], best_key, demand_station_less
+    )
+    if pair then
+      pair.demand = demand[best_key] or 0
+      assign_pair(pair, assigned_capacity, requested_capacity, true)
+      first_station_by_settlement[pair.candidate.key] =
+        first_station_by_settlement[pair.candidate.key] or pair.assignment.station
+      if (demand[best_key] or 0) > (requested_capacity[best_key] or 0) then
+        heap_push(demand_heap, best_key, demand_less)
       end
     end
-    if not pair then break end
-    pair.demand = demand[best_key] or 0
-    assign_pair(pair, assigned_capacity, requested_capacity, true)
-    first_station_by_settlement[pair.candidate.key] =
-      first_station_by_settlement[pair.candidate.key] or pair.assignment.station
   end
 
-  while true do
-    local best_key
-    local pair
-    for _, key in ipairs(candidate_keys) do
-      local available = best_available_station(
-        candidate_pairs_by_key[key], key, capacity_station_less
-      )
-      if available and (not best_key
-        or (assigned_capacity[key] or 0) < (assigned_capacity[best_key] or 0)
-        or ((assigned_capacity[key] or 0) == (assigned_capacity[best_key] or 0)
-          and stable_less(key, best_key))) then
-        best_key = key
-        pair = available
-      end
+  local function capacity_less(left, right)
+    local left_capacity = assigned_capacity[left] or 0
+    local right_capacity = assigned_capacity[right] or 0
+    if left_capacity ~= right_capacity then return left_capacity < right_capacity end
+    return stable_less(left, right)
+  end
+  local capacity_heap = {}
+  for _, key in ipairs(candidate_keys) do heap_push(capacity_heap, key, capacity_less) end
+  while #capacity_heap > 0 do
+    local best_key = heap_pop(capacity_heap, capacity_less)
+    local pair = best_available_station(
+      candidate_pairs_by_key[best_key], best_key, capacity_station_less
+    )
+    if pair then
+      assign_pair(pair, assigned_capacity, requested_capacity, false)
+      first_station_by_settlement[pair.candidate.key] =
+        first_station_by_settlement[pair.candidate.key] or pair.assignment.station
+      heap_push(capacity_heap, best_key, capacity_less)
     end
-    if not pair then break end
-    assign_pair(pair, assigned_capacity, requested_capacity, false)
-    first_station_by_settlement[pair.candidate.key] =
-      first_station_by_settlement[pair.candidate.key] or pair.assignment.station
   end
 
   for _, assignment in pairs(assignments) do

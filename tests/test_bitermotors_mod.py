@@ -154,7 +154,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("target_offset = {0, 0}", control)
         self.assertIn("x_scale = 0.19", control)
         self.assertIn("function update_sales_office_showrooms()", control)
-        self.assertIn("destroy_sales_office_showroom_rendering(entity.unit_number)", control)
+        self.assertIn("destroy_sales_office_showroom_rendering(unit_number)", control)
+        self.assertIn("if not entity or not entity.valid then return end", control)
+        self.assertIn("untrack_bitermotors_entity(unit_number)", control)
         self.assertIn("build_sales_office_showroom_animations()", art_script)
         self.assertIn("sales-office-active-empty-chroma.png", art_script)
         self.assertIn("VEHICLE_ICON_NAMES", art_script)
@@ -1643,7 +1645,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function foundry_power_gate_status(force)", control)
         self.assertIn("count_deployed_energy_product(force, HIGH_DENSITY_SOLAR_ARRAY_NAME)", control)
         self.assertIn("count_deployed_energy_product(force, GRID_BATTERY_NAME)", control)
-        self.assertIn("quality = BITERMOTORS_ENERGY_JUMPSTART_QUALITY", control)
+        self.assertIn('registered_bitermotors_entities("energy_products", force)', control)
+        self.assertIn("entity.quality.name == BITERMOTORS_ENERGY_JUMPSTART_QUALITY", control)
         self.assertIn("total - math.min(starter_count, starter_quality_count)", control)
         self.assertIn("technology.enabled = technology.researched or gate.qualified", control)
         self.assertIn('label = "Industrial power qualification"', control)
@@ -2090,7 +2093,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("EV Reservation consumption are paused", control)
         self.assertIn("[Biter Motors] %s online", control)
         self.assertIn("EV Charging Network researched. Craft a separate V2 charger", control)
-        self.assertIn("script.on_nth_tick(60", control)
+        self.assertIn("script.on_nth_tick(15", control)
         self.assertIn("PROSPECT_RESERVATION_RETRY_MINUTES = 5", control)
         self.assertIn("RESERVATION_SAMPLES_PER_PRINT = 60", control)
         self.assertIn("bitermotors_reservation_print_progress", control)
@@ -2585,7 +2588,7 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_customer_reconciliation_is_not_per_second(self):
         control = (MOD / "control.lua").read_text()
         once_per_second = control[
-            control.index("script.on_nth_tick(60, function()"):
+            control.index("script.on_nth_tick(15, function()"):
             control.index("script.on_nth_tick(600, function()")
         ]
         self.assertNotIn("sync_customer_settlements()", once_per_second)
@@ -2667,6 +2670,12 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function ChargerAllocator.allocate", allocator)
         self.assertIn("assignment.customer_requested_stalls", allocator)
         self.assertIn("demand_phase", allocator)
+        self.assertIn("local function heap_push", allocator)
+        self.assertIn("local function heap_pop", allocator)
+        self.assertIn("while #demand_heap > 0", allocator)
+        self.assertIn("while #capacity_heap > 0", allocator)
+        allocation_body = allocator[allocator.index("function ChargerAllocator.allocate"):]
+        self.assertNotIn("while true do", allocation_body)
         self.assertIn('test_charger_allocator = function()', control)
         buyer_start = control.index("function eligible_customer_buyers")
         buyer_end = control.index("function sales_office_buyer_status", buyer_start)
@@ -2740,7 +2749,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("(assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)", control)
         self.assertIn("CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS = 15 * 60 * 60", control)
         self.assertIn("CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER = 3", control)
-        self.assertIn("grow_customer_settlement(station, state)", control)
+        self.assertIn("grow_customer_settlement(selected.station, selected.state)", control)
+        self.assertIn("CUSTOMER_GROWTH_PLACEMENT_ATTEMPTS = 32", control)
+        self.assertIn("CUSTOMER_GROWTH_PLACEMENT_RETRY_TICKS = 30 * 60", control)
+        self.assertIn("#placement_candidates > 0", control)
+        self.assertIn("selected.unit_number", control)
         self.assertIn("local service = customer_service_for_force(force)", control)
         self.assertIn("assignment and assignment.requested_stalls or 0", control)
         growth = control[
@@ -2861,7 +2874,7 @@ class BiterMotorsModTest(unittest.TestCase):
         for fragment in [
             "CUSTOMER_COMMUTE_MAX_ACTIVE = 512",
             "CUSTOMER_COMMUTE_STARTS_PER_SECOND = 8",
-            "CUSTOMER_COMMUTE_SCHEDULER_BATCH = 256",
+            "CUSTOMER_COMMUTE_SCHEDULER_BATCH = 64",
             "CUSTOMER_COMMUTE_CHARGE_SECONDS = 30",
             "CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS = 2 * 60 * 60",
             "function select_customer_commute_station",
@@ -2910,7 +2923,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function bitermotors_market_cache", control)
         self.assertIn("local CUSTOMER_MARKET_CACHE_TICKS = 3600", control)
         self.assertIn("function refresh_customer_service_power_capacity", control)
-        self.assertIn("refresh_customer_service_power_capacity(force, services_by_force[force_index])", control)
+        self.assertIn("refresh_customer_service_power_capacity(force, service)", control)
         self.assertIn("script.on_event(defines.events.on_biter_base_built", control)
         self.assertIn('mark_bitermotors_market_dirty(force, "settlement-built")', control)
         virtualized = control[
@@ -2923,6 +2936,15 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("game.tick - cached.tick < CUSTOMER_MARKET_CACHE_TICKS", control)
         self.assertIn("market_snapshot_cache_hits", control)
         self.assertIn("market_snapshot_builds", control)
+        self.assertIn("function customer_market_topology_for_force(force)", control)
+        self.assertIn("market_topology_cache_hits", control)
+        self.assertIn("market_topology_builds", control)
+        self.assertIn('["vehicle-sale"] = true', control)
+        service_start = control.index("customer_service_for_force = function")
+        service_end = control.index("function refresh_customer_service_power_capacity", service_start)
+        service = control[service_start:service_end]
+        self.assertIn("customer_market_topology_for_force(force)", service)
+        self.assertNotIn("office_covered_settlements(offices)", service)
         self.assertIn("function customer_buyer_queues", control)
         self.assertIn("function dequeue_available_buyer", control)
         self.assertIn("defines.events.on_entity_spawned", control)
@@ -2931,6 +2953,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('registered_bitermotors_entities("sales_offices")', control)
         self.assertIn('registered_bitermotors_entities("stations", force, surface)', control)
         self.assertIn('registered_bitermotors_entities("ai_machines", force)', control)
+        self.assertIn('registered_bitermotors_entities("energy_products", force)', control)
         self.assertIn("performance_status = function", control)
         self.assertIn('require("runtime.timing_wheel")', control)
         self.assertIn('require("runtime.performance_state")', control)
@@ -2938,7 +2961,23 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("BITERMOTORS_REGISTRY_RECONCILIATION_CHUNKS_PER_STEP = 2", control)
         self.assertIn("rebuild_bitermotors_registry_reconciliation_chunks", control)
         self.assertIn("register_bitermotors_reconciliation_chunk(event.surface, event.position)", control)
-        self.assertIn('mark_bitermotors_market_dirty(entity.force, "infrastructure-built")', control)
+        self.assertIn('mark_bitermotors_market_dirty(entity.force, reason)', control)
+        self.assertIn('"station-built"', control)
+        self.assertIn('"sales-office-built"', control)
+        self.assertIn("storage.bitermotors_market_candidate_cache", control)
+        self.assertIn("market_candidate_cache_hits", control)
+        self.assertIn("BITERMOTORS_CANDIDATE_CACHE_PRESERVING_INVALIDATIONS", control)
+        self.assertIn('[' + '"settlement-built"' + '] = true', control)
+        self.assertIn('[' + '"settlement-removed"' + '] = true', control)
+        self.assertIn('[' + '"settlement-growth"' + '] = true', control)
+        self.assertIn("function add_bitermotors_market_candidate", control)
+        self.assertIn("function remove_bitermotors_market_candidate", control)
+        self.assertIn("function add_bitermotors_market_station", control)
+        self.assertIn("function remove_bitermotors_market_station", control)
+        self.assertIn("market_station_candidate", control)
+        self.assertIn("market_candidate_stale_prunes", control)
+        self.assertIn("function sales_office_market_for_service", control)
+        self.assertIn("sales_office_market_cache_hits", control)
         reconciliation_start = control.index("function reconcile_bitermotors_entity_registry_step")
         reconciliation_end = control.index("function bitermotors_market_cache", reconciliation_start)
         reconciliation = control[reconciliation_start:reconciliation_end]
@@ -2946,7 +2985,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("name = config.names", reconciliation)
         half_second = control[
             control.index("script.on_nth_tick(30, function()"):
-            control.index("script.on_nth_tick(60, function()")
+            control.index("script.on_nth_tick(15, function()")
         ]
         self.assertIn("reconcile_bitermotors_entity_registry_step()", half_second)
         ten_seconds = control[
@@ -2964,16 +3003,35 @@ class BiterMotorsModTest(unittest.TestCase):
         ai_end = control.index("function bitermotors_accelerated_start_enabled", ai_start)
         self.assertNotIn("find_entities_filtered", control[ai_start:ai_end])
         once_per_second = control[
-            control.index("script.on_nth_tick(60, function()"):
+            control.index("function process_bitermotors_second_housekeeping()"):
             control.index("script.on_nth_tick(UiRefresh.interval_ticks")
         ]
         self.assertEqual(once_per_second.count("calculate_station_utilization(station.force)"), 1)
         self.assertIn("if player_market_force(force) then", once_per_second)
-        self.assertIn("sync_sales_office_buyers()", once_per_second)
+        self.assertIn("process_bitermotors_sales_office_buyer_chunk()", once_per_second)
+        self.assertIn("sync_sales_office_buyers(chunk_size, true)", once_per_second)
+        self.assertIn("storage.bitermotors_sales_office_sync_cursor", control)
+        self.assertIn("math.ceil(office_count / 4)", once_per_second)
         self.assertNotIn("active_station_stalls(station)", once_per_second)
         self.assertIn("allocations_by_force[force_index]", once_per_second)
-        self.assertIn("services_by_force[force_index]", once_per_second)
-        self.assertIn("cached.tick == game.tick", control)
+        self.assertIn("storage.bitermotors_station_allocations_by_force", once_per_second)
+        self.assertIn("local service = customer_service_for_force(force)", once_per_second)
+        self.assertIn("local phase = game.tick % 60", once_per_second)
+        utilization_start = control.index("local function calculate_station_utilization")
+        utilization_end = control.index("function cached_station_utilization", utilization_start)
+        utilization = control[utilization_start:utilization_end]
+        self.assertIn("rebuild_station_spatial_index(force, scratch)", utilization)
+        self.assertIn("scratch.spatial_index[vehicle.surface.index]", utilization)
+        self.assertIn("electric_vehicle_registry()", utilization)
+        self.assertNotIn("nearby_uncharged_vehicles(station)", utilization)
+        self.assertIn("clear_table(vehicle_assignment.vehicles)", utilization)
+
+        pole_cache_start = control.index("local function nearby_real_power_pole")
+        pole_cache_end = control.index("local function station_has_grid_access", pole_cache_start)
+        pole_cache = control[pole_cache_start:pole_cache_end]
+        self.assertIn("cached.resolved", pole_cache)
+        self.assertNotIn("cached.tick == game.tick", pole_cache)
+        self.assertIn("function invalidate_station_power_pole_cache_near", pole_cache)
 
     def test_charger_changes_refresh_market_capacity_immediately(self):
         control = (MOD / "control.lua").read_text()
@@ -2981,9 +3039,12 @@ class BiterMotorsModTest(unittest.TestCase):
         built_end = control.index("defines.events.on_player_mined_entity", built_start)
         built = control[built_start:built_end]
         self.assertLess(built.index("track_bitermotors_entity(entity)"), built.index("handle_station_built(entity, event)"))
-        self.assertLess(built.index('mark_bitermotors_market_dirty(entity.force, "infrastructure-built")'),
+        self.assertLess(built.index('mark_bitermotors_market_dirty(entity.force, reason)'),
                         built.index("handle_station_built(entity, event)"))
+        self.assertIn('is_station(entity) and "station-built"', built)
+        self.assertIn('entity.name == SALES_OFFICE_NAME and "sales-office-built"', built)
         self.assertIn("refresh_bitermotors_infrastructure_change(entity)", built)
+        self.assertIn("invalidate_station_power_pole_cache_near(entity)", built)
         refresh_start = control.index("function refresh_bitermotors_infrastructure_change")
         refresh_end = control.index("local function sync_biter_customer_diplomacy", refresh_start)
         refresh = control[refresh_start:refresh_end]
@@ -2993,7 +3054,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("refresh_progress_panel(player)", refresh)
         removed = control[built_end:control.index("script.on_nth_tick(1", built_end)]
         self.assertIn("refresh_bitermotors_infrastructure_change(entity)", removed)
-        self.assertIn('mark_bitermotors_market_dirty(entity.force, "infrastructure-removed")', removed)
+        self.assertIn('is_station(entity) and "station-removed"', removed)
+        self.assertIn('entity.name == SALES_OFFICE_NAME and "sales-office-removed"', removed)
+        self.assertIn("invalidate_station_power_pole_cache_near(entity)", removed)
         self.assertNotIn('mark_bitermotors_market_dirty(entity.force, "entity-removed")', removed)
 
     def test_bitermotors_scale_benchmark_and_runtime_modules_exist(self):
@@ -3027,10 +3090,19 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('require("runtime.sales_office_market")', (MOD / "control.lua").read_text())
         self.assertIn("bitermotors_progress_panel_signatures", (MOD / "control.lua").read_text())
         self.assertIn("BITERMOTORS_BENCHMARK_UNITS:-20000", benchmark)
+        self.assertIn("bitermotors_perf_benchmark_0.1.1", benchmark)
+        self.assertIn("BITERMOTORS_BENCHMARK_SEED:-424242", benchmark)
+        self.assertIn('--map-gen-seed "$benchmark_seed"', benchmark)
         self.assertIn("BITERMOTORS_BENCHMARK_CAPS", benchmark)
         self.assertIn("0 128 256 512", benchmark)
         self.assertIn("completed_commands", benchmark)
         self.assertIn("performance_test_seed_owner", benchmark)
+        self.assertIn('"bitermotors-small-biter-mass-market"', benchmark)
+
+        playtest_benchmark = (ROOT / "scripts/benchmark-bitermotors-playtest-save.sh").read_text()
+        self.assertIn("BITERMOTORS_BENCHMARK_VERBOSE:-0", playtest_benchmark)
+        self.assertIn("non-recoverable error", playtest_benchmark)
+        self.assertIn("avg={average:.3f} ms", playtest_benchmark)
 
     def test_bitermotors_avoids_capex_language(self):
         combined = "\n".join(

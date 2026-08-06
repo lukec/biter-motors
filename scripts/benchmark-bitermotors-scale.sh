@@ -6,16 +6,17 @@ factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamap
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 unit_count="${BITERMOTORS_BENCHMARK_UNITS:-20000}"
 benchmark_ticks="${BITERMOTORS_BENCHMARK_TICKS:-3600}"
+benchmark_seed="${BITERMOTORS_BENCHMARK_SEED:-424242}"
 results="${BITERMOTORS_BENCHMARK_RESULTS:-/tmp/bitermotors-20k-results.csv}"
 register_owners="${BITERMOTORS_BENCHMARK_REGISTER_OWNERS:-1}"
 read -r -a caps <<<"${BITERMOTORS_BENCHMARK_CAPS:-0 128 256 512}"
 
-printf 'units,registered_owners,moving_cap,ticks,avg_ms,min_ms,max_ms,movers,moved_units,completed_commands,queued_commutes,active_commutes,market_builds,bitertaxi_builds\n' >"$results"
+printf 'units,registered_owners,moving_cap,ticks,seed,avg_ms,min_ms,max_ms,movers,moved_units,completed_commands,queued_commutes,active_commutes,market_builds,bitertaxi_builds\n' >"$results"
 
 for cap in "${caps[@]}"; do
   tmp="$(mktemp -d "/tmp/bitermotors-scale-${cap}.XXXXXX")"
   mods="$tmp/mods"
-  bench="$mods/bitermotors_perf_benchmark_0.1.0"
+  bench="$mods/bitermotors_perf_benchmark_0.1.1"
   save="$tmp/saves/bitermotors-scale.zip"
   report="$tmp/script-output/bitermotors-scale.jsonl"
   mkdir -p "$mods" "$bench" "$tmp/saves" "$tmp/script-output"
@@ -83,7 +84,7 @@ script.on_init(function()
     local column = (index - 1) % 200
     local row = math.floor((index - 1) / 200)
     local entity = surface.create_entity{
-      name = "small-biter",
+      name = REGISTER_OWNERS and "bitermotors-small-biter-mass-market" or "small-biter",
       position = {1000 + column * 2, row * 2},
       force = customers
     }
@@ -153,20 +154,27 @@ EOF_LUA
 
   create_log="/tmp/bitermotors-scale-${cap}-create.log"
   benchmark_log="/tmp/bitermotors-scale-${cap}-benchmark.log"
-  "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$create_log" 2>&1
+  if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
+    --create "$save" --map-gen-seed "$benchmark_seed" >"$create_log" 2>&1; then
+    tail -120 "$create_log" >&2
+    exit 1
+  fi
   if grep -qE 'non-recoverable error|Error while running event' "$create_log"; then
     tail -120 "$create_log" >&2
     exit 1
   fi
   rm -f "$report"
-  "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
-    --benchmark "$save" --benchmark-ticks "$benchmark_ticks" --benchmark-runs 1 >"$benchmark_log" 2>&1
+  if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
+    --benchmark "$save" --benchmark-ticks "$benchmark_ticks" --benchmark-runs 1 >"$benchmark_log" 2>&1; then
+    tail -120 "$benchmark_log" >&2
+    exit 1
+  fi
   if grep -qE 'non-recoverable error|Error while running event' "$benchmark_log"; then
     tail -120 "$benchmark_log" >&2
     exit 1
   fi
 
-  python3 - "$benchmark_log" "$report" "$results" "$unit_count" "$cap" "$benchmark_ticks" <<'PY'
+  python3 - "$benchmark_log" "$report" "$results" "$unit_count" "$cap" "$benchmark_ticks" "$benchmark_seed" <<'PY'
 import json
 import re
 import sys
@@ -180,7 +188,8 @@ if not match:
 performance = report["performance"]
 counters = performance.get("counters", {})
 row = [
-    sys.argv[4], str(report.get("registered_owners", False)).lower(), sys.argv[5], sys.argv[6], *match.groups(),
+    sys.argv[4], str(report.get("registered_owners", False)).lower(), sys.argv[5], sys.argv[6], sys.argv[7],
+    *match.groups(),
     report.get("movers", 0),
     report.get("moved_units", 0),
     report.get("completed_commands", 0),

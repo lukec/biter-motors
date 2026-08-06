@@ -1,0 +1,14 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+  Major Features:
+    - First Biter Motors public-alpha release candidate.
+    - Adds a complete Nauvis campaign from crash landing through physical AGI training.
+    - Turns biter settlements into customers for EVs, Grid Batteries, and Bitertaxi service.
+    - Adds terrestrial and orbital AI compute with physical power, cooling, and token logistics.
+  Features:
+    - Adds five drivable EV products plus the battery-electric Cybertrain.
+    - Adds Biterfactories, battery chemistry, recycling, high-density solar power, and Grid Batteries.
+    - Adds bounded customer populations, charging commutes, Self-driving, and Summon EV.
+  Info:
+    - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
+    - This is alpha software. Balance, artwork, progression, and compatibility may change.

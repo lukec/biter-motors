@@ -1,0 +1,24 @@
+# Changelog
+
+## 0.1.1 - Alpha
+
+This is the first Biter Motors alpha release candidate line after the private
+development namespace migration.
+
+- Rebranded the player-facing campaign as Biter Motors.
+- Added the terrestrial customer economy: Sales Offices, physical
+  reservations, charging coverage, customer ownership, and Dollar profit.
+- Added drivable Roadster, Premium EV, Mass-market EV, Megatruck, Bitertaxi,
+  and Cybertrain vehicles with charging and bounded customer simulation.
+- Added Biterfactory production, battery chemistry, recycling, High-density
+  Solar Panels, Grid Batteries, and terrestrial AI compute.
+- Added orbital AI infrastructure, physical AI Token return, and the AGI
+  training-run victory path.
+- Added bounded customer populations, timing-wheel scheduling, and scale
+  benchmarks for large customer populations.
+- Reworked charger allocation around event-invalidated power caches and a
+  spatial station index, substantially reducing recurring late-save stutter.
+- Added the fresh-start crash-landing narrative and recovered industrial kit.
+
+This release is alpha software. Balance, artwork, progression, performance,
+and late-game details remain subject to change.

@@ -1,0 +1,32 @@
+name: Biter Motors CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  release-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install static-test dependency
+        run: python -m pip install --disable-pip-version-check Pillow
+      - name: Run unit and static tests
+        run: python -m unittest discover tests
+      - name: Build and validate deterministic release archive
+        run: |
+          archive="$(python scripts/package-bitermotors.py --output-dir "$RUNNER_TEMP/bitermotors-dist")"
+          package_root="$(basename "$archive" .zip)"
+          python scripts/check-bitermotors-release.py \
+            "$archive" \
+            --source "mod/$package_root"
+      - name: Check whitespace
+        run: |
+          empty_tree="$(git hash-object -t tree /dev/null)"
+          git diff --check "$empty_tree" HEAD

@@ -213,20 +213,20 @@ Status: **complete**
 
 ### Gate 2: Legal And Release Artifacts
 
-Status: **next implementation turn**
+Status: **complete**
 
-- [ ] Add the chosen source-code license.
-- [ ] Add an explicit asset license and exclusions for third-party Factorio
+- [x] Add the chosen source-code license.
+- [x] Add an explicit asset license and exclusions for third-party Factorio
       assets.
-- [ ] Add `ATTRIBUTION.md`, including MIT-licensed electric-vehicle inspiration
+- [x] Add `ATTRIBUTION.md`, including MIT-licensed electric-vehicle inspiration
       and any third-party tools or source material actually incorporated.
-- [ ] Add `CHANGELOG.md`.
-- [ ] Add a reproducible packaging script that produces
+- [x] Add `CHANGELOG.md`.
+- [x] Add a reproducible packaging script that produces
       `bitermotors_<version>.zip` with the correct root directory.
-- [ ] Add CI for static tests, archive layout, forbidden namespace scans, and
+- [x] Add CI for static tests, archive layout, forbidden namespace scans, and
       release metadata.
-- [ ] Replace remaining stale generated art QA indexes or clearly mark them as
-      historical development material.
+- [x] Clearly mark the generated art QA index as historical development
+      material; it is not part of release archives.
 
 ### Gate 3: Campaign Completion
 
@@ -254,13 +254,29 @@ Status: **partially complete**
 - [x] Timing wheels and lifecycle registries for recurring customer work.
 - [x] No per-customer rendered vehicle icon objects.
 - [x] Existing 20,000-unit stress and commute benchmarks.
-- [ ] Re-run the stress suite against the renamed release candidate.
+- [x] Re-run the stress suite against the renamed release candidate.
 - [ ] Run a four-hour headless soak on a late terrestrial save.
 - [ ] Run a one-hour soak with multiple orbital cores and platforms.
 - [ ] Verify no recurring invalid-entity crashes, log spam, or second-scale
       update spikes.
 - [ ] Validate save/load, reconnect, multiplayer join, and configuration-change
       behavior.
+
+Current release-candidate baseline (Factorio 2.1.13, fixed seed `424242`):
+
+- Luke's protected late-terrestrial save improved from a 3.00 ms warm average,
+  39.68 ms p99, and 248.29 ms maximum to 1.31 ms, 16.48 ms, and 79.42 ms
+  respectively in the 3,600-tick verbose comparison.
+- A 36,000-tick soak of the same save completed without a script error at
+  1.75 ms average and 83.54 ms maximum; the earlier soak was 3.93 ms average
+  and 1,129 ms maximum.
+- 2,000 represented owners cost 1.13 ms while stationary, 1.93 ms with up to
+  128 commanded movers, and 2.40 ms with up to 512 commanded movers.
+- 20,000 physical biters cost 25.76 ms while stationary before ownership
+  bookkeeping. This confirms that Factorio's native unit simulation, not one
+  remaining Lua scan, makes fully physical 20,000-customer populations
+  incompatible with 60 UPS. Production therefore keeps the bounded visible
+  representative model.
 
 ### Gate 5: Interface And Art
 
@@ -285,14 +301,19 @@ Status: **functional, not final**
 
 ### Gate 6: Compatibility Contract
 
-Status: **documented**
+Status: **archive validated**
+
+The checked items below were validated locally with the Factorio 2.1.13 engine
+using an isolated user directory and the exact packaged archive. CI reproduces
+the static, unit, metadata, and deterministic-package checks; it does not bundle
+or execute Factorio.
 
 - [x] Publish `COMPATIBILITY.md`.
 - [x] Define the first portal release as the beginning of the public save
       compatibility contract.
 - [x] State Nauvis-and-orbit overhaul boundaries and expected mod conflicts.
-- [ ] Test a release archive on a clean Factorio user directory.
-- [ ] Test new single-player and multiplayer worlds with only declared
+- [x] Test a release archive on a clean Factorio user directory.
+- [x] Test new single-player and multiplayer worlds with only declared
       dependencies.
 
 ### Gate 7: Release Candidate

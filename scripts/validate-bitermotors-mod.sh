@@ -214,11 +214,22 @@ script.on_init(function()
   local biterfactory_economics_test = create_named(surface, BITERFACTORY, {80, 80}, force)
   local solar_array = create_named(surface, SOLAR_ARRAY, {60, 24}, force)
   local grid_battery = create_named(surface, GRID_BATTERY, {64, 24}, force)
+  if solar_array then
+    script.raise_event(defines.events.script_raised_built, {entity = solar_array})
+  end
+  if grid_battery then
+    script.raise_event(defines.events.script_raised_built, {entity = grid_battery})
+  end
   for index = 2, 25 do
-    create_named(surface, SOLAR_ARRAY, {60 + ((index - 1) % 8) * 4, 32 + math.floor((index - 1) / 8) * 4}, force)
+    local panel = create_named(surface, SOLAR_ARRAY, {
+      60 + ((index - 1) % 8) * 4,
+      32 + math.floor((index - 1) / 8) * 4
+    }, force)
+    if panel then script.raise_event(defines.events.script_raised_built, {entity = panel}) end
   end
   for index = 2, 5 do
-    create_named(surface, GRID_BATTERY, {64 + (index - 1) * 4, 48}, force)
+    local battery = create_named(surface, GRID_BATTERY, {64 + (index - 1) * 4, 48}, force)
+    if battery then script.raise_event(defines.events.script_raised_built, {entity = battery}) end
   end
   local power_source = create_named(surface, POWER_SOURCE, {1, -2}, force)
   local roadster = create_named(surface, PROTOTYPE_ROADSTER, {4, -6}, force)

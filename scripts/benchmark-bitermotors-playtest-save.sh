@@ -6,6 +6,7 @@ factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamap
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 save="${1:?usage: $0 SAVE.zip [TICKS]}"
 ticks="${2:-600}"
+verbose="${BITERMOTORS_BENCHMARK_VERBOSE:-0}"
 tmp="$(mktemp -d /tmp/bitermotors-playtest-benchmark.XXXXXX)"
 mods="$tmp/mods"
 
@@ -21,9 +22,24 @@ cat > "$mods/mod-list.json" <<'EOF'
 EOF
 
 cp "$save" "$tmp/benchmark.zip"
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
-  --benchmark "$tmp/benchmark.zip" --benchmark-ticks "$ticks" --benchmark-runs 1 \
-  --benchmark-verbose all >"$tmp/benchmark.log" 2>&1
+benchmark_args=(
+  --config "$tmp/config.ini"
+  --mod-directory "$mods"
+  --benchmark "$tmp/benchmark.zip"
+  --benchmark-ticks "$ticks"
+  --benchmark-runs 1
+)
+if [[ "$verbose" == "1" ]]; then
+  benchmark_args+=(--benchmark-verbose all)
+fi
+if ! "$factorio_bin" "${benchmark_args[@]}" >"$tmp/benchmark.log" 2>&1; then
+  tail -120 "$tmp/benchmark.log" >&2
+  exit 1
+fi
+if grep -qE 'non-recoverable error|Error while running event|errored when running' "$tmp/benchmark.log"; then
+  tail -120 "$tmp/benchmark.log" >&2
+  exit 1
+fi
 
 python3 - "$tmp/benchmark.log" "${FACTORIO_BENCHMARK_MAX_MS:-0}" <<'PY'
 import re
@@ -32,12 +48,23 @@ import sys
 
 text = Path(sys.argv[1]).read_text(errors="replace")
 threshold = float(sys.argv[2])
-matches = [float(value) for value in re.findall(r"avg:\s*([0-9.]+)\s*ms", text)]
+matches = [
+    tuple(map(float, values))
+    for values in re.findall(
+        r"avg:\s*([0-9.]+)\s*ms,\s*min:\s*([0-9.]+)\s*ms,\s*max:\s*([0-9.]+)\s*ms",
+        text,
+    )
+]
 if not matches:
     print(text[-4000:])
-    raise SystemExit("Could not parse benchmark average update time")
-average = matches[-1]
-print(f"Biter Motors benchmark average update: {average:.3f} ms")
+    raise SystemExit("Could not parse benchmark update times")
+average, minimum, maximum = matches[-1]
+print(
+    "Biter Motors benchmark update: "
+    f"avg={average:.3f} ms min={minimum:.3f} ms max={maximum:.3f} ms"
+)
 if threshold > 0 and average > threshold:
     raise SystemExit(f"Biter Motors benchmark exceeds {threshold:g} ms threshold: {average:.3f} ms")
 PY
+
+echo "Benchmark log: $tmp/benchmark.log"
