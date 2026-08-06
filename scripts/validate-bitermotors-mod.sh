@@ -156,11 +156,62 @@ script.on_init(function()
     "bitermotors-terrestrial-ai",
     "bitermotors-autonomous-logistics",
     "bitermotors-cybertrain-logistics",
+    "bitermotors-orbital-compute",
     "bitermotors-planetary-energy-grid"
   }) do
     if force.technologies[technology_name] then
       force.technologies[technology_name].researched = true
     end
+  end
+
+  local platform = force.create_space_platform{
+    name = "Biter Motors Endgame Smoke",
+    planet = "nauvis",
+    starter_pack = "space-platform-starter-pack"
+  }
+  local platform_hub = platform and platform.apply_starter_pack(true)
+  local orbital_surface = platform and platform.surface
+  if orbital_surface then
+    local foundation = {}
+    for x = -32, 32 do
+      for y = -32, 32 do
+        foundation[#foundation + 1] = {name = "space-platform-foundation", position = {x, y}}
+      end
+    end
+    orbital_surface.set_tiles(foundation, false, false, false, true)
+    local orbital_power = orbital_surface.create_entity{
+      name = POWER_SOURCE, position = {0, 22}, force = force
+    }
+    if orbital_power then
+      orbital_power.power_production = 1000000000
+      orbital_power.output_flow_limit = 1000000000
+      orbital_power.energy = 1000000000
+      storage.orbital_power_unit_number = orbital_power.unit_number
+    end
+    local orbital_core = orbital_surface.create_entity{
+      name = ORBITAL_CORE, position = {0, 12}, force = force, raise_built = true
+    }
+    if orbital_core then
+      pcall(function() orbital_core.set_recipe("bitermotors-orbital-ai-token") end)
+      local input = orbital_core.get_inventory(input_inventory_id())
+      if input then input.insert{name = DOLLAR, count = 20} end
+      storage.orbital_core_unit_number = orbital_core.unit_number
+    end
+    local radiator_positions = {
+      {-18, 10}, {-12, 10}, {-6, 10}, {6, 10},
+      {12, 10}, {18, 10}, {-18, 18}, {-12, 18}
+    }
+    for index = 1, 7 do
+      orbital_surface.create_entity{
+        name = ORBITAL_RADIATOR,
+        position = radiator_positions[index],
+        force = force,
+        raise_built = true
+      }
+    end
+    storage.orbital_radiator_positions = radiator_positions
+    storage.orbital_surface_index = orbital_surface.index
+    storage.orbital_platform_created = platform_hub ~= nil and orbital_core ~= nil
   end
   local production_statistics = force.get_item_production_statistics(surface)
   storage.foundry_enabled_before_qualification = force.technologies.foundry.enabled
@@ -374,8 +425,9 @@ script.on_init(function()
   local inserted_bitertaxi_fleet = bitertaxi_input and bitertaxi_input.insert{name = BITERTAXI_FLEET, count = 3} or 0
   local bitertaxi_center_inventory = bitertaxi_center.get_inventory(defines.inventory.chest)
   if bitertaxi_center_inventory then bitertaxi_center_inventory.insert{name = BITERTAXI_FLEET, count = 20} end
-  local token_statistics = force.get_item_production_statistics(surface)
-  token_statistics.set_output_count("bitermotors-ai-token", 1000000000)
+  storage.seeded_endgame_status = remote.call(
+    "bitermotors", "test_set_ai_token_progress", "player", 1000000000, 0
+  )
   storage.agi_training_status = remote.call("bitermotors", "agi_training_status", "player")
   pcall(function() controller.set_recipe(AGI_RECIPE) end)
   pcall(function() biterfactory.set_recipe(PREMIUM_EV_RECIPE) end)
@@ -647,6 +699,80 @@ local function find_unit(surface, name, unit_number)
   return nil
 end
 
+script.on_nth_tick(97, function()
+  if game.tick < 97 or storage.orbital_undercooled_reported then return end
+  storage.orbital_undercooled_reported = true
+  write_report{
+    tick = game.tick,
+    status = "orbital_undercooled",
+    platform_created = storage.orbital_platform_created,
+    endgame = remote.call("bitermotors", "endgame_status", "player")
+  }
+end)
+
+script.on_nth_tick(179, function()
+  if game.tick < 179 or storage.orbital_cooling_completed then return end
+  storage.orbital_cooling_completed = true
+  local surface = game.get_surface(storage.orbital_surface_index)
+  local position = storage.orbital_radiator_positions
+    and storage.orbital_radiator_positions[8] or {-12, 18}
+  local radiator = surface and surface.create_entity{
+    name = ORBITAL_RADIATOR,
+    position = position,
+    force = game.forces.player,
+    raise_built = true
+  }
+  storage.eighth_orbital_radiator_created = radiator ~= nil
+end)
+
+script.on_nth_tick(2111, function()
+  if game.tick < 2111 or storage.orbital_operating_reported then return end
+  storage.orbital_operating_reported = true
+  local surface = game.get_surface(storage.orbital_surface_index)
+  local core = surface and find_unit(surface, ORBITAL_CORE, storage.orbital_core_unit_number)
+  local output = core and core.get_inventory(output_inventory_id())
+  write_report{
+    tick = game.tick,
+    status = "orbital_operating",
+    eighth_radiator_created = storage.eighth_orbital_radiator_created,
+    physical_tokens = output and output.get_item_count("bitermotors-ai-token") or -1,
+    endgame = remote.call("bitermotors", "endgame_status", "player")
+  }
+end)
+
+script.on_nth_tick(2173, function()
+  if game.tick < 2173 or storage.orbital_brownout_started then return end
+  storage.orbital_brownout_started = true
+  local surface = game.get_surface(storage.orbital_surface_index)
+  local power = surface and find_unit(surface, POWER_SOURCE, storage.orbital_power_unit_number)
+  if power then
+    power.power_production = 0
+    power.output_flow_limit = 0
+    power.energy = 0
+  end
+end)
+
+script.on_nth_tick(2231, function()
+  if game.tick < 2231 or storage.orbital_brownout_reported then return end
+  storage.orbital_brownout_reported = true
+  write_report{
+    tick = game.tick,
+    status = "orbital_brownout",
+    endgame = remote.call("bitermotors", "endgame_status", "player")
+  }
+end)
+
+script.on_nth_tick(2291, function()
+  if game.tick < 2291 or storage.orbital_power_restored then return end
+  storage.orbital_power_restored = true
+  local surface = game.get_surface(storage.orbital_surface_index)
+  local power = surface and find_unit(surface, POWER_SOURCE, storage.orbital_power_unit_number)
+  if power then
+    power.power_production = 1000000000
+    power.output_flow_limit = 1000000000
+  end
+end)
+
 script.on_nth_tick(3300, function()
   if game.tick < 3300 or storage.invalid_cache_spawner_unit_number then return end
   local surface = game.get_surface(storage.surface_index or 1)
@@ -916,6 +1042,7 @@ script.on_nth_tick(3780, function()
     end
   end
   local ai_efficiency = remote.call("bitermotors", "ai_efficiency_status", "player")
+  local endgame = remote.call("bitermotors", "endgame_status", "player")
   local datacenter_input = datacenter and datacenter.get_inventory(input_inventory_id())
   local datacenter_output = datacenter and datacenter.get_inventory(output_inventory_id())
   local reservations = station_output and station_output.get_item_count(RESERVATION) or -1
@@ -1059,6 +1186,8 @@ script.on_nth_tick(3780, function()
     terrestrial_datacenter_productivity_bonus = datacenter and datacenter.productivity_bonus or -1,
     terrestrial_datacenter_bonus_progress = datacenter and datacenter.bonus_progress or -1,
     terrestrial_ai_efficiency = ai_efficiency and ai_efficiency.terrestrial,
+    seeded_endgame_status = storage.seeded_endgame_status,
+    endgame_status = endgame,
     event_unpowered_station_created = storage.event_unpowered_station_created,
     event_unpowered_station_survived = storage.event_unpowered_station_created and event_unpowered_station ~= nil,
     direct_unpowered_station_created = storage.direct_unpowered_station_created,
@@ -2112,6 +2241,18 @@ brownout = next((record for record in records if record.get("status") == "custom
 overload = next((record for record in records if record.get("status") == "customer_overload"), None)
 recovery = next((record for record in records if record.get("status") == "customer_recovery"), None)
 compute_brownout = next((record for record in records if record.get("status") == "compute_brownout"), None)
+orbital_undercooled = next(
+    (record for record in records if record.get("status") == "orbital_undercooled"),
+    None,
+)
+orbital_operating = next(
+    (record for record in records if record.get("status") == "orbital_operating"),
+    None,
+)
+orbital_brownout = next(
+    (record for record in records if record.get("status") == "orbital_brownout"),
+    None,
+)
 commutes = next((record for record in records if record.get("status") == "customer_commutes"), None)
 invalid_market_snapshot = next(
     (record for record in records if record.get("status") == "invalid_market_snapshot"),
@@ -2287,6 +2428,39 @@ if terrestrial_ai.get("researched_level") != 5 or terrestrial_ai.get("tokens_per
     raise SystemExit(f"Terrestrial AI efficiency status mismatch: {checked}")
 if terrestrial_ai.get("generated", 0) < 20:
     raise SystemExit(f"Terrestrial AI production tracker did not observe completed cycles: {checked}")
+seeded_endgame = checked.get("seeded_endgame_status") or {}
+if seeded_endgame.get("item_production_stat_ai_tokens") != 0:
+    raise SystemExit(f"AI Token ledger smoke must begin with empty native item statistics: {checked}")
+if seeded_endgame.get("cumulative_ai_tokens") != 1_000_000_000:
+    raise SystemExit(f"AI Token ledger did not drive the cumulative AGI gate: {checked}")
+endgame = checked.get("endgame_status") or {}
+if endgame.get("cumulative_ai_tokens", 0) < 1_000_000_000:
+    raise SystemExit(f"endgame status lost cumulative AI Token ledger progress: {checked}")
+if (endgame.get("agi") or {}).get("unlocked") is not True:
+    raise SystemExit(f"endgame status did not expose AGI readiness: {checked}")
+if (checked.get("progress") or {}).get("snapshot", {}).get("ai_tokens_produced", 0) < 1_000_000_000:
+    raise SystemExit(f"progress panel snapshot did not use cumulative AI Token ledger: {checked}")
+if orbital_undercooled is None or not orbital_undercooled.get("platform_created"):
+    raise SystemExit(f"orbital endgame smoke platform was not created: {orbital_undercooled}")
+undercooled_endgame = orbital_undercooled.get("endgame") or {}
+undercooled_cores = undercooled_endgame.get("cores") or []
+if (undercooled_endgame.get("cooling") or {}).get("radiators") != 7:
+    raise SystemExit(f"orbital cooling smoke did not begin with seven radiators: {orbital_undercooled}")
+if len(undercooled_cores) != 1 or not undercooled_cores[0].get("reset_for_cooling"):
+    raise SystemExit(f"undercooled orbital batch did not reset: {orbital_undercooled}")
+if orbital_operating is None or not orbital_operating.get("eighth_radiator_created"):
+    raise SystemExit(f"eighth orbital radiator was not installed: {orbital_operating}")
+operating_endgame = orbital_operating.get("endgame") or {}
+if (operating_endgame.get("cooling") or {}).get("cooled_cores") != 1:
+    raise SystemExit(f"eight radiators did not cool one orbital core: {orbital_operating}")
+if orbital_operating.get("physical_tokens", 0) < 10_000:
+    raise SystemExit(f"powered cooled orbital core did not finish a physical batch: {orbital_operating}")
+if (operating_endgame.get("orbital") or {}).get("generated", 0) < 10_000:
+    raise SystemExit(f"orbital cycle ledger did not count the completed batch: {orbital_operating}")
+brownout_endgame = (orbital_brownout or {}).get("endgame") or {}
+brownout_cores = brownout_endgame.get("cores") or []
+if len(brownout_cores) != 1 or not brownout_cores[0].get("reset_for_power"):
+    raise SystemExit(f"orbital brownout did not reset the active batch: {orbital_brownout}")
 if checked.get("grid_connections") != 0 or checked.get("grid_connection_created"):
     raise SystemExit(f"EV Charging Stations must not create wire-routing electric poles: {checked}")
 if not checked.get("v1_power_sinks_deferred"):

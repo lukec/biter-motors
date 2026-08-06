@@ -1883,7 +1883,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("content.style.maximal_height = content_height", control)
         self.assertIn("Cumulative AI Tokens", control)
         self.assertIn("if snapshot.planetary_grid_researched then", control)
-        self.assertIn("AI Tokens generated", control)
+        self.assertIn("AI Tokens produced", control)
+        self.assertIn('add_progress_section(content, "Compute", compute_rows)', control)
+        self.assertIn("cumulative_ai_tokens_generated", control)
+        self.assertIn("endgame_status = function", control)
+        self.assertIn(
+            "snapshot.chargers_v3 == 0 and not snapshot.terrestrial_ai_researched",
+            control,
+        )
         self.assertIn("if snapshot.terrestrial_ai_researched then", control)
         self.assertIn("if snapshot.autonomous_logistics_researched then", control)
         self.assertIn("if snapshot.mass_market_researched then", control)
@@ -2805,7 +2812,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('AGI_TOKEN_GATE = 1000000000', control)
         self.assertIn('controller_has_agi_model(controller)', control)
         self.assertIn('sync_agi_training_unlock(force, true)', control)
-        self.assertIn('statistics.set_output_count(', control)
+        self.assertIn('function cumulative_ai_tokens_generated(force)', control)
+        self.assertIn(
+            'math.max(count_item_produced_raw(force, "bitermotors-ai-token"), tracked)',
+            control,
+        )
+        self.assertIn('ai_tokens_produced = cumulative_ai_tokens_generated(force)', control)
+        self.assertIn('test_set_ai_token_progress = function', control)
         self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
 
@@ -2867,6 +2880,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('while processed < 32', control)
         self.assertIn('track_bitermotors_compute_machine(entity)', control)
         self.assertIn('rebuild_bitermotors_compute_machines()', control)
+        self.assertIn('function endgame_status(force)', control)
+        self.assertIn('reset_for_power = failure and failure.power == true', control)
+        self.assertIn('reset_for_cooling = failure and failure.cooling == true', control)
 
     def test_customer_ev_owners_physically_commute_to_chargers(self):
         control = (MOD / "control.lua").read_text()

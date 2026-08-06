@@ -1278,7 +1278,7 @@ end
 
 function sync_agi_training_unlock(force, announce)
   if not force or not force.valid then return false end
-  local cumulative = count_item_produced(force, "bitermotors-ai-token")
+  local cumulative = cumulative_ai_tokens_generated(force)
   local unlocked = cumulative >= AGI_TOKEN_GATE
   local recipe = force.recipes and force.recipes[AGI_TRAINING_RECIPE_NAME]
   if recipe then recipe.enabled = unlocked end
@@ -1351,6 +1351,18 @@ function ai_efficiency_track_status(force, track_name)
     maximum_level = maximum_level,
     milestone_mode = config.milestones ~= nil
   }
+end
+
+function cumulative_ai_tokens_generated(force)
+  if not force or not force.valid then return 0 end
+  local tracked = 0
+  for track_name in pairs(AI_EFFICIENCY_TRACKS) do
+    local status = ai_efficiency_track_status(force, track_name)
+    tracked = tracked + (status and status.generated or 0)
+  end
+  -- Item production statistics can omit AI Token recipe output. The completed-
+  -- cycle ledger is authoritative, while max() preserves older seeded saves.
+  return math.max(count_item_produced_raw(force, "bitermotors-ai-token"), tracked)
 end
 
 function update_ai_efficiency_unlocks(force, track_name, track)
@@ -8051,7 +8063,7 @@ local function sync_all_force_unlocks()
 end
 
 function agi_training_status(force)
-  local cumulative = count_item_produced(force, "bitermotors-ai-token")
+  local cumulative = cumulative_ai_tokens_generated(force)
   local active = 0
   local progress = 0
   for unit_number, controller in pairs(grid_controllers()) do
@@ -8076,6 +8088,48 @@ function agi_training_status(force)
   }
 end
 
+function endgame_status(force)
+  if not force or not force.valid then return nil end
+  local terrestrial = ai_efficiency_track_status(force, "terrestrial")
+  local orbital = ai_efficiency_track_status(force, "orbital")
+  local cooling = orbital_cooling_status(force)
+  local failures = bitermotors_compute_power_failures()
+  local cores = {}
+  for unit_number, entity in pairs(bitermotors_compute_machines()) do
+    if entity and entity.valid and entity.force == force
+      and entity.name == ORBITAL_DATACENTER_CORE_NAME then
+      local recipe = entity.get_recipe()
+      local failure = failures[unit_number]
+      local power_fraction = entity.electric_buffer_size > 0
+        and entity.energy / entity.electric_buffer_size or 1
+      cores[#cores + 1] = {
+        unit_number = unit_number,
+        surface = entity.surface.name,
+        position = {x = entity.position.x, y = entity.position.y},
+        recipe = recipe and recipe.name or nil,
+        crafting_progress = entity.crafting_progress or 0,
+        products_finished = safe_products_finished(entity),
+        power_fraction = power_fraction,
+        cooled = orbital_core_has_cooling(entity),
+        disabled_by_script = entity.disabled_by_script == true,
+        reset_for_power = failure and failure.power == true or false,
+        reset_for_cooling = failure and failure.cooling == true or false
+      }
+    end
+  end
+  table.sort(cores, function(left, right) return left.unit_number < right.unit_number end)
+  return {
+    cumulative_ai_tokens = cumulative_ai_tokens_generated(force),
+    item_production_stat_ai_tokens = count_item_produced_raw(force, "bitermotors-ai-token"),
+    terrestrial = terrestrial,
+    orbital = orbital,
+    cooling = cooling,
+    cores = cores,
+    agi = agi_training_status(force),
+    victory = victory_forces()[force.name] == true
+  }
+end
+
 function trigger_victory(force, controller)
   if not force or not force.valid then
     return
@@ -8089,7 +8143,7 @@ function trigger_victory(force, controller)
   storage.bitermotors_agi_victory = storage.bitermotors_agi_victory or {}
   storage.bitermotors_agi_victory[force.name] = {
     tick = game.tick,
-    cumulative_ai_tokens = count_item_produced(force, "bitermotors-ai-token"),
+    cumulative_ai_tokens = cumulative_ai_tokens_generated(force),
     surface = controller and controller.valid and controller.surface.name or nil,
     position = controller and controller.valid and controller.position or nil
   }
@@ -9746,7 +9800,7 @@ local function progress_snapshot(force)
     orbital_radiator_panels = orbital_cooling.radiators,
     required_orbital_radiator_panels = orbital_cooling.required_radiators,
     high_density_space_solar_panels = count_entities(force, HIGH_DENSITY_SPACE_SOLAR_PANEL_NAME),
-    ai_tokens_produced = count_item_produced(force, "bitermotors-ai-token"),
+    ai_tokens_produced = cumulative_ai_tokens_generated(force),
     agi_token_gate = agi.required_ai_tokens,
     agi_training_unlocked = agi.unlocked,
     agi_training_active = agi.active_controllers,
@@ -9867,7 +9921,7 @@ local function current_progress_objective(snapshot)
     return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Megatruck production.", snapshot.mass_market_evs_sold)
   elseif not snapshot.megatruck_gate.technology_ready then
     return "Megatruck engineering", "Research Megatruck Engineering.", "Develop Tank technology, then invest science and Dollars to adapt armored-vehicle engineering for the Megatruck."
-  elseif snapshot.chargers_v3 == 0 then
+  elseif snapshot.chargers_v3 == 0 and not snapshot.terrestrial_ai_researched then
     return "Rapid Charging", "Craft and place a V3 Rapid Charger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.grid_batteries == 0 then
     return "Energy products", "Build a High-density Solar Panel and a Grid Battery.", "Upgrade a conventional panel in an assembler; Biterfactories can mass-produce panels more cheaply. Build Grid Batteries in either Biterfactory tier."
@@ -10129,10 +10183,14 @@ function add_progress_section(parent, caption, rows)
   add_progress_metrics(parent, rows)
 end
 
+function format_grouped_integer(value)
+  local grouped = tostring(math.floor(math.max(0, value or 0) + 0.5))
+  return grouped:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
 local function format_represented_usd(dollars)
   local amount = math.floor(math.max(0, dollars or 0) * 10000 + 0.5)
-  local grouped = tostring(amount):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
-  return "$" .. grouped
+  return "$" .. format_grouped_integer(amount)
 end
 
 local function refresh_progress_panel(player)
@@ -10534,19 +10592,27 @@ local function refresh_progress_panel(player)
       }
     end
   end
+  local compute_rows = {}
   if snapshot.terrestrial_ai_researched then
-    market_rows[#market_rows + 1] = {
-      sprite = "item/bitermotors-ai-token", label = "AI Tokens generated",
-      value = snapshot.terrestrial_ai_next_threshold
-        and string.format("%d / %d", snapshot.terrestrial_ai_tokens_generated, snapshot.terrestrial_ai_next_threshold)
-        or string.format("%d; terrestrial ceiling", snapshot.terrestrial_ai_tokens_generated),
+    compute_rows[#compute_rows + 1] = {
+      sprite = "item/bitermotors-ai-token", label = "AI Tokens produced",
+      value = string.format("%s total", format_grouped_integer(snapshot.ai_tokens_produced)),
+      color = snapshot.ai_tokens_produced > 0 and BITERMOTORS_STATE_COLORS.good
+        or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.terrestrial_ai_next_threshold
-        and "Cumulative terrestrial AI Tokens toward the next automatic 10% efficiency level. Keep Datacenters powered and supplied with Dollars."
-        or "Terrestrial AI efficiency has reached its current ceiling. Orbital compute is required for endgame token scale."
+        and string.format(
+          "%s terrestrial Tokens generated. The next terrestrial efficiency research becomes available at %s. Keep Datacenters powered and supplied with Dollars.",
+          format_grouped_integer(snapshot.terrestrial_ai_tokens_generated),
+          format_grouped_integer(snapshot.terrestrial_ai_next_threshold)
+        )
+        or string.format(
+          "%s terrestrial Tokens generated. Terrestrial efficiency has reached its current ceiling; orbital compute provides endgame scale.",
+          format_grouped_integer(snapshot.terrestrial_ai_tokens_generated)
+        )
     }
   end
   if snapshot.orbital_compute_researched then
-    market_rows[#market_rows + 1] = {
+    compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-orbital-datacenter-core",
       label = "Orbital compute",
       value = string.format(
@@ -10559,7 +10625,7 @@ local function refresh_progress_panel(player)
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
       tooltip = "Each core draws 250 MW. Low power or insufficient cooling resets the active AI Token batch to zero."
     }
-    market_rows[#market_rows + 1] = {
+    compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-orbital-radiator-panel",
       label = "Orbital cooling",
       value = string.format(
@@ -10571,12 +10637,19 @@ local function refresh_progress_panel(player)
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
       tooltip = "Eight Orbital Radiator Panels provide cooling capacity for one Datacenter Core on the same platform."
     }
-    market_rows[#market_rows + 1] = {
+    compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-ai-token",
       label = "Orbital AI scale",
       value = snapshot.orbital_ai_next_threshold
-        and string.format("%d / %d", snapshot.orbital_ai_tokens_generated, snapshot.orbital_ai_next_threshold)
-        or string.format("%d; hyperscale ready", snapshot.orbital_ai_tokens_generated),
+        and string.format(
+          "%s / %s",
+          format_grouped_integer(snapshot.orbital_ai_tokens_generated),
+          format_grouped_integer(snapshot.orbital_ai_next_threshold)
+        )
+        or string.format(
+          "%s; hyperscale ready",
+          format_grouped_integer(snapshot.orbital_ai_tokens_generated)
+        ),
       color = snapshot.orbital_ai_next_threshold
         and BITERMOTORS_STATE_COLORS.warning or BITERMOTORS_STATE_COLORS.good,
       tooltip = snapshot.orbital_ai_next_threshold
@@ -10615,12 +10688,16 @@ local function refresh_progress_panel(player)
     }
   end
   if snapshot.planetary_grid_researched then
-    market_rows[#market_rows + 1] = {
+    compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-agi-training-dataset", label = "AGI training",
       value = snapshot.victory and "Complete"
         or (snapshot.agi_training_unlocked
           and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
-          or string.format("%d / %d AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate)),
+          or string.format(
+            "%s / %s AI Tokens",
+            format_grouped_integer(snapshot.ai_tokens_produced),
+            format_grouped_integer(snapshot.agi_token_gate)
+          )),
       color = snapshot.victory and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.victory
         and "AGI training completed. Biter Motors's victory condition has been achieved."
@@ -10630,6 +10707,7 @@ local function refresh_progress_panel(player)
     }
   end
   add_progress_section(content, "Business", market_rows)
+  add_progress_section(content, "Compute", compute_rows)
 
   content.add{type = "line"}
   add_section_heading(content, "Journey")
@@ -12528,6 +12606,31 @@ remote.add_interface("bitermotors", {
       result[track_name] = ai_efficiency_track_status(force, track_name)
     end
     return result
+  end,
+  endgame_status = function(force_name)
+    return endgame_status(game.forces[force_name or "player"])
+  end,
+  test_set_ai_token_progress = function(force_name, terrestrial_generated, orbital_generated)
+    if not script.active_mods["bitermotors_smoke"] then return nil end
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local force_progress = ai_efficiency_progress()[force.index] or {}
+    ai_efficiency_progress()[force.index] = force_progress
+    local generated_by_track = {
+      terrestrial = math.max(0, math.floor(terrestrial_generated or 0)),
+      orbital = math.max(0, math.floor(orbital_generated or 0))
+    }
+    for track_name, generated in pairs(generated_by_track) do
+      local track = force_progress[track_name] or {}
+      track.generated = generated
+      track.machines = track.machines or {}
+      track.bonus_progress = track.bonus_progress or {}
+      track.pending_bonus = track.pending_bonus or {}
+      force_progress[track_name] = track
+      update_ai_efficiency_unlocks(force, track_name, track)
+    end
+    sync_agi_training_unlock(force, false)
+    return endgame_status(force)
   end,
   customer_charging_commutes = function(force_name)
     local force = game.forces[force_name or "player"]

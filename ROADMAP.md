@@ -232,9 +232,13 @@ Status: **complete**
 
 Status: **playtest required**
 
-- [ ] Resolve the endgame scale blocker identified in
-      `docs/economy-balance.md`: choose and implement a release target between
-      the modeled 10 GW balanced ending and 25 GW demanding ending.
+- [x] Choose and implement the modeled 10 GW balanced ending documented in
+      `docs/economy-balance.md`; the 25 GW sensitivity is no longer a release
+      candidate.
+- [x] Make completed AI production cycles the authoritative cumulative counter
+      for progression, the Compute panel, the AGI gate, and victory metadata.
+- [x] Add a read-only endgame status contract for token tracks, orbital cooling,
+      core reset state, and AGI readiness.
 - [ ] Complete one non-sandbox campaign from a fresh crash landing to the AGI
       Model.
 - [ ] Record milestone time, profit, power, production, customer, and token
