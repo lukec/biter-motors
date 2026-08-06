@@ -1955,6 +1955,8 @@ if wrecked_ev["stack_size"] != 1:
     raise SystemExit(f"Wrecked EV stack size mismatch: {wrecked_ev['stack_size']}")
 
 stack_inserter_technology = data["technology"]["stack-inserter"]
+if stack_inserter_technology.get("enabled") is not True or stack_inserter_technology.get("hidden", False):
+    raise SystemExit(f"Stack Inserter research must be enabled and visible: {stack_inserter_technology}")
 if set(stack_inserter_technology.get("prerequisites", [])) != {
     "bulk-inserter", "bitermotors-capital-scaling",
     "production-science-pack", "utility-science-pack",

@@ -1404,6 +1404,8 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertIn(ingredient, block)
         self.assertIn('"bitermotors-capital-scaling"', block)
         self.assertIn('stack_inserter_tech.unit = science(750, {', block)
+        self.assertIn('stack_inserter_tech.enabled = true', block)
+        self.assertIn('stack_inserter_tech.hidden = false', block)
         self.assertIn('"bitermotors-dollar"', block)
         self.assertNotIn('"agricultural-science-pack"', block)
         self.assertNotIn('"carbon-fiber"', block)
