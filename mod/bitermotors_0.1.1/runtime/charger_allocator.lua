@@ -41,9 +41,9 @@ local function heap_pop(heap, less)
   return result
 end
 
-local function assignment_available(assignment, key)
+local function assignment_available(assignment, key, allow_repeat)
   return #assignment.settlements < assignment.spec.stalls
-    and not assignment.assigned_keys[key]
+    and (allow_repeat or not assignment.assigned_keys[key])
 end
 
 local function demand_station_less(left, right)
@@ -77,10 +77,10 @@ local function capacity_station_less(left, right)
   return stable_less(left_spec.key, right_spec.key)
 end
 
-local function best_available_station(pairs, key, less)
+local function best_available_station(pairs, key, less, allow_repeat)
   local best
   for _, pair in ipairs(pairs or {}) do
-    if assignment_available(pair.assignment, key)
+    if assignment_available(pair.assignment, key, allow_repeat)
       and (not best or less(pair, best)) then
       best = pair
     end
@@ -172,7 +172,7 @@ function ChargerAllocator.allocate(station_specs, demand)
   while #demand_heap > 0 do
     local best_key = heap_pop(demand_heap, demand_less)
     local pair = best_available_station(
-      candidate_pairs_by_key[best_key], best_key, demand_station_less
+      candidate_pairs_by_key[best_key], best_key, demand_station_less, true
     )
     if pair then
       pair.demand = demand[best_key] or 0
@@ -196,7 +196,7 @@ function ChargerAllocator.allocate(station_specs, demand)
   while #capacity_heap > 0 do
     local best_key = heap_pop(capacity_heap, capacity_less)
     local pair = best_available_station(
-      candidate_pairs_by_key[best_key], best_key, capacity_station_less
+      candidate_pairs_by_key[best_key], best_key, capacity_station_less, false
     )
     if pair then
       assign_pair(pair, assigned_capacity, requested_capacity, false)

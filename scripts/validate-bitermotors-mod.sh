@@ -2520,10 +2520,14 @@ if preproduction_market.get("customer_ev_fleet") != 0 or preproduction_market.ge
 if checked.get("market", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"expected three living Bitertaxi owners in the active customer fleet: {checked}")
 charger_allocator = checked.get("charger_allocator", {})
-if charger_allocator.get("active_by_station") != [1, 1, 1]:
-    raise SystemExit(f"demand-first charger allocation did not balance one stall onto each eligible charger: {checked}")
-if charger_allocator.get("requested_capacity") != 36 or charger_allocator.get("underserved") != 8:
-    raise SystemExit(f"one-stall-per-settlement charger capacity was not preserved: {checked}")
+if charger_allocator.get("active_by_station") != [2, 1, 1]:
+    raise SystemExit(f"demand-first charger allocation did not balance demand across eligible chargers: {checked}")
+if charger_allocator.get("requested_capacity") != 48 or charger_allocator.get("underserved") != 0:
+    raise SystemExit(f"charger demand did not consume additional free stalls before reporting underserved EVs: {checked}")
+if charger_allocator.get("v3_active_stalls") != 2:
+    raise SystemExit(f"V3 charger did not assign multiple stalls to one settlement: {checked}")
+if charger_allocator.get("v3_requested_capacity") != 64 or charger_allocator.get("v3_underserved") != 0:
+    raise SystemExit(f"V3 charger reported underserved EVs while free stalls remained: {checked}")
 sales_office_market = checked.get("sales_office_market", {})
 for field in (
     "keeper_retained",

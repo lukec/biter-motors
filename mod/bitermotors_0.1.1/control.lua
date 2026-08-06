@@ -4770,10 +4770,12 @@ customer_service_for_force = function(force, advance_mood)
   end
 
   for _, assignment in pairs(service.assignments) do
+    local operational_seen = {}
     for _, settlement in pairs(assignment.settlements) do
       local key = settlement_key(settlement.surface, settlement)
-      if service.operational_keys[key] then
+      if service.operational_keys[key] and not operational_seen[key] then
         assignment.operational_settlements[#assignment.operational_settlements + 1] = settlement
+        operational_seen[key] = true
       end
     end
   end
@@ -6941,15 +6943,18 @@ function waiting_market_buyers_at_station(station, service)
   local assignment = service.assignments[station.unit_number]
   local stale_assignment = false
   local count = 0
+  local counted_settlements = {}
   for _, settlement in pairs(assignment and assignment.settlements or {}) do
     if settlement and settlement.valid then
       local key = settlement_key(settlement.surface, settlement)
       if service.operational_keys[key]
-        and service.assignment_by_settlement_key[key] == station then
+        and service.assignment_by_settlement_key[key] == station
+        and not counted_settlements[key] then
         count = count + customer_population_available_purchase_accounts(
           customer_settlement_populations()[key],
           station.force
         )
+        counted_settlements[key] = true
       end
     else
       stale_assignment = true
@@ -11494,7 +11499,7 @@ local function show_customer_settlement_info_panel(player, settlement)
     local active_stalls = active_station_stalls(assigned_station, allocations)
     add_station_info_label(panel, "Assigned charger: " .. config.display_name)
     add_station_info_label(panel, string.format(
-      "Charger stalls: %d active, %d settlement slots free, %d total",
+      "Charger stalls: %d active, %d unallocated, %d total",
       active_stalls,
       math.max(0, config.stalls - assigned_count),
       config.stalls
@@ -12565,10 +12570,24 @@ remote.add_interface("bitermotors", {
     end
     local requested_capacity =
       allocation.requested_capacity_by_settlement_key.settlement or 0
+    local v3_allocation = ChargerAllocator.allocate({{
+      key = "v3",
+      station = "v3",
+      stalls = 12,
+      evs_per_stall = 32,
+      candidates = {{key = "v3-settlement", settlement = "v3-settlement", distance = 1}}
+    }}, {["v3-settlement"] = 56})
     return {
       active_by_station = active_by_station,
       requested_capacity = requested_capacity,
-      underserved = math.max(0, 44 - requested_capacity)
+      underserved = math.max(0, 44 - requested_capacity),
+      v3_active_stalls = v3_allocation.assignments.v3.customer_requested_stalls,
+      v3_requested_capacity =
+        v3_allocation.requested_capacity_by_settlement_key["v3-settlement"] or 0,
+      v3_underserved = math.max(
+        0,
+        56 - (v3_allocation.requested_capacity_by_settlement_key["v3-settlement"] or 0)
+      )
     }
   end,
   test_sales_office_market = function()

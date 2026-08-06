@@ -1932,7 +1932,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("Sales Office coverage", control)
         self.assertIn("Active vehicles at this settlement", control)
         self.assertIn("Assigned charger", control)
-        self.assertIn("settlement slots free", control)
+        self.assertIn("unallocated", control)
         self.assertIn("Network vehicle capacity", control)
         self.assertIn("outside the %d-tile Sales Office market radius", control)
         self.assertIn("no reachable powered charger has a free settlement stall", control)
@@ -2677,6 +2677,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("function ChargerAllocator.allocate", allocator)
         self.assertIn("assignment.customer_requested_stalls", allocator)
         self.assertIn("demand_phase", allocator)
+        self.assertIn("allow_repeat", allocator)
+        self.assertIn("and (allow_repeat or not assignment.assigned_keys[key])", allocator)
         self.assertIn("local function heap_push", allocator)
         self.assertIn("local function heap_pop", allocator)
         self.assertIn("while #demand_heap > 0", allocator)
@@ -2684,6 +2686,8 @@ class BiterMotorsModTest(unittest.TestCase):
         allocation_body = allocator[allocator.index("function ChargerAllocator.allocate"):]
         self.assertNotIn("while true do", allocation_body)
         self.assertIn('test_charger_allocator = function()', control)
+        self.assertIn("v3_active_stalls", control)
+        self.assertIn("v3_underserved", control)
         buyer_start = control.index("function eligible_customer_buyers")
         buyer_end = control.index("function sales_office_buyer_status", buyer_start)
         buyer_selection = control[buyer_start:buyer_end]
