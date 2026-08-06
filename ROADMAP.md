@@ -83,6 +83,10 @@ not a second simulated company.
 - Customer growth, charging commutes, road rage, and bounded representative
   populations remain visible without requiring one Lua object per simulated
   customer.
+- Healthy chargers accrue settlement growth at a utilization-weighted station
+  rate, bank at most one expansion, and share a five-minute global expansion
+  cooldown. A new customer settlement may still bring one hostile worm, so
+  growth remains useful and dangerous without scaling linearly with every stall.
 
 ### Approved Easier-Balance Target
 

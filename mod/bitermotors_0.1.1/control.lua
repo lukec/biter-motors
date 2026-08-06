@@ -255,8 +255,10 @@ local FIRST_CUSTOMER_CHARGER_UNLOCK_RECIPES = {
 local RESERVATION_BUFFER_LIMIT = 200
 local PROSPECT_RESERVATION_RETRY_MINUTES = 5
 local RESERVATION_SAMPLES_PER_PRINT = 60
-local CUSTOMER_GROWTH_STALL_MINUTES = 4
-local CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STALL_MINUTES * 60
+CUSTOMER_GROWTH_STATION_MINUTES = 4
+CUSTOMER_GROWTH_PROGRESS_REQUIRED = CUSTOMER_GROWTH_STATION_MINUTES * 60
+CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS = 5 * 60 * 60
+CUSTOMER_GROWTH_MODEL_VERSION = 2
 CUSTOMER_GROWTH_PLACEMENT_ATTEMPTS = 32
 CUSTOMER_GROWTH_PLACEMENT_RETRY_TICKS = 30 * 60
 CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS = 15 * 60 * 60
@@ -6684,6 +6686,33 @@ local function customer_growth_states()
   return storage.bitermotors_customer_growth_states
 end
 
+local function customer_growth_next_ticks()
+  storage.bitermotors_customer_growth_next_ticks =
+    storage.bitermotors_customer_growth_next_ticks or {}
+  return storage.bitermotors_customer_growth_next_ticks
+end
+
+local function reconcile_customer_growth_model()
+  if storage.bitermotors_customer_growth_model_version
+    == CUSTOMER_GROWTH_MODEL_VERSION then
+    return false
+  end
+  for _, state in pairs(customer_growth_states()) do
+    state.progress = 0
+    state.placement_attempt = 0
+    state.next_placement_attempt_tick = nil
+  end
+  local next_ticks = customer_growth_next_ticks()
+  clear_table(next_ticks)
+  for _, force in pairs(game.forces) do
+    if player_market_force(force) then
+      next_ticks[force.index] = game.tick + CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS
+    end
+  end
+  storage.bitermotors_customer_growth_model_version = CUSTOMER_GROWTH_MODEL_VERSION
+  return true
+end
+
 local function customer_growth_random()
   local generator = storage.bitermotors_customer_growth_random
   if not generator or not generator.valid then
@@ -6814,8 +6843,11 @@ local function process_customer_growth(force)
   if not player_market_force(force) then
     return
   end
+  reconcile_customer_growth_model()
   local service = customer_service_for_force(force)
   local states = customer_growth_states()
+  local next_growth_ticks = customer_growth_next_ticks()
+  local global_growth_ready = game.tick >= (next_growth_ticks[force.index] or 0)
   local referral_level = continuous_improvement_level(force, CUSTOMER_REFERRAL_TECH_NAME)
   local referral_multiplier = 1 + referral_level * 0.1
   local organic_interval = math.max(
@@ -6829,16 +6861,23 @@ local function process_customer_growth(force)
     if station and station.valid then
       local state = states[unit_number] or {progress = 0, colonies = 0}
       states[unit_number] = state
+      local config = station_config(station)
       local active_stalls = math.min(
         assignment.requested_stalls or 0,
         assignment.powered_stalls or 0
       )
-      local spare_stalls = station_config(station).stalls - assignment.requested_stalls
+      local spare_stalls = config.stalls - assignment.requested_stalls
       local local_service_healthy =
         (assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)
       if local_service_healthy and active_stalls > 0 and spare_stalls > 0 then
-        state.progress = (state.progress or 0) + active_stalls * referral_multiplier
-        if state.progress >= CUSTOMER_GROWTH_PROGRESS_REQUIRED
+        local utilization = active_stalls / config.stalls
+        local growth_rate = (0.25 + 0.75 * utilization) * referral_multiplier
+        state.progress = math.min(
+          CUSTOMER_GROWTH_PROGRESS_REQUIRED,
+          (state.progress or 0) + growth_rate
+        )
+        if global_growth_ready
+          and state.progress >= CUSTOMER_GROWTH_PROGRESS_REQUIRED
           and game.tick >= (state.next_placement_attempt_tick or 0) then
           placement_candidates[#placement_candidates + 1] = {
             unit_number = unit_number,
@@ -6889,7 +6928,9 @@ local function process_customer_growth(force)
     end
     storage.bitermotors_customer_growth_cursors[force.index] = selected.unit_number
     if grow_customer_settlement(selected.station, selected.state) then
-      selected.state.progress = selected.state.progress - CUSTOMER_GROWTH_PROGRESS_REQUIRED
+      selected.state.progress = 0
+      next_growth_ticks[force.index] =
+        game.tick + CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS
     else
       selected.state.progress = CUSTOMER_GROWTH_PROGRESS_REQUIRED
     end
@@ -11711,6 +11752,8 @@ end
 
 script.on_init(function()
   storage.bitermotors_ev_self_driving = EvSelfDriving.ensure(nil)
+  storage.bitermotors_customer_growth_model_version = CUSTOMER_GROWTH_MODEL_VERSION
+  storage.bitermotors_customer_growth_next_ticks = {}
   configure_bitermotors_new_game()
   apply_bitermotors_enemy_pressure_settings()
   cleanup_legacy_station_grid_connections()
@@ -11752,6 +11795,7 @@ end)
 
 script.on_configuration_changed(function()
   NamespaceMigration.migrate(storage)
+  reconcile_customer_growth_model()
   reset_active_ev_self_drivings()
   apply_bitermotors_enemy_pressure_settings()
   reset_charger_hover_overlays()
@@ -12629,6 +12673,33 @@ remote.add_interface("bitermotors", {
       pooled_requested_capacity = pooled_requested_capacity,
       pooled_admitted_settlements = pooled_admitted
     }
+  end,
+  test_prepare_customer_growth = function(force_name)
+    if not script.active_mods["bitermotors_smoke"] then return nil end
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local service = customer_service_for_force(force)
+    local states = customer_growth_states()
+    for unit_number, assignment in pairs(service.assignments or {}) do
+      local station = assignment.station
+      local config = station and station.valid and station_config(station)
+      local requested = assignment.requested_stalls or 0
+      if config and requested > 0 and requested < config.stalls
+        and (assignment.powered_stalls or 0) >= requested then
+        local state = states[unit_number] or {progress = 0, colonies = 0}
+        states[unit_number] = state
+        state.progress = CUSTOMER_GROWTH_PROGRESS_REQUIRED
+        state.next_placement_attempt_tick = nil
+        customer_growth_next_ticks()[force.index] = game.tick
+        return {
+          station_unit_number = unit_number,
+          progress = state.progress,
+          required = CUSTOMER_GROWTH_PROGRESS_REQUIRED,
+          global_cooldown_ticks = CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS
+        }
+      end
+    end
+    return false
   end,
   test_sales_office_market = function()
     if not script.active_mods["bitermotors_smoke"] then return nil end

@@ -2742,7 +2742,9 @@ class BiterMotorsModTest(unittest.TestCase):
 
     def test_customer_growth_requires_service_and_keeps_worms_hostile(self):
         control = (MOD / "control.lua").read_text()
-        self.assertIn("CUSTOMER_GROWTH_STALL_MINUTES = 4", control)
+        self.assertIn("CUSTOMER_GROWTH_STATION_MINUTES = 4", control)
+        self.assertIn("CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS = 5 * 60 * 60", control)
+        self.assertIn("CUSTOMER_GROWTH_MODEL_VERSION = 2", control)
         self.assertIn("customer_service_for_force", control)
         self.assertIn("accessible_stall_capacity", control)
         for capacity in [12, 20, 32, 50]:
@@ -2760,6 +2762,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("process_customer_growth(force)", control)
         self.assertIn("assignment.powered_stalls or 0", control)
         self.assertIn("spare_stalls > 0", control)
+        self.assertIn("local utilization = active_stalls / config.stalls", control)
+        self.assertIn("local growth_rate = (0.25 + 0.75 * utilization) * referral_multiplier", control)
+        self.assertIn("state.progress = math.min(", control)
+        self.assertIn("global_growth_ready", control)
+        self.assertIn("game.tick + CUSTOMER_GROWTH_GLOBAL_COOLDOWN_TICKS", control)
+        self.assertIn("reconcile_customer_growth_model()", control)
+        self.assertIn("state.progress = 0", control)
+        self.assertIn("test_prepare_customer_growth = function", control)
         self.assertNotIn("service.stranded_evs == 0", control)
         self.assertIn("(assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)", control)
         self.assertIn("CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS = 15 * 60 * 60", control)

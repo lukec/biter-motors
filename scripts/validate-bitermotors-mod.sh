@@ -1232,6 +1232,12 @@ script.on_nth_tick(3780, function()
   }
 end)
 
+script.on_nth_tick(18000, function()
+  if game.tick < 18000 then return end
+  storage.customer_growth_prepared =
+    remote.call("bitermotors", "test_prepare_customer_growth", "player")
+end)
+
 script.on_nth_tick(18200, function()
   if game.tick < 18200 then return end
   local surface = game.get_surface(storage.surface_index or 1)
@@ -1241,6 +1247,7 @@ script.on_nth_tick(18200, function()
   write_report{
     tick = game.tick,
     status = "customer_growth",
+    customer_growth_prepared = storage.customer_growth_prepared,
     market = market,
     charger_reservations = station_output
       and station_output.get_item_count(RESERVATION) or -1,
@@ -2579,6 +2586,11 @@ if brownout.get("underserved_chart_tags", 0) != 0:
     raise SystemExit(f"brownout marked settlements underserved despite sufficient powered pooled capacity: {brownout}")
 if brownout.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"customers should remain friendly during the three-minute service grace period: {brownout}")
+growth_prepared = (growth or {}).get("customer_growth_prepared") or {}
+if growth_prepared.get("global_cooldown_ticks") != 18000:
+    raise SystemExit(f"customer growth did not expose the five-minute global cooldown: {growth}")
+if growth_prepared.get("progress") != growth_prepared.get("required"):
+    raise SystemExit(f"customer growth smoke setup did not prime exactly one station: {growth}")
 if growth is None or growth.get("spawner_growth", 0) < 1:
     raise SystemExit(f"served charger did not grow a customer settlement: {growth}")
 if growth.get("worm_growth", 0) not in (0, 1):
