@@ -482,6 +482,7 @@ CHARGER_STALL_VISUAL_LAYOUTS = {
   ["bitermotors-ev-charging-station-v4"] = {columns = 5, spacing_x = 0.9, spacing_y = 0.78, offset_y = 0, scale = 0.78}
 }
 local STATION_GRID_CONNECTION_DISTANCE = 18
+local STATION_POWER_MODEL = "native-footprint-supply-area-v2"
 local SALES_OFFICE_CUSTOMER_RADIUS = 128
 GRID_BATTERY_SALES_RADIUS = 384
 GRID_BATTERY_INITIAL_ADOPTION_FRACTION = 0.05
@@ -3245,12 +3246,12 @@ local function nearby_real_power_pole(station)
   local cache = storage.bitermotors_station_power_pole_cache
   local unit_number = station.unit_number
   local cached = unit_number and cache[unit_number]
-  if cached and cached.resolved then
+  if cached and cached.resolved and cached.model == STATION_POWER_MODEL then
     if not cached.pole or cached.pole.valid then
       return cached.pole, cached.connection_position
     end
-    cache[unit_number] = nil
   end
+  if cached then cache[unit_number] = nil end
   local position = station.position
   local radius = STATION_GRID_CONNECTION_DISTANCE
   local area = {
@@ -3290,6 +3291,7 @@ local function nearby_real_power_pole(station)
   if unit_number then
     cache[unit_number] = {
       resolved = true,
+      model = STATION_POWER_MODEL,
       pole = nearest,
       connection_position = nearest_connection_position
     }
@@ -3473,11 +3475,11 @@ local function cleanup_legacy_station_grid_connections()
   end
   storage.bitermotors_station_grid_connections = {}
   storage.bitermotors_station_power_pole_cache = {}
-  storage.bitermotors_station_power_model = "native-footprint-supply-area-v2"
+  storage.bitermotors_station_power_model = STATION_POWER_MODEL
 end
 
 local function ensure_native_station_power_model()
-  if storage.bitermotors_station_power_model ~= "native-footprint-supply-area-v2" then
+  if storage.bitermotors_station_power_model ~= STATION_POWER_MODEL then
     cleanup_legacy_station_grid_connections()
   end
 end
