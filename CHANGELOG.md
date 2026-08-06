@@ -15,6 +15,8 @@ development namespace migration.
   support, 8 MW traction, and a low-speed limp-home reserve.
 - Replaced module-badged clean battery recipe icons with dedicated refining,
   extraction, and dry-electrode process artwork.
+- Grouped all four EV Charging Station tiers into one dedicated crafting-picker
+  row in tier order.
 - Added Biterfactory production, battery chemistry, recycling, High-density
   Solar Panels, Grid Batteries, and terrestrial AI compute.
 - Added orbital AI infrastructure, physical AI Token return, and the AGI

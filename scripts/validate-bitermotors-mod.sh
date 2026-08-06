@@ -2033,6 +2033,7 @@ if "bitermotors" in data.get("item-group", {}):
     raise SystemExit("Biter Motors must use vanilla crafting tabs, not a separate item group")
 expected_subgroup_groups = {
     "bitermotors-infrastructure": "production",
+    "bitermotors-charging": "production",
     "bitermotors-components": "intermediate-products",
     "bitermotors-capital": "intermediate-products",
 }
@@ -2050,6 +2051,7 @@ expected_item_subgroups = {
     "bitermotors-high-density-space-solar-panel": "energy",
     "bitermotors-ai-token": "science-pack",
     "bitermotors-sales-office": "bitermotors-infrastructure",
+    "bitermotors-ev-charging-station": "bitermotors-charging",
     "bitermotors-high-energy-battery-pack": "bitermotors-components",
     "bitermotors-dollar": "bitermotors-capital",
     "bitermotors-ev-reservation": "raw-material",
@@ -2059,6 +2061,20 @@ for item_name, expected_subgroup in expected_item_subgroups.items():
     actual_subgroup = data["item"][item_name]["subgroup"]
     if actual_subgroup != expected_subgroup:
         raise SystemExit(f"{item_name} item subgroup mismatch: {actual_subgroup}")
+charger_names = [
+    "bitermotors-ev-charging-station",
+    "bitermotors-ev-charging-station-v2",
+    "bitermotors-ev-charging-station-v3",
+    "bitermotors-ev-charging-station-v4",
+]
+for index, charger_name in enumerate(charger_names):
+    expected_order = f"{chr(ord('a') + index)}[{charger_name.removeprefix('bitermotors-')}]"
+    item = data["item"][charger_name]
+    recipe = data["recipe"][charger_name]
+    if item.get("subgroup") != "bitermotors-charging" or recipe.get("subgroup") != "bitermotors-charging":
+        raise SystemExit(f"{charger_name} must stay in the dedicated charging picker row")
+    if item.get("order") != expected_order or recipe.get("order") != expected_order:
+        raise SystemExit(f"{charger_name} picker order mismatch: item={item.get('order')} recipe={recipe.get('order')}")
 always_visible_logistics_items = {
     "bitermotors-dollar",
     "bitermotors-ev-reservation",

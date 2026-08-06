@@ -1290,6 +1290,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("[item-group-name]", locale)
         for subgroup, group in [
             ("bitermotors-infrastructure", "production"),
+            ("bitermotors-charging", "production"),
             ("bitermotors-components", "intermediate-products"),
             ("bitermotors-capital", "intermediate-products"),
         ]:
@@ -1305,6 +1306,7 @@ class BiterMotorsModTest(unittest.TestCase):
             ("bitermotors-orbital-datacenter-core", "bitermotors-infrastructure"),
             ("bitermotors-ai-token", "science-pack"),
             ("bitermotors-sales-office", "bitermotors-infrastructure"),
+            ("bitermotors-ev-charging-station", "bitermotors-charging"),
             ("bitermotors-high-energy-battery-pack", "bitermotors-components"),
             ("bitermotors-dollar", "bitermotors-capital"),
             ("bitermotors-ev-reservation", "raw-material"),
@@ -1334,6 +1336,7 @@ class BiterMotorsModTest(unittest.TestCase):
             ("bitermotors-orbital-radiator-panel", "energy"),
             ("bitermotors-terrestrial-ai-token", "science-pack"),
             ("bitermotors-sales-office", "bitermotors-infrastructure"),
+            ("bitermotors-ev-charging-station", "bitermotors-charging"),
             ("bitermotors-high-energy-battery-pack", "bitermotors-components"),
             ("bitermotors-sell-prototype-roadster", "bitermotors-capital"),
         ]:
@@ -1723,10 +1726,21 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('cleanup_legacy_station_grid_connections()', control)
         self.assertNotIn('charger_wire.connect_to(grid_wire, false)', control)
         self.assertNotIn('name = STATION_GRID_CONNECTION_NAME,\n      position = station.position', control)
-        self.assertIn('item("bitermotors-ev-charging-station", ev_charging_station_icon, "bitermotors-infrastructure", "b[ev-charging-station]", 5', data)
-        self.assertIn('item("bitermotors-ev-charging-station-v2", ev_charging_station_v2_icon, "bitermotors-infrastructure", "c[ev-charging-station-v2]", 5', data)
-        self.assertIn('item("bitermotors-ev-charging-station-v3", ev_charging_station_v3_icon, "bitermotors-infrastructure", "d[ev-charging-station-v3]", 5', data)
-        self.assertIn('item("bitermotors-ev-charging-station-v4", ev_charging_station_v4_icon, "bitermotors-infrastructure", "e[ev-charging-station-v4]", 5', data)
+        for index, name in enumerate([
+            "bitermotors-ev-charging-station",
+            "bitermotors-ev-charging-station-v2",
+            "bitermotors-ev-charging-station-v3",
+            "bitermotors-ev-charging-station-v4",
+        ]):
+            item_start = data.index(f'item("{name}"')
+            item_block = data[item_start:item_start + 300]
+            recipe_start = data.index(f'recipe("{name}"')
+            recipe_block = data[recipe_start:recipe_start + 300]
+            expected_order = chr(ord("a") + index) + "["
+            self.assertIn('"bitermotors-charging"', item_block)
+            self.assertIn(f'"{expected_order}', item_block)
+            self.assertIn('"bitermotors-charging"', recipe_block)
+            self.assertIn(f'"{expected_order}', recipe_block)
 
     def test_terrestrial_industrial_supply_chain(self):
         data = (MOD / "data.lua").read_text()

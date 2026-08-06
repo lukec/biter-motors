@@ -304,6 +304,12 @@ Status: **functional, not final**
 - [x] Distinct vehicle sprites and major terrestrial building artwork.
 - [ ] Final orbital core, radiator, and space-solar art pass.
 - [ ] Final icon/readability audit at 16, 32, and 64 pixels.
+  - [x] Replace clean battery recipe module badges with dedicated process art.
+  - [ ] Replace composed placeholder icons for Biterfactory V2, Tandem Solar
+        Array, Grid Battery Array, Wrecked EV, eSpider, Electric Drivetrain,
+        Autonomy Computer, Orbital Radiator, and Space Solar.
+  - [ ] Decide which unique Biter Motors technology families need dedicated
+        art instead of a vanilla technology image plus the common mod badge.
 - [ ] Animation and footprint audit for every placeable Biter Motors entity.
 - [ ] Remove obsolete launch-business art from generated QA pages.
 - [x] Add benefit-led marketing copy while preserving the illustrated campaign

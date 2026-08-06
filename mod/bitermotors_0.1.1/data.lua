@@ -797,6 +797,12 @@ data:extend({
   },
   {
     type = "item-subgroup",
+    name = "bitermotors-charging",
+    group = "production",
+    order = "eb[bitermotors-charging]"
+  },
+  {
+    type = "item-subgroup",
     name = "bitermotors-components",
     group = "intermediate-products",
     order = "za[bitermotors-components]"
@@ -994,10 +1000,10 @@ data:extend({
   item("bitermotors-datacenter-rack", generated_icon("datacenter-rack"), "bitermotors-components", "f[datacenter-rack]", 50),
 
   item("bitermotors-sales-office", sales_office_icon, "bitermotors-infrastructure", "a[sales-office]", 10, {place_result = "bitermotors-sales-office"}),
-  item("bitermotors-ev-charging-station", ev_charging_station_icon, "bitermotors-infrastructure", "b[ev-charging-station]", 5, {place_result = "bitermotors-ev-charging-station"}),
-  item("bitermotors-ev-charging-station-v2", ev_charging_station_v2_icon, "bitermotors-infrastructure", "c[ev-charging-station-v2]", 5, {place_result = "bitermotors-ev-charging-station-v2"}),
-  item("bitermotors-ev-charging-station-v3", ev_charging_station_v3_icon, "bitermotors-infrastructure", "d[ev-charging-station-v3]", 5, {place_result = "bitermotors-ev-charging-station-v3"}),
-  item("bitermotors-ev-charging-station-v4", ev_charging_station_v4_icon, "bitermotors-infrastructure", "e[ev-charging-station-v4]", 5, {place_result = "bitermotors-ev-charging-station-v4"}),
+  item("bitermotors-ev-charging-station", ev_charging_station_icon, "bitermotors-charging", "a[ev-charging-station]", 5, {place_result = "bitermotors-ev-charging-station"}),
+  item("bitermotors-ev-charging-station-v2", ev_charging_station_v2_icon, "bitermotors-charging", "b[ev-charging-station-v2]", 5, {place_result = "bitermotors-ev-charging-station-v2"}),
+  item("bitermotors-ev-charging-station-v3", ev_charging_station_v3_icon, "bitermotors-charging", "c[ev-charging-station-v3]", 5, {place_result = "bitermotors-ev-charging-station-v3"}),
+  item("bitermotors-ev-charging-station-v4", ev_charging_station_v4_icon, "bitermotors-charging", "d[ev-charging-station-v4]", 5, {place_result = "bitermotors-ev-charging-station-v4"}),
   item("bitermotors-biterfactory-building", biterfactory_icon, "bitermotors-infrastructure", "f[biterfactory]", 1, {place_result = "bitermotors-biterfactory-building"}),
   item("bitermotors-biterfactory-v2", biterfactory_v2_icon, "bitermotors-infrastructure", "g[biterfactory-v2]", 1, {place_result = "bitermotors-biterfactory-v2"}),
   item("bitermotors-high-density-solar-array", high_density_solar_array_icon, "energy", "bitermotors-a[high-density-solar-array]", 10, {place_result = "bitermotors-high-density-solar-array"}),
@@ -1643,7 +1649,7 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-sales-office", amount = 1}}, 4
   ),
-  recipe("bitermotors-ev-charging-station", {"advanced-crafting"}, "bitermotors-infrastructure", "b[ev-charging-station]",
+  recipe("bitermotors-ev-charging-station", {"advanced-crafting"}, "bitermotors-charging", "a[ev-charging-station]",
     {
       {type = "item", name = "substation", amount = 1},
       {type = "item", name = "accumulator", amount = 2},
@@ -1651,7 +1657,7 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-ev-charging-station", amount = 1}}, 12
   ),
-  recipe("bitermotors-ev-charging-station-v2", {"advanced-crafting"}, "bitermotors-infrastructure", "c[ev-charging-station-v2]",
+  recipe("bitermotors-ev-charging-station-v2", {"advanced-crafting"}, "bitermotors-charging", "b[ev-charging-station-v2]",
     {
       {type = "item", name = "bitermotors-ev-charging-station", amount = 1},
       {type = "item", name = "substation", amount = 2},
@@ -1659,7 +1665,7 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-ev-charging-station-v2", amount = 1}}, 30
   ),
-  recipe("bitermotors-ev-charging-station-v3", {"advanced-crafting"}, "bitermotors-infrastructure", "d[ev-charging-station-v3]",
+  recipe("bitermotors-ev-charging-station-v3", {"advanced-crafting"}, "bitermotors-charging", "c[ev-charging-station-v3]",
     {
       {type = "item", name = "bitermotors-ev-charging-station-v2", amount = 1},
       {type = "item", name = "substation", amount = 4},
@@ -1668,7 +1674,7 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-ev-charging-station-v3", amount = 1}}, 45
   ),
-  recipe("bitermotors-ev-charging-station-v4", {"advanced-crafting"}, "bitermotors-infrastructure", "e[ev-charging-station-v4]",
+  recipe("bitermotors-ev-charging-station-v4", {"advanced-crafting"}, "bitermotors-charging", "d[ev-charging-station-v4]",
     {
       {type = "item", name = "bitermotors-ev-charging-station-v3", amount = 1},
       {type = "item", name = "bitermotors-high-density-solar-array", amount = 4},
