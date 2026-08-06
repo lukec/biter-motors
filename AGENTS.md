@@ -20,6 +20,9 @@ changes that policy.
   reconciliation for missed third-party events.
 - Factorio can log a non-recoverable mod error while exiting with status zero.
   Engine validators must inspect logs for runtime errors.
+- Player-facing currencies and script-produced inventory items must use the
+  `always-show` item flag and have prototype-dump coverage so they remain
+  selectable in logistic requests and filter pickers while recipes are locked.
 
 ## Verification
 

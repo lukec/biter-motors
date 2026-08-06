@@ -1272,6 +1272,10 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('flags = {"always-show"}', ai_token)
         self.assertIn('"h[bitermotors-ai-token]", 1000000', ai_token)
 
+        for filter_item in ["bitermotors-dollar", "bitermotors-ev-reservation"]:
+            item_start = data.index(f'item("{filter_item}"')
+            self.assertIn('flags = {"always-show"}', data[item_start:item_start + 350])
+
         for name, subgroup in [
             ("bitermotors-prototype-roadster", "transport"),
             ("bitermotors-high-density-solar-array", "energy"),
@@ -1359,7 +1363,7 @@ class BiterMotorsModTest(unittest.TestCase):
         updates = (MOD / "data-updates.lua").read_text()
         logistic_rewrite = updates[
             updates.index('local logistic_system_tech = data.raw.technology["logistic-system"]'):
-            updates.index("-- Tier 2 modules are terrestrial Biter Motors capital investments")
+            updates.index("-- Gleba normally supplies the Stack Inserter's science and ingredients")
         ]
         self.assertIn('prerequisites = {"logistic-robotics", "bitermotors-industrial-supply-chain"}', logistic_rewrite)
         self.assertIn('"automation-science-pack"', logistic_rewrite)
@@ -1383,6 +1387,27 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertGreaterEqual(bottom - top, image.height * 0.84)
             self.assertAlmostEqual((left + right) / 2, image.width / 2, delta=image.width * 0.05)
             self.assertAlmostEqual((top + bottom) / 2, image.height / 2, delta=image.height * 0.05)
+
+    def test_stack_inserter_is_a_terrestrial_capital_upgrade(self):
+        updates = (MOD / "data-updates.lua").read_text()
+        block = updates[
+            updates.index('rewrite_recipe("stack-inserter"'):
+            updates.index("-- Tier 2 modules are terrestrial Biter Motors capital investments")
+        ]
+
+        for ingredient in [
+            '{"bulk-inserter", 1}',
+            '{"electric-engine-unit", 2}',
+            '{"processing-unit", 2}',
+            '{"low-density-structure", 5}',
+        ]:
+            self.assertIn(ingredient, block)
+        self.assertIn('"bitermotors-capital-scaling"', block)
+        self.assertIn('stack_inserter_tech.unit = science(750, {', block)
+        self.assertIn('"bitermotors-dollar"', block)
+        self.assertNotIn('"agricultural-science-pack"', block)
+        self.assertNotIn('"carbon-fiber"', block)
+        self.assertNotIn('"jelly"', block)
 
     def test_biterfactory_v2_is_a_faster_more_efficient_structural_casting_upgrade(self):
         data = (MOD / "data.lua").read_text()

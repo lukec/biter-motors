@@ -216,6 +216,38 @@ logistic_system_tech.unit = science(500, {
 }, 30)
 logistic_system_tech.enabled = true
 
+-- Gleba normally supplies the Stack Inserter's science and ingredients. Biter
+-- Motors keeps it as a late terrestrial throughput upgrade instead.
+rewrite_recipe("stack-inserter", {
+  categories = {"crafting", "advanced-crafting"},
+  ingredients = ingredients(
+    {"bulk-inserter", 1},
+    {"electric-engine-unit", 2},
+    {"processing-unit", 2},
+    {"low-density-structure", 5}
+  ),
+  energy_required = 1
+})
+local stack_inserter_tech = data.raw.technology["stack-inserter"]
+mark_bitermotors_technology(stack_inserter_tech, "__space-age__/graphics/technology/stack-inserter.png")
+stack_inserter_tech.prerequisites = {
+  "bulk-inserter",
+  "bitermotors-capital-scaling",
+  "production-science-pack",
+  "utility-science-pack"
+}
+stack_inserter_tech.research_trigger = nil
+stack_inserter_tech.unit = science(750, {
+  "automation-science-pack",
+  "logistic-science-pack",
+  "chemical-science-pack",
+  "production-science-pack",
+  "utility-science-pack",
+  "bitermotors-dollar"
+}, 45)
+stack_inserter_tech.enabled = true
+stack_inserter_tech.hidden = false
+
 -- Tier 2 modules are terrestrial Biter Motors capital investments. Space Age
 -- normally gates them on the first orbital science pack even though their
 -- recipes use only Nauvis materials.

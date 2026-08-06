@@ -1461,6 +1461,7 @@ bitermotors_technologies = {
     if name.startswith("bitermotors-")
 } | {
     "big-mining-drill", "foundry", "recycling", "tesla-weapons",
+    "stack-inserter",
     "speed-module-2", "productivity-module-2", "efficiency-module-2", "quality-module-2",
     "speed-module-3", "productivity-module-3", "efficiency-module-3", "quality-module-3",
 }
@@ -1937,22 +1938,47 @@ for item_name, expected_subgroup in expected_item_subgroups.items():
     actual_subgroup = data["item"][item_name]["subgroup"]
     if actual_subgroup != expected_subgroup:
         raise SystemExit(f"{item_name} item subgroup mismatch: {actual_subgroup}")
-if data["item"]["bitermotors-ev-reservation"].get("hidden", False):
-    raise SystemExit("EV Reservation must remain visible in item-filter selectors")
-wrecked_ev = data["item"]["bitermotors-wrecked-ev"]
-if wrecked_ev.get("hidden", False):
-    raise SystemExit("Wrecked EV must remain visible in item-filter selectors")
-if "always-show" not in wrecked_ev.get("flags", []):
-    raise SystemExit("Wrecked EV must remain requestable before Recycling is unlocked")
-if wrecked_ev["stack_size"] != 1:
-    raise SystemExit(f"Wrecked EV stack size mismatch: {wrecked_ev['stack_size']}")
-for damaged_pack_name in (
+always_visible_logistics_items = {
+    "bitermotors-dollar",
+    "bitermotors-ev-reservation",
+    "bitermotors-wrecked-ev",
+    "bitermotors-ai-token",
     "bitermotors-damaged-high-energy-battery-pack",
     "bitermotors-damaged-lfp-battery-pack",
-):
-    damaged_pack = data["item"][damaged_pack_name]
-    if damaged_pack.get("hidden", False) or "always-show" not in damaged_pack.get("flags", []):
-        raise SystemExit(f"{damaged_pack_name} must remain visible in logistics filter pickers")
+}
+for item_name in always_visible_logistics_items:
+    item = data["item"][item_name]
+    if item.get("hidden", False) or "always-show" not in item.get("flags", []):
+        raise SystemExit(f"{item_name} must remain visible in logistics filter pickers")
+wrecked_ev = data["item"]["bitermotors-wrecked-ev"]
+if wrecked_ev["stack_size"] != 1:
+    raise SystemExit(f"Wrecked EV stack size mismatch: {wrecked_ev['stack_size']}")
+
+stack_inserter_technology = data["technology"]["stack-inserter"]
+if set(stack_inserter_technology.get("prerequisites", [])) != {
+    "bulk-inserter", "bitermotors-capital-scaling",
+    "production-science-pack", "utility-science-pack",
+}:
+    raise SystemExit(f"Stack Inserter terrestrial prerequisites mismatch: {stack_inserter_technology}")
+stack_inserter_science = {
+    ingredient[0] for ingredient in stack_inserter_technology["unit"]["ingredients"]
+}
+if stack_inserter_technology["unit"]["count"] != 750 or stack_inserter_science != {
+    "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+    "production-science-pack", "utility-science-pack", "bitermotors-dollar",
+}:
+    raise SystemExit(f"Stack Inserter terrestrial research mismatch: {stack_inserter_technology}")
+stack_inserter_ingredients = {
+    ingredient["name"]: ingredient["amount"]
+    for ingredient in data["recipe"]["stack-inserter"]["ingredients"]
+}
+if stack_inserter_ingredients != {
+    "bulk-inserter": 1,
+    "electric-engine-unit": 2,
+    "processing-unit": 2,
+    "low-density-structure": 5,
+}:
+    raise SystemExit(f"Stack Inserter terrestrial recipe mismatch: {stack_inserter_ingredients}")
 
 expected_recipe_subgroups = {
     "bitermotors-prototype-roadster": "transport",

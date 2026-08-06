@@ -907,8 +907,12 @@ data:extend({
 })
 
 data:extend({
-  item("bitermotors-dollar", dollar_icon, "bitermotors-capital", "a[dollar]", 100000),
-  item("bitermotors-ev-reservation", ev_reservation_icon, "raw-material", "z[bitermotors-ev-reservation]", 1000),
+  item("bitermotors-dollar", dollar_icon, "bitermotors-capital", "a[dollar]", 100000, {
+    flags = {"always-show"}
+  }),
+  item("bitermotors-ev-reservation", ev_reservation_icon, "raw-material", "z[bitermotors-ev-reservation]", 1000, {
+    flags = {"always-show"}
+  }),
   item("bitermotors-wrecked-ev", wrecked_ev_icon, "bitermotors-components", "z[wrecked-ev]", 1, {
     flags = {"always-show"}
   }),
