@@ -3473,11 +3473,11 @@ local function cleanup_legacy_station_grid_connections()
   end
   storage.bitermotors_station_grid_connections = {}
   storage.bitermotors_station_power_pole_cache = {}
-  storage.bitermotors_station_power_model = "native-supply-area-v1"
+  storage.bitermotors_station_power_model = "native-footprint-supply-area-v2"
 end
 
 local function ensure_native_station_power_model()
-  if storage.bitermotors_station_power_model ~= "native-supply-area-v1" then
+  if storage.bitermotors_station_power_model ~= "native-footprint-supply-area-v2" then
     cleanup_legacy_station_grid_connections()
   end
 end

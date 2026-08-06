@@ -1600,7 +1600,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("connection_position = connection_position or station.position", control)
         self.assertIn("position = connection_position", control)
         self.assertIn("math.abs(existing.position.x - connection_position.x) > 0.01", control)
-        self.assertIn('storage.bitermotors_station_power_model = "native-supply-area-v1"', control)
+        self.assertIn('storage.bitermotors_station_power_model = "native-footprint-supply-area-v2"', control)
         self.assertIn('cleanup_legacy_station_grid_connections()', control)
         self.assertNotIn('charger_wire.connect_to(grid_wire, false)', control)
         self.assertNotIn('name = STATION_GRID_CONNECTION_NAME,\n      position = station.position', control)
