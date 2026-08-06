@@ -1935,7 +1935,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("unallocated", control)
         self.assertIn("Network vehicle capacity", control)
         self.assertIn("outside the %d-tile Sales Office market radius", control)
-        self.assertIn("no reachable powered charger has a free settlement stall", control)
+        self.assertIn("no reachable powered charger has free pooled EV capacity", control)
         self.assertIn("sold EVs exceed reachable charging capacity", control)
         self.assertIn("remains friendly during its patience period", control)
         self.assertIn("is_customer_settlement_entity(entity)", control)
@@ -2620,6 +2620,9 @@ class BiterMotorsModTest(unittest.TestCase):
         cache_start = control.index("function market_service_references_valid")
         cache_end = control.index("local function next_customer_charging_step", cache_start)
         cache = control[cache_start:cache_end]
+        self.assertIn("or not service.station_specs", cache)
+        self.assertIn("or not service.demand_by_settlement_key", cache)
+        self.assertIn("or not service.powered_assignments", cache)
         self.assertIn("if not settlement or not settlement.valid then return false end", cache)
         self.assertIn("if not assignment.station or not assignment.station.valid then return false end", cache)
         self.assertIn("market_service_references_valid(cached.service)", cache)
@@ -2676,18 +2679,19 @@ class BiterMotorsModTest(unittest.TestCase):
         allocator = (MOD / "runtime" / "charger_allocator.lua").read_text()
         self.assertIn("function ChargerAllocator.allocate", allocator)
         self.assertIn("assignment.customer_requested_stalls", allocator)
-        self.assertIn("demand_phase", allocator)
-        self.assertIn("allow_repeat", allocator)
-        self.assertIn("and (allow_repeat or not assignment.assigned_keys[key])", allocator)
+        self.assertIn("assignment.total_requested_evs", allocator)
+        self.assertIn("spec.ev_capacity", allocator)
+        self.assertIn("options.admit_prospects ~= false", allocator)
         self.assertIn("local function heap_push", allocator)
         self.assertIn("local function heap_pop", allocator)
         self.assertIn("while #demand_heap > 0", allocator)
-        self.assertIn("while #capacity_heap > 0", allocator)
         allocation_body = allocator[allocator.index("function ChargerAllocator.allocate"):]
         self.assertNotIn("while true do", allocation_body)
         self.assertIn('test_charger_allocator = function()', control)
         self.assertIn("v3_active_stalls", control)
         self.assertIn("v3_underserved", control)
+        self.assertIn("pooled_active_stalls", control)
+        self.assertIn("pooled_admitted_settlements", control)
         buyer_start = control.index("function eligible_customer_buyers")
         buyer_end = control.index("function sales_office_buyer_status", buyer_start)
         buyer_selection = control[buyer_start:buyer_end]
@@ -2699,7 +2703,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("Underserved vehicles: %d", control)
         self.assertIn("function charging_capacity_recommendation(force, missing)", control)
         self.assertIn("Fix: add %d powered %s%s within %d tiles", control)
-        self.assertIn("at most one stall from each nearby charger", control)
+        self.assertIn("EVs allocated into reachable charging pools", control)
         self.assertIn('return "Customers hostile", BITERMOTORS_STATE_COLORS.bad', control)
 
     def test_worms_remain_hostile_inside_customer_coverage(self):
@@ -3275,7 +3279,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("customer_population_available_purchase_accounts(", waiting)
         self.assertIn("or not service.prospects_by_settlement_key then", control)
         self.assertNotIn("customer_unit_registry()", waiting)
-        self.assertIn("local key = settlement and settlement.valid and", control)
+        self.assertIn("stall_index > (assignment.powered_stalls or 0)", control)
         self.assertIn("if not station or not station.valid then", control)
 
     def test_bitermotors_stack_sizes_match_physical_scale(self):

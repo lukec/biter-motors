@@ -747,19 +747,9 @@ end
 function charger_stall_visual_state(service, station, assignment, stall_index, charging_available)
   local load = assignment and assignment.stall_loads and assignment.stall_loads[stall_index] or 0
   if load <= 0 then return "idle", charging_available end
-  local settlement = assignment and assignment.settlements[stall_index]
-  local key = settlement and settlement.valid and (
-    settlement.surface.index .. ":" .. (settlement.unit_number or string.format(
-      "%s:%.1f:%.1f",
-      settlement.name,
-      settlement.position.x,
-      settlement.position.y
-    ))
-  )
-  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
-  local owned = key and (vehicle_summary.by_settlement[key] or 0) or 0
-  local capacity = key and (service.powered_capacity_by_settlement_key[key] or 0) or 0
-  if owned > capacity then return "overload", charging_available end
+  if assignment and stall_index > (assignment.powered_stalls or 0) then
+    return "overload", charging_available
+  end
   if charging_available > 0 then return "charging", charging_available - 1 end
   local config = station_config(station)
   local fraction = config and load / config.evs_per_stall or 0
@@ -4603,6 +4593,9 @@ function market_service_references_valid(service)
   if not service then return false end
   if not service.assignments
     or not service.assignment_by_settlement_key
+    or not service.station_specs
+    or not service.demand_by_settlement_key
+    or not service.powered_assignments
     or not service.operational_keys
     or not service.prospects_by_settlement_key then
     return false
@@ -4614,6 +4607,68 @@ function market_service_references_valid(service)
     if not assignment.station or not assignment.station.valid then return false end
   end
   return true
+end
+
+function refresh_customer_service_power_allocation(service)
+  clear_table(service.powered_capacity_by_settlement_key)
+  service.accessible_stall_capacity = 0
+  service.powered_stall_capacity = 0
+  service.supported_ev_capacity = 0
+
+  local powered_specs = {}
+  for _, spec in pairs(service.station_specs or {}) do
+    local assignment = service.assignments[spec.key]
+    local station = spec.station
+    local config = station and station.valid and station_config(station)
+    if assignment and config then
+      assignment.powered_stalls = powered_station_stalls(
+        station,
+        assignment.requested_stalls
+      )
+      if #spec.candidates > 0 then
+        service.accessible_stall_capacity =
+          service.accessible_stall_capacity + config.stalls
+        service.powered_stall_capacity =
+          service.powered_stall_capacity + assignment.powered_stalls
+        service.supported_ev_capacity = service.supported_ev_capacity
+          + assignment.powered_stalls * config.evs_per_stall
+      end
+      powered_specs[#powered_specs + 1] = {
+        key = spec.key,
+        station = station,
+        stalls = config.stalls,
+        evs_per_stall = config.evs_per_stall,
+        ev_capacity = assignment.powered_stalls * config.evs_per_stall,
+        candidates = spec.candidates
+      }
+    end
+  end
+
+  local powered_allocation = ChargerAllocator.allocate(
+    powered_specs,
+    service.demand_by_settlement_key,
+    {admit_prospects = false}
+  )
+  service.powered_assignments = powered_allocation.assignments
+  for key, capacity in pairs(
+    powered_allocation.requested_capacity_by_settlement_key or {}
+  ) do
+    service.powered_capacity_by_settlement_key[key] = capacity
+  end
+end
+
+function rebuild_assignment_operational_settlements(service)
+  for _, assignment in pairs(service.assignments or {}) do
+    clear_table(assignment.operational_settlements)
+    local operational_seen = {}
+    for _, settlement in pairs(assignment.settlements or {}) do
+      local key = settlement_key(settlement.surface, settlement)
+      if service.operational_keys[key] and not operational_seen[key] then
+        assignment.operational_settlements[#assignment.operational_settlements + 1] = settlement
+        operational_seen[key] = true
+      end
+    end
+  end
 end
 
 customer_service_for_force = function(force, advance_mood)
@@ -4672,6 +4727,9 @@ customer_service_for_force = function(force, advance_mood)
     average_evs_per_stall = 0,
     stranded_evs = 0,
     underserved_settlements = 0,
+    station_specs = {},
+    demand_by_settlement_key = {},
+    powered_assignments = {},
     sales_office_market = {by_office = {}}
   }
   if not player_market_force(force) then
@@ -4708,37 +4766,16 @@ customer_service_for_force = function(force, advance_mood)
   end
 
   local allocation = ChargerAllocator.allocate(station_specs, demand_by_settlement_key)
+  service.station_specs = station_specs
+  service.demand_by_settlement_key = demand_by_settlement_key
   service.assignment_by_settlement_key = allocation.first_station_by_settlement_key
   service.assigned_capacity_by_settlement_key =
     allocation.assigned_capacity_by_settlement_key
   service.requested_capacity_by_settlement_key =
     allocation.requested_capacity_by_settlement_key
 
-  for _, spec in pairs(station_specs) do
-    local station = spec.station
-    local config = station_config(station)
-    local assignment = allocation.assignments[spec.key]
-    assignment.powered_stalls = powered_station_stalls(station, assignment.requested_stalls)
-    local powered_remaining = assignment.powered_stalls
-    for _, settlement in pairs(assignment.settlements) do
-      local key = settlement_key(settlement.surface, settlement)
-      local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
-      if assignment.requested_settlement_keys[key] and powered_remaining > 0 then
-        service.powered_capacity_by_settlement_key[key] =
-          (service.powered_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
-        powered_remaining = powered_remaining - 1
-      end
-    end
-    if #spec.candidates > 0 then
-      if #(assignment.settlements or {}) > 0 then
-        service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
-        service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
-        service.supported_ev_capacity = service.supported_ev_capacity
-          + assignment.powered_stalls * config.evs_per_stall
-      end
-    end
-    service.assignments[spec.key] = assignment
-  end
+  service.assignments = allocation.assignments
+  refresh_customer_service_power_allocation(service)
 
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
@@ -4769,16 +4806,7 @@ customer_service_for_force = function(force, advance_mood)
     end
   end
 
-  for _, assignment in pairs(service.assignments) do
-    local operational_seen = {}
-    for _, settlement in pairs(assignment.settlements) do
-      local key = settlement_key(settlement.surface, settlement)
-      if service.operational_keys[key] and not operational_seen[key] then
-        assignment.operational_settlements[#assignment.operational_settlements + 1] = settlement
-        operational_seen[key] = true
-      end
-    end
-  end
+  rebuild_assignment_operational_settlements(service)
 
   if service.powered_stall_capacity > 0 then
     service.average_evs_per_stall = math.floor(
@@ -4802,37 +4830,10 @@ end
 
 function refresh_customer_service_power_capacity(force, service)
   if not force or not service then return service end
-  clear_table(service.powered_capacity_by_settlement_key)
   clear_table(service.operational_keys)
-  service.accessible_stall_capacity = 0
-  service.powered_stall_capacity = 0
-  service.supported_ev_capacity = 0
   service.stranded_evs = 0
   service.underserved_settlements = 0
-
-  for _, assignment in pairs(service.assignments or {}) do
-    local station = assignment.station
-    local config = station and station.valid and station_config(station)
-    if config then
-      assignment.powered_stalls = powered_station_stalls(
-        station,
-        assignment.requested_stalls
-      )
-      local powered_remaining = assignment.powered_stalls
-      for _, settlement in pairs(assignment.settlements or {}) do
-        local key = settlement_key(settlement.surface, settlement)
-        if assignment.requested_settlement_keys[key] and powered_remaining > 0 then
-          service.powered_capacity_by_settlement_key[key] =
-            (service.powered_capacity_by_settlement_key[key] or 0) + config.evs_per_stall
-          powered_remaining = powered_remaining - 1
-        end
-      end
-      service.accessible_stall_capacity = service.accessible_stall_capacity + config.stalls
-      service.powered_stall_capacity = service.powered_stall_capacity + assignment.powered_stalls
-      service.supported_ev_capacity = service.supported_ev_capacity
-        + assignment.powered_stalls * config.evs_per_stall
-    end
-  end
+  refresh_customer_service_power_allocation(service)
 
   local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(force)
   for _, settlement in pairs(service.candidate_settlements or {}) do
@@ -4849,6 +4850,7 @@ function refresh_customer_service_power_capacity(force, service)
       service.underserved_settlements = service.underserved_settlements + 1
     end
   end
+  rebuild_assignment_operational_settlements(service)
   service.average_evs_per_stall = service.powered_stall_capacity > 0 and math.floor(
     service.supported_ev_capacity / service.powered_stall_capacity + 0.5
   ) or 0
@@ -4888,37 +4890,42 @@ local function next_customer_charging_step(service, office)
   end
 
   local best = nil
-  local recorded_keys = {}
   for _, assignment in ipairs(assignments) do
     local station = assignment.station
     local config = station_config(station)
     if config then
+      local serves_eligible_settlement = false
       for _, settlement in ipairs(assignment.settlements or {}) do
         if settlement and settlement.valid then
           local key = settlement_key(settlement.surface, settlement)
-          if eligible_keys[key]
-            and not recorded_keys[key]
-            and not assignment.requested_settlement_keys[key] then
-            recorded_keys[key] = true
-            local vehicle_count = settlement_vehicle_count(service.vehicle_summary, settlement)
-            local requested_capacity = service.requested_capacity_by_settlement_key[key] or 0
-            local candidate = {
-              available = true,
-              ev_owners_until = math.max(1, requested_capacity - vehicle_count + 1),
-              ev_capacity_added = config.evs_per_stall,
-              evs_per_stall = config.evs_per_stall,
-              power_kw = station_stall_power_watts(station) / 1000,
-              station_name = config.display_name,
-              settlement_key = key
-            }
-            if not best
-              or candidate.ev_owners_until < best.ev_owners_until
-              or (candidate.ev_owners_until == best.ev_owners_until
-                and (station.unit_number or 0) < (best.station_unit_number or math.huge)) then
-              candidate.station_unit_number = station.unit_number
-              best = candidate
-            end
+          if eligible_keys[key] then
+            serves_eligible_settlement = true
+            break
           end
+        end
+      end
+      local current_load = assignment.total_requested_evs or 0
+      local maximum_load = config.stalls * config.evs_per_stall
+      if serves_eligible_settlement and current_load < maximum_load then
+        local current_stalls = current_load > 0
+          and math.ceil(current_load / config.evs_per_stall) or 0
+        local current_capacity = current_stalls * config.evs_per_stall
+        local owners_until = current_load == 0
+          and 1 or (current_capacity - current_load + 1)
+        local candidate = {
+          available = true,
+          ev_owners_until = math.max(1, owners_until),
+          ev_capacity_added = config.evs_per_stall,
+          evs_per_stall = config.evs_per_stall,
+          power_kw = station_stall_power_watts(station) / 1000,
+          station_name = config.display_name,
+          station_unit_number = station.unit_number
+        }
+        if not best
+          or candidate.ev_owners_until < best.ev_owners_until
+          or (candidate.ev_owners_until == best.ev_owners_until
+            and (station.unit_number or 0) < (best.station_unit_number or math.huge)) then
+          best = candidate
         end
       end
     end
@@ -6826,7 +6833,7 @@ local function process_customer_growth(force)
         assignment.requested_stalls or 0,
         assignment.powered_stalls or 0
       )
-      local spare_stalls = station_config(station).stalls - #assignment.settlements
+      local spare_stalls = station_config(station).stalls - assignment.requested_stalls
       local local_service_healthy =
         (assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)
       if local_service_healthy and active_stalls > 0 and spare_stalls > 0 then
@@ -11425,8 +11432,9 @@ local function show_customer_settlement_info_panel(player, settlement)
   ))
   add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
   add_station_info_label(panel, string.format(
-    "Allocated charging capacity: %d (at most one stall from each nearby charger)",
-    local_assigned_capacity
+    "EVs allocated into reachable charging pools: %d / %d",
+    local_assigned_capacity,
+    settlement_vehicles
   ))
   add_station_info_label(panel, string.format(
     "Powered charging capacity at this settlement: %d",
@@ -11494,7 +11502,7 @@ local function show_customer_settlement_info_panel(player, settlement)
   if assigned_station and assigned_station.valid then
     local config = station_config(assigned_station)
     local assignment = service.assignments[assigned_station.unit_number]
-    local assigned_count = assignment and #assignment.settlements or 0
+    local assigned_count = assignment and assignment.requested_stalls or 0
     local allocations = cached_station_utilization(force)
     local active_stalls = active_station_stalls(assigned_station, allocations)
     add_station_info_label(panel, "Assigned charger: " .. config.display_name)
@@ -11504,7 +11512,7 @@ local function show_customer_settlement_info_panel(player, settlement)
       math.max(0, config.stalls - assigned_count),
       config.stalls
     ))
-    add_station_info_label(panel, string.format("This stall supports %d sold EVs", config.evs_per_stall))
+    add_station_info_label(panel, string.format("Each stall supports %d sold EVs", config.evs_per_stall))
     add_station_info_label(panel, "Charger grid: " .. (station_has_grid_access(assigned_station) and "connected" or "not connected"))
   else
     add_station_info_label(panel, "Assigned charger: none")
@@ -11529,7 +11537,7 @@ local function show_customer_settlement_info_panel(player, settlement)
       SALES_OFFICE_CUSTOMER_RADIUS
     )
   elseif not assigned_station then
-    reason = "Hostile reason: no reachable powered charger has a free settlement stall."
+    reason = "Hostile reason: no reachable powered charger has free pooled EV capacity."
   else
     reason = "Hostile reason: charging service is not currently available."
   end
@@ -12577,6 +12585,34 @@ remote.add_interface("bitermotors", {
       evs_per_stall = 32,
       candidates = {{key = "v3-settlement", settlement = "v3-settlement", distance = 1}}
     }}, {["v3-settlement"] = 56})
+    local pooled_candidates = {}
+    local pooled_demand = {}
+    for index = 1, 19 do
+      local key = "pooled-" .. index
+      pooled_candidates[#pooled_candidates + 1] = {
+        key = key,
+        settlement = key,
+        distance = index
+      }
+      pooled_demand[key] = index == 1 and 15 or (index <= 17 and 1 or 0)
+    end
+    local pooled_allocation = ChargerAllocator.allocate({{
+      key = "pooled-v3",
+      station = "pooled-v3",
+      stalls = 12,
+      evs_per_stall = 32,
+      candidates = pooled_candidates
+    }}, pooled_demand)
+    local pooled_admitted = 0
+    local pooled_requested_capacity = 0
+    for _ in pairs(pooled_allocation.admitted_keys) do
+      pooled_admitted = pooled_admitted + 1
+    end
+    for _, capacity in pairs(
+      pooled_allocation.requested_capacity_by_settlement_key
+    ) do
+      pooled_requested_capacity = pooled_requested_capacity + capacity
+    end
     return {
       active_by_station = active_by_station,
       requested_capacity = requested_capacity,
@@ -12587,7 +12623,11 @@ remote.add_interface("bitermotors", {
       v3_underserved = math.max(
         0,
         56 - (v3_allocation.requested_capacity_by_settlement_key["v3-settlement"] or 0)
-      )
+      ),
+      pooled_active_stalls =
+        pooled_allocation.assignments["pooled-v3"].customer_requested_stalls,
+      pooled_requested_capacity = pooled_requested_capacity,
+      pooled_admitted_settlements = pooled_admitted
     }
   end,
   test_sales_office_market = function()

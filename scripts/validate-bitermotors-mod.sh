@@ -1166,7 +1166,7 @@ script.on_nth_tick(3780, function()
     power_sinks = power_sinks,
     v1_power_sinks_deferred = power_sinks == 0,
     v2_power_sinks = v2_power_sinks,
-    v2_power_sinks_preferred = v2_power_sinks == 2,
+    v2_power_sinks_preferred = v2_power_sinks == 1,
     roadster_created = roadster ~= nil,
     roadster_started_charged = storage.roadster_started_charged,
     roadster_batteries = roadster_batteries,
@@ -2466,7 +2466,7 @@ if checked.get("grid_connections") != 0 or checked.get("grid_connection_created"
 if not checked.get("v1_power_sinks_deferred"):
     raise SystemExit(f"lower-tier V1 charger received demand while an eligible V2 had room: {checked}")
 if not checked.get("v2_power_sinks_preferred"):
-    raise SystemExit(f"higher-tier V2 charger did not receive both settlement demand stalls: {checked}")
+    raise SystemExit(f"higher-tier V2 charger did not receive the pooled customer demand: {checked}")
 if not checked.get("roadster_created") or checked.get("roadster_batteries") != 1:
     raise SystemExit(f"placed Roadster did not receive its short-range battery equipment item: {checked}")
 if not checked.get("roadster_started_charged"):
@@ -2522,12 +2522,18 @@ if checked.get("market", {}).get("customer_ev_fleet") != 3:
 charger_allocator = checked.get("charger_allocator", {})
 if charger_allocator.get("active_by_station") != [2, 1, 1]:
     raise SystemExit(f"demand-first charger allocation did not balance demand across eligible chargers: {checked}")
-if charger_allocator.get("requested_capacity") != 48 or charger_allocator.get("underserved") != 0:
-    raise SystemExit(f"charger demand did not consume additional free stalls before reporting underserved EVs: {checked}")
+if charger_allocator.get("requested_capacity") != 44 or charger_allocator.get("underserved") != 0:
+    raise SystemExit(f"charger demand did not pool exact EV capacity before reporting underserved EVs: {checked}")
 if charger_allocator.get("v3_active_stalls") != 2:
     raise SystemExit(f"V3 charger did not assign multiple stalls to one settlement: {checked}")
-if charger_allocator.get("v3_requested_capacity") != 64 or charger_allocator.get("v3_underserved") != 0:
+if charger_allocator.get("v3_requested_capacity") != 56 or charger_allocator.get("v3_underserved") != 0:
     raise SystemExit(f"V3 charger reported underserved EVs while free stalls remained: {checked}")
+if charger_allocator.get("pooled_active_stalls") != 1:
+    raise SystemExit(f"31 EV owners across 19 settlements should fit into one V3 stall: {checked}")
+if charger_allocator.get("pooled_requested_capacity") != 31:
+    raise SystemExit(f"pooled V3 allocation did not preserve exact customer EV demand: {checked}")
+if charger_allocator.get("pooled_admitted_settlements") != 19:
+    raise SystemExit(f"pooled V3 allocation did not admit all reachable owner and prospect settlements: {checked}")
 sales_office_market = checked.get("sales_office_market", {})
 for field in (
     "keeper_retained",
@@ -2540,8 +2546,8 @@ for field in (
         raise SystemExit(f"Sales Office market redundancy policy failed {field}: {checked}")
 if sales_office_market.get("shared_market_offices") != 4:
     raise SystemExit(f"Sales Office market peer count was not local and deterministic: {checked}")
-if checked.get("market", {}).get("active_customer_stalls") != 2:
-    raise SystemExit(f"charging utilization must be capped by sold EVs and the two served settlements: {checked}")
+if checked.get("market", {}).get("active_customer_stalls") != 1:
+    raise SystemExit(f"three sold EVs across two settlements should share one active stall: {checked}")
 next_charging_step = checked.get("market", {}).get("next_charging_step", {})
 if not next_charging_step.get("available") or next_charging_step.get("ev_owners_until", 0) < 1:
     raise SystemExit(f"customer market did not expose a positive next charging load step: {checked}")
@@ -2559,18 +2565,18 @@ if not integrity.get("ok") or integrity.get("disabled_recipes"):
     raise SystemExit(f"Biter Motors progression integrity check failed: {checked}")
 if checked.get("market", {}).get("charging_stall_capacity") != 12:
     raise SystemExit(f"expected mixed V1/V2 charging capacity of 12 stalls: {checked}")
-if checked.get("market", {}).get("supported_ev_capacity") != 40:
-    raise SystemExit(f"expected two powered V2 stalls to support 40 active customer EVs: {checked}")
-if checked.get("maximum_settlement_capacity", 0) <= 20:
-    raise SystemExit(f"overlapping chargers did not add sale capacity at a settlement: {checked}")
+if checked.get("market", {}).get("supported_ev_capacity") != 20:
+    raise SystemExit(f"expected one powered V2 stall to support 20 active customer EVs: {checked}")
+if checked.get("maximum_settlement_capacity", 0) < 2:
+    raise SystemExit(f"pooled allocation did not preserve settlement-level EV demand: {checked}")
 if checked.get("market", {}).get("evs_per_stall") != 20:
     raise SystemExit(f"expected the active V2 stalls to support 20 EVs each: {checked}")
 if brownout is None or brownout.get("market", {}).get("active_customer_stalls") != 1:
-    raise SystemExit(f"50 percent charger power should proportionally leave one of two requested stalls powered: {brownout}")
-if brownout.get("market", {}).get("stranded_evs", 0) < 1:
-    raise SystemExit(f"brownout should strand the owners at one settlement despite spare aggregate EV capacity: {brownout}")
-if brownout.get("underserved_chart_tags", 0) < 1:
-    raise SystemExit(f"brownout did not place an underserved-settlement chart tag: {brownout}")
+    raise SystemExit(f"50 percent charger power should leave the single requested pooled stall powered: {brownout}")
+if brownout.get("market", {}).get("stranded_evs", 0) != 0:
+    raise SystemExit(f"brownout stranded EVs despite sufficient remaining powered pooled capacity: {brownout}")
+if brownout.get("underserved_chart_tags", 0) != 0:
+    raise SystemExit(f"brownout marked settlements underserved despite sufficient powered pooled capacity: {brownout}")
 if brownout.get("market", {}).get("angry_settlements") != 0:
     raise SystemExit(f"customers should remain friendly during the three-minute service grace period: {brownout}")
 if growth is None or growth.get("spawner_growth", 0) < 1:

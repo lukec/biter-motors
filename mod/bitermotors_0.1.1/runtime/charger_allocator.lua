@@ -41,21 +41,29 @@ local function heap_pop(heap, less)
   return result
 end
 
-local function assignment_available(assignment, key, allow_repeat)
-  return #assignment.settlements < assignment.spec.stalls
-    and (allow_repeat or not assignment.assigned_keys[key])
+local function add_assignment_settlement(assignment, candidate)
+  local key = candidate.key
+  if assignment.assigned_keys[key] then return end
+  assignment.assigned_keys[key] = true
+  assignment.settlements[#assignment.settlements + 1] = candidate.settlement
 end
 
-local function demand_station_less(left, right)
+local function station_less(left, right)
   local left_spec = left.assignment.spec
   local right_spec = right.assignment.spec
   if left_spec.evs_per_stall ~= right_spec.evs_per_stall then
     return left_spec.evs_per_stall > right_spec.evs_per_stall
   end
-  local left_active = left.assignment.customer_requested_stalls
-  local right_active = right.assignment.customer_requested_stalls
-  if left_active * right_spec.stalls ~= right_active * left_spec.stalls then
-    return ratio_less(left_active, left_spec.stalls, right_active, right_spec.stalls)
+  local left_used = left.assignment.total_capacity - left.assignment.remaining_capacity
+  local right_used = right.assignment.total_capacity - right.assignment.remaining_capacity
+  if left_used * right.assignment.total_capacity
+    ~= right_used * left.assignment.total_capacity then
+    return ratio_less(
+      left_used,
+      left.assignment.total_capacity,
+      right_used,
+      right.assignment.total_capacity
+    )
   end
   if left.candidate.distance ~= right.candidate.distance then
     return left.candidate.distance < right.candidate.distance
@@ -63,79 +71,101 @@ local function demand_station_less(left, right)
   return stable_less(left_spec.key, right_spec.key)
 end
 
-local function capacity_station_less(left, right)
-  local left_spec = left.assignment.spec
-  local right_spec = right.assignment.spec
-  local left_filled = #left.assignment.settlements
-  local right_filled = #right.assignment.settlements
-  if left_filled * right_spec.stalls ~= right_filled * left_spec.stalls then
-    return ratio_less(left_filled, left_spec.stalls, right_filled, right_spec.stalls)
-  end
-  if left.candidate.distance ~= right.candidate.distance then
-    return left.candidate.distance < right.candidate.distance
-  end
-  return stable_less(left_spec.key, right_spec.key)
-end
-
-local function best_available_station(pairs, key, less, allow_repeat)
+local function best_available_station(pairs)
   local best
   for _, pair in ipairs(pairs or {}) do
-    if assignment_available(pair.assignment, key, allow_repeat)
-      and (not best or less(pair, best)) then
+    if pair.assignment.remaining_capacity > 0
+      and (not best or station_less(pair, best)) then
       best = pair
     end
   end
   return best
 end
 
-local function demand_key_less(left, right, requested_capacity, demand)
-  local left_requested = requested_capacity[left] or 0
-  local right_requested = requested_capacity[right] or 0
+local function demand_key_less(left, right, allocated, demand)
+  local left_allocated = allocated[left] or 0
+  local right_allocated = allocated[right] or 0
   local left_demand = demand[left] or 0
   local right_demand = demand[right] or 0
-  if left_requested * right_demand ~= right_requested * left_demand then
-    return ratio_less(left_requested, left_demand, right_requested, right_demand)
+  if left_allocated * right_demand ~= right_allocated * left_demand then
+    return ratio_less(left_allocated, left_demand, right_allocated, right_demand)
   end
-  local left_unmet = left_demand - left_requested
-  local right_unmet = right_demand - right_requested
+  local left_unmet = left_demand - left_allocated
+  local right_unmet = right_demand - right_allocated
   if left_unmet ~= right_unmet then return left_unmet > right_unmet end
   return stable_less(left, right)
 end
 
-local function assign_pair(pair, assigned_capacity, requested_capacity, demand_phase)
+local function assign_demand(pair, amount, allocated, first_station)
   local assignment = pair.assignment
   local candidate = pair.candidate
-  local spec = assignment.spec
   local key = candidate.key
-  local stall_index = #assignment.settlements + 1
-
-  assignment.settlements[stall_index] = candidate.settlement
-  assignment.assigned_keys[key] = true
-  assigned_capacity[key] = (assigned_capacity[key] or 0) + spec.evs_per_stall
-  assignment.stall_loads[stall_index] = 0
-
-  if demand_phase then
-    local requested = requested_capacity[key] or 0
-    assignment.stall_loads[stall_index] = math.max(
-      0,
-      math.min(spec.evs_per_stall, (pair.demand or 0) - requested)
-    )
-    assignment.customer_requested_stalls = assignment.customer_requested_stalls + 1
-    assignment.requested_settlement_keys[key] = true
-    requested_capacity[key] = requested + spec.evs_per_stall
-  end
+  assignment.remaining_capacity = assignment.remaining_capacity - amount
+  assignment.total_requested_evs = assignment.total_requested_evs + amount
+  assignment.load_by_settlement_key[key] =
+    (assignment.load_by_settlement_key[key] or 0) + amount
+  assignment.requested_settlement_keys[key] = true
+  assignment.load_chunks[#assignment.load_chunks + 1] = {
+    settlement = candidate.settlement,
+    amount = amount
+  }
+  add_assignment_settlement(assignment, candidate)
+  allocated[key] = (allocated[key] or 0) + amount
+  first_station[key] = first_station[key] or assignment.station
 end
 
-function ChargerAllocator.allocate(station_specs, demand)
+local function admit_prospect(pair, assigned_capacity, first_station, admitted_keys)
+  local assignment = pair.assignment
+  local candidate = pair.candidate
+  local key = candidate.key
+  assignment.remaining_capacity = assignment.remaining_capacity - 1
+  add_assignment_settlement(assignment, candidate)
+  assigned_capacity[key] = 1
+  first_station[key] = first_station[key] or assignment.station
+  admitted_keys[key] = true
+end
+
+local function finalize_assignment(assignment)
+  local evs_per_stall = assignment.spec.evs_per_stall
+  local stall_index = 1
+  local stall_remaining = evs_per_stall
+  for _, chunk in ipairs(assignment.load_chunks) do
+    local remaining = chunk.amount
+    while remaining > 0 do
+      local amount = math.min(remaining, stall_remaining)
+      assignment.stall_loads[stall_index] =
+        (assignment.stall_loads[stall_index] or 0) + amount
+      assignment.stall_settlements[stall_index] =
+        assignment.stall_settlements[stall_index] or chunk.settlement
+      remaining = remaining - amount
+      stall_remaining = stall_remaining - amount
+      if stall_remaining == 0 then
+        stall_index = stall_index + 1
+        stall_remaining = evs_per_stall
+      end
+    end
+  end
+  assignment.customer_requested_stalls = assignment.total_requested_evs > 0
+    and math.ceil(assignment.total_requested_evs / evs_per_stall) or 0
+  assignment.requested_stalls = assignment.customer_requested_stalls
+end
+
+function ChargerAllocator.allocate(station_specs, demand, options)
   demand = demand or {}
+  options = options or {}
   local assignments = {}
   local candidate_pairs_by_key = {}
   local candidate_keys = {}
   local assigned_capacity = {}
   local requested_capacity = {}
   local first_station_by_settlement = {}
+  local admitted_keys = {}
 
   for _, spec in ipairs(station_specs or {}) do
+    local total_capacity = math.max(
+      0,
+      math.floor(spec.ev_capacity or (spec.stalls * spec.evs_per_stall))
+    )
     local assignment = {
       spec = spec,
       station = spec.station,
@@ -143,7 +173,13 @@ function ChargerAllocator.allocate(station_specs, demand)
       assigned_keys = {},
       operational_settlements = {},
       requested_settlement_keys = {},
+      load_by_settlement_key = {},
+      load_chunks = {},
       stall_loads = {},
+      stall_settlements = {},
+      total_capacity = total_capacity,
+      remaining_capacity = total_capacity,
+      total_requested_evs = 0,
       customer_requested_stalls = 0,
       requested_stalls = 0,
       powered_stalls = 0
@@ -170,51 +206,51 @@ function ChargerAllocator.allocate(station_specs, demand)
     if (demand[key] or 0) > 0 then heap_push(demand_heap, key, demand_less) end
   end
   while #demand_heap > 0 do
-    local best_key = heap_pop(demand_heap, demand_less)
-    local pair = best_available_station(
-      candidate_pairs_by_key[best_key], best_key, demand_station_less, true
-    )
+    local key = heap_pop(demand_heap, demand_less)
+    local pair = best_available_station(candidate_pairs_by_key[key])
     if pair then
-      pair.demand = demand[best_key] or 0
-      assign_pair(pair, assigned_capacity, requested_capacity, true)
-      first_station_by_settlement[pair.candidate.key] =
-        first_station_by_settlement[pair.candidate.key] or pair.assignment.station
-      if (demand[best_key] or 0) > (requested_capacity[best_key] or 0) then
-        heap_push(demand_heap, best_key, demand_less)
+      local unmet = (demand[key] or 0) - (requested_capacity[key] or 0)
+      local amount = math.min(
+        unmet,
+        pair.assignment.remaining_capacity,
+        pair.assignment.spec.evs_per_stall
+      )
+      if amount > 0 then
+        assign_demand(pair, amount, requested_capacity, first_station_by_settlement)
+        assigned_capacity[key] = requested_capacity[key]
+      end
+      if (requested_capacity[key] or 0) < (demand[key] or 0) then
+        heap_push(demand_heap, key, demand_less)
+      else
+        admitted_keys[key] = true
       end
     end
   end
 
-  local function capacity_less(left, right)
-    local left_capacity = assigned_capacity[left] or 0
-    local right_capacity = assigned_capacity[right] or 0
-    if left_capacity ~= right_capacity then return left_capacity < right_capacity end
-    return stable_less(left, right)
-  end
-  local capacity_heap = {}
-  for _, key in ipairs(candidate_keys) do heap_push(capacity_heap, key, capacity_less) end
-  while #capacity_heap > 0 do
-    local best_key = heap_pop(capacity_heap, capacity_less)
-    local pair = best_available_station(
-      candidate_pairs_by_key[best_key], best_key, capacity_station_less, false
-    )
-    if pair then
-      assign_pair(pair, assigned_capacity, requested_capacity, false)
-      first_station_by_settlement[pair.candidate.key] =
-        first_station_by_settlement[pair.candidate.key] or pair.assignment.station
-      heap_push(capacity_heap, best_key, capacity_less)
+  if options.admit_prospects ~= false then
+    for _, key in ipairs(candidate_keys) do
+      if (demand[key] or 0) == 0 then
+        local pair = best_available_station(candidate_pairs_by_key[key])
+        if pair then
+          admit_prospect(
+            pair,
+            assigned_capacity,
+            first_station_by_settlement,
+            admitted_keys
+          )
+        end
+      end
     end
   end
 
-  for _, assignment in pairs(assignments) do
-    assignment.requested_stalls = assignment.customer_requested_stalls
-  end
+  for _, assignment in pairs(assignments) do finalize_assignment(assignment) end
 
   return {
     assignments = assignments,
     assigned_capacity_by_settlement_key = assigned_capacity,
     requested_capacity_by_settlement_key = requested_capacity,
-    first_station_by_settlement_key = first_station_by_settlement
+    first_station_by_settlement_key = first_station_by_settlement,
+    admitted_keys = admitted_keys
   }
 end
 
