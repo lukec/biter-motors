@@ -10,6 +10,7 @@ ProductionHistory = require("runtime.production_history")
 ChargerAllocator = require("runtime.charger_allocator")
 SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
+ReservationPlanner = require("runtime.reservation_planner")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -253,7 +254,7 @@ local SALES_OFFICE_INITIAL_RECIPES = {
 local FIRST_CUSTOMER_CHARGER_UNLOCK_RECIPES = {
   "bitermotors-prototype-roadster"
 }
-local RESERVATION_BUFFER_LIMIT = 200
+local RESERVATION_BUFFER_LIMIT = 20
 local PROSPECT_RESERVATION_RETRY_MINUTES = 5
 local RESERVATION_SAMPLES_PER_PRINT = 60
 CUSTOMER_GROWTH_STATION_MINUTES = 4
@@ -7273,9 +7274,39 @@ function waiting_market_buyers_at_station(station, service)
   return count
 end
 
-function station_reservation_rate_per_minute(station, service)
-  return waiting_market_buyers_at_station(station, service)
-    / PROSPECT_RESERVATION_RETRY_MINUTES
+function sales_office_reservation_capacity_per_minute(force)
+  local capacity = 0
+  for _, office in pairs(registered_bitermotors_entities("sales_offices", force)) do
+    if office.valid and not office.disabled_by_script then
+      local recipe = office.get_recipe()
+      if recipe and RESERVATION_RECIPES[recipe.name] then
+        capacity = capacity + 60 / math.max(0.001, recipe.energy)
+      end
+    end
+  end
+  return capacity
+end
+
+function reservation_print_plan(force, service)
+  service = service or customer_service_for_force(force)
+  local stations = {}
+  for _, station in pairs(registered_bitermotors_entities("stations", force)) do
+    stations[#stations + 1] = {
+      key = station.unit_number,
+      prospects = station_has_grid_access(station)
+        and waiting_market_buyers_at_station(station, service) or 0
+    }
+  end
+  return ReservationPlanner.allocate(
+    stations,
+    PROSPECT_RESERVATION_RETRY_MINUTES,
+    sales_office_reservation_capacity_per_minute(force)
+  )
+end
+
+function station_reservation_rate_per_minute(station, service, plan)
+  plan = plan or reservation_print_plan(station.force, service)
+  return plan.rates_by_station[station.unit_number] or 0
 end
 
 local function count_active_customer_stalls(force)
@@ -7401,7 +7432,8 @@ local function show_station_info_panel(player, station)
   local active_stalls = active_station_stalls(station, allocations)
   local service = customer_growth_summary(station.force)
   local waiting_prospects = waiting_market_buyers_at_station(station, service)
-  local reservation_rate = station_reservation_rate_per_minute(station, service)
+  local reservation_plan = reservation_print_plan(station.force, service)
+  local reservation_rate = station_reservation_rate_per_minute(station, service, reservation_plan)
   local reservation_inventory = station_reservation_inventory(station)
   local reservation_stock = reservation_inventory and reservation_inventory.get_item_count(RESERVATION_NAME) or 0
   local researched_power_per_stall_kw = station_stall_power_watts(station) / 1000
@@ -7461,11 +7493,11 @@ local function show_station_info_panel(player, station)
     {sprite = "item/bitermotors-ev-charging-station", label = "Stalls", value = string.format("%d / %d active", active_stalls, config.stalls)},
     {sprite = "item/bitermotors-mass-market-ev", label = "EV capacity", value = string.format("%d / %d", active_stalls * config.evs_per_stall, config.stalls * config.evs_per_stall)},
     {sprite = "entity/biter-spawner", label = "Settlements", value = string.format("%d served", friendly_here)},
-    {sprite = "item/bitermotors-premium-ev", label = "Prospects", value = tostring(waiting_prospects), tooltip = string.format("New and returning prospects file one EV Reservation every %d minutes while an unpurchased vehicle generation is available.", PROSPECT_RESERVATION_RETRY_MINUTES)},
+    {sprite = "item/bitermotors-premium-ev", label = "Prospects", value = tostring(waiting_prospects), tooltip = string.format("New and returning prospects retry every %d minutes. Reservation printing is shared across chargers and capped by active Sales Office throughput.", PROSPECT_RESERVATION_RETRY_MINUTES)},
     {sprite = "item/bitermotors-ev-charging-station", label = "Underserved", value = tostring(underserved_here), color = underserved_here > 0 and BITERMOTORS_STATE_COLORS.bad or BITERMOTORS_STATE_COLORS.good},
     {sprite = "item/bitermotors-prototype-roadster", label = "Commutes", value = string.format("%d in / %d charging", commute_counts.en_route, commute_counts.charging)},
     {sprite = "item/accumulator", label = "Power", value = string.format("%.0f / %.0f kW", power_draw_kw, config.stalls * researched_power_per_stall_kw)},
-    {sprite = "item/bitermotors-ev-reservation", label = "Reservations", value = string.format("%.1f / min", reservation_rate)},
+    {sprite = "item/bitermotors-ev-reservation", label = "Reservations", value = string.format("%.1f / min", reservation_rate), tooltip = string.format("This charger's share of the %.1f reservations/min active Sales Offices can consume.", reservation_plan.maximum_rate)},
     {sprite = "item/bitermotors-ev-reservation", label = "Stored", value = tostring(reservation_stock)}
   })
 
@@ -7494,6 +7526,7 @@ local function biter_customer_market_summary(force)
   local reservation_prospects = 0
   local active_customer_stalls = powered_stations
   local service = nil
+  local reservation_plan = nil
 
   if customer_mode then
     covered_settlements = count_covered_biter_settlements(force)
@@ -7507,14 +7540,9 @@ local function biter_customer_market_summary(force)
           force
         )
     end
-    for _, surface in pairs(game.surfaces) do
-      for _, station in pairs(find_stations(surface, force)) do
-        local prospects = waiting_market_buyers_at_station(station, service)
-        reservation_prospects = reservation_prospects + prospects
-        reservation_rate = reservation_rate
-          + prospects / PROSPECT_RESERVATION_RETRY_MINUTES
-      end
-    end
+    reservation_plan = reservation_print_plan(force, service)
+    reservation_prospects = reservation_plan.prospects
+    reservation_rate = reservation_plan.capped_rate
   end
 
   local requested_customer_stalls = 0
@@ -7560,7 +7588,9 @@ local function biter_customer_market_summary(force)
     customer_prospects = customer_prospects,
     reservation_prospects = reservation_prospects,
     demand_units = reservation_rate,
-    reservations_per_minute = reservation_rate
+    reservations_per_minute = reservation_rate,
+    uncapped_reservations_per_minute = reservation_plan and reservation_plan.uncapped_rate or reservation_rate,
+    reservation_sales_capacity_per_minute = reservation_plan and reservation_plan.maximum_rate or reservation_rate
   }
 end
 
@@ -7652,13 +7682,21 @@ local function generate_station_reservations(force, service)
   end
 
   service = service or customer_service_for_force(force)
+  local plan = reservation_print_plan(force, service)
   local progress = reservation_print_progress()
+  local seen = {}
   for _, surface in pairs(game.surfaces) do
     for _, station in pairs(find_stations(surface, force)) do
-      local reservation_rate = station_reservation_rate_per_minute(station, service)
+      local key = station.unit_number
+      seen[key] = true
+      local reservation_rate = station_reservation_rate_per_minute(station, service, plan)
       if reservation_rate > 0 and station_has_grid_access(station) then
-        local key = station.unit_number
-        local accumulated = (progress[key] or 0) + reservation_rate
+        -- Old saves may contain enormous unprinted retry credit from the
+        -- prospect-scaled model. It is demand, not physical paperwork.
+        local accumulated = math.min(
+          math.max(0, progress[key] or 0),
+          RESERVATION_SAMPLES_PER_PRINT - 0.001
+        ) + reservation_rate
         local ready = math.floor(accumulated / RESERVATION_SAMPLES_PER_PRINT)
         if ready > 0 then
           local inserted = top_up_station_reservations(station, ready)
@@ -7669,8 +7707,16 @@ local function generate_station_reservations(force, service)
           end
         end
         progress[key] = accumulated
+      else
+        progress[key] = math.min(
+          math.max(0, progress[key] or 0),
+          RESERVATION_SAMPLES_PER_PRINT - 0.001
+        )
       end
     end
+  end
+  for key in pairs(progress) do
+    if not seen[key] then progress[key] = nil end
   end
 end
 
@@ -10150,6 +10196,8 @@ local function progress_snapshot(force)
     stranded_evs = market.stranded_evs,
     grown_colonies = market.grown_colonies,
     reservations_per_minute = market.reservations_per_minute,
+    uncapped_reservations_per_minute = market.uncapped_reservations_per_minute,
+    reservation_sales_capacity_per_minute = market.reservation_sales_capacity_per_minute,
     customer_prospects = market.customer_prospects,
     reservation_prospects = market.reservation_prospects,
     reservation_stock = market.charger_reservation_stock,
@@ -10875,7 +10923,12 @@ local function refresh_progress_panel(player)
       value = string.format("%d stored, %.1f/min", snapshot.reservation_stock, snapshot.reservations_per_minute),
       color = snapshot.reservations_per_minute > 0 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
       tooltip = snapshot.reservations_per_minute > 0
-      and string.format("%d new or returning prospects retry every %d minutes. Move their physical paperwork to Sales Offices with belts or logistic bots.", snapshot.reservation_prospects, PROSPECT_RESERVATION_RETRY_MINUTES)
+      and string.format(
+        "%d prospects represent %.1f reservations/min of demand. Printing is capped at %.1f/min to match active Sales Office throughput; move the physical paperwork with belts or logistic bots.",
+        snapshot.reservation_prospects,
+        snapshot.uncapped_reservations_per_minute,
+        snapshot.reservation_sales_capacity_per_minute
+      )
       or "No reservations are being printed. Chargers need reachable prospects with an unpurchased vehicle generation in operational customer settlements."
     }
   end

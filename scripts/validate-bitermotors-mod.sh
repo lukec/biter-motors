@@ -2931,6 +2931,9 @@ if growth.get("worm_growth", 0) not in (0, 1):
     raise SystemExit(f"one settlement growth event should create at most one hostile worm: {growth}")
 if growth.get("market", {}).get("grown_colonies", 0) < 1:
     raise SystemExit(f"customer growth state did not report the grown colony: {growth}")
+growth_market = growth.get("market", {})
+if growth_market.get("reservations_per_minute", 0) > growth_market.get("reservation_sales_capacity_per_minute", 0) + 0.001:
+    raise SystemExit(f"reservation output exceeded active Sales Office throughput: {growth}")
 if overload is None or overload.get("market", {}).get("stranded_evs", 0) < 1:
     raise SystemExit(f"charging overload did not report stranded EVs: {overload}")
 if overload.get("underserved_chart_tags", 0) < 1:
