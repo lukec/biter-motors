@@ -10421,15 +10421,25 @@ local function current_progress_objective(snapshot)
 end
 
 local function progress_stages(snapshot)
+  local customer_complete = snapshot.first_sale_complete
+  local premium_complete = customer_complete and snapshot.mass_market_sale_complete
+  local mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched
+  local autonomy_complete = mass_market_complete
+    and snapshot.ai_tokens_produced >= 1000
+    and snapshot.autonomous_logistics_researched
+    and snapshot.bitertaxi_gate.market_ready
+    and snapshot.bitertaxi_fleets_produced > 0
+    and snapshot.chargers_v4 > 0
+    and snapshot.bitertaxi_depots > 0
+    and snapshot.bitertaxi_sale_complete
+  local orbital_complete = autonomy_complete and snapshot.planetary_grid_researched
   return {
-    {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = snapshot.first_sale_complete},
-    {name = "Premium EVs", sprite = "item/bitermotors-premium-ev", complete = snapshot.premium_sale_complete
-      and snapshot.premium_evs_produced >= snapshot.premium_pilot_production_gate
-      and snapshot.biterfactories + snapshot.biterfactories_v2 > 0},
-    {name = "Mass-market EVs", sprite = "item/bitermotors-mass-market-ev", complete = snapshot.mass_market_sale_complete},
-    {name = "AI and autonomy", sprite = "item/bitermotors-ai-token", complete = snapshot.bitertaxi_sale_complete},
-    {name = "Orbital AI", sprite = "item/bitermotors-orbital-datacenter-core", complete = snapshot.orbital_ai_tokens_generated > 0},
-    {name = "AGI", sprite = "item/bitermotors-agi-model", complete = snapshot.victory}
+    {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = customer_complete},
+    {name = "Premium EVs", sprite = "item/bitermotors-premium-ev", complete = premium_complete},
+    {name = "Mass-market EVs", sprite = "item/bitermotors-mass-market-ev", complete = mass_market_complete},
+    {name = "AI and autonomy", sprite = "item/bitermotors-ai-token", complete = autonomy_complete},
+    {name = "Orbital AI", sprite = "item/bitermotors-orbital-datacenter-core", complete = orbital_complete},
+    {name = "AGI", sprite = "item/bitermotors-agi-model", complete = orbital_complete and snapshot.victory}
   }
 end
 
@@ -13407,6 +13417,7 @@ remote.add_interface("bitermotors", {
       stage = stage,
       objective = objective,
       detail = detail,
+      journey = progress_stages(snapshot),
       snapshot = snapshot
     }
   end,
