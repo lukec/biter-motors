@@ -711,6 +711,14 @@ data:extend({
   },
   {
     type = "custom-input",
+    name = "bitermotors-open-settlement-inspector",
+    key_sequence = "",
+    linked_game_control = "open-gui",
+    consuming = "none",
+    action = "lua"
+  },
+  {
+    type = "custom-input",
     name = "bitermotors-ev-self-driving-manual-up",
     key_sequence = "",
     linked_game_control = "move-up",

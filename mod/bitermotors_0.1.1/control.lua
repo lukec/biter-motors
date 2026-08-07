@@ -607,6 +607,8 @@ local HOSTILE_WORM_ENTITY_NAMES = {
 }
 local STATION_INFO_PANEL_NAME = "bitermotors_station_info_panel"
 local ENTITY_INFO_PANEL_NAME = "bitermotors_entity_info_panel"
+ENTITY_INFO_CLOSE_BUTTON_NAME = "bitermotors_entity_info_close"
+SETTLEMENT_INSPECT_INPUT = "bitermotors-open-settlement-inspector"
 local PROGRESS_PANEL_NAME = "bitermotors_progress_panel"
 local PROGRESS_CONTENT_NAME = "bitermotors_progress_content"
 local PROGRESS_CLOSE_BUTTON_NAME = "bitermotors_progress_close"
@@ -11210,10 +11212,10 @@ local function close_entity_info_panel(player)
   if not player or not player.valid then
     return
   end
-  local panel = player.gui.relative[ENTITY_INFO_PANEL_NAME]
-  if panel then
-    panel.destroy()
-  end
+  local screen_panel = player.gui.screen[ENTITY_INFO_PANEL_NAME]
+  if screen_panel then screen_panel.destroy() end
+  local legacy_panel = player.gui.relative[ENTITY_INFO_PANEL_NAME]
+  if legacy_panel then legacy_panel.destroy() end
 end
 
 local function is_bitermotors_manufacturer(entity)
@@ -11855,17 +11857,27 @@ local function show_customer_settlement_info_panel(player, settlement)
   for _, count in pairs(population.virtual_by_vehicle or {}) do
     settlement_population = settlement_population + count
   end
-  local panel = player.gui.relative.add{
+  local panel = player.gui.screen.add{
     type = "frame",
     name = ENTITY_INFO_PANEL_NAME,
-    caption = "Biter Motors Customer Settlement",
-    direction = "vertical",
-    anchor = {
-      gui = defines.relative_gui_type.additional_entity_info_gui,
-      position = defines.relative_gui_position.right
-    }
+    direction = "vertical"
   }
   panel.style.width = 380
+  panel.auto_center = true
+  local titlebar = panel.add{type = "flow", direction = "horizontal"}
+  titlebar.drag_target = panel
+  titlebar.add{type = "label", caption = "Biter Motors Customer Settlement", style = "frame_title"}
+  local drag = titlebar.add{type = "empty-widget", style = "draggable_space_header"}
+  drag.style.horizontally_stretchable = true
+  drag.style.height = 24
+  drag.drag_target = panel
+  titlebar.add{
+    type = "sprite-button",
+    name = ENTITY_INFO_CLOSE_BUTTON_NAME,
+    sprite = "utility/close",
+    style = "frame_action_button",
+    tooltip = "Close"
+  }
 
   local local_powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
   local local_assigned_capacity = service.capacity_by_settlement_key[key] or 0
@@ -12016,6 +12028,37 @@ local function show_customer_settlement_info_panel(player, settlement)
     reason = "Hostile reason: charging service is not currently available."
   end
   add_station_info_label(panel, reason)
+end
+
+function pending_settlement_inspectors()
+  storage.bitermotors_pending_settlement_inspectors =
+    storage.bitermotors_pending_settlement_inspectors or {}
+  return storage.bitermotors_pending_settlement_inspectors
+end
+
+function queue_selected_settlement_inspector(event)
+  local player = event.player_index and game.get_player(event.player_index)
+  local settlement = player and player.selected
+  if not is_customer_settlement_entity(settlement) then return end
+  pending_settlement_inspectors()[player.index] = {
+    settlement = settlement,
+    requested_tick = game.tick
+  }
+end
+
+function open_pending_settlement_inspectors()
+  for player_index, pending in pairs(pending_settlement_inspectors()) do
+    if pending.requested_tick < game.tick then
+      pending_settlement_inspectors()[player_index] = nil
+      local player = game.get_player(player_index)
+      local settlement = pending.settlement
+      if player and player.valid and is_customer_settlement_entity(settlement) then
+        opened_bitermotors_entities()[player.index] = settlement
+        close_station_info_panel(player)
+        show_customer_settlement_info_panel(player, settlement)
+      end
+    end
+  end
 end
 
 local function refresh_station_power_state(station, allocations)
@@ -12306,11 +12349,12 @@ script.on_event(defines.events.on_gui_click, function(event)
   local player = game.get_player(event.player_index)
   local panel_name = element.name == PROGRESS_CLOSE_BUTTON_NAME and PROGRESS_PANEL_NAME
     or element.name == "bitermotors_station_info_close" and STATION_INFO_PANEL_NAME
+    or element.name == ENTITY_INFO_CLOSE_BUTTON_NAME and ENTITY_INFO_PANEL_NAME
   local panel = panel_name and player and player.gui.screen[panel_name]
   if panel then
     panel.destroy()
   end
-  if panel_name == STATION_INFO_PANEL_NAME and player then
+  if (panel_name == STATION_INFO_PANEL_NAME or panel_name == ENTITY_INFO_PANEL_NAME) and player then
     opened_bitermotors_entities()[player.index] = nil
   end
 end)
@@ -12436,6 +12480,7 @@ script.on_event(defines.events.on_player_left_game, function(event)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_bitermotors_entities()[event.player_index] = nil
+  pending_settlement_inspectors()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
 end)
 
@@ -12444,6 +12489,7 @@ script.on_event(defines.events.on_player_removed, function(event)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_bitermotors_entities()[event.player_index] = nil
+  pending_settlement_inspectors()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
   sales_office_coverage_enabled()[event.player_index] = nil
   bitertaxi_coverage_enabled()[event.player_index] = nil
@@ -12477,6 +12523,8 @@ for input_name in pairs(EV_SELF_DRIVING_MANUAL_INPUTS) do
     cancel_player_ev_self_driving_manual(game.get_player(event.player_index))
   end)
 end
+
+script.on_event(SETTLEMENT_INSPECT_INPUT, queue_selected_settlement_inspector)
 
 script.on_event(defines.events.on_research_finished, function(event)
   local research = event.research
@@ -12819,6 +12867,7 @@ function process_bitermotors_sales_office_buyer_chunk()
 end
 
 script.on_nth_tick(15, function()
+  open_pending_settlement_inspectors()
   local phase = game.tick % 60
   if phase == 0 then
     process_bitermotors_second_housekeeping()

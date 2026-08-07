@@ -2139,11 +2139,23 @@ class BiterMotorsModTest(unittest.TestCase):
 
     def test_customer_settlement_inspector_explains_service_and_hostility(self):
         control = (MOD / "control.lua").read_text()
+        data = (MOD / "data.lua").read_text()
 
         self.assertIn("assignment_by_settlement_key", control)
         self.assertIn("is_customer_settlement_entity", control)
         self.assertIn("show_customer_settlement_info_panel", control)
         self.assertIn('caption = "Biter Motors Customer Settlement"', control)
+        self.assertIn('name = "bitermotors-open-settlement-inspector"', data)
+        self.assertIn('linked_game_control = "open-gui"', data)
+        self.assertIn("queue_selected_settlement_inspector", control)
+        self.assertIn("open_pending_settlement_inspectors()", control)
+        settlement_panel = control[
+            control.index("local function show_customer_settlement_info_panel"):
+            control.index("function pending_settlement_inspectors")
+        ]
+        self.assertIn("player.gui.screen.add", settlement_panel)
+        self.assertIn("ENTITY_INFO_CLOSE_BUTTON_NAME", settlement_panel)
+        self.assertNotIn("player.gui.relative.add", settlement_panel)
         self.assertIn("Sales Office coverage", control)
         self.assertIn("Privately owned EVs at this settlement", control)
         self.assertIn("Bitertaxi service", control)
