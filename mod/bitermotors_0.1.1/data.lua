@@ -8,23 +8,6 @@ local function icon64(path, tint)
   }
 end
 
-local function layered_icon64(base, overlay, base_tint, overlay_tint)
-  return {
-    {
-      icon = base,
-      icon_size = 64,
-      tint = base_tint
-    },
-    {
-      icon = overlay,
-      icon_size = 64,
-      scale = 0.35,
-      shift = {8, 8},
-      tint = overlay_tint
-    }
-  }
-end
-
 local function tech_icon(path)
   return {
     {
@@ -523,29 +506,13 @@ end
 
 local dollar_icon = icon64("__base__/graphics/icons/coin.png", {r = 1.0, g = 0.86, b = 0.25, a = 1.0})
 local ev_reservation_icon = generated_icon("ev-reservation")
-local wrecked_ev_icon = layered_icon64(
-  "__base__/graphics/icons/car.png",
-  "__space-age__/graphics/icons/scrap.png",
-  {r = 0.55, g = 0.55, b = 0.55, a = 1.0}
-)
+local wrecked_ev_icon = generated_icon("wrecked-ev")
 local ai_token_icon = generated_icon("ai-token")
 local agi_model_icon = generated_icon("agi-model")
 local biterfactory_module_icon = generated_icon("biterfactory-module")
 local biterfactory_icon = generated_icon("biterfactory")
 local structural_casting_icon = generated_icon("structural-casting")
-local biterfactory_v2_icon = {
-  {
-    icon = "__bitermotors__/graphics/icons/biterfactory.png",
-    icon_size = 256,
-    tint = {r = 0.72, g = 0.92, b = 1.0, a = 1.0}
-  },
-  {
-    icon = "__base__/graphics/icons/productivity-module-3.png",
-    icon_size = 64,
-    scale = 0.35,
-    shift = {8, 8}
-  }
-}
+local biterfactory_v2_icon = generated_icon("biterfactory-v2")
 local ev_charging_station_icon = generated_icon("ev-charging-station")
 local ev_charging_station_v2_icon = generated_icon("ev-charging-station-v2")
 local ev_charging_station_v3_icon = generated_icon("ev-charging-station-v3")
@@ -560,43 +527,16 @@ local sales_office_icon = {
 }
 local datacenter_icon = generated_icon("terrestrial-datacenter")
 local orbital_datacenter_core_icon = generated_icon("orbital-datacenter-core")
-local orbital_radiator_panel_icon = layered_icon64(
-  "__base__/graphics/icons/heat-pipe.png",
-  "__space-age__/graphics/icons/space-platform-foundation.png",
-  {r = 0.92, g = 0.48, b = 0.36, a = 1.0}
-)
-local high_density_space_solar_panel_icon = layered_icon64(
-  "__base__/graphics/icons/solar-panel.png",
-  "__space-age__/graphics/icons/space-platform-foundation.png",
-  {r = 0.55, g = 0.86, b = 1.0, a = 1.0}
-)
+local orbital_radiator_panel_icon = generated_icon("orbital-radiator-panel")
+local high_density_space_solar_panel_icon = generated_icon("high-density-space-solar-panel")
 local planetary_grid_controller_icon = generated_icon("planetary-grid-controller")
 local high_density_solar_array_icon = generated_icon("high-density-solar-array")
-local tandem_solar_array_icon = generated_icon("high-density-solar-array")
-table.insert(tandem_solar_array_icon, {
-  icon = "__base__/graphics/icons/productivity-module-3.png",
-  icon_size = 64,
-  scale = 0.35,
-  shift = {8, 8},
-  tint = {r = 0.55, g = 1.0, b = 0.78, a = 1.0}
-})
+local tandem_solar_array_icon = generated_icon("tandem-solar-array")
 local grid_battery_icon = generated_icon("grid-battery")
-local grid_battery_array_icon = generated_icon("grid-battery")
-table.insert(grid_battery_array_icon, {
-  icon = "__base__/graphics/icons/processing-unit.png",
-  icon_size = 64,
-  scale = 0.35,
-  shift = {8, 8},
-  tint = {r = 0.62, g = 0.92, b = 1.0, a = 1.0}
-})
+local grid_battery_array_icon = generated_icon("grid-battery-array")
 local bitertaxi_depot_icon = generated_icon("bitertaxi-depot")
 local megatruck_icon = generated_icon("megatruck")
-local espider_icon = layered_icon64(
-  "__base__/graphics/icons/spidertron.png",
-  "__space-age__/graphics/icons/battery-mk3-equipment.png",
-  nil,
-  {r = 0.35, g = 0.95, b = 1.0, a = 1.0}
-)
+local espider_icon = generated_icon("espider")
 
 local runtime_visual_sprites = {}
 for frame_index = 1, 8 do
@@ -959,12 +899,12 @@ data:extend({
   item("bitermotors-damaged-lfp-battery-pack", generated_icon("damaged-lfp-battery-pack"), "bitermotors-components", "d-b[damaged-lfp-pack]", 20, {
     flags = {"always-show"}
   }),
-  item("bitermotors-electric-drivetrain", layered_icon64("__base__/graphics/icons/electric-engine-unit.png", "__base__/graphics/icons/advanced-circuit.png"), "bitermotors-components", "b[electric-drivetrain]", 50),
+  item("bitermotors-electric-drivetrain", generated_icon("electric-drivetrain"), "bitermotors-components", "b[electric-drivetrain]", 50),
   item("bitermotors-prototype-roadster", generated_icon("prototype-roadster"), "transport", "bitermotors-a[prototype-roadster]", 1, {place_result = "bitermotors-prototype-roadster"}),
   item("bitermotors-premium-ev", generated_icon("premium-ev"), "transport", "bitermotors-b[premium-ev]", 1, {place_result = "bitermotors-premium-ev"}),
   item("bitermotors-mass-market-ev", generated_icon("mass-market-ev"), "transport", "bitermotors-c[mass-market-ev]", 1, {place_result = "bitermotors-mass-market-ev"}),
   item("bitermotors-megatruck", megatruck_icon, "transport", "bitermotors-d[megatruck]", 1, {place_result = "bitermotors-megatruck"}),
-  item("bitermotors-autonomy-computer", layered_icon64("__base__/graphics/icons/processing-unit.png", "__base__/graphics/icons/speed-module.png"), "bitermotors-components", "e[autonomy-computer]", 50),
+  item("bitermotors-autonomy-computer", generated_icon("autonomy-computer"), "bitermotors-components", "e[autonomy-computer]", 50),
   item("bitermotors-bitertaxi-fleet", generated_icon("bitertaxi-fleet"), "transport", "bitermotors-e[bitertaxi-fleet]", 5, {place_result = "bitermotors-bitertaxi-fleet"}),
   espider_item,
 

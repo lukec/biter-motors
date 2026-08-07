@@ -797,6 +797,15 @@ class BiterMotorsModTest(unittest.TestCase):
             "agi-model",
             "planetary-grid-controller",
             "bitertaxi-depot",
+            "biterfactory-v2",
+            "tandem-solar-array",
+            "grid-battery-array",
+            "wrecked-ev",
+            "espider",
+            "electric-drivetrain",
+            "autonomy-computer",
+            "orbital-radiator-panel",
+            "high-density-space-solar-panel",
         ]:
             self.assertIn(f'generated_icon("{slug}")', data)
             icon_path = MOD / f"graphics/icons/{slug}.png"
@@ -841,8 +850,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("tint = {r = 0.25, g = 0.85, b = 1.0, a = 0.35}", data)
         self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', data)
         self.assertIn('generated_entity_animation("orbital-datacenter-core", 0.36)', data)
-        self.assertIn('orbital_radiator_panel_icon = layered_icon64(', data)
-        self.assertIn('high_density_space_solar_panel_icon = layered_icon64(', data)
+        self.assertIn('orbital_radiator_panel_icon = generated_icon("orbital-radiator-panel")', data)
+        self.assertIn('high_density_space_solar_panel_icon = generated_icon("high-density-space-solar-panel")', data)
         for slug in [
             "ev-charging-station",
             "ev-charging-station-v2",
@@ -1615,7 +1624,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('high_density_solar_array.fast_replaceable_group = "solar-panel"', data)
         self.assertIn('data.raw["solar-panel"]["solar-panel"].next_upgrade = "bitermotors-high-density-solar-array"', data)
         self.assertIn('generated_icon("high-density-solar-array")', data)
-        self.assertIn('local tandem_solar_array_icon = generated_icon("high-density-solar-array")', data)
+        self.assertIn('local tandem_solar_array_icon = generated_icon("tandem-solar-array")', data)
         self.assertIn('graphics/entity/high-density-solar-array/high-density-solar-array.png', data)
         self.assertIn('graphics/entity/high-density-solar-array/high-density-solar-array-shadow.png', data)
         control = (MOD / "control.lua").read_text()
@@ -1627,7 +1636,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('grid_battery.energy_source.input_flow_limit = "5MW"', data)
         self.assertIn('grid_battery.energy_source.output_flow_limit = "5MW"', data)
         self.assertIn('generated_icon("grid-battery")', data)
-        self.assertIn('local grid_battery_array_icon = generated_icon("grid-battery")', data)
+        self.assertIn('local grid_battery_array_icon = generated_icon("grid-battery-array")', data)
         self.assertIn('graphics/animation/grid-battery-charge.png', data)
         self.assertIn('graphics/animation/grid-battery-discharge.png', data)
         self.assertIn('charge_cooldown = 30', data)

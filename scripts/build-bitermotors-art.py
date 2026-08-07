@@ -17,6 +17,7 @@ TECHNOLOGY_DIR = MOD_GRAPHICS / "technology"
 SHOWROOM_DIR = MOD_GRAPHICS / "entity/sales-office/showroom"
 ICON_SOURCE_DIR = ROOT / "art/bitermotors-icon-sources"
 MASTER_DIR = ROOT / "art/bitermotors-masters/final"
+ICON_UPGRADE_SOURCE_DIR = ROOT / "art/bitermotors-masters/sources/icon-upgrades"
 ACTIVE_SHOWROOM_SOURCE = (
     ROOT / "art/bitermotors-masters/sources/sales-office-active-empty-chroma.png"
 )
@@ -212,6 +213,12 @@ def derive_and_normalize_icons() -> None:
         if source.stem in VEHICLE_ICON_NAMES:
             continue
         normalized_icon(Image.open(source)).save(ICON_DIR / source.name, optimize=True)
+
+    for source in sorted(ICON_UPGRADE_SOURCE_DIR.glob("*.png")):
+        normalized_icon(Image.open(source), 224).save(
+            ICON_DIR / source.name,
+            optimize=True,
+        )
 
     normalized_icon(Image.open(MASTER_DIR / "agi-model.png")).save(ICON_DIR / "agi-model.png", optimize=True)
 

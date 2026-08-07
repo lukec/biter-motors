@@ -17,6 +17,9 @@ development namespace migration.
   extraction, and dry-electrode process artwork.
 - Grouped all four EV Charging Station tiers into one dedicated crafting-picker
   row in tier order.
+- Replaced nine composed placeholder icons with dedicated Biter Motors artwork
+  for advanced factories, energy products, components, vehicles, and orbital
+  infrastructure.
 - Added Biterfactory production, battery chemistry, recycling, High-density
   Solar Panels, Grid Batteries, and terrestrial AI compute.
 - Added orbital AI infrastructure, physical AI Token return, and the AGI

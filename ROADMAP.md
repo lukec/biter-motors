@@ -305,7 +305,7 @@ Status: **functional, not final**
 - [ ] Final orbital core, radiator, and space-solar art pass.
 - [ ] Final icon/readability audit at 16, 32, and 64 pixels.
   - [x] Replace clean battery recipe module badges with dedicated process art.
-  - [ ] Replace composed placeholder icons for Biterfactory V2, Tandem Solar
+  - [x] Replace composed placeholder icons for Biterfactory V2, Tandem Solar
         Array, Grid Battery Array, Wrecked EV, eSpider, Electric Drivetrain,
         Autonomy Computer, Orbital Radiator, and Space Solar.
   - [ ] Decide which unique Biter Motors technology families need dedicated
