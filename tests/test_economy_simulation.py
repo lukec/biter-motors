@@ -56,7 +56,7 @@ class EconomySimulationTests(unittest.TestCase):
         demanding = economy.bitertaxi_revenue_per_hour(economy.DEMANDING_RELEASE, 1)
         self.assertEqual(6_000, current)
         self.assertEqual(3_000, demanding)
-        self.assertAlmostEqual(3.4131666667, economy.bitertaxi_payback_hours(economy.CURRENT), places=6)
+        self.assertAlmostEqual(3.3666666667, economy.bitertaxi_payback_hours(economy.CURRENT), places=6)
 
     def test_easier_terrestrial_progression_uses_approved_dollar_costs(self):
         self.assertEqual(

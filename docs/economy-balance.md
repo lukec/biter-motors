@@ -92,7 +92,7 @@ modules, and factory build time, so real playtime will be longer.
 Recommended construction around the mass-market transition adds about 275
 Dollars: 100 for Biterfactory V1, 150 more for V2, and 25 for the solar-panel
 production gate. A fully stocked Bitertaxi Depot costs about
-20,479 Dollars, serves 1,000
+20,200 Dollars, serves 1,000
 customers, earns 6,000 Dollars/hour at
 the target rate, and pays back its full center-and-fleet capex in about
 3.4 hours before other operating costs.
@@ -107,9 +107,9 @@ improvement research is intentionally excluded.
 |---|---:|---|
 | Biterfactory V1 | 100 | 10 Biterfactory Modules |
 | Biterfactory V2 upgrade | 150 | Structural Casting plus the V2 recipe |
-| V3 Rapid Charger upgrade | 75 | Direct recipe capital |
-| V4 Solar Charging Hub upgrade | 204 direct / 284 effective | 200 Dollars, 4 HD panels, and 4 unsold Grid Batteries |
-| Full Bitertaxi Depot | 20,479 direct / 20,559 effective | 200 fleets, charger chain, center, and four unsold Grid Batteries |
+| V3 Rapid Charger upgrade | 0 | Physical electrical infrastructure only |
+| V4 Solar Charging Hub upgrade | 0 direct / 80 effective | 4 HD panels and 4 unsold Grid Batteries |
+| Full Bitertaxi Depot | 20,200 direct / 20,280 effective | 200 fleets, charger chain, center, and four unsold Grid Batteries |
 | Planetary Grid Controller | 11,050 direct / 11,250 effective | 10,000 direct, 100 capital-funded Biterfactory Modules, and 10 Grid Battery Array upgrades |
 | AGI final-run storage | 500 direct / 2,500 effective | 100 Grid Battery Arrays, separate from the 1,001-grid-asset target |
 
@@ -170,9 +170,9 @@ millions of HD panels.
 | 10 saturated Grid Battery Sales Offices | 5.7 h | 6.1 h | 6.5 h |
 | 25 saturated Grid Battery Sales Offices | 2.3 h | 2.4 h | 2.6 h |
 | 100 saturated Grid Battery Sales Offices | 0.6 h | 0.6 h | 0.6 h |
-| 10 full Bitertaxi Depots, net of fleet capex | 5.7 h | 5.8 h | 12.0 h |
-| 50 full Bitertaxi Depots, net of fleet capex | 3.9 h | 3.9 h | 7.9 h |
-| 100 full Bitertaxi Depots, net of fleet capex | 3.6 h | 3.7 h | 7.3 h |
+| 10 full Bitertaxi Depots, net of fleet capex | 5.7 h | 5.8 h | 11.9 h |
+| 50 full Bitertaxi Depots, net of fleet capex | 3.8 h | 3.9 h | 7.8 h |
+| 100 full Bitertaxi Depots, net of fleet capex | 3.6 h | 3.6 h | 7.3 h |
 
 These times assume every office or service center is continuously saturated.
 Customer growth, reservations, production, transport, and power shortages all

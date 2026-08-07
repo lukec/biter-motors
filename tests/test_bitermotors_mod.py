@@ -1889,16 +1889,18 @@ class BiterMotorsModTest(unittest.TestCase):
             'name = "bitermotors-ev-charging-station-v2", amount = 1',
             'name = "substation", amount = 4',
             'name = "processing-unit", amount = 40',
-            'name = "bitermotors-dollar", amount = 75',
         ]:
             self.assertIn(expected, station_v3_recipe)
+        self.assertNotIn('"bitermotors-dollar"', station_v3_recipe)
         for expected in [
             'name = "bitermotors-ev-charging-station-v3", amount = 1',
             'name = "bitermotors-high-density-solar-array", amount = 4',
             'name = "bitermotors-grid-battery", amount = 4',
-            'name = "bitermotors-dollar", amount = 200',
         ]:
             self.assertIn(expected, station_v4_recipe)
+        self.assertNotIn('"bitermotors-dollar"', station_v4_recipe)
+        self.assertIn("Upgrade 1 V2 charger with 4 Substations and 40 Processing Units", control)
+        self.assertIn("Upgrade 1 V3 Rapid Charger with 4 High-density Solar Panels and 4 Grid Batteries", control)
         charging_tech = data[data.index('tech("bitermotors-ev-charging-network"'):data.index('tech("bitermotors-energy-products"')]
         self.assertIn('unlock("bitermotors-ev-charging-station-v2")', charging_tech)
         self.assertNotIn('unlock("bitermotors-ev-charging-station")', charging_tech)

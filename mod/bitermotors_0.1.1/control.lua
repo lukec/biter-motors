@@ -10348,7 +10348,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.megatruck_gate.technology_ready then
     return "Megatruck engineering", "Research Megatruck Engineering.", "Develop Tank technology, then invest science and Dollars to adapt armored-vehicle engineering for the Megatruck."
   elseif snapshot.chargers_v3 == 0 and not snapshot.terrestrial_ai_researched then
-    return "Rapid Charging", "Craft and place a V3 Rapid Charger.", "Craft it from 1 V2 charger, 4 Substations, 40 Processing Units, and 75 Dollars. Its 12 occupied stalls can draw 3 MW."
+    return "Rapid Charging", "Craft and place a V3 Rapid Charger.", "Upgrade 1 V2 charger with 4 Substations and 40 Processing Units. Its 12 occupied stalls can draw 3 MW."
   elseif snapshot.solar_arrays == 0 or snapshot.grid_batteries == 0 then
     return "Energy products", "Build a High-density Solar Panel and a Grid Battery.", "Upgrade a conventional panel in an assembler; Biterfactories can mass-produce panels more cheaply. Build Grid Batteries in either Biterfactory tier."
   elseif not snapshot.terrestrial_ai_researched then
@@ -10364,7 +10364,7 @@ local function current_progress_objective(snapshot)
   elseif snapshot.bitertaxi_fleets_produced == 0 then
     return "Autonomy", "Build the first Bitertaxi Fleet in Biterfactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
   elseif snapshot.chargers_v4 == 0 then
-    return "Rapid Charging", "Craft and place a solar-canopy V4 Solar Charging Hub.", "Craft it from 1 V3 Rapid Charger, 4 High-density Solar Panels, 4 Grid Batteries, and 200 Dollars. Twenty occupied stalls can draw 10 MW."
+    return "Rapid Charging", "Craft and place a solar-canopy V4 Solar Charging Hub.", "Upgrade 1 V3 Rapid Charger with 4 High-density Solar Panels and 4 Grid Batteries. Twenty occupied stalls can draw 10 MW."
   elseif snapshot.bitertaxi_depots == 0 then
     return "Autonomy", "Build a Bitertaxi Depot.", "Combine a V4 Solar Charging Hub, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Bitertaxis and draws 10 MW."
   elseif not snapshot.bitertaxi_sale_complete then

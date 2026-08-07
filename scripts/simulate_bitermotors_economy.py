@@ -206,7 +206,7 @@ PRE_ENDGAME_DOLLARS = (
 
 BITERTAXI_FLEET_DOLLARS = 100
 BITERTAXI_FLEETS_PER_CENTER = 200
-BITERTAXI_CENTER_FIXED_DOLLARS = 75 + 200 + 200 + 4
+BITERTAXI_CENTER_FIXED_DOLLARS = 200
 BITERTAXI_CENTER_CAPEX = (
     BITERTAXI_FLEETS_PER_CENTER * BITERTAXI_FLEET_DOLLARS
     + BITERTAXI_CENTER_FIXED_DOLLARS
@@ -609,11 +609,11 @@ def construction_markdown() -> str:
     rows = (
         ("Biterfactory V1", "100", "10 Biterfactory Modules"),
         ("Biterfactory V2 upgrade", "150", "Structural Casting plus the V2 recipe"),
-        ("V3 Rapid Charger upgrade", "75", "Direct recipe capital"),
+        ("V3 Rapid Charger upgrade", "0", "Physical electrical infrastructure only"),
         (
             "V4 Solar Charging Hub upgrade",
-            "204 direct / 284 effective",
-            "200 Dollars, 4 HD panels, and 4 unsold Grid Batteries",
+            "0 direct / 80 effective",
+            "4 HD panels and 4 unsold Grid Batteries",
         ),
         (
             "Full Bitertaxi Depot",

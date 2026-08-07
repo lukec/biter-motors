@@ -1636,8 +1636,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-ev-charging-station-v2", amount = 1},
       {type = "item", name = "substation", amount = 4},
-      {type = "item", name = "processing-unit", amount = 40},
-      {type = "item", name = "bitermotors-dollar", amount = 75}
+      {type = "item", name = "processing-unit", amount = 40}
     },
     {{type = "item", name = "bitermotors-ev-charging-station-v3", amount = 1}}, 45
   ),
@@ -1645,8 +1644,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-ev-charging-station-v3", amount = 1},
       {type = "item", name = "bitermotors-high-density-solar-array", amount = 4},
-      {type = "item", name = "bitermotors-grid-battery", amount = 4},
-      {type = "item", name = "bitermotors-dollar", amount = 200}
+      {type = "item", name = "bitermotors-grid-battery", amount = 4}
     },
     {{type = "item", name = "bitermotors-ev-charging-station-v4", amount = 1}}, 60
   ),
