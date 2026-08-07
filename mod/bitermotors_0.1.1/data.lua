@@ -1329,7 +1329,12 @@ local bitertaxi_depot_power = copied_assembler(
   "10MW",
   1
 )
-bitertaxi_depot_power.flags = {"not-on-map", "not-blueprintable", "not-deconstructable"}
+bitertaxi_depot_power.flags = {
+  "placeable-off-grid",
+  "not-on-map",
+  "not-blueprintable",
+  "not-deconstructable"
+}
 bitertaxi_depot_power.minable = nil
 bitertaxi_depot_power.selectable_in_game = false
 bitertaxi_depot_power.collision_mask = {layers = {}}

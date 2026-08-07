@@ -25,6 +25,8 @@ development namespace migration.
   benchmarks for large customer populations.
 - Reworked charger allocation around event-invalidated power caches and a
   spatial station index, substantially reducing recurring late-save stutter.
+- Made the Bitertaxi Depot's hidden 10 MW load connect anywhere a real power
+  pole overlaps its 8x8 footprint, matching EV Charging Station behavior.
 - Added the fresh-start crash-landing narrative and recovered industrial kit.
 - Restored Transport Belt Capacity, Battery MK3, Advanced Asteroid Processing,
   and Asteroid Productivity through reachable Biter Motors progression paths.

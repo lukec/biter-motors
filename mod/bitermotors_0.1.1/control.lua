@@ -3355,13 +3355,16 @@ function invalidate_station_power_pole_cache_near(entity)
   local cache = storage.bitermotors_station_power_pole_cache
   if not cache then return end
   local radius = STATION_GRID_CONNECTION_DISTANCE
-  for unit_number, station in pairs(bitermotors_entity_registries().stations) do
-    if not station or not station.valid then
-      cache[unit_number] = nil
-    elseif station.surface == entity.surface and station.force == entity.force
-      and math.abs(station.position.x - entity.position.x) <= radius
-      and math.abs(station.position.y - entity.position.y) <= radius then
-      cache[unit_number] = nil
+  local registries = bitermotors_entity_registries()
+  for _, consumers in pairs({registries.stations, registries.bitertaxi_depots}) do
+    for unit_number, consumer in pairs(consumers) do
+      if not consumer or not consumer.valid then
+        cache[unit_number] = nil
+      elseif consumer.surface == entity.surface and consumer.force == entity.force
+        and math.abs(consumer.position.x - entity.position.x) <= radius
+        and math.abs(consumer.position.y - entity.position.y) <= radius then
+        cache[unit_number] = nil
+      end
     end
   end
 end
@@ -7549,22 +7552,35 @@ function bitertaxi_depot_power_entities()
 end
 
 function ensure_bitertaxi_depot_power(center)
+  if not center or not center.valid or not center.unit_number then return nil end
   local powers = bitertaxi_depot_power_entities()
   local power = powers[center.unit_number]
+  local _, connection_position = nearby_real_power_pole(center)
+  connection_position = connection_position or center.position
+  if power and power.valid
+    and (math.abs(power.position.x - connection_position.x) > 0.01
+      or math.abs(power.position.y - connection_position.y) > 0.01) then
+    power.destroy()
+    power = nil
+  end
+  if power and not power.valid then power = nil end
   if power and power.valid then return power end
   local existing = center.surface.find_entities_filtered{
     name = BITERTAXI_DEPOT_POWER_NAME,
-    position = center.position,
-    radius = 0.25,
+    area = center.bounding_box,
     force = center.force
   }
   for _, candidate in pairs(existing) do
-    if candidate.valid then
+    if candidate.valid
+      and math.abs(candidate.position.x - connection_position.x) <= 0.01
+      and math.abs(candidate.position.y - connection_position.y) <= 0.01 then
       if not power then
         power = candidate
       else
         candidate.destroy()
       end
+    elseif candidate.valid then
+      candidate.destroy()
     end
   end
   if power then
@@ -7573,7 +7589,7 @@ function ensure_bitertaxi_depot_power(center)
   end
   power = center.surface.create_entity{
     name = BITERTAXI_DEPOT_POWER_NAME,
-    position = center.position,
+    position = connection_position,
     force = center.force,
     quality = center.quality,
     create_build_effect_smoke = false
@@ -7680,8 +7696,10 @@ function bitertaxi_customer_allocations(force)
 end
 
 function bitertaxi_depot_power_factor(center)
+  if not nearby_real_power_pole(center) then return 0 end
   local power = ensure_bitertaxi_depot_power(center)
   if not power then return 0 end
+  if not power.is_connected_to_electric_network() then return 0 end
   if power.status == defines.entity_status.no_power then return 0 end
   if power.status == defines.entity_status.low_power then return 0.5 end
   return power.energy and power.energy > 0 and 1 or 0
@@ -7703,7 +7721,8 @@ function bitertaxi_depot_snapshot(center, allocated_customers)
   if customers == nil then
     customers = bitertaxi_customer_allocations(center.force)[center.unit_number] or 0
   end
-  local power_factor = bitertaxi_depot_power_factor(center)
+  local grid_connected = nearby_real_power_pole(center) ~= nil
+  local power_factor = grid_connected and bitertaxi_depot_power_factor(center) or 0
   local audio_level = continuous_improvement_level(center.force, PREMIUM_AUDIO_TECH_NAME)
   local metrics = BitertaxiDepot.metrics{
     max_fleet = 200,
@@ -7721,6 +7740,7 @@ function bitertaxi_depot_snapshot(center, allocated_customers)
     allocated = metrics.allocated,
     customers = customers,
     served = metrics.served,
+    grid_connected = grid_connected,
     power_factor = power_factor,
     revenue_per_minute = metrics.revenue_per_minute,
     output_dollars = output and output.get_item_count(DOLLAR_NAME) or 0,
@@ -10968,6 +10988,23 @@ BITERMOTORS_STATE_COLORS = {
 }
 
 function entity_status_presentation(entity)
+  if entity.name == BITERTAXI_DEPOT_NAME then
+    local snapshot = bitertaxi_depot_snapshot(entity)
+    if not snapshot.grid_connected then
+      return "No grid", BITERMOTORS_STATE_COLORS.bad
+    elseif snapshot.power_factor == 0 then
+      return "No power", BITERMOTORS_STATE_COLORS.bad
+    elseif snapshot.power_factor < 1 then
+      return "Low power", BITERMOTORS_STATE_COLORS.warning
+    elseif snapshot.output_blocked then
+      return "Dollar output blocked", BITERMOTORS_STATE_COLORS.bad
+    elseif snapshot.stored == 0 then
+      return "No Bitertaxis", BITERMOTORS_STATE_COLORS.warning
+    elseif snapshot.allocated > 0 then
+      return "Working", BITERMOTORS_STATE_COLORS.good
+    end
+    return "No customers in range", BITERMOTORS_STATE_COLORS.neutral
+  end
   if entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
     local market = classify_sales_office_market(buyers)
@@ -11106,6 +11143,8 @@ local function show_manufacturer_info_panel(player, entity)
       add_station_info_label(panel, "Next: deliver Bitertaxis to the 40-slot fleet inventory.")
     elseif snapshot.customers == 0 then
       add_station_info_label(panel, "Blocked: no mobile biter customers are inside service coverage.")
+    elseif not snapshot.grid_connected then
+      add_station_info_label(panel, "Blocked: place a real power pole so its supply area overlaps the depot footprint.")
     elseif snapshot.power_factor == 0 then
       add_station_info_label(panel, "Blocked: connect and supply the 10 MW fleet charger load.")
     elseif snapshot.output_blocked then

@@ -2386,7 +2386,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('name = "bitermotors-bitertaxi-depot"', data)
         self.assertIn("bitertaxi_depot.inventory_size = 43", data)
         self.assertIn('"bitermotors-bitertaxi-depot-power"', data)
-        self.assertIn('"10MW"', data[data.index("local bitertaxi_depot_power ="):data.index("local orbital_datacenter_core =")])
+        depot_power = data[data.index("local bitertaxi_depot_power ="):data.index("local orbital_datacenter_core =")]
+        self.assertIn('"10MW"', depot_power)
+        self.assertIn('"placeable-off-grid"', depot_power)
         self.assertIn('recipe("bitermotors-operate-bitertaxi-fleet", {"bitermotors-bitertaxi-depot"}', data)
         self.assertIn('unlock("bitermotors-bitertaxi-depot")', data)
         self.assertIn('unlock("bitermotors-operate-bitertaxi-fleet")', data)
@@ -2395,6 +2397,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("BITERTAXI_ATTRITION_VEHICLE_HOURS = 60", control)
         self.assertIn("function process_bitertaxi_depots", control)
         self.assertIn("function ensure_bitertaxi_depot_power", control)
+        self.assertIn("local _, connection_position = nearby_real_power_pole(center)", control)
+        self.assertIn("position = connection_position", control)
+        self.assertIn("if not power.is_connected_to_electric_network() then return 0 end", control)
         self.assertIn("function bitertaxi_customer_allocations", control)
         self.assertIn('registered_bitermotors_entities("bitertaxi_depots", force)', control)
         self.assertIn("customer_settlement_populations()", control)
@@ -2407,7 +2412,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("output_blocked = bitertaxi_dollar_output_blocked(output)", control)
         self.assertIn("not snapshot.output_blocked", control)
         self.assertIn("trips and fleet attrition are paused", control)
-        self.assertIn("radius = 0.25", control)
+        self.assertIn("area = center.bounding_box", control)
         self.assertIn("active_power_units", control)
         self.assertIn("not active_power_units[power.unit_number]", control)
         self.assertIn("bitertaxi_depot_status = function", control)
@@ -2415,6 +2420,18 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("legacy_bitertaxi_sale.enabled = false", control)
         self.assertIn("invalidate_bitertaxi_customer_allocations(entity.force)", control)
         self.assertIn("bitermotors-bitertaxi-depot=Bitertaxi Depot", locale)
+        validator = (ROOT / "scripts" / "validate-bitermotors-mod.sh").read_text()
+        self.assertIn("position = {bitertaxi_x, bitertaxi_y + 12}", validator)
+        self.assertIn("position = {bitertaxi_x, bitertaxi_y + 20}", validator)
+
+    def test_power_pole_changes_invalidate_chargers_and_bitertaxi_depots(self):
+        control = (MOD / "control.lua").read_text()
+        start = control.index("function invalidate_station_power_pole_cache_near")
+        end = control.index("local function station_has_grid_access", start)
+        invalidation = control[start:end]
+
+        self.assertIn("registries.stations", invalidation)
+        self.assertIn("registries.bitertaxi_depots", invalidation)
 
     def test_easier_campaign_economy_is_consistent_in_runtime_and_prototypes(self):
         data = (MOD / "data.lua").read_text()

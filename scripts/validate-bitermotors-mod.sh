@@ -251,16 +251,16 @@ script.on_init(function()
   local bitertaxi_x = bitertaxi_center and bitertaxi_center.position.x or 200
   local bitertaxi_y = bitertaxi_center and bitertaxi_center.position.y or -100
   for x = bitertaxi_x - 2, bitertaxi_x + 2 do
-    for y = bitertaxi_y + 6, bitertaxi_y + 13 do
+    for y = bitertaxi_y + 6, bitertaxi_y + 21 do
       bitertaxi_power_tiles[#bitertaxi_power_tiles + 1] = {name = "landfill", position = {x, y}}
     end
   end
   surface.set_tiles(bitertaxi_power_tiles)
   local bitertaxi_substation = surface.create_entity{
-    name = "substation", position = {bitertaxi_x, bitertaxi_y + 8}, force = force
+    name = "substation", position = {bitertaxi_x, bitertaxi_y + 12}, force = force
   }
   local bitertaxi_power = surface.create_entity{
-    name = POWER_SOURCE, position = {bitertaxi_x, bitertaxi_y + 12}, force = force
+    name = POWER_SOURCE, position = {bitertaxi_x, bitertaxi_y + 20}, force = force
   }
   local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
@@ -2463,7 +2463,10 @@ if reserve_fuel.get("fuel_top_speed_multiplier") != 0.1:
     raise SystemExit(f"eSpider limp-home fuel speed mismatch: {reserve_fuel}")
 print("eSpider native vehicle prototypes OK.")
 PY
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/bitermotors-create.log 2>&1
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/bitermotors-create.log 2>&1; then
+  tail -120 /tmp/bitermotors-create.log >&2
+  exit 1
+fi
 if grep -qE ' errored when running|Error:|Error while loading|Modifications: ' /tmp/bitermotors-create.log; then
   cat /tmp/bitermotors-create.log
   exit 1
@@ -2473,7 +2476,10 @@ if grep -qE "non-recoverable error|Error while running event" /tmp/bitermotors-c
   exit 1
 fi
 rm -f "$report"
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --benchmark "$save" --benchmark-ticks 18580 --benchmark-runs 1 >/tmp/bitermotors-benchmark.log 2>&1
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --benchmark "$save" --benchmark-ticks 18580 --benchmark-runs 1 >/tmp/bitermotors-benchmark.log 2>&1; then
+  tail -120 /tmp/bitermotors-benchmark.log >&2
+  exit 1
+fi
 if grep -qE "non-recoverable error|Error while running event" /tmp/bitermotors-benchmark.log; then
   tail -120 /tmp/bitermotors-benchmark.log >&2
   exit 1
