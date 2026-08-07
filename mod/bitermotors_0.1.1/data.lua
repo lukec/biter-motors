@@ -1261,7 +1261,9 @@ terrestrial_datacenter.graphics_set = generated_entity_animation("terrestrial-da
   working_animation("datacenter-cooling-fans", 128, 64, 0.55, {0, -1.65}, 0.4, false)
 })
 
-local bitertaxi_depot = table.deepcopy(data.raw["logistic-container"]["passive-provider-chest"])
+-- The operating fleet is private machine inventory. A logistic provider would
+-- let requester chests remove Bitertaxis that are actively serving customers.
+local bitertaxi_depot = table.deepcopy(data.raw.container["steel-chest"])
 bitertaxi_depot.name = "bitermotors-bitertaxi-depot"
 bitertaxi_depot.icons = bitertaxi_depot_icon
 bitertaxi_depot.icon = nil

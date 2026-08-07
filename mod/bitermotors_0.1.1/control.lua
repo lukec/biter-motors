@@ -7312,7 +7312,7 @@ local function close_station_info_panel(player)
 end
 
 function bitermotors_relative_anchor(entity)
-  local gui_type = entity.type == "logistic-container"
+  local gui_type = (entity.type == "container" or entity.type == "logistic-container")
     and defines.relative_gui_type.container_gui
     or defines.relative_gui_type.assembling_machine_gui
   return {
@@ -7825,7 +7825,7 @@ function bitertaxi_service_for_force(force)
   end
   storage.bitermotors_bitertaxi_allocation_cache = storage.bitermotors_bitertaxi_allocation_cache or {}
   local cached = storage.bitermotors_bitertaxi_allocation_cache[force.index]
-  if cached and game.tick - cached.tick < 300 then
+  if cached and game.tick - cached.tick <= 300 then
     return cached.service
   end
 

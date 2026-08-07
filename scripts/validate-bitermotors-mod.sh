@@ -2043,6 +2043,10 @@ for base_name in (
 datacenter = data["assembling-machine"]["bitermotors-terrestrial-datacenter"]
 if datacenter["energy_usage"] != "8MW" or "bitermotors-datacenter" not in datacenter["crafting_categories"]:
     raise SystemExit(f"Terrestrial Datacenter prototype mismatch: {datacenter}")
+if "bitermotors-bitertaxi-depot" not in data["container"]:
+    raise SystemExit("Bitertaxi Depot must use private container inventory")
+if "bitermotors-bitertaxi-depot" in data.get("logistic-container", {}):
+    raise SystemExit("Bitertaxi Depot operating fleet must not be a logistic provider")
 bitertaxi_recipe = data["recipe"]["bitermotors-bitertaxi-fleet"]
 if bitertaxi_recipe["categories"] != ["bitermotors-mass-vehicle-assembly"]:
     raise SystemExit(f"Bitertaxi Fleet must be built in Biterfactory V2: {bitertaxi_recipe['categories']}")
