@@ -10362,7 +10362,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.bitertaxi_gate.market_ready then
     return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Megatruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
   elseif snapshot.bitertaxi_fleets_produced == 0 then
-    return "Autonomy", "Build the first Bitertaxi Fleet in Biterfactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 100 Dollars."
+    return "Autonomy", "Build the first Bitertaxi Fleet in Biterfactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 20 Dollars."
   elseif snapshot.chargers_v4 == 0 then
     return "Rapid Charging", "Craft and place a solar-canopy V4 Solar Charging Hub.", "Upgrade 1 V3 Rapid Charger with 4 High-density Solar Panels and 4 Grid Batteries. Twenty occupied stalls can draw 10 MW."
   elseif snapshot.bitertaxi_depots == 0 then

@@ -1919,7 +1919,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('name = "bitermotors-bitertaxi-fleet", amount = 3', bitertaxi_sale)
         self.assertIn('{{type = "item", name = "bitermotors-dollar", amount = 1}}, 3', bitertaxi_sale)
         bitertaxi_recipe = data[data.index('recipe("bitermotors-bitertaxi-fleet"'):data.index('recipe("bitermotors-bitertaxi-depot"')]
-        self.assertIn('name = "bitermotors-dollar", amount = 100', bitertaxi_recipe)
+        self.assertIn('name = "bitermotors-dollar", amount = 20', bitertaxi_recipe)
+        self.assertNotIn('name = "bitermotors-dollar", amount = 100', bitertaxi_recipe)
+        self.assertIn("4 Mass-market EVs, 4 Autonomy Computers, and 20 Dollars", control)
 
     def test_sales_office_coverage_has_remote_view_toggle(self):
         data = (MOD / "data.lua").read_text()

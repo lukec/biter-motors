@@ -1968,7 +1968,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-mass-market-ev", amount = 4},
       {type = "item", name = "bitermotors-autonomy-computer", amount = 4},
-      {type = "item", name = "bitermotors-dollar", amount = 100}
+      {type = "item", name = "bitermotors-dollar", amount = 20}
     },
     {{type = "item", name = "bitermotors-bitertaxi-fleet", amount = 1}}, 20
   ),
