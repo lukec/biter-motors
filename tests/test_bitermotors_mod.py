@@ -1957,6 +1957,31 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("{r = 0.10, g = 0.20, b = 0.08, a = 0.10}", control)
         self.assertNotIn("color = {r = 0.2, g = 1.0, b = 0.35", control)
 
+    def test_bitertaxi_coverage_has_remote_view_toggle(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/bitermotors.cfg").read_text()
+        shortcut = data[
+            data.index('name = "bitermotors-toggle-bitertaxi-coverage"') - 40:
+            data.index('name = "bitermotors-route-ev"')
+        ]
+
+        self.assertIn('type = "shortcut"', shortcut)
+        self.assertIn('action = "lua"', shortcut)
+        self.assertIn('toggleable = true', shortcut)
+        self.assertIn('technology_to_unlock = "bitermotors-autonomous-logistics"', shortcut)
+        self.assertIn('__bitermotors__/graphics/icons/bitertaxi-depot.png', shortcut)
+        self.assertIn(
+            "bitermotors-toggle-bitertaxi-coverage=Bitertaxi Service Coverage",
+            locale,
+        )
+        self.assertIn('BITERTAXI_COVERAGE_SHORTCUT = "bitermotors-toggle-bitertaxi-coverage"', control)
+        self.assertIn("refresh_bitertaxi_coverage", control)
+        self.assertIn("refresh_all_bitertaxi_coverage", control)
+        self.assertIn('render_mode = "chart"', control)
+        self.assertIn("radius = BITERTAXI_DEPOT_RADIUS", control)
+        self.assertIn("mark_bitertaxi_coverage_dirty", control)
+
     def test_grid_battery_sales_use_social_adoption_and_physical_buyers(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
@@ -2110,11 +2135,13 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("show_customer_settlement_info_panel", control)
         self.assertIn('caption = "Biter Motors Customer Settlement"', control)
         self.assertIn("Sales Office coverage", control)
-        self.assertIn("Active vehicles at this settlement", control)
+        self.assertIn("Privately owned EVs at this settlement", control)
+        self.assertIn("Bitertaxi service", control)
         self.assertIn("Assigned charger", control)
         self.assertIn("unallocated", control)
         self.assertIn("Network vehicle capacity", control)
-        self.assertIn("outside the %d-tile Sales Office market radius", control)
+        self.assertIn("outside both the %d-tile Sales Office market radius", control)
+        self.assertIn("Bitertaxi fleet capacity or power is insufficient", control)
         self.assertIn("no reachable powered charger has free pooled EV capacity", control)
         self.assertIn("sold EVs exceed reachable charging capacity", control)
         self.assertIn("remains friendly during its patience period", control)
@@ -2410,11 +2437,15 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("position = connection_position", control)
         self.assertIn("if not power.is_connected_to_electric_network() then return 0 end", control)
         self.assertIn("function bitertaxi_customer_allocations", control)
+        self.assertIn("function bitertaxi_service_for_force", control)
         self.assertIn('registered_bitermotors_entities("bitertaxi_depots", force)', control)
         self.assertIn("customer_settlement_populations()", control)
-        self.assertIn("distance <= BITERTAXI_DEPOT_RADIUS * BITERTAXI_DEPOT_RADIUS", control)
-        self.assertIn("available[center.unit_number] = stored > 0", control)
-        self.assertIn("result[selected.unit_number] = result[selected.unit_number] + customers", control)
+        self.assertIn("bitertaxi_covered_settlements(depots)", control)
+        self.assertIn("stored * BITERTAXI_CUSTOMERS_PER_VEHICLE * power_factor", control)
+        self.assertIn("served_by_settlement_key", control)
+        self.assertIn("service.bitertaxi_service.served_by_settlement_key[key]", control)
+        self.assertIn("Operational Bitertaxi service makes covered settlements friendly", control)
+        self.assertIn("no - not required for Bitertaxi service", control)
         self.assertIn("game.tick - cached.tick < 300", control)
         self.assertIn("function bitertaxi_dollar_output_blocked", control)
         self.assertIn("slot.count >= slot.prototype.stack_size", control)
@@ -2432,6 +2463,7 @@ class BiterMotorsModTest(unittest.TestCase):
         validator = (ROOT / "scripts" / "validate-bitermotors-mod.sh").read_text()
         self.assertIn("position = {bitertaxi_x, bitertaxi_y + 12}", validator)
         self.assertIn("position = {bitertaxi_x, bitertaxi_y + 20}", validator)
+        self.assertIn("bitertaxi_only_spawner_converted_to_customer", validator)
 
     def test_power_pole_changes_invalidate_chargers_and_bitertaxi_depots(self):
         control = (MOD / "control.lua").read_text()
@@ -3498,7 +3530,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('mark_bitermotors_market_dirty(station.force, "invalid-assigned-settlement")', waiting)
         self.assertIn("service.assignment_by_settlement_key[key] == station", waiting)
         self.assertIn("customer_population_available_purchase_accounts(", waiting)
-        self.assertIn("or not service.prospects_by_settlement_key then", control)
+        self.assertIn("or not service.prospects_by_settlement_key", control)
+        self.assertIn("or not service.bitertaxi_service then", control)
         self.assertNotIn("customer_unit_registry()", waiting)
         self.assertIn("stall_index > (assignment.powered_stalls or 0)", control)
         self.assertIn("if not station or not station.valid then", control)

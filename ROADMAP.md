@@ -77,7 +77,10 @@ not a second simulated company.
 - EV Reservations are physical paperwork moved by belts or bots.
 - Sales require living prospects and assign sold vehicles to specific mobile
   customers.
-- Customer settlements need Sales Office coverage and local powered charging.
+- Private EV markets need Sales Office coverage and local powered charging.
+- A powered, stocked Bitertaxi Depot independently discovers and serves
+  settlements within 256 tiles; one Bitertaxi supports five customers, up to
+  1,000 customers per depot, without requiring a Sales Office.
 - Insufficient service strands affected owners and can make only those
   settlements hostile after a grace period.
 - Customer growth, charging commutes, road rage, and bounded representative
@@ -123,7 +126,8 @@ gate.
 - Terrestrial Stack Inserters followed by reachable space-era belt-capacity
   research for three- and four-high belt stacks.
 - Biterfactory V1 and the fast-replaceable V2 upgrade.
-- Bitertaxi Depots turn fleet utilization into recurring profit.
+- Bitertaxi Depots turn fleet utilization into recurring profit, independently
+  pacify covered settlements, and expose service coverage in remote view.
 - Cybertrain provides extreme-speed battery-electric rail freight with
   acceleration draw, regenerative braking, reserve crawl, and station charging.
 

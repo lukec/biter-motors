@@ -62,6 +62,7 @@ function clear_table(values)
 end
 local STATION_GRID_CONNECTION_NAME = "bitermotors-ev-charging-grid-connection"
 local SALES_OFFICE_COVERAGE_SHORTCUT = "bitermotors-toggle-sales-office-coverage"
+BITERTAXI_COVERAGE_SHORTCUT = "bitermotors-toggle-bitertaxi-coverage"
 local BITERMOTORS_PROGRESS_SHORTCUT = "bitermotors-open-progress"
 EV_SELF_DRIVING_DESTINATION_ITEM = "bitermotors-ev-self-driving-destination"
 EV_SELF_DRIVING_SUMMON_SHORTCUT = "bitermotors-summon-ev"
@@ -283,11 +284,23 @@ BITERMOTORS_DYNAMIC_MARKET_INVALIDATIONS = {
   ["station-removed"] = true,
   ["settlement-built"] = true,
   ["settlement-removed"] = true,
-  ["settlement-growth"] = true
+  ["settlement-growth"] = true,
+  ["bitertaxi-service-changed"] = true
 }
 BITERMOTORS_CANDIDATE_CACHE_PRESERVING_INVALIDATIONS = {
   ["station-built"] = true,
   ["station-removed"] = true,
+  ["settlement-built"] = true,
+  ["settlement-removed"] = true,
+  ["settlement-growth"] = true
+}
+BITERTAXI_ALLOCATION_INVALIDATIONS = {
+  ["bitertaxi-service-changed"] = true,
+  ["customer-lifecycle-repaired"] = true,
+  ["infrastructure-built"] = true,
+  ["infrastructure-removed"] = true,
+  ["organic-customer-growth"] = true,
+  ["registry-reconciled"] = true,
   ["settlement-built"] = true,
   ["settlement-removed"] = true,
   ["settlement-growth"] = true
@@ -3026,6 +3039,11 @@ function mark_bitermotors_market_dirty(force, reason)
   end
   storage.bitermotors_vehicle_summary_cache = storage.bitermotors_vehicle_summary_cache or {}
   storage.bitermotors_vehicle_summary_cache[force.index] = nil
+  if BITERTAXI_ALLOCATION_INVALIDATIONS[reason] then
+    storage.bitermotors_bitertaxi_allocation_cache =
+      storage.bitermotors_bitertaxi_allocation_cache or {}
+    storage.bitermotors_bitertaxi_allocation_cache[force.index] = nil
+  end
 end
 
 function customer_buyer_queues()
@@ -3255,6 +3273,68 @@ end
 
 local function mark_sales_office_coverage_dirty()
   storage.bitermotors_sales_office_coverage_dirty = true
+end
+
+function bitertaxi_coverage_enabled()
+  storage.bitermotors_bitertaxi_coverage_enabled =
+    storage.bitermotors_bitertaxi_coverage_enabled or {}
+  return storage.bitermotors_bitertaxi_coverage_enabled
+end
+
+function bitertaxi_coverage_renderings()
+  storage.bitermotors_bitertaxi_coverage_renderings =
+    storage.bitermotors_bitertaxi_coverage_renderings or {}
+  return storage.bitermotors_bitertaxi_coverage_renderings
+end
+
+function destroy_bitertaxi_coverage(player_index)
+  local renderings = bitertaxi_coverage_renderings()
+  for _, object in pairs(renderings[player_index] or {}) do
+    if object and object.valid then object.destroy() end
+  end
+  renderings[player_index] = {}
+end
+
+function refresh_bitertaxi_coverage(player)
+  if not player or not player.valid then return end
+
+  destroy_bitertaxi_coverage(player.index)
+  local enabled = bitertaxi_coverage_enabled()[player.index] == true
+  player.set_shortcut_toggled(BITERTAXI_COVERAGE_SHORTCUT, enabled)
+  if not enabled then return end
+
+  local objects = bitertaxi_coverage_renderings()[player.index]
+  for _, center in pairs(registered_bitermotors_entities("bitertaxi_depots", player.force)) do
+    objects[#objects + 1] = rendering.draw_circle{
+      color = {r = 0.12, g = 0.14, b = 0.05, a = 0.12},
+      radius = BITERTAXI_DEPOT_RADIUS,
+      width = 1,
+      filled = true,
+      target = center,
+      surface = center.surface,
+      players = {player},
+      render_mode = "chart"
+    }
+    objects[#objects + 1] = rendering.draw_circle{
+      color = {r = 0.86, g = 0.70, b = 0.18, a = 0.76},
+      radius = BITERTAXI_DEPOT_RADIUS,
+      width = 4,
+      filled = false,
+      target = center,
+      surface = center.surface,
+      players = {player},
+      render_mode = "chart"
+    }
+  end
+end
+
+function refresh_all_bitertaxi_coverage()
+  for _, player in pairs(game.players) do refresh_bitertaxi_coverage(player) end
+  storage.bitermotors_bitertaxi_coverage_dirty = false
+end
+
+function mark_bitertaxi_coverage_dirty()
+  storage.bitermotors_bitertaxi_coverage_dirty = true
 end
 
 local function player_market_force(force)
@@ -4261,12 +4341,29 @@ local function force_sales_offices(force)
   return sorted_entities(registered_bitermotors_entities("sales_offices", force))
 end
 
+function force_bitertaxi_depots(force)
+  return sorted_entities(registered_bitermotors_entities("bitertaxi_depots", force))
+end
+
 local function position_has_sales_coverage(surface, position, offices)
   for _, office in pairs(offices) do
     if office.valid and office.surface == surface then
       local dx = position.x - office.position.x
       local dy = position.y - office.position.y
       if dx * dx + dy * dy <= SALES_OFFICE_CUSTOMER_RADIUS * SALES_OFFICE_CUSTOMER_RADIUS then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+function position_has_bitertaxi_coverage(surface, position, depots)
+  for _, depot in pairs(depots or {}) do
+    if depot.valid and depot.surface == surface then
+      local dx = position.x - depot.position.x
+      local dy = position.y - depot.position.y
+      if dx * dx + dy * dy <= BITERTAXI_DEPOT_RADIUS * BITERTAXI_DEPOT_RADIUS then
         return true
       end
     end
@@ -4318,8 +4415,14 @@ function add_bitermotors_market_station(force, station)
   local config = station_config(station)
   local candidates = {}
   for _, settlement in pairs(topology.candidates or {}) do
-    local candidate = market_station_candidate(station, settlement)
-    if candidate then candidates[#candidates + 1] = candidate end
+    if position_has_sales_coverage(
+      settlement.surface,
+      settlement.position,
+      topology.offices or {}
+    ) then
+      local candidate = market_station_candidate(station, settlement)
+      if candidate then candidates[#candidates + 1] = candidate end
+    end
   end
   sort_market_station_candidates(candidates)
   topology.station_specs[#topology.station_specs + 1] = {
@@ -4361,11 +4464,21 @@ function add_bitermotors_market_candidate(force, settlement)
       return
     end
   end
+  for _, depot in pairs(snapshot.depots or {}) do
+    if not depot or not depot.valid then
+      caches[force.index] = nil
+      return
+    end
+  end
   if not position_has_sales_coverage(
-    settlement.surface,
-    settlement.position,
-    snapshot.offices or {}
-  ) then
+      settlement.surface,
+      settlement.position,
+      snapshot.offices or {}
+    ) and not position_has_bitertaxi_coverage(
+      settlement.surface,
+      settlement.position,
+      snapshot.depots or {}
+    ) then
     return
   end
   for _, candidate in pairs(snapshot.candidates or {}) do
@@ -4385,10 +4498,16 @@ function add_bitermotors_market_candidate(force, settlement)
       sorted_entities(topology.candidates)
     end
     for _, spec in pairs(topology.station_specs or {}) do
-      local candidate = market_station_candidate(spec.station, settlement)
-      if candidate then
-        spec.candidates[#spec.candidates + 1] = candidate
-        sort_market_station_candidates(spec.candidates)
+      if position_has_sales_coverage(
+        settlement.surface,
+        settlement.position,
+        topology.offices or {}
+      ) then
+        local candidate = market_station_candidate(spec.station, settlement)
+        if candidate then
+          spec.candidates[#spec.candidates + 1] = candidate
+          sort_market_station_candidates(spec.candidates)
+        end
       end
     end
   end
@@ -4446,13 +4565,46 @@ local function office_covered_settlements(offices)
   end
   return sorted_entities(settlements)
 end
+function bitertaxi_covered_settlements(depots)
+  local enemy = game.forces.enemy
+  local customers = customer_force()
+  local settlements_by_key = {}
+  for _, depot in pairs(depots or {}) do
+    local area = area_around(depot.position, BITERTAXI_DEPOT_RADIUS)
+    for _, source_force in pairs({enemy, customers}) do
+      for_each_biter_customer_settlement(depot.surface, source_force, area, function(settlement)
+        if within_radius(depot, settlement, BITERTAXI_DEPOT_RADIUS) then
+          settlements_by_key[settlement_key(depot.surface, settlement)] = settlement
+        end
+      end)
+    end
+  end
+
+  local settlements = {}
+  for _, settlement in pairs(settlements_by_key) do settlements[#settlements + 1] = settlement end
+  return sorted_entities(settlements)
+end
+
+function merge_customer_settlements(...)
+  local by_key = {}
+  for _, settlements in pairs({...}) do
+    for _, settlement in pairs(settlements or {}) do
+      if settlement and settlement.valid then
+        by_key[settlement_key(settlement.surface, settlement)] = settlement
+      end
+    end
+  end
+  local result = {}
+  for _, settlement in pairs(by_key) do result[#result + 1] = settlement end
+  return sorted_entities(result)
+end
 
 function customer_market_topology_for_force(force)
   storage.bitermotors_market_topology_cache = storage.bitermotors_market_topology_cache or {}
   local cache = storage.bitermotors_market_topology_cache
   local topology = cache[force.index]
   if topology then
-    local valid = true
+    local valid = topology.depots ~= nil
     for _, entity in pairs(topology.offices or {}) do
       if not entity or not entity.valid then valid = false break end
     end
@@ -4478,9 +4630,14 @@ function customer_market_topology_for_force(force)
   storage.bitermotors_market_candidate_cache = storage.bitermotors_market_candidate_cache or {}
   local candidate_cache = storage.bitermotors_market_candidate_cache
   local candidate_snapshot = candidate_cache[force.index]
-  local candidate_snapshot_valid = candidate_snapshot ~= nil
+  local candidate_snapshot_valid = candidate_snapshot ~= nil and candidate_snapshot.depots ~= nil
   if candidate_snapshot_valid then
     for _, entity in pairs(candidate_snapshot.offices or {}) do
+      if not entity or not entity.valid then candidate_snapshot_valid = false break end
+    end
+  end
+  if candidate_snapshot_valid then
+    for _, entity in pairs(candidate_snapshot.depots or {}) do
       if not entity or not entity.valid then candidate_snapshot_valid = false break end
     end
   end
@@ -4498,9 +4655,14 @@ function customer_market_topology_for_force(force)
   end
   if not candidate_snapshot_valid then
     local offices = force_sales_offices(force)
+    local depots = force_bitertaxi_depots(force)
     candidate_snapshot = {
       offices = offices,
-      candidates = office_covered_settlements(offices)
+      depots = depots,
+      candidates = merge_customer_settlements(
+        office_covered_settlements(offices),
+        bitertaxi_covered_settlements(depots)
+      )
     }
     candidate_cache[force.index] = candidate_snapshot
     storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
@@ -4512,6 +4674,7 @@ function customer_market_topology_for_force(force)
       (storage.bitermotors_perf_counters.market_candidate_cache_hits or 0) + 1
   end
   local offices = candidate_snapshot.offices
+  local depots = candidate_snapshot.depots
   local candidates = candidate_snapshot.candidates
   local station_specs = {}
   for _, surface in pairs(game.surfaces) do
@@ -4521,6 +4684,7 @@ function customer_market_topology_for_force(force)
         local station_candidates = {}
         for _, settlement in pairs(candidates) do
           if settlement.valid and settlement.surface == station.surface
+            and position_has_sales_coverage(surface, settlement.position, offices)
             and within_radius(station, settlement, config.customer_radius) then
             local dx = settlement.position.x - station.position.x
             local dy = settlement.position.y - station.position.y
@@ -4551,7 +4715,12 @@ function customer_market_topology_for_force(force)
     end
     return left.key < right.key
   end)
-  topology = {offices = offices, candidates = candidates, station_specs = station_specs}
+  topology = {
+    offices = offices,
+    depots = depots,
+    candidates = candidates,
+    station_specs = station_specs
+  }
   cache[force.index] = topology
   storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
   storage.bitermotors_perf_counters.market_topology_builds =
@@ -4682,7 +4851,8 @@ function market_service_references_valid(service)
     or not service.demand_by_settlement_key
     or not service.powered_assignments
     or not service.operational_keys
-    or not service.prospects_by_settlement_key then
+    or not service.prospects_by_settlement_key
+    or not service.bitertaxi_service then
     return false
   end
   for _, settlement in pairs(service.candidate_settlements or {}) do
@@ -4815,6 +4985,10 @@ customer_service_for_force = function(force, advance_mood)
     station_specs = {},
     demand_by_settlement_key = {},
     powered_assignments = {},
+    bitertaxi_service = {
+      demand_by_depot = {},
+      served_by_settlement_key = {}
+    },
     sales_office_market = {by_office = {}}
   }
   if not player_market_force(force) then
@@ -4861,6 +5035,7 @@ customer_service_for_force = function(force, advance_mood)
 
   service.assignments = allocation.assignments
   refresh_customer_service_power_allocation(service)
+  service.bitertaxi_service = bitertaxi_service_for_force(force)
 
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
@@ -4869,7 +5044,8 @@ customer_service_for_force = function(force, advance_mood)
     local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
     local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
     service.capacity_by_settlement_key[key] = assigned_capacity
-    if (vehicle_count == 0 and assigned_capacity > 0)
+    if service.bitertaxi_service.served_by_settlement_key[key]
+      or (vehicle_count == 0 and assigned_capacity > 0)
       or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
       service.operational_keys[key] = true
     end
@@ -7636,63 +7812,88 @@ function bitertaxi_safety_snapshot(force)
   }
 end
 
-function bitertaxi_customer_allocations(force)
-  if not force then return {} end
+function bitertaxi_population_size(population)
+  if not population then return 1 end
+  local customers = (population.physical or 0) + (population.virtual_unowned or 0)
+  for _, count in pairs(population.virtual_by_vehicle or {}) do customers = customers + count end
+  return math.max(1, customers)
+end
+
+function bitertaxi_service_for_force(force)
+  if not force then
+    return {demand_by_depot = {}, served_by_settlement_key = {}}
+  end
   storage.bitermotors_bitertaxi_allocation_cache = storage.bitermotors_bitertaxi_allocation_cache or {}
   local cached = storage.bitermotors_bitertaxi_allocation_cache[force.index]
   if cached and game.tick - cached.tick < 300 then
-    return cached.allocations
+    return cached.service
   end
-  local result = {}
-  local customer_force = game.forces[CUSTOMER_FORCE_NAME]
-  if not customer_force then return result end
-  local centers_by_surface = {}
-  for _, center in pairs(registered_bitermotors_entities("bitertaxi_depots", force)) do
-    centers_by_surface[center.surface.index] = centers_by_surface[center.surface.index] or {}
-    centers_by_surface[center.surface.index][#centers_by_surface[center.surface.index] + 1] = center
+
+  local depots = force_bitertaxi_depots(force)
+  local service = {
+    demand_by_depot = {},
+    served_by_settlement_key = {}
+  }
+  local remaining_by_depot = {}
+  for _, depot in pairs(depots) do
+    local inventory = bitertaxi_depot_inventories(depot)
+    local stored = inventory and math.min(200, inventory.get_item_count(BITERTAXI_ITEM_NAME)) or 0
+    local power_factor = bitertaxi_depot_power_factor(depot)
+    local capacity = math.floor(stored * BITERTAXI_CUSTOMERS_PER_VEHICLE * power_factor)
+    remaining_by_depot[depot.unit_number] = capacity
+    service.demand_by_depot[depot.unit_number] = 0
   end
-  for surface_index, centers in pairs(centers_by_surface) do
-    local surface = game.surfaces[surface_index]
-    table.sort(centers, function(a, b) return a.unit_number < b.unit_number end)
-    local available = {}
-    for _, center in pairs(centers) do
-      local inventory = bitertaxi_depot_inventories(center)
-      local stored = inventory and math.min(200, inventory.get_item_count(BITERTAXI_ITEM_NAME)) or 0
-      available[center.unit_number] = stored > 0
-      result[center.unit_number] = 0
-    end
-    for _, population in pairs(customer_settlement_populations()) do
-      if population.market_force_name == force.name and population.surface_index == surface_index then
-        local selected
-        local best_distance
-        for _, center in pairs(centers) do
-          if available[center.unit_number] then
-            local dx = population.position.x - center.position.x
-            local dy = population.position.y - center.position.y
-            local distance = dx * dx + dy * dy
-            if distance <= BITERTAXI_DEPOT_RADIUS * BITERTAXI_DEPOT_RADIUS
-              and (not best_distance or distance < best_distance) then
-              selected = center
-              best_distance = distance
-            end
-          end
-        end
-        if selected then
-          local customers = (population.physical or 0) + (population.virtual_unowned or 0)
-          for _, count in pairs(population.virtual_by_vehicle or {}) do customers = customers + count end
-          result[selected.unit_number] = result[selected.unit_number] + customers
-        end
+
+  for _, settlement in pairs(bitertaxi_covered_settlements(depots)) do
+    local key = settlement_key(settlement.surface, settlement)
+    local nearby = {}
+    for _, depot in pairs(depots) do
+      if depot.surface == settlement.surface and within_radius(depot, settlement, BITERTAXI_DEPOT_RADIUS) then
+        local dx = settlement.position.x - depot.position.x
+        local dy = settlement.position.y - depot.position.y
+        nearby[#nearby + 1] = {
+          depot = depot,
+          distance = dx * dx + dy * dy
+        }
       end
     end
+    table.sort(nearby, function(left, right)
+      if left.distance ~= right.distance then return left.distance < right.distance end
+      return left.depot.unit_number < right.depot.unit_number
+    end)
+
+    local required = bitertaxi_population_size(customer_settlement_populations()[key])
+    local remaining = required
+    for _, candidate in pairs(nearby) do
+      if remaining <= 0 then break end
+      local depot_unit_number = candidate.depot.unit_number
+      local served = math.min(remaining, remaining_by_depot[depot_unit_number])
+      if served > 0 then
+        remaining_by_depot[depot_unit_number] = remaining_by_depot[depot_unit_number] - served
+        remaining = remaining - served
+        service.demand_by_depot[depot_unit_number] =
+          service.demand_by_depot[depot_unit_number] + served
+      end
+    end
+    if remaining > 0 and nearby[1] then
+      local nearest_unit = nearby[1].depot.unit_number
+      service.demand_by_depot[nearest_unit] = service.demand_by_depot[nearest_unit] + remaining
+    end
+    if remaining <= 0 then service.served_by_settlement_key[key] = true end
   end
+
   storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
   storage.bitermotors_perf_counters.bitertaxi_allocation_builds =
     (storage.bitermotors_perf_counters.bitertaxi_allocation_builds or 0) + 1
   storage.bitermotors_bitertaxi_allocation_cache[force.index] = {
     tick = game.tick,
-    allocations = result
+    service = service
   }
-  return result
+  return service
+end
+
+function bitertaxi_customer_allocations(force)
+  return bitertaxi_service_for_force(force).demand_by_depot
 end
 
 function bitertaxi_depot_power_factor(center)
@@ -7784,6 +7985,13 @@ function process_bitertaxi_depots()
         local state = bitertaxi_depot_states()[center.unit_number]
           or {revenue = 0, attrition = 0, dollars = 0, vehicles_retired = 0}
         bitertaxi_depot_states()[center.unit_number] = state
+        local service_capacity = math.floor(
+          snapshot.stored * BITERTAXI_CUSTOMERS_PER_VEHICLE * snapshot.power_factor
+        )
+        if state.service_capacity ~= service_capacity then
+          state.service_capacity = service_capacity
+          mark_bitermotors_market_dirty(center.force, "bitertaxi-service-changed")
+        end
         if snapshot.allocated > 0 and snapshot.power_factor > 0 and not snapshot.output_blocked then
           completed_rides_by_force[center.force.index] = (completed_rides_by_force[center.force.index] or 0)
             + snapshot.allocated * snapshot.power_factor / 60
@@ -8081,7 +8289,7 @@ local ENTITY_PLACEMENT_MESSAGES = {
   [HIGH_DENSITY_SOLAR_ARRAY_NAME] = "[Biter Motors] First High-density Solar Panel online: 300 kW peak output. Upgrade existing panels before chargers, Biterfactories, and datacenters compete for power.",
   [GRID_BATTERY_NAME] = "[Biter Motors] First Grid Battery online: 100 MJ storage with 5 MW charge and discharge. Pair it with daytime generation to stabilize Biter Motors loads.",
   [TERRESTRIAL_DATACENTER_NAME] = "[Biter Motors] First Terrestrial Datacenter online. Supply Dollars and select AI Token production: each 30-second cycle consumes 20 Dollars, draws 8 MW, and produces 20 AI Tokens.",
-  [BITERTAXI_DEPOT_NAME] = "[Biter Motors] Bitertaxi Depot online. Load up to 200 Bitertaxis; its built-in V4 fleet charging draws 10 MW while Operate Bitertaxi Fleet converts nearby customer service into recurring profit."
+  [BITERTAXI_DEPOT_NAME] = "[Biter Motors] Bitertaxi Depot online. Load up to 200 Bitertaxis and supply 10 MW. Operational fleet coverage directly converts nearby settlements into customers and produces recurring profit; no Sales Office is required."
 }
 
 local function announce_first_entity_placement(entity)
@@ -11114,6 +11322,7 @@ local function show_manufacturer_info_panel(player, entity)
       snapshot.customers,
       BITERTAXI_DEPOT_RADIUS
     ))
+    add_station_info_label(panel, "Operational Bitertaxi service makes covered settlements friendly; no Sales Office is required.")
     add_station_info_label(panel, string.format(
       "Built-in V4 charging: %.0f%% power; rated demand 10 MW",
       snapshot.power_factor * 100
@@ -11564,7 +11773,14 @@ local function show_customer_settlement_info_panel(player, settlement)
   local key = settlement_key(settlement.surface, settlement)
   local offices = force_sales_offices(force)
   local sales_covered = position_has_sales_coverage(settlement.surface, settlement.position, offices)
+  local depots = force_bitertaxi_depots(force)
+  local bitertaxi_covered = position_has_bitertaxi_coverage(
+    settlement.surface,
+    settlement.position,
+    depots
+  )
   local service = customer_service_for_force(force)
+  local bitertaxi_served = service.bitertaxi_service.served_by_settlement_key[key] == true
   local assigned_station = service.assignment_by_settlement_key[key]
   local friendly = service.served_keys[key] == true
   local angry = service.angry_keys[key] == true
@@ -11596,16 +11812,29 @@ local function show_customer_settlement_info_panel(player, settlement)
     0,
     math.min(settlement_vehicles, local_assigned_capacity) - local_powered_capacity
   )
-  local status = friendly and (local_underserved > 0 and "customer - charging underserved" or "customer")
+  local status = friendly and (
+      bitertaxi_served and "customer - Bitertaxi service"
+      or local_underserved > 0 and "customer - charging underserved"
+      or "customer"
+    )
     or "hostile"
   add_station_info_label(panel, "Status: " .. status)
-  add_station_info_label(panel, "Sales Office coverage: " .. (sales_covered and "yes" or "no"))
+  add_station_info_label(panel, "Sales Office coverage: " .. (
+    sales_covered and "yes"
+    or bitertaxi_served and "no - not required for Bitertaxi service"
+    or "no"
+  ))
+  add_station_info_label(panel, "Bitertaxi service: " .. (
+    bitertaxi_served and "operational"
+    or bitertaxi_covered and "in range, but fleet capacity or power is insufficient"
+    or "outside coverage"
+  ))
   add_station_info_label(panel, string.format(
     "Settlement population: %d (%d visible representatives)",
     settlement_population,
     population.physical or 0
   ))
-  add_station_info_label(panel, string.format("Active vehicles at this settlement: %d", settlement_vehicles))
+  add_station_info_label(panel, string.format("Privately owned EVs at this settlement: %d", settlement_vehicles))
   add_station_info_label(panel, string.format(
     "EVs allocated into reachable charging pools: %d / %d",
     local_assigned_capacity,
@@ -11616,7 +11845,7 @@ local function show_customer_settlement_info_panel(player, settlement)
     local_powered_capacity
   ))
   add_station_info_label(panel, string.format("Underserved vehicles: %d", local_underserved))
-  if local_capacity_missing > 0 then
+  if local_capacity_missing > 0 and not bitertaxi_served then
     local recommendation = charging_capacity_recommendation(force, local_capacity_missing)
     if recommendation then
       add_station_info_label(panel, string.format(
@@ -11630,7 +11859,7 @@ local function show_customer_settlement_info_panel(player, settlement)
       add_station_info_label(panel, "Fix: add powered charging capacity near this settlement.")
     end
   end
-  if local_power_missing > 0 then
+  if local_power_missing > 0 and not bitertaxi_served then
     add_station_info_label(panel, string.format(
       "Fix: restore charger grid power for %d EVs at this settlement.",
       local_power_missing
@@ -11689,12 +11918,16 @@ local function show_customer_settlement_info_panel(player, settlement)
     ))
     add_station_info_label(panel, string.format("Each stall supports %d sold EVs", config.evs_per_stall))
     add_station_info_label(panel, "Charger grid: " .. (station_has_grid_access(assigned_station) and "connected" or "not connected"))
+  elseif bitertaxi_served then
+    add_station_info_label(panel, "Private EV charger: not required while Bitertaxi service is operational")
   else
     add_station_info_label(panel, "Assigned charger: none")
   end
 
   local reason
-  if friendly and operational then
+  if friendly and bitertaxi_served then
+    reason = "Customer status: served by an operational Bitertaxi fleet; Sales Office coverage is not required."
+  elseif friendly and operational then
     reason = "Customer status: served by both market and powered charging coverage."
   elseif friendly then
     reason = string.format(
@@ -11706,10 +11939,13 @@ local function show_customer_settlement_info_panel(player, settlement)
       "Hostile reason: %d sold EVs exceed reachable charging capacity. Add powered stalls to restore service.",
       local_underserved
     )
+  elseif bitertaxi_covered then
+    reason = "Hostile reason: Bitertaxi fleet capacity or power is insufficient for this settlement."
   elseif not sales_covered then
     reason = string.format(
-      "Hostile reason: outside the %d-tile Sales Office market radius.",
-      SALES_OFFICE_CUSTOMER_RADIUS
+      "Hostile reason: outside both the %d-tile Sales Office market radius and %d-tile Bitertaxi service radius.",
+      SALES_OFFICE_CUSTOMER_RADIUS,
+      BITERTAXI_DEPOT_RADIUS
     )
   elseif not assigned_station then
     reason = "Hostile reason: no reachable powered charger has free pooled EV capacity."
@@ -11910,6 +12146,7 @@ script.on_init(function()
   sync_sales_office_buyers()
   rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
+  refresh_all_bitertaxi_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
     if player.gui.screen[PROGRESS_PANEL_NAME] then
@@ -11954,6 +12191,7 @@ script.on_configuration_changed(function()
   sync_sales_office_buyers()
   rebuild_customer_commute_queue()
   refresh_all_sales_office_coverage()
+  refresh_all_bitertaxi_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
     if player.gui.screen[PROGRESS_PANEL_NAME] then
@@ -11988,6 +12226,12 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
     local enabled = sales_office_coverage_enabled()
     enabled[player.index] = not enabled[player.index]
     refresh_sales_office_coverage(player)
+    return
+  end
+  if event.prototype_name == BITERTAXI_COVERAGE_SHORTCUT then
+    local enabled = bitertaxi_coverage_enabled()
+    enabled[player.index] = not enabled[player.index]
+    refresh_bitertaxi_coverage(player)
   end
 end)
 
@@ -12014,7 +12258,9 @@ script.on_event(defines.events.on_player_created, function(event)
     grant_bitermotors_energy_jumpstart(player)
     seed_crash_site_salvage(player)
     sales_office_coverage_enabled()[player.index] = false
+    bitertaxi_coverage_enabled()[player.index] = false
     refresh_sales_office_coverage(player)
+    refresh_bitertaxi_coverage(player)
     sync_charger_placement_overlay(player)
   end
 end)
@@ -12118,6 +12364,7 @@ script.on_event(defines.events.on_player_joined_game, function(event)
   release_charger_hover_overlay(event.player_index)
   sync_charger_placement_overlay(player)
   refresh_sales_office_coverage(player)
+  refresh_bitertaxi_coverage(player)
   refresh_progress_panel(player)
 end)
 
@@ -12136,6 +12383,8 @@ script.on_event(defines.events.on_player_removed, function(event)
   opened_bitermotors_entities()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
   sales_office_coverage_enabled()[event.player_index] = nil
+  bitertaxi_coverage_enabled()[event.player_index] = nil
+  destroy_bitertaxi_coverage(event.player_index)
   storage.bitermotors_charger_overlay_warnings = storage.bitermotors_charger_overlay_warnings or {}
   storage.bitermotors_charger_overlay_warnings[event.player_index] = nil
   storage.bitermotors_progress_panel_signatures = storage.bitermotors_progress_panel_signatures or {}
@@ -12148,6 +12397,7 @@ script.on_event(defines.events.on_player_changed_force, function(event)
   local player = game.get_player(event.player_index)
   cancel_player_ev_self_drivings(event.player_index, "player changed force", true)
   refresh_sales_office_coverage(player)
+  refresh_bitertaxi_coverage(player)
   refresh_progress_panel(player)
 end)
 
@@ -12253,6 +12503,7 @@ for _, event_name in pairs({
 	      if entity and entity.valid and entity.name == BITERTAXI_DEPOT_NAME then
 	        bitertaxi_depot_inventories(entity)
 	        ensure_bitertaxi_depot_power(entity)
+	        mark_bitertaxi_coverage_dirty()
 	      end
 	      if entity and entity.valid and entity.name == SALES_OFFICE_NAME then
 	        mark_sales_office_coverage_dirty()
@@ -12386,6 +12637,7 @@ for _, event_name in pairs({
         local power = bitertaxi_depot_power_entities()[entity.unit_number]
         if power and power.valid then power.destroy() end
         bitertaxi_depot_power_entities()[entity.unit_number] = nil
+        mark_bitertaxi_coverage_dirty()
       end
       if refresh_infrastructure and entity.valid then
         refresh_bitermotors_infrastructure_change(entity)
@@ -12444,6 +12696,9 @@ function process_bitermotors_second_housekeeping()
   process_customer_vehicle_variant_migration(50)
   if storage.bitermotors_sales_office_coverage_dirty then
     refresh_all_sales_office_coverage()
+  end
+  if storage.bitermotors_bitertaxi_coverage_dirty then
+    refresh_all_bitertaxi_coverage()
   end
   for _, force in pairs(game.forces) do
     if player_market_force(force) then

@@ -262,6 +262,17 @@ script.on_init(function()
   local bitertaxi_power = surface.create_entity{
     name = POWER_SOURCE, position = {bitertaxi_x, bitertaxi_y + 20}, force = force
   }
+  local bitertaxi_only_spawner_position = surface.find_non_colliding_position(
+    BITER_SPAWNER,
+    {bitertaxi_x + 32, bitertaxi_y},
+    24,
+    1
+  )
+  local bitertaxi_only_spawner = bitertaxi_only_spawner_position and surface.create_entity{
+    name = BITER_SPAWNER,
+    position = bitertaxi_only_spawner_position,
+    force = game.forces.enemy
+  }
   local pole = create_named(surface, POWER_POLE, {1, 0}, force)
   local station_v2 = create_named(surface, STATION_V2, {4, 0}, force)
   local station = create_named(surface, STATION, {-2, 0}, force)
@@ -412,7 +423,7 @@ script.on_init(function()
     bitertaxi_power.power_usage = 0
     bitertaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not vanilla_spider or not espider or not datacenter or not datacenter_pole or not datacenter_power then
+  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not bitertaxi_only_spawner or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not vanilla_spider or not espider or not datacenter or not datacenter_pole or not datacenter_power then
     write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, biterfactory = biterfactory ~= nil, biterfactory_v2 = biterfactory_v2 ~= nil, solar_array = solar_array ~= nil, grid_battery = grid_battery ~= nil}
     return
   end
@@ -568,6 +579,7 @@ script.on_init(function()
   storage.datacenter_unit_number = datacenter.unit_number
   storage.datacenter_power_unit_number = datacenter_power.unit_number
   storage.biter_spawner_unit_number = biter_spawner.unit_number
+  storage.bitertaxi_only_spawner_unit_number = bitertaxi_only_spawner.unit_number
   storage.far_biter_spawner_unit_number = far_biter_spawner.unit_number
   storage.hostile_worm_unit_number = hostile_worm.unit_number
   storage.legacy_customer_worm_unit_number = legacy_customer_worm.unit_number
@@ -1093,6 +1105,11 @@ script.on_nth_tick(3780, function()
   local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
   local controller = find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local biter_spawner = find_unit(surface, BITER_SPAWNER, storage.biter_spawner_unit_number)
+  local bitertaxi_only_spawner = find_unit(
+    surface,
+    BITER_SPAWNER,
+    storage.bitertaxi_only_spawner_unit_number
+  )
   local far_biter_spawner = find_unit(surface, BITER_SPAWNER, storage.far_biter_spawner_unit_number)
   local hostile_worm = find_unit(surface, WORM, storage.hostile_worm_unit_number)
   local legacy_customer_worm = find_unit(surface, WORM, storage.legacy_customer_worm_unit_number)
@@ -1186,6 +1203,9 @@ script.on_nth_tick(3780, function()
     force = customer_force
   }
   local biter_spawner_customer = biter_spawner and customer_force and biter_spawner.force.name == CUSTOMER_FORCE
+  local bitertaxi_only_spawner_customer = bitertaxi_only_spawner
+    and customer_force
+    and bitertaxi_only_spawner.force.name == CUSTOMER_FORCE
   local far_biter_spawner_enemy = far_biter_spawner and far_biter_spawner.force.name == "enemy"
   local hostile_worm_enemy = hostile_worm and hostile_worm.force.name == "enemy"
   local legacy_customer_worm_enemy = legacy_customer_worm and legacy_customer_worm.force.name == "enemy"
@@ -1323,6 +1343,7 @@ script.on_nth_tick(3780, function()
     biter_customer_mode = market and market.biter_customer_mode,
     customer_force_created = customer_force ~= nil,
     nearby_spawner_converted_to_customer = biter_spawner_customer,
+    bitertaxi_only_spawner_converted_to_customer = bitertaxi_only_spawner_customer,
     far_spawner_remained_enemy = far_biter_spawner_enemy,
     nearby_worm_remained_enemy = hostile_worm_enemy,
     legacy_customer_worm_reverted_to_enemy = legacy_customer_worm_enemy,
@@ -2801,6 +2822,8 @@ if not checked.get("customer_force_created"):
     raise SystemExit(f"customer force was not created: {checked}")
 if not checked.get("nearby_spawner_converted_to_customer"):
     raise SystemExit(f"Sales Office-covered biter spawner was not converted to customer force: {checked}")
+if not checked.get("bitertaxi_only_spawner_converted_to_customer"):
+    raise SystemExit(f"Bitertaxi-only biter spawner was not converted without Sales Office coverage: {checked}")
 if not checked.get("far_spawner_remained_enemy"):
     raise SystemExit(f"far biter spawner should remain enemy force: {checked}")
 if not checked.get("nearby_worm_remained_enemy"):

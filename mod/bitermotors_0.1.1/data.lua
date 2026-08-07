@@ -676,8 +676,20 @@ data:extend({
   },
   {
     type = "shortcut",
+    name = "bitermotors-toggle-bitertaxi-coverage",
+    order = "z[bitermotors]-c[bitertaxi-coverage]",
+    action = "lua",
+    toggleable = true,
+    technology_to_unlock = "bitermotors-autonomous-logistics",
+    icon = "__bitermotors__/graphics/icons/bitertaxi-depot.png",
+    icon_size = 256,
+    small_icon = "__bitermotors__/graphics/icons/bitertaxi-depot.png",
+    small_icon_size = 256
+  },
+  {
+    type = "shortcut",
     name = "bitermotors-route-ev",
-    order = "z[bitermotors]-c[route]",
+    order = "z[bitermotors]-d[route]",
     action = "spawn-item",
     item_to_spawn = "bitermotors-ev-self-driving-destination",
     technology_to_unlock = "bitermotors-autonomous-logistics",
@@ -689,7 +701,7 @@ data:extend({
   {
     type = "shortcut",
     name = "bitermotors-summon-ev",
-    order = "z[bitermotors]-d[summon]",
+    order = "z[bitermotors]-e[summon]",
     action = "lua",
     technology_to_unlock = "bitermotors-autonomous-logistics",
     icon = "__bitermotors__/graphics/icons/bitertaxi-fleet.png",
