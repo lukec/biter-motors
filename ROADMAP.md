@@ -285,6 +285,9 @@ Status: **partially complete**
 - [x] Add an exact-archive soak harness with terrestrial and orbital fixture
       requirements, runtime-error detection, periodic state probes, and
       explicit average/p99/spike thresholds.
+- [x] Coalesce sale and population demand invalidations instead of rebuilding
+      the full customer market graph for every event.
+- [x] Cache unchanged per-stall charger power-sink configurations.
 - [ ] Run a four-hour headless soak on a late terrestrial save.
 - [ ] Run a one-hour soak with multiple orbital cores and platforms.
 - [ ] Verify no recurring invalid-entity crashes, log spam, or second-scale
@@ -292,11 +295,13 @@ Status: **partially complete**
 - [ ] Validate save/load, reconnect, multiplayer join, and configuration-change
       behavior.
 
-Current release-candidate baseline (Factorio 2.1.14, fixed seed `424242`):
+Current release-candidate baseline (Factorio 2.1.14):
 
-- Luke's protected late-terrestrial save improved from a 3.00 ms warm average,
-  39.68 ms p99, and 248.29 ms maximum to 1.31 ms, 16.48 ms, and 79.42 ms
-  respectively in the 3,600-tick verbose comparison.
+- Luke's protected late-terrestrial save, containing 221 settlements, 9,229
+  represented owners, 156 chargers, 20 Sales Offices, and about 2,000 visible
+  customer units, improved from 2.17 ms warm average, 12.16 ms p95, 24.53 ms
+  p99, and 287.22 ms maximum to 1.36 ms, 6.54 ms, 15.05 ms, and 55.42 ms in the
+  exact 3,600-tick verbose comparison.
 - A 36,000-tick soak of the same save completed without a script error at
   1.75 ms average and 83.54 ms maximum; the earlier soak was 3.93 ms average
   and 1,129 ms maximum.

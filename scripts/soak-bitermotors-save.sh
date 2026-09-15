@@ -134,6 +134,7 @@ EOF_INFO
 cat > "$probe/control.lua" <<EOF_LUA
 local PROFILE = "$profile"
 local SAMPLE_TICKS = $sample_ticks
+local PERIODIC_PROBE = true
 local REPORT = "bitermotors-soak.jsonl"
 local CORE = "bitermotors-orbital-datacenter-core"
 
@@ -191,9 +192,11 @@ end
 
 script.on_init(initialize)
 script.on_configuration_changed(initialize)
-script.on_nth_tick(SAMPLE_TICKS, function()
-  snapshot("periodic")
-end)
+if PERIODIC_PROBE then
+  script.on_nth_tick(SAMPLE_TICKS, function()
+    snapshot("periodic")
+  end)
+end
 EOF_LUA
 
 benchmark_log="$output_dir/benchmark.log"
@@ -215,6 +218,17 @@ echo "Running $profile soak for $ticks ticks..."
 cp "$probe_report" "$output_dir/probe.jsonl"
 
 echo "Running bounded timing sample for $timing_ticks ticks..."
+python3 - "$probe/control.lua" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+source = path.read_text()
+old = "local PERIODIC_PROBE = true"
+if old not in source:
+    raise SystemExit("soak probe periodic flag was not found")
+path.write_text(source.replace(old, "local PERIODIC_PROBE = false", 1))
+PY
 "$factorio_bin" "${benchmark_args[@]}" --benchmark-ticks "$timing_ticks" \
   --benchmark-verbose all >"$timing_log" 2>&1
 

@@ -288,6 +288,13 @@ BITERMOTORS_DYNAMIC_MARKET_INVALIDATIONS = {
   ["settlement-growth"] = true,
   ["bitertaxi-service-changed"] = true
 }
+BITERMOTORS_DEFERRED_MARKET_INVALIDATIONS = {
+  ["customer-registered"] = true,
+  ["customer-removed"] = true,
+  ["settlement-seed-customer"] = true,
+  ["organic-customer-growth"] = true,
+  ["vehicle-sale"] = true
+}
 BITERMOTORS_CANDIDATE_CACHE_PRESERVING_INVALIDATIONS = {
   ["station-built"] = true,
   ["station-removed"] = true,
@@ -321,6 +328,7 @@ CUSTOMER_COMMUTE_FIRST_VISIT_TICKS = 60 * 60
 CUSTOMER_COMMUTE_RETRY_BASE_TICKS = 30 * 60
 CUSTOMER_COMMUTE_RETRY_MAX_TICKS = 5 * 60 * 60
 CUSTOMER_COMMUTE_PATH_TIMEOUT_TICKS = 2 * 60 * 60
+BITERTAXI_ALLOCATION_CACHE_TICKS = 60 * 60
 CUSTOMER_COMMUTE_INTERVALS = {
   ["bitermotors-prototype-roadster"] = 3 * 60 * 60,
   ["bitermotors-premium-ev"] = 6 * 60 * 60,
@@ -3031,7 +3039,17 @@ end
 
 function mark_bitermotors_market_dirty(force, reason)
   if not force then return end
-  PerformanceState.invalidate(PerformanceState.ensure(storage), force.index, reason)
+  local deferred = BITERMOTORS_DEFERRED_MARKET_INVALIDATIONS[reason]
+  if deferred then
+    storage.bitermotors_deferred_market_dirty =
+      storage.bitermotors_deferred_market_dirty or {}
+    storage.bitermotors_deferred_market_dirty[force.index] = true
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.deferred_market_invalidations =
+      (storage.bitermotors_perf_counters.deferred_market_invalidations or 0) + 1
+  else
+    PerformanceState.invalidate(PerformanceState.ensure(storage), force.index, reason)
+  end
   if not BITERMOTORS_DYNAMIC_MARKET_INVALIDATIONS[reason] then
     storage.bitermotors_market_topology_cache = storage.bitermotors_market_topology_cache or {}
     storage.bitermotors_market_topology_cache[force.index] = nil
@@ -3047,6 +3065,28 @@ function mark_bitermotors_market_dirty(force, reason)
       storage.bitermotors_bitertaxi_allocation_cache or {}
     storage.bitermotors_bitertaxi_allocation_cache[force.index] = nil
   end
+end
+
+function flush_deferred_market_invalidations()
+  local pending = storage.bitermotors_deferred_market_dirty
+  if not pending then return 0 end
+  local flushed = 0
+  for force_index in pairs(pending) do
+    local force = game.forces[force_index]
+    if force then
+      PerformanceState.invalidate(
+        PerformanceState.ensure(storage),
+        force_index,
+        "dynamic-market-batch"
+      )
+      flushed = flushed + 1
+    end
+    pending[force_index] = nil
+  end
+  storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+  storage.bitermotors_perf_counters.deferred_market_batches =
+    (storage.bitermotors_perf_counters.deferred_market_batches or 0) + flushed
+  return flushed
 end
 
 function customer_buyer_queues()
@@ -3517,6 +3557,24 @@ local function ensure_station_power_sinks(station, active_stalls)
   local power_state = station_power_service()[station.unit_number] or {power_fraction = 1}
   power_state.requested_stalls = stalls
   station_power_service()[station.unit_number] = power_state
+  local watts = station_stall_power_watts(station)
+  local last_sink = stalls > 0 and station_sinks[stalls] or nil
+  local extra_sink = station_sinks[stalls + 1]
+  local sink_shape_valid = stalls == 0
+    and next(station_sinks) == nil
+    or stalls > 0
+      and last_sink and last_sink.valid
+      and (not extra_sink or not extra_sink.valid)
+  if sink_shape_valid
+    and power_state.sink_stalls == stalls
+    and power_state.sink_watts == watts
+    and power_state.sink_x == connection_position.x
+    and power_state.sink_y == connection_position.y then
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.station_power_sink_cache_hits =
+      (storage.bitermotors_perf_counters.station_power_sink_cache_hits or 0) + 1
+    return station_sinks
+  end
   for stall = 1, config.stalls do
     local existing = station_sinks[stall]
     if stall <= stalls then
@@ -3539,6 +3597,13 @@ local function ensure_station_power_sinks(station, active_stalls)
       station_sinks[stall] = nil
     end
   end
+  power_state.sink_stalls = stalls
+  power_state.sink_watts = watts
+  power_state.sink_x = connection_position.x
+  power_state.sink_y = connection_position.y
+  storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+  storage.bitermotors_perf_counters.station_power_sink_syncs =
+    (storage.bitermotors_perf_counters.station_power_sink_syncs or 0) + 1
 
   return station_sinks
 end
@@ -4868,13 +4933,13 @@ function market_service_references_valid(service)
 end
 
 function refresh_customer_service_power_allocation(service)
-  clear_table(service.powered_capacity_by_settlement_key)
   service.accessible_stall_capacity = 0
   service.powered_stall_capacity = 0
   service.supported_ev_capacity = 0
 
   local powered_specs = {}
-  for _, spec in pairs(service.station_specs or {}) do
+  local signature_parts = {}
+  for _, spec in ipairs(service.station_specs or {}) do
     local assignment = service.assignments[spec.key]
     local station = spec.station
     local config = station and station.valid and station_config(station)
@@ -4899,7 +4964,36 @@ function refresh_customer_service_power_allocation(service)
         ev_capacity = assignment.powered_stalls * config.evs_per_stall,
         candidates = spec.candidates
       }
+      signature_parts[#signature_parts + 1] = spec.key .. ":" .. assignment.powered_stalls
     end
+  end
+
+  local signature = table.concat(signature_parts, "|")
+  if service.powered_allocation_signature == signature then
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.powered_allocation_cache_hits =
+      (storage.bitermotors_perf_counters.powered_allocation_cache_hits or 0) + 1
+    return false
+  end
+
+  clear_table(service.powered_capacity_by_settlement_key)
+  local fully_powered = true
+  for _, assignment in pairs(service.assignments or {}) do
+    if (assignment.powered_stalls or 0) < (assignment.requested_stalls or 0) then
+      fully_powered = false
+      break
+    end
+  end
+  if fully_powered then
+    for key, capacity in pairs(service.requested_capacity_by_settlement_key or {}) do
+      service.powered_capacity_by_settlement_key[key] = capacity
+    end
+    service.powered_assignments = service.assignments
+    service.powered_allocation_signature = signature
+    storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+    storage.bitermotors_perf_counters.powered_allocation_fast_paths =
+      (storage.bitermotors_perf_counters.powered_allocation_fast_paths or 0) + 1
+    return true
   end
 
   local powered_allocation = ChargerAllocator.allocate(
@@ -4913,6 +5007,11 @@ function refresh_customer_service_power_allocation(service)
   ) do
     service.powered_capacity_by_settlement_key[key] = capacity
   end
+  service.powered_allocation_signature = signature
+  storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
+  storage.bitermotors_perf_counters.powered_allocation_builds =
+    (storage.bitermotors_perf_counters.powered_allocation_builds or 0) + 1
+  return true
 end
 
 function rebuild_assignment_operational_settlements(service)
@@ -7291,12 +7390,24 @@ end
 
 function reservation_print_plan(force, service)
   service = service or customer_service_for_force(force)
+  local prospects_by_station = {}
+  for key in pairs(service.operational_keys or {}) do
+    local station = service.assignment_by_settlement_key[key]
+    if station and station.valid and station.unit_number then
+      prospects_by_station[station.unit_number] =
+        (prospects_by_station[station.unit_number] or 0)
+        + customer_population_available_purchase_accounts(
+          customer_settlement_populations()[key],
+          force
+        )
+    end
+  end
   local stations = {}
   for _, station in pairs(registered_bitermotors_entities("stations", force)) do
     stations[#stations + 1] = {
       key = station.unit_number,
       prospects = station_has_grid_access(station)
-        and waiting_market_buyers_at_station(station, service) or 0
+        and (prospects_by_station[station.unit_number] or 0) or 0
     }
   end
   return ReservationPlanner.allocate(
@@ -7873,7 +7984,8 @@ function bitertaxi_service_for_force(force)
   end
   storage.bitermotors_bitertaxi_allocation_cache = storage.bitermotors_bitertaxi_allocation_cache or {}
   local cached = storage.bitermotors_bitertaxi_allocation_cache[force.index]
-  if cached and cached.service and game.tick - cached.tick <= 300 then
+  if cached and cached.service
+    and game.tick - cached.tick <= BITERTAXI_ALLOCATION_CACHE_TICKS then
     return cached.service
   end
 
@@ -8011,7 +8123,6 @@ function process_bitertaxi_depots()
     return
   end
   local seen = {}
-  local active_power_units = {}
   local allocations_by_force = {}
   local safety_by_force = {}
   local completed_rides_by_force = {}
@@ -8024,9 +8135,6 @@ function process_bitertaxi_depots()
           or bitertaxi_safety_snapshot(center.force)
         seen[center.unit_number] = true
         local power = ensure_bitertaxi_depot_power(center)
-        if power and power.valid and power.unit_number then
-          active_power_units[power.unit_number] = true
-        end
         local input, output = bitertaxi_depot_inventories(center)
         local snapshot = bitertaxi_depot_snapshot(center, customer_allocations[center.unit_number] or 0)
         set_bitermotors_runtime_visual_enabled(center, snapshot.allocated > 0 and snapshot.power_factor > 0)
@@ -8098,11 +8206,18 @@ function process_bitertaxi_depots()
       bitertaxi_depot_power_entities()[unit_number] = nil
     end
   end
+end
+
+function cleanup_orphaned_bitertaxi_depot_power()
+  local active_power_units = {}
+  for _, power in pairs(bitertaxi_depot_power_entities()) do
+    if power and power.valid and power.unit_number then
+      active_power_units[power.unit_number] = true
+    end
+  end
   for _, surface in pairs(game.surfaces) do
     for _, power in pairs(surface.find_entities_filtered{name = BITERTAXI_DEPOT_POWER_NAME}) do
-      if power.valid and not active_power_units[power.unit_number] then
-        power.destroy()
-      end
+      if power.valid and not active_power_units[power.unit_number] then power.destroy() end
     end
   end
 end
@@ -9276,7 +9391,7 @@ end
 function sync_grid_battery_sales_offices()
   sync_grid_battery_adoption_waves()
   local active = process_grid_battery_buyer_trips()
-  local representatives = available_grid_battery_representatives()
+  local representatives
   local starts = 0
   storage.bitermotors_sales_office_coverage_recipes =
     storage.bitermotors_sales_office_coverage_recipes or {}
@@ -9299,7 +9414,12 @@ function sync_grid_battery_sales_offices()
         end
       else
         if not trip and starts < GRID_BATTERY_BUYER_STARTS_PER_SECOND
+          and active + starts < GRID_BATTERY_BUYER_MAX_ACTIVE then
+          representatives = representatives or available_grid_battery_representatives()
+        end
+        if not trip and starts < GRID_BATTERY_BUYER_STARTS_PER_SECOND
           and active + starts < GRID_BATTERY_BUYER_MAX_ACTIVE
+          and representatives
           and reserve_grid_battery_buyer(office, representatives) then
           reserved_unit = grid_battery_office_reservations()[office.unit_number]
           trip = reserved_unit and grid_battery_buyer_trips()[reserved_unit]
@@ -12234,6 +12354,7 @@ script.on_init(function()
   apply_bitermotors_enemy_pressure_settings()
   cleanup_legacy_station_grid_connections()
   rebuild_bitermotors_entity_registries()
+  cleanup_orphaned_bitertaxi_depot_power()
   rebuild_electric_vehicles()
   rebuild_cybertrain_runtime()
   rebuild_grid_controllers()
@@ -12278,6 +12399,7 @@ script.on_configuration_changed(function()
   reset_charger_hover_overlays()
   cleanup_legacy_station_grid_connections()
   rebuild_bitermotors_entity_registries()
+  cleanup_orphaned_bitertaxi_depot_power()
   rebuild_electric_vehicles()
   rebuild_cybertrain_runtime()
   rebuild_grid_controllers()
@@ -12868,6 +12990,9 @@ end
 
 script.on_nth_tick(15, function()
   open_pending_settlement_inspectors()
+  if game.tick % 600 == 45 then
+    flush_deferred_market_invalidations()
+  end
   local phase = game.tick % 60
   if phase == 0 then
     process_bitermotors_second_housekeeping()

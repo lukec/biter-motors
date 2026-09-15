@@ -96,6 +96,8 @@ class SoakHarnessTest(unittest.TestCase):
         self.assertIn("game.tick_paused = false", text)
         self.assertIn("--benchmark-verbose all", text)
         self.assertIn("bitermotors-soak.jsonl", text)
+        self.assertIn("local PERIODIC_PROBE = true", text)
+        self.assertIn('source.replace(old, "local PERIODIC_PROBE = false", 1)', text)
         self.assertIn("--skip-profile-requirements", text)
 
 

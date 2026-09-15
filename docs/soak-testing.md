@@ -21,6 +21,32 @@ the 16.667 ms update budget: long-run average at most 8 ms, warm p99 at most
 16.667 ms, and warm maximum at most 100 ms. The first 60 timing ticks are
 excluded as load warmup.
 
+The temporary probe records periodic state during the long run. The harness
+disables that periodic callback before the bounded timing sample so the
+serialization cost of `progress_status`, `endgame_status`, and
+`performance_status` is not mistaken for gameplay cost. The timing sample
+still loads the same packaged mod and copied save.
+
+## Late-terrestrial Performance Reference
+
+The September 2026 investigation used Luke's protected late-terrestrial save
+with 221 settlements, 9,229 represented vehicle owners, 156 chargers, 20 Sales
+Offices, and about 2,000 visible customer units. The original warm sample was
+2.17 ms average, 12.16 ms p95, 24.53 ms p99, and 287.22 ms maximum.
+
+The recurring hitch came from rebuilding the complete settlement-to-charger
+market graph after every vehicle sale and population event. Biter Motors now
+coalesces demand-only invalidations into one ten-second batch; infrastructure
+changes still invalidate immediately. Charger power maintenance also caches
+unchanged hidden sink configurations rather than rewriting every stall every
+second. The same 3,600-tick sample after those changes measured 1.36 ms average,
+6.54 ms p95, 15.05 ms p99, and 55.42 ms maximum on Factorio 2.1.14.
+
+The tradeoff is bounded: ownership is assigned immediately, while aggregate
+charger utilization and settlement mood may trail sales or population churn by
+at most ten seconds. Building or removing chargers, poles, Sales Offices, or
+settlements remains immediately actionable.
+
 ## Terrestrial Release Soak
 
 Use a representative late-terrestrial save with an operating customer economy

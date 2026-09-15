@@ -210,10 +210,14 @@ function ChargerAllocator.allocate(station_specs, demand, options)
     local pair = best_available_station(candidate_pairs_by_key[key])
     if pair then
       local unmet = (demand[key] or 0) - (requested_capacity[key] or 0)
+      local candidate_pairs = candidate_pairs_by_key[key] or {}
+      local chunk_size = #candidate_pairs == 1
+        and unmet
+        or pair.assignment.spec.evs_per_stall
       local amount = math.min(
         unmet,
         pair.assignment.remaining_capacity,
-        pair.assignment.spec.evs_per_stall
+        chunk_size
       )
       if amount > 0 then
         assign_demand(pair, amount, requested_capacity, first_station_by_settlement)
