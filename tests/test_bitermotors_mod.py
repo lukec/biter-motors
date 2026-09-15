@@ -2489,6 +2489,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("service.bitertaxi_service.served_by_settlement_key[key]", control)
         self.assertIn("Operational Bitertaxi service makes covered settlements friendly", control)
         self.assertIn("no - not required for Bitertaxi service", control)
+        self.assertIn("if cached and cached.service and game.tick - cached.tick <= 300 then", control)
         self.assertIn("game.tick - cached.tick <= 300", control)
         self.assertIn("function bitertaxi_dollar_output_blocked", control)
         self.assertIn("slot.count >= slot.prototype.stack_size", control)

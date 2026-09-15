@@ -7873,7 +7873,7 @@ function bitertaxi_service_for_force(force)
   end
   storage.bitermotors_bitertaxi_allocation_cache = storage.bitermotors_bitertaxi_allocation_cache or {}
   local cached = storage.bitermotors_bitertaxi_allocation_cache[force.index]
-  if cached and game.tick - cached.tick <= 300 then
+  if cached and cached.service and game.tick - cached.tick <= 300 then
     return cached.service
   end
 
