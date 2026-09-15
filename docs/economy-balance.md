@@ -155,8 +155,9 @@ pressure points:
   100M, and 1B cumulative tokens;
 - final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
 - the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Battery Arrays;
-- Bitertaxi service earns 1 Dollar per 2 allocated vehicle-minutes, targeting a
-  roughly 3-4 hour full-center capex payback.
+- Bitertaxi service earns 1 Dollar per 2 allocated vehicle-minutes. At the
+  current 20-Dollar fleet recipe, a full center's 4,200-Dollar direct cost has
+  an ideal 0.7-hour payback at saturation.
 
 At 10 GW the ending asks for about 4,762 Tandem
 Arrays and 1,001 Grid Battery Arrays. That is still a

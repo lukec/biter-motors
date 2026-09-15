@@ -52,14 +52,14 @@ selected loops only after checking GitHub and mod-portal size and format limits.
 | 46-58s | Biterfactories, dense logistics, bots, and moving EV output | `Make the next order of magnitude routine.` |
 | 58-67s | HD solar, Grid Batteries, charging load, and a strained power graph | `Success becomes a grid problem.` |
 | 67-72s | Bitertaxi fleet and Cybertrain fly-by | `Automate what comes next.` |
-| 72-75s | Biter Motors title and Alpha badge | `Biter Motors - Alpha` |
+| 72-75s | Biter Motors title and Beta badge | `Biter Motors - Beta` |
 
 ## YouTube Deliverables
 
 - 60-90 second 16:9 gameplay trailer at 1080p.
 - Captioned version with no information carried only by audio.
 - Thumbnail using real gameplay plus the Biter Motors title treatment.
-- Description with the alpha warning, Factorio and Space Age requirements,
+- Description with the beta warning, Factorio and Space Age requirements,
   repository link, eventual mod-portal link, and feedback link.
 - A shorter silent loop assembled from the same footage for README or social
   use if the hosting and file-size checks pass.

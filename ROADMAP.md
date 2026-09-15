@@ -6,8 +6,13 @@ design requirements.
 
 ## Release Objective
 
-Ship a stable public alpha for Factorio 2.1 Space Age that supports a complete
+Ship a stable public beta for Factorio 2.1 Space Age that supports a complete
 new-world campaign from the crash landing through a physical AGI victory.
+
+Beta begins the public save-compatibility contract. It requires a feature-frozen
+and finishable campaign, release soak evidence, and an exact-archive rehearsal.
+Final art polish and a gameplay trailer may continue during beta when they do
+not obscure mechanics or progression.
 
 Every development day should close at least one public-release gap:
 
@@ -110,8 +115,9 @@ sales:
   three times each settlement's starting representation. A shortage suspends
   only the affected settlement; healthy settlements continue growing.
 - Charger radii target `64 / 128 / 192 / 256` tiles for V1 through V4.
-- Bitertaxi Depots target `1 Dollar per 2 allocated vehicle-minutes`,
-  giving a full center approximately a `3-4` hour capex payback at saturation.
+- Bitertaxi Depots target `1 Dollar per 2 allocated vehicle-minutes`. Following
+  playtest feedback, each fleet now costs 20 Dollars; a full center therefore
+  targets approximately a 42-minute direct-capital payback at saturation.
 
 The simulator and economy report are the source of truth for these balance
 assumptions. The corresponding runtime values and replacement invariants pass
@@ -214,7 +220,7 @@ The cumulative gate makes orbital scaling practically necessary. The physical
 recipe and uninterrupted 10-gigawatt run ensure that the terrestrial factory,
 capital loop, and power grid remain part of the finale.
 
-## Public Alpha Gates
+## Public Beta Gates
 
 ### Gate 1: Product Coherence
 
@@ -276,6 +282,9 @@ Status: **partially complete**
 - [x] No per-customer rendered vehicle icon objects.
 - [x] Existing 20,000-unit stress and commute benchmarks.
 - [x] Re-run the stress suite against the renamed release candidate.
+- [x] Add an exact-archive soak harness with terrestrial and orbital fixture
+      requirements, runtime-error detection, periodic state probes, and
+      explicit average/p99/spike thresholds.
 - [ ] Run a four-hour headless soak on a late terrestrial save.
 - [ ] Run a one-hour soak with multiple orbital cores and platforms.
 - [ ] Verify no recurring invalid-entity crashes, log spam, or second-scale
@@ -283,7 +292,7 @@ Status: **partially complete**
 - [ ] Validate save/load, reconnect, multiplayer join, and configuration-change
       behavior.
 
-Current release-candidate baseline (Factorio 2.1.13, fixed seed `424242`):
+Current release-candidate baseline (Factorio 2.1.14, fixed seed `424242`):
 
 - Luke's protected late-terrestrial save improved from a 3.00 ms warm average,
   39.68 ms p99, and 248.29 ms maximum to 1.31 ms, 16.48 ms, and 79.42 ms
@@ -330,7 +339,7 @@ Status: **functional, not final**
 
 Status: **archive validated**
 
-The checked items below were validated locally with the Factorio 2.1.13 engine
+The checked items below were validated locally with the Factorio 2.1.14 engine
 using an isolated user directory and the exact packaged archive. CI reproduces
 the static, unit, metadata, and deterministic-package checks; it does not bundle
 or execute Factorio.
@@ -342,6 +351,10 @@ or execute Factorio.
 - [x] Test a release archive on a clean Factorio user directory.
 - [x] Test new single-player and multiplayer worlds with only declared
       dependencies.
+
+The repeatable terrestrial and orbital soak procedure, profile requirements,
+performance gates, and result artifacts are documented in
+`docs/soak-testing.md`.
 
 ### Gate 7: Release Candidate
 
@@ -358,7 +371,7 @@ Status: **not started**
 
 Status: **not started**
 
-- [ ] Create the mods.factorio.com listing as an alpha.
+- [ ] Create the mods.factorio.com listing as a beta.
 - [ ] Use the marketing README and spoiler-light screenshots.
 - [ ] Upload and verify the selected gameplay images in the mod portal gallery.
 - [x] Write a spoiler-light gameplay trailer storyboard and capture contract.
@@ -401,7 +414,7 @@ These are candidates only after the release gates above:
   130.0, or about 3.41x the travel and roughly 160 km/h. Battery endurance is
   approximately two minutes at sustained full stride.
 
-## Explicit Non-Goals For Public Alpha
+## Explicit Non-Goals For Public Beta
 
 - No custom launch-service products or commercial SpaceX simulation.
 - No Vulcanus, Fulgora, Gleba, or Aquilo campaign support.

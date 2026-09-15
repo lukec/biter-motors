@@ -162,6 +162,8 @@ scripts/validate-bitermotors-mod.sh
 ```
 
 Additional focused validators and scale benchmarks live in `scripts/`.
+The release soak harness and terrestrial/orbital acceptance profiles are
+documented in [docs/soak-testing.md](docs/soak-testing.md).
 
 ## Build A Release Archive
 

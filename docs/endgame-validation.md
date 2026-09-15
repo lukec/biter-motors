@@ -2,7 +2,7 @@
 
 The Biter Motors endgame is a physical orbital-compute campaign ending in one
 uninterrupted 10 GW AGI training run. This document defines the runtime signals
-that must agree before the public alpha.
+that must agree before the public beta.
 
 ## Authoritative AI Token Accounting
 
