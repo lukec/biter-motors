@@ -2,16 +2,18 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 tmp="$(mktemp -d /tmp/bitermotors-battery-resources.XXXXXX)"
 mods="$tmp/mods"
-helper="$mods/bitermotors_battery_resource_test_0.1.0"
+helper="$mods/bitermotors_battery_resource_test_0.1.1"
 save="$tmp/resources.zip"
 report="$tmp/script-output/bitermotors-battery-resources.json"
 
 mkdir -p "$mods" "$helper" "$tmp/script-output"
-ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$mods"
 
 cat > "$tmp/config.ini" <<EOF
 [path]
@@ -48,6 +50,7 @@ script.on_init(function()
   local lithium_distance, lithium_wells = nearest_distance(surface, "bitermotors-lithium-brine", radius)
   local uranium_distance, uranium_tiles = nearest_distance(surface, "uranium-ore", radius)
   helpers.write_file("bitermotors-battery-resources.json", helpers.table_to_json{
+    status = "battery_resources_complete",
     radius = radius,
     nickel_distance = nickel_distance,
     nickel_tiles = nickel_tiles,
@@ -61,10 +64,7 @@ EOF
 
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$tmp/create.log" 2>&1
 
-if rg -n "Error while running event|non-recoverable error|Failed to load mods" "$tmp/create.log"; then
-  echo "Battery resource validation encountered a Factorio error: $tmp/create.log" >&2
-  exit 1
-fi
+bitermotors_check_log "$tmp/create.log" --expect-marker Goodbye
 
 python3 - "$report" <<'PY'
 import json
@@ -72,6 +72,8 @@ from pathlib import Path
 import sys
 
 row = json.loads(Path(sys.argv[1]).read_text())
+if row.get("status") != "battery_resources_complete":
+    raise SystemExit(f"battery resource report missing completion sentinel: {row}")
 for resource, count_field, distance_field in (
     ("Nickel Ore", "nickel_tiles", "nickel_distance"),
     ("Lithium Brine", "lithium_wells", "lithium_distance"),

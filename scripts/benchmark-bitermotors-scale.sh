@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 unit_count="${BITERMOTORS_BENCHMARK_UNITS:-20000}"
@@ -10,6 +12,14 @@ benchmark_seed="${BITERMOTORS_BENCHMARK_SEED:-424242}"
 results="${BITERMOTORS_BENCHMARK_RESULTS:-/tmp/bitermotors-20k-results.csv}"
 register_owners="${BITERMOTORS_BENCHMARK_REGISTER_OWNERS:-1}"
 read -r -a caps <<<"${BITERMOTORS_BENCHMARK_CAPS:-0 128 256 512}"
+
+for numeric in "$unit_count" "$benchmark_ticks" "$benchmark_seed" "$register_owners" "${caps[@]}"; do
+  [[ "$numeric" =~ ^[0-9]+$ ]] || { echo "benchmark parameters must be non-negative integers" >&2; exit 2; }
+done
+(( unit_count > 0 && benchmark_ticks > 1 && register_owners <= 1 )) || {
+  echo "benchmark requires units > 0, ticks > 1, and REGISTER_OWNERS = 0 or 1" >&2
+  exit 2
+}
 
 printf 'units,registered_owners,moving_cap,ticks,seed,avg_ms,min_ms,max_ms,movers,moved_units,completed_commands,queued_commutes,active_commutes,market_builds,bitertaxi_builds\n' >"$results"
 
@@ -20,7 +30,7 @@ for cap in "${caps[@]}"; do
   save="$tmp/saves/bitermotors-scale.zip"
   report="$tmp/script-output/bitermotors-scale.jsonl"
   mkdir -p "$mods" "$bench" "$tmp/saves" "$tmp/script-output"
-  ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+  bitermotors_stage_mod "$mods"
 
   cat >"$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -39,18 +49,18 @@ EOF_CONFIG
 }
 EOF_MOD_LIST
 
-  cat >"$bench/info.json" <<'EOF_INFO'
+  cat >"$bench/info.json" <<EOF_INFO
 {
   "name": "bitermotors_perf_benchmark",
   "version": "0.1.1",
   "title": "Biter Motors Performance Benchmark",
   "author": "Codex",
   "factorio_version": "2.1",
-  "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "bitermotors >= 0.1.0"]
+  "dependencies": ["base >= 2.1.20", "space-age >= 2.1.20", "bitermotors >= $bitermotors_mod_version"]
 }
 EOF_INFO
 
-  report_tick=$((benchmark_ticks - 60))
+  report_tick=$((benchmark_ticks - 1))
   cat >"$bench/control.lua" <<EOF_LUA
 local UNIT_COUNT = $unit_count
 local REGISTER_OWNERS = $register_owners == 1
@@ -140,6 +150,7 @@ script.on_nth_tick(REPORT_TICK, function()
     end
   end
   helpers.write_file(REPORT, helpers.table_to_json{
+    status = "benchmark_complete",
     tick = game.tick,
     created = storage.created,
     moving_cap = MOVING_CAP,
@@ -152,27 +163,23 @@ script.on_nth_tick(REPORT_TICK, function()
 end)
 EOF_LUA
 
-  create_log="/tmp/bitermotors-scale-${cap}-create.log"
-  benchmark_log="/tmp/bitermotors-scale-${cap}-benchmark.log"
+  create_log="$tmp/create.log"
+  benchmark_log="$tmp/benchmark.log"
   if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
     --create "$save" --map-gen-seed "$benchmark_seed" >"$create_log" 2>&1; then
     tail -120 "$create_log" >&2
     exit 1
   fi
-  if grep -qE 'non-recoverable error|Error while running event' "$create_log"; then
-    tail -120 "$create_log" >&2
-    exit 1
-  fi
+  bitermotors_check_log "$create_log" --expect-marker Goodbye
   rm -f "$report"
   if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" \
     --benchmark "$save" --benchmark-ticks "$benchmark_ticks" --benchmark-runs 1 >"$benchmark_log" 2>&1; then
     tail -120 "$benchmark_log" >&2
     exit 1
   fi
-  if grep -qE 'non-recoverable error|Error while running event' "$benchmark_log"; then
-    tail -120 "$benchmark_log" >&2
-    exit 1
-  fi
+  bitermotors_check_log "$benchmark_log" --expect-updates "$benchmark_ticks" --expect-marker Goodbye
+  python3 "$repo_root/scripts/validation_support.py" report "$report" \
+    --require-status benchmark_complete --minimum-tick "$report_tick"
 
   python3 - "$benchmark_log" "$report" "$results" "$unit_count" "$cap" "$benchmark_ticks" "$benchmark_seed" <<'PY'
 import json

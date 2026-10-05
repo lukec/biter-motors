@@ -22,8 +22,8 @@ usage() {
 Usage: scripts/soak-bitermotors-save.sh --profile terrestrial|orbital --save SAVE.zip [options]
 
 Options:
-  --hours N                    Simulated hours; defaults to 4 terrestrial or 1 orbital.
-  --ticks N                    Exact simulated ticks, overriding --hours.
+  --hours N                    Nominal hours at 60 updates/s; defaults to 4 terrestrial or 1 orbital.
+  --ticks N                    Requested benchmark updates, overriding --hours.
   --timing-ticks N             Bounded verbose timing sample; default 3600.
   --sample-ticks N             Probe snapshot interval; default 3600.
   --warmup-ticks N             Timing samples discarded after load; default 60.
@@ -83,8 +83,8 @@ fi
 for numeric in "$ticks" "$timing_ticks" "$sample_ticks" "$warmup_ticks"; do
   [[ "$numeric" =~ ^[0-9]+$ ]] || { echo "tick values must be non-negative integers" >&2; exit 2; }
 done
-(( ticks > 0 && timing_ticks > warmup_ticks && sample_ticks > 0 )) || {
-  echo "ticks must be positive and timing ticks must exceed warmup ticks" >&2
+(( ticks > 1 && timing_ticks > 1 && timing_ticks > warmup_ticks && sample_ticks > 0 )) || {
+  echo "both runs require at least two updates and timing ticks must exceed warmup ticks" >&2
   exit 2
 }
 
@@ -93,13 +93,39 @@ if [[ -z "$output_dir" ]]; then
   output_dir="$(mktemp -d /tmp/bitermotors-soak-results.XXXXXX)"
 fi
 mkdir -p "$output_dir" "$tmp/mods" "$tmp/saves" "$tmp/script-output" "$tmp/release"
+summary="$output_dir/summary.json"
+rm -f "$summary"
+# Setup/packaging failures must leave evidence too, before the analyzer can run.
+failure_summary() {
+  local status=$?
+  if (( status != 0 )); then
+    python3 - "$summary" "$status" <<'PY'
+import json
+import sys
+from pathlib import Path
+path = Path(sys.argv[1])
+try:
+    previous = json.loads(path.read_text())
+except (OSError, ValueError):
+    previous = {}
+if previous.get("status") != "fail":
+    path.write_text(json.dumps({"status": "fail", "failures": [
+        "soak harness aborted with exit status " + sys.argv[2] + "; inspect setup and engine logs"
+    ]}, indent=2) + "\n")
+PY
+  fi
+}
+trap failure_summary EXIT
+# The soak always packages this checkout rather than accepting an external ZIP.
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 mods="$tmp/mods"
 probe="$mods/bitermotors_soak_probe_0.1.1"
 mkdir -p "$probe"
 
-archive="$(python3 "$repo_root/scripts/package-bitermotors.py" --output-dir "$tmp/release")"
+archive="$(python3 "$repo_root/scripts/package-bitermotors.py" --output-dir "$tmp/release" --version "$bitermotors_mod_version")"
 python3 "$repo_root/scripts/check-bitermotors-release.py" \
-  "$archive" --source "$repo_root/mod/bitermotors_0.1.1"
+  "$archive" --source "$bitermotors_mod_source"
 cp "$archive" "$mods/"
 cp "$save" "$tmp/saves/soak.zip"
 
@@ -120,23 +146,30 @@ cat > "$mods/mod-list.json" <<'EOF_MOD_LIST'
 }
 EOF_MOD_LIST
 
-cat > "$probe/info.json" <<'EOF_INFO'
+cat > "$probe/info.json" <<EOF_INFO
 {
   "name": "bitermotors_soak_probe",
   "version": "0.1.1",
   "title": "Biter Motors Soak Probe",
   "author": "Biter Motors",
   "factorio_version": "2.1",
-  "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "bitermotors >= 0.1.1"]
+  "dependencies": ["base >= 2.1.0", "space-age >= 2.1.0", "bitermotors >= $bitermotors_mod_version"]
 }
 EOF_INFO
 
 cat > "$probe/control.lua" <<EOF_LUA
 local PROFILE = "$profile"
 local SAMPLE_TICKS = $sample_ticks
+local RUN_TICKS = $ticks
 local PERIODIC_PROBE = true
 local REPORT = "bitermotors-soak.jsonl"
 local CORE = "bitermotors-orbital-datacenter-core"
+local CORE_RECIPES = {
+  ["bitermotors-orbital-ai-token"] = true,
+  ["bitermotors-orbital-ai-token-cluster"] = true,
+  ["bitermotors-orbital-ai-token-grid-scale"] = true,
+  ["bitermotors-orbital-ai-token-hyperscale"] = true
+}
 
 local function call_status(method)
   if not remote.interfaces.bitermotors or not remote.interfaces.bitermotors[method] then
@@ -160,8 +193,11 @@ local function snapshot(kind)
   end
   local active_cores = 0
   for _, core in pairs(ending and ending.cores or {}) do
-    if core.recipe == "bitermotors-orbital-ai-token"
+    if CORE_RECIPES[core.recipe or ""]
       and core.cooled
+      and not core.disabled_by_script
+      and not core.reset_for_power
+      and not core.reset_for_cooling
       and (core.power_fraction or 0) > 0 then
       active_cores = active_cores + 1
     end
@@ -177,24 +213,37 @@ local function snapshot(kind)
     endgame = ending,
     performance = performance,
     errors = {
-      progress = progress_error,
-      endgame = endgame_error,
-      performance = performance_error
+      progress = progress_error or false,
+      endgame = endgame_error or false,
+      performance = performance_error or false
     }
   } .. "\n", true)
 end
 
 local function initialize()
   game.tick_paused = false
-  storage.bitermotors_soak_started = game.tick
-  snapshot("initial")
+  storage.bitermotors_soak_started = nil
 end
 
 script.on_init(initialize)
 script.on_configuration_changed(initialize)
+-- Count from the first native update, not from the load/configuration callback.
+-- On the validated engine, N updates span N-1 ticks between these probes.
+script.on_event(defines.events.on_tick, function(event)
+  if not storage.bitermotors_soak_started then
+    storage.bitermotors_soak_started = event.tick
+    snapshot("initial")
+  elseif event.tick == storage.bitermotors_soak_started + RUN_TICKS - 1 then
+    if PERIODIC_PROBE and event.tick % SAMPLE_TICKS == 0 then snapshot("periodic") end
+    snapshot("final")
+  end
+end)
 if PERIODIC_PROBE then
-  script.on_nth_tick(SAMPLE_TICKS, function()
-    snapshot("periodic")
+  script.on_nth_tick(SAMPLE_TICKS, function(event)
+    local start = storage.bitermotors_soak_started
+    if start and event.tick > start and event.tick < start + RUN_TICKS - 1 then
+      snapshot("periodic")
+    end
   end)
 end
 EOF_LUA
@@ -202,7 +251,6 @@ EOF_LUA
 benchmark_log="$output_dir/benchmark.log"
 timing_log="$output_dir/timing-sample.log"
 probe_report="$tmp/script-output/bitermotors-soak.jsonl"
-summary="$output_dir/summary.json"
 
 benchmark_args=(
   --config "$tmp/config.ini"
@@ -213,12 +261,17 @@ benchmark_args=(
 
 started_at="$(date +%s)"
 echo "Running $profile soak for $ticks ticks..."
-"$factorio_bin" "${benchmark_args[@]}" --benchmark-ticks "$ticks" >"$benchmark_log" 2>&1
-[[ -s "$probe_report" ]] || { tail -120 "$benchmark_log" >&2; echo "Soak probe produced no report" >&2; exit 1; }
-cp "$probe_report" "$output_dir/probe.jsonl"
+benchmark_exit=0
+"$factorio_bin" "${benchmark_args[@]}" --benchmark-ticks "$ticks" >"$benchmark_log" 2>&1 || benchmark_exit=$?
+if [[ -f "$probe_report" ]]; then
+  cp "$probe_report" "$output_dir/probe.jsonl"
+  rm "$probe_report"
+else
+  : > "$output_dir/probe.jsonl"
+fi
 
 echo "Running bounded timing sample for $timing_ticks ticks..."
-python3 - "$probe/control.lua" <<'PY'
+python3 - "$probe/control.lua" "$ticks" "$timing_ticks" <<'PY'
 from pathlib import Path
 import sys
 
@@ -227,16 +280,28 @@ source = path.read_text()
 old = "local PERIODIC_PROBE = true"
 if old not in source:
     raise SystemExit("soak probe periodic flag was not found")
-path.write_text(source.replace(old, "local PERIODIC_PROBE = false", 1))
+source = source.replace(old, "local PERIODIC_PROBE = false", 1)
+source = source.replace("local RUN_TICKS = " + sys.argv[2], "local RUN_TICKS = " + sys.argv[3], 1)
+path.write_text(source)
 PY
+timing_exit=0
 "$factorio_bin" "${benchmark_args[@]}" --benchmark-ticks "$timing_ticks" \
-  --benchmark-verbose all >"$timing_log" 2>&1
+  --benchmark-verbose all >"$timing_log" 2>&1 || timing_exit=$?
+if [[ -f "$probe_report" ]]; then
+  cp "$probe_report" "$output_dir/timing-probe.jsonl"
+else
+  : > "$output_dir/timing-probe.jsonl"
+fi
 
 factorio_version="$("$factorio_bin" --version | sed -n 's/^Version: \([^ ]*\).*/\1/p' | head -1)"
 wall_seconds="$(( $(date +%s) - started_at ))"
 analyzer_args=(
   --profile "$profile"
   --ticks "$ticks"
+  --timing-ticks "$timing_ticks"
+  --sample-ticks "$sample_ticks"
+  --benchmark-exit-code "$benchmark_exit"
+  --timing-exit-code "$timing_exit"
   --factorio-version "$factorio_version"
   --wall-seconds "$wall_seconds"
   --save "$save"
@@ -244,6 +309,7 @@ analyzer_args=(
   --benchmark-log "$benchmark_log"
   --timing-log "$timing_log"
   --probe-report "$output_dir/probe.jsonl"
+  --timing-probe-report "$output_dir/timing-probe.jsonl"
   --output "$summary"
   --warmup-ticks "$warmup_ticks"
   --max-average-ms "$max_average_ms"

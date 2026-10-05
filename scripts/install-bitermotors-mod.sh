@@ -2,13 +2,15 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source_dir="$repo_root/mod/bitermotors_0.1.1"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
+source_dir="$bitermotors_mod_source"
 client_mods_dir="${FACTORIO_CLIENT_MODS_DIR:-${FACTORIO_MODS_DIR:-$HOME/Library/Application Support/factorio/mods}}"
 server_mods_dir="${FACTORIO_SERVER_MODS_DIR:-}"
 
 link_bitermotors() {
   local mods_dir="$1"
-  local target_dir="$mods_dir/bitermotors_0.1.1"
+  local target_dir="$mods_dir/bitermotors_$bitermotors_mod_version"
   local mod_list="$mods_dir/mod-list.json"
 
   mkdir -p "$mods_dir"

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import runpy
 import zipfile
 from pathlib import Path
 
@@ -44,8 +45,9 @@ def inspect_archive(archive_path: Path) -> None:
             fail("archive manifest must target Factorio 2.1")
         if info.get("homepage") != EXPECTED_HOMEPAGE:
             fail(f"archive manifest homepage must be {EXPECTED_HOMEPAGE}")
-        if "space-age >= 2.1.0" not in info.get("dependencies", []):
-            fail("archive manifest must declare Space Age")
+        for dependency in ("base >= 2.1.20", "space-age >= 2.1.20"):
+            if dependency not in info.get("dependencies", []):
+                fail(f"archive manifest must declare {dependency}")
         for artifact in REQUIRED_ARTIFACTS:
             if f"{root}/{artifact}" not in names:
                 fail(f"archive is missing {artifact}")
@@ -90,14 +92,36 @@ def inspect_source(source: Path) -> None:
     print(f"source namespace scan OK: {source}")
 
 
+def inspect_source_match(archive_path: Path, source: Path) -> None:
+    # Use the packager's own inclusion rules, including legal/release documents.
+    package = runpy.run_path(str(Path(__file__).with_name("package-bitermotors.py")))
+    version = json.loads((source / "info.json").read_text())["version"]
+    expected = dict(package["archive_entries"](source, f"bitermotors_{version}"))
+    with zipfile.ZipFile(archive_path) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)):
+            fail("archive contains duplicate entries")
+        if set(names) != set(expected):
+            fail("archive contents do not match the current source/package manifest")
+        for name, content in expected.items():
+            if archive.read(name) != content:
+                fail(f"archive differs from current source: {name}")
+    print("archive bytes match the current source/package manifest")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
     parser.add_argument("--source", type=Path)
+    parser.add_argument("--require-source-match", action="store_true")
     args = parser.parse_args()
+    if args.require_source_match and not args.source:
+        parser.error("--require-source-match requires --source")
     inspect_archive(args.archive)
     if args.source:
         inspect_source(args.source)
+    if args.require_source_match:
+        inspect_source_match(args.archive, args.source)
     return 0
 
 

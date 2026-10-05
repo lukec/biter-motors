@@ -3,14 +3,15 @@
 Review date: **2026-10-05**. Reviewed source: **54c12ac** on `main`.
 Installed engine: **Factorio 2.1.20, build 87512, mac-arm64, Space Age**.
 This review supersedes older release-readiness conclusions, not the campaign
-vision. Recommendations below are **not implemented** by this review.
+vision. The review commit itself implemented no recommendations; subsequent
+implementation status is recorded below.
 
 ## Verdict
 
 **Do not start the final acceptance playthrough yet.** The terrestrial game has
 enough content for v1. Finish and stabilize it rather than add another branch.
-There are current-engine compatibility, accounting, customer-state, recycling,
-and victory defects. The finale also has an avoidable physical-item logistics
+The initial compatibility defect is fixed in Phase 1; accounting, customer-state,
+recycling, and victory defects remain. The finale also has a physical-item logistics
 grind that must be resolved before a campaign can fairly test its balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
@@ -20,6 +21,9 @@ the ending. Existing private alpha saves are useful regression fixtures; their
 preservation is not a prerequisite for Luke's proposed fresh campaign.
 
 ## Scope And Evidence
+
+This section and the finding references record the original review of
+`54c12ac`, not the subsequent repaired baseline.
 
 Reviewed the prototypes and technology changes, runtime and customer modules,
 progression/economy contracts, tests, validators, soak tools, packaging, legal
@@ -503,15 +507,23 @@ verification, and remaining gaps in this document as each phase completes.
 
 ### Phase 1: Restore A Truthful Current-Version Baseline
 
-- [ ] Fix R01 and choose/document the supported engine build.
-- [ ] Correct helper folder/manifest versions and version-derived source paths.
-- [ ] Make validators inspect the whole run and fail on missing sentinels/errors.
-- [ ] Harden soak completeness checks from R13 with negative fixtures.
-- [ ] Record a clean unmodified source and exact-ZIP engine pass.
+- [x] Fix R01 and choose/document the supported engine build.
+- [x] Correct helper folder/manifest versions and version-derived source paths.
+- [x] Make validators inspect the whole run and fail on missing sentinels/errors.
+- [x] Harden soak completeness checks from R13 with negative fixtures.
+- [x] Record a clean source and exact-ZIP engine pass without a shim.
 
 **Deliverables:** compatibility fix, trustworthy validation tools, dated baseline.
 **Exit gate:** clean create/save/reload plus existing smoke with no shim; test
 suite and deliberate broken/truncated validator cases both behave correctly.
+
+**Completed 2026-10-05:** [dated baseline and exact archive](validation-baseline.md).
+Factorio 2.1.20 loads the corrected source and package; 147 Python tests pass.
+Native short soaks verify N-1 tick spans, including a terminal periodic boundary.
+R01 and the evidence-completeness defects in R13 are addressed. Version-derived
+install/validation paths also close part of R14; its packaging/provenance work
+is not complete. GUI acceptance still needs a player-bearing fixture. No long
+soak, full campaign, or final training qualification is claimed by Phase 1.
 
 ### Phase 2: Make Progression And Customer State Authoritative
 
@@ -644,11 +656,12 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Start with **Phase 1**, followed immediately by R02's authoritative counter and
-transaction fixtures in Phase 2. These determine whether any later balance or
+Start **Phase 2** with R02's authoritative counter and transaction fixtures.
+These determine whether any later balance or
 milestone evidence is meaningful. Decide the compressed-Dataset and fixed final
 controller contracts before Phase 3; everything else can follow the existing
 mechanics without another broad design round.
 
-The review itself changes planning/documentation only. It does not mark any
-finding fixed, qualify a release, or authorize restarting Luke's game.
+The original review changed planning/documentation only. Phase 1 now records
+its implemented fixes above; neither step qualifies a release or authorizes
+restarting Luke's game.

@@ -20,6 +20,9 @@ changes that policy.
   reconciliation for missed third-party events.
 - Factorio can log a non-recoverable mod error while exiting with status zero.
   Engine validators must inspect logs for runtime errors.
+- `on_nth_tick` can fire at tick zero. Completion probes must reject premature
+  callbacks; benchmark update counts alone do not prove advancing game time.
+  A paused or won world can still report all requested benchmark updates.
 - Player-facing currencies and script-produced inventory items must use the
   `always-show` item flag and have prototype-dump coverage so they remain
   selectable in logistic requests and filter pickers while recipes are locked.

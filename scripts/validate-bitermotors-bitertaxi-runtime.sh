@@ -2,12 +2,14 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 source_save="${1:-$HOME/Library/Application Support/factorio/saves/Biter-Motors-Start16.zip}"
 tmp="$(mktemp -d /tmp/bitermotors-rsc-runtime.XXXXXX)"
 mkdir -p "$tmp/mods" "$tmp/script-output"
-ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$tmp/mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$tmp/mods"
 printf '%s\n' '{"mods":[{"name":"base","enabled":true},{"name":"space-age","enabled":true},{"name":"bitermotors","enabled":true}]}' > "$tmp/mods/mod-list.json"
 printf '[path]\nread-data=%s\nwrite-data=%s\n' "$read_data" "$tmp" > "$tmp/config.ini"
 cp "$read_data/server-settings.example.json" "$tmp/server-settings.json"
@@ -111,7 +113,9 @@ with RconClient("127.0.0.1", 27026, "test", timeout=10) as client:
     assert sum(row["customers"] for row in rows) > 0, result
     assert any(row["output_blocked"] for row in rows), result
     assert result["helpers"] == 2, result
-    client.command(destroy)
+    destroy_output = client.command(destroy)
+    if "RSC_DESTROY" not in destroy_output:
+        raise SystemExit("missing terminal RSC_DESTROY sentinel")
     time.sleep(2)
     result_output = client.command(query)
     line = next(line for line in result_output.splitlines() if line.startswith("RSC_RESULT "))
@@ -120,3 +124,7 @@ with RconClient("127.0.0.1", 27026, "test", timeout=10) as client:
     assert after["helpers"] == 1, after
     print("Biter Motors RSC runtime gate OK:", json.dumps({"before": result, "after": after}, sort_keys=True))
 PY
+trap - EXIT
+kill "$pid" 2>/dev/null || true
+wait "$pid" 2>/dev/null || true
+bitermotors_check_log "$tmp/server.log"

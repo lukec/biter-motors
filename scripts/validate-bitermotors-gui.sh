@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 source_save="${1:-${FACTORIO_GUI_TEST_SAVE:-}}"
@@ -13,7 +15,7 @@ fi
 
 tmp="$(mktemp -d /tmp/bitermotors-gui-validate.XXXXXX)"
 mods="$tmp/mods"
-helper="$mods/bitermotors_gui_smoke_0.1.0"
+helper="$mods/bitermotors_gui_smoke_0.1.1"
 save="$tmp/gui-smoke.zip"
 report="$tmp/script-output/bitermotors-gui-smoke.jsonl"
 
@@ -29,7 +31,7 @@ trap cleanup EXIT
 
 mkdir -p "$mods" "$helper" "$tmp/script-output"
 cp "$source_save" "$save"
-ln -s "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$mods"
 
 cat > "$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -63,6 +65,7 @@ cat > "$helper/control.lua" <<'EOF_LUA'
 local REPORT = "bitermotors-gui-smoke.jsonl"
 
 local function write_report(payload)
+  payload.tick = game.tick
   helpers.write_file(REPORT, helpers.table_to_json(payload) .. "\n", true)
 end
 
@@ -307,6 +310,7 @@ script.on_event(defines.events.on_tick, function()
 
   write_report{
     status = "checked",
+    complete = true,
     progress_call_ok = progress_ok,
     jumpstart_solar = jumpstart_solar,
     jumpstart_grid_batteries = jumpstart_grid_batteries,
@@ -363,6 +367,8 @@ rm -f "$report"
   --benchmark-ticks 2 \
   --benchmark-runs 1 \
   >"$tmp/bitermotors-gui-benchmark.log" 2>&1
+bitermotors_check_log "$tmp/bitermotors-gui-benchmark.log" --expect-updates 2 --expect-marker Goodbye
+python3 "$repo_root/scripts/validation_support.py" report "$report" --require-status checked
 
 python3 - "$report" <<'PY'
 import json
@@ -374,6 +380,8 @@ records = [json.loads(line) for line in report.read_text().splitlines() if line.
 checked = next((record for record in records if record.get("status") == "checked"), None)
 if checked is None:
     raise SystemExit(f"GUI smoke report missing checked record: {records}")
+if records[-1] is not checked or checked.get("complete") is not True:
+    raise SystemExit(f"GUI smoke report missing final completion sentinel: {records}")
 for field in (
     "progress_call_ok",
     "progress_result",

@@ -6,7 +6,7 @@ release ancestors.
 
 ## Supported Game
 
-- Factorio 2.1
+- Factorio **2.1.20 or later**, subject to build-specific validation
 - Space Age enabled
 - Quality, Elevated Rails, and Recycler as supplied by Space Age
 - New Biter Motors worlds
@@ -14,6 +14,13 @@ release ancestors.
 
 Release candidates are tested against the current Factorio 2.1 build. New
 experimental Factorio builds are supported only after validation.
+
+The current alpha baseline is **2.1.20, build 87512, mac-arm64**, verified on
+2026-10-05. Both `base` and `space-age` dependencies require at least 2.1.20.
+Source and packaged engine smoke tests pass on that build; this is not yet a
+full campaign, multiplayer, or release soak qualification. See the
+[dated baseline](docs/validation-baseline.md) and
+[remaining v1 plan](docs/v1-readiness-review.md).
 
 ## World Scope
 

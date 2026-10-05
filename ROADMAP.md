@@ -21,9 +21,12 @@ not delay a proven ending.
 
 The [2026-10-05 v1 readiness review](docs/v1-readiness-review.md) is the current
 implementation plan. Reviewed commit: `54c12ac`; installed engine: **2.1.20**.
-The unmodified mod **does not load** on that build because hidden drive-charge
-items use removed `fuel_category` fields. Passing Python tests and historical
-2.1.14 archive results are not current release qualification.
+The reviewed source could not load on that build. **Phase 1 is now complete:**
+the compatibility defect is fixed, isolated source and exact-archive smoke
+tests pass without a shim, and validators/soaks reject incomplete evidence.
+The [dated baseline](docs/validation-baseline.md) records the tests and limits.
+Passing Python tests, short harness checks, and historical 2.1.14 results are
+not current release qualification.
 
 Complete these phases in order; the review defines their findings, artifacts,
 and acceptance tests:
@@ -41,7 +44,9 @@ and acceptance tests:
    uninterrupted AGI completion with a frozen engine/mod configuration.
 8. **V1 publication:** validated 1.0.0 archive, tag, portal download verification.
 
-No phase is complete yet. The final playthrough begins only after Phases 1-6.
+Phases **2-8 remain outstanding**. The immediate next slice is authoritative
+production/sales/profit accounting and behavioral transaction fixtures in
+Phase 2. The final playthrough begins only after Phases 1-6.
 The recommended compressed-Dataset transport and quality/beacon-independent
 60-minute, 10 GW finale require design approval before implementation. No new
 company, planet, battery chemistry, or future feature branch belongs in this

@@ -6,8 +6,8 @@
   "homepage": "https://github.com/lukec/biter-motors",
   "factorio_version": "2.1",
   "dependencies": [
-    "base >= 2.1.0",
-    "space-age >= 2.1.0"
+    "base >= 2.1.20",
+    "space-age >= 2.1.20"
   ],
   "description": "Build Biter Motors on Nauvis, scale orbital AI compute above it, then train an AGI model in a planet-scale energy facility."
 }

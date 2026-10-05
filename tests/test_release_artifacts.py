@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,10 +75,43 @@ class ReleaseArtifactTest(unittest.TestCase):
                 self.assertTrue(all(info.date_time == (1980, 1, 1, 0, 0, 0) for info in archive.infolist()))
 
             subprocess.run(
-                ["python3", str(CHECK_SCRIPT), str(first_archive), "--source", str(MOD)],
+                ["python3", str(CHECK_SCRIPT), str(first_archive), "--source", str(MOD),
+                 "--require-source-match"],
                 cwd=ROOT,
                 check=True,
             )
+
+    def test_source_match_rejects_stale_wrong_version_and_duplicate_archives(self):
+        spec = importlib.util.spec_from_file_location("check_bitermotors", CHECK_SCRIPT)
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            source = directory / "bitermotors_1.0.0"
+            source.mkdir()
+            (source / "info.json").write_text(json.dumps({"version": "1.0.0"}))
+            expected = [("bitermotors_1.0.0/control.lua", b"current")]
+            with mock.patch.object(checker.runpy, "run_path", return_value={
+                "archive_entries": lambda path, root: expected
+            }):
+                archive_path = directory / "test.zip"
+                for entries, message in (
+                    ([(expected[0][0], b"stale")], "differs"),
+                    ([("bitermotors_0.1.1/control.lua", b"current")], "manifest"),
+                    (expected + [("extra.lua", b"extra")], "manifest"),
+                ):
+                    with self.subTest(message=message):
+                        with zipfile.ZipFile(archive_path, "w") as archive:
+                            for name, content in entries:
+                                archive.writestr(name, content)
+                        with self.assertRaisesRegex(SystemExit, message):
+                            checker.inspect_source_match(archive_path, source)
+                with zipfile.ZipFile(archive_path, "w") as archive:
+                    archive.writestr(*expected[0])
+                    with self.assertWarns(UserWarning):
+                        archive.writestr(*expected[0])
+                with self.assertRaisesRegex(SystemExit, "duplicate"):
+                    checker.inspect_source_match(archive_path, source)
 
     def test_package_excludes_development_and_runtime_junk(self):
         package = load_package_module()

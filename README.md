@@ -123,7 +123,7 @@ contract is documented in [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Requirements
 
-- Factorio 2.1
+- Factorio 2.1.20 (current validated baseline; later builds require validation)
 - Space Age
 - Python 3 for static tests
 - Pillow for artwork assertions
@@ -149,10 +149,10 @@ after changing player-facing mod files.
 
 ## Validate
 
-Run the static contract suite:
+Run the Python contract, economy, artifact, and validation-tool suites:
 
 ```bash
-python3 -m unittest tests.test_bitermotors_mod
+python3 -m unittest discover tests
 ```
 
 Run the isolated Factorio smoke test:
@@ -162,6 +162,11 @@ scripts/validate-bitermotors-mod.sh
 ```
 
 Additional focused validators and scale benchmarks live in `scripts/`.
+To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
+to its absolute ZIP path when running an isolated validator. It must match the
+current checkout's package contents; stale same-version archives are rejected.
+The [current validation baseline](docs/validation-baseline.md) distinguishes
+engine smoke evidence from the remaining campaign/release gates.
 The release soak harness and terrestrial/orbital acceptance profiles are
 documented in [docs/soak-testing.md](docs/soak-testing.md).
 
@@ -173,7 +178,7 @@ Build the deterministic Factorio archive into `dist/`:
 python3 scripts/package-bitermotors.py
 python3 scripts/check-bitermotors-release.py \
   dist/bitermotors_0.1.1.zip \
-  --source mod/bitermotors_0.1.1
+  --source mod/bitermotors_0.1.1 --require-source-match
 ```
 
 The archive contains one Factorio-compatible root directory,

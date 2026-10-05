@@ -930,28 +930,28 @@ data:extend({
 
   item("bitermotors-electric-drive-charge", icon64("__base__/graphics/icons/battery.png"), "other", "z[bitermotors-electric-drive-charge]", 1, {
     hidden = true,
-    fuel_category = "bitermotors-electric-drive",
+    fuel_categories = {"bitermotors-electric-drive"},
     fuel_value = "1MJ",
     fuel_acceleration_multiplier = 1.15,
     fuel_top_speed_multiplier = 1.05
   }),
   item("bitermotors-cybertrain-drive-charge", generated_icon("cybertrain-drive-charge"), "other", "z[bitermotors-cybertrain-drive-charge]", 1000, {
     hidden = true,
-    fuel_category = "bitermotors-cybertrain-drive",
+    fuel_categories = {"bitermotors-cybertrain-drive"},
     fuel_value = "1MJ",
     fuel_acceleration_multiplier = 2.0,
     fuel_top_speed_multiplier = 1.5
   }),
   item("bitermotors-espider-drive-charge", icon64("__space-age__/graphics/icons/battery-mk3-equipment.png"), "other", "z[bitermotors-espider-drive-charge]", 1, {
     hidden = true,
-    fuel_category = "bitermotors-espider-drive",
+    fuel_categories = {"bitermotors-espider-drive"},
     fuel_value = "10MJ",
     fuel_acceleration_multiplier = 1,
     fuel_top_speed_multiplier = 1
   }),
   item("bitermotors-espider-reserve-charge", icon64("__base__/graphics/icons/battery.png", {r = 1.0, g = 0.55, b = 0.18, a = 1.0}), "other", "z[bitermotors-espider-reserve-charge]", 1, {
     hidden = true,
-    fuel_category = "bitermotors-espider-drive",
+    fuel_categories = {"bitermotors-espider-drive"},
     fuel_value = "10MJ",
     fuel_acceleration_multiplier = 0.2,
     fuel_top_speed_multiplier = 0.1

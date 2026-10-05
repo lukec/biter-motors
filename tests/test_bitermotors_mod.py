@@ -7,7 +7,7 @@ from PIL import Image, ImageChops
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MOD = ROOT / "mod" / "bitermotors_0.1.1"
+MOD = next((ROOT / "mod").glob("bitermotors_*/info.json")).parent
 
 
 class BiterMotorsModTest(unittest.TestCase):
@@ -247,8 +247,23 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_bitermotors_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
         self.assertEqual(info["name"], "bitermotors")
-        self.assertEqual(info["version"], "0.1.1")
-        self.assertIn("space-age >= 2.1.0", info["dependencies"])
+        self.assertEqual(MOD.name, f'bitermotors_{info["version"]}')
+        self.assertIn("base >= 2.1.20", info["dependencies"])
+        self.assertIn("space-age >= 2.1.20", info["dependencies"])
+
+    def test_drive_charge_items_use_current_item_fuel_categories(self):
+        data = (MOD / "data.lua").read_text()
+        self.assertNotRegex(data, r"\bfuel_category\s*=")
+        expected = {
+            "bitermotors-electric-drive-charge": "bitermotors-electric-drive",
+            "bitermotors-cybertrain-drive-charge": "bitermotors-cybertrain-drive",
+            "bitermotors-espider-drive-charge": "bitermotors-espider-drive",
+            "bitermotors-espider-reserve-charge": "bitermotors-espider-drive",
+        }
+        for item, category in expected.items():
+            start = data.index(f'item("{item}"')
+            definition = data[start:data.index("  }),", start)]
+            self.assertIn(f'fuel_categories = {{"{category}"}}', definition)
 
     def test_legacy_product_names_exist_only_in_the_namespace_migration(self):
         current_sources = "\n".join(
@@ -3458,7 +3473,7 @@ class BiterMotorsModTest(unittest.TestCase):
 
         playtest_benchmark = (ROOT / "scripts/benchmark-bitermotors-playtest-save.sh").read_text()
         self.assertIn("BITERMOTORS_BENCHMARK_VERBOSE:-0", playtest_benchmark)
-        self.assertIn("non-recoverable error", playtest_benchmark)
+        self.assertIn('bitermotors_check_log "$tmp/benchmark.log"', playtest_benchmark)
         self.assertIn("avg={average:.3f} ms", playtest_benchmark)
 
     def test_bitermotors_avoids_capex_language(self):

@@ -1,6 +1,6 @@
 # Biter Motors 0.1.1
 
-Biter Motors is an alpha Factorio 2.1 Space Age campaign for Nauvis and
+Biter Motors is an alpha Factorio 2.1.20 Space Age campaign for Nauvis and
 stationary platforms in Nauvis orbit.
 
 The mod id is `bitermotors`; custom prototypes use the `bitermotors-` prefix.

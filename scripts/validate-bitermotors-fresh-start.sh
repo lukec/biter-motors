@@ -2,16 +2,18 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 tmp="$(mktemp -d /tmp/bitermotors-fresh-start.XXXXXX)"
 mods="$tmp/mods"
-helper="$mods/bitermotors_fresh_start_test_0.1.0"
+helper="$mods/bitermotors_fresh_start_test_0.1.1"
 save="$tmp/fresh.zip"
 report="$tmp/script-output/bitermotors-fresh-start.jsonl"
 
 mkdir -p "$mods" "$helper" "$tmp/script-output"
-ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$mods"
 
 cat > "$tmp/config.ini" <<EOF
 [path]
@@ -44,6 +46,8 @@ script.on_init(function()
     technologies[name] = force.technologies[name] and force.technologies[name].researched or false
   end
   helpers.write_file("bitermotors-fresh-start.jsonl", helpers.table_to_json{
+    status = "fresh_start_complete",
+    tick = game.tick,
     active_mods = script.active_mods,
     accelerated_start = settings.startup["bitermotors-accelerated-start"].value,
     ship = ship,
@@ -59,6 +63,9 @@ end)
 EOF
 
 "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$tmp/create.log" 2>&1
+bitermotors_check_log "$tmp/create.log" --expect-marker Goodbye
+python3 "$repo_root/scripts/validation_support.py" report "$report" \
+  --require-status fresh_start_complete
 
 python3 - "$report" <<'PY'
 import json
@@ -66,7 +73,12 @@ from pathlib import Path
 import sys
 
 path = Path(sys.argv[1])
-row = json.loads(path.read_text().splitlines()[-1])
+records = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+if not records:
+    raise SystemExit("fresh-start report is empty")
+row = records[-1]
+if row.get("status") == "failed":
+    raise SystemExit(f"fresh-start report failed: {row}")
 required_mods = {"base", "space-age", "quality", "bitermotors"}
 if not required_mods.issubset(row["active_mods"]):
     raise SystemExit(f"required mods missing: {row}")

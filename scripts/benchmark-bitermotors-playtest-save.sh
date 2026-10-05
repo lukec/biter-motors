@@ -2,16 +2,19 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 save="${1:?usage: $0 SAVE.zip [TICKS]}"
 ticks="${2:-600}"
+[[ "$ticks" =~ ^[0-9]+$ ]] && (( ticks > 1 )) || { echo "TICKS must be an integer greater than one" >&2; exit 2; }
 verbose="${BITERMOTORS_BENCHMARK_VERBOSE:-0}"
 tmp="$(mktemp -d /tmp/bitermotors-playtest-benchmark.XXXXXX)"
 mods="$tmp/mods"
 
 mkdir -p "$mods"
-ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$mods"
 cat > "$tmp/config.ini" <<EOF
 [path]
 read-data=$read_data
@@ -36,10 +39,7 @@ if ! "$factorio_bin" "${benchmark_args[@]}" >"$tmp/benchmark.log" 2>&1; then
   tail -120 "$tmp/benchmark.log" >&2
   exit 1
 fi
-if grep -qE 'non-recoverable error|Error while running event|errored when running' "$tmp/benchmark.log"; then
-  tail -120 "$tmp/benchmark.log" >&2
-  exit 1
-fi
+bitermotors_check_log "$tmp/benchmark.log" --expect-updates "$ticks" --expect-marker Goodbye
 
 python3 - "$tmp/benchmark.log" "${FACTORIO_BENCHMARK_MAX_MS:-0}" <<'PY'
 import re
@@ -68,3 +68,4 @@ if threshold > 0 and average > threshold:
 PY
 
 echo "Benchmark log: $tmp/benchmark.log"
+echo "Ad-hoc timing only; use the soak harness to verify elapsed game time."

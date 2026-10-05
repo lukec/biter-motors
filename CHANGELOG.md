@@ -5,6 +5,11 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Restored Factorio 2.1.20 compatibility for EV, Cybertrain, and eSpider
+  drive-charge fuel items; both engine dependencies now require 2.1.20.
+- Hardened isolated validators and soak evidence against zero-exit Lua errors,
+  stale archives, incomplete probes, paused game time, and truncated timings.
+  This establishes a current engine baseline, not full campaign qualification.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

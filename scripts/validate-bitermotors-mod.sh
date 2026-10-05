@@ -2,6 +2,9 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+source "$repo_root/scripts/lib/bitermotors-validation.sh"
+bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 tmp="$(mktemp -d /tmp/bitermotors-validate.XXXXXX)"
@@ -11,7 +14,7 @@ save="$tmp/saves/bitermotors-smoke.zip"
 report="$tmp/script-output/bitermotors-smoke.jsonl"
 
 mkdir -p "$mods" "$smoke" "$tmp/script-output" "$tmp/saves"
-ln -sfn "$repo_root/mod/bitermotors_0.1.1" "$mods/bitermotors_0.1.1"
+bitermotors_stage_mod "$mods"
 
 cat > "$tmp/config.ini" <<EOF_CONFIG
 [path]
@@ -1088,6 +1091,7 @@ script.on_nth_tick(1, function()
     agi_models = output and output.get_item_count(AGI_MODEL) or -1,
     game_finished = safe_value(function() return game.finished end)
   }
+  write_report{status = "validation_complete", tick = game.tick}
 end)
 
 script.on_nth_tick(3780, function()
@@ -1471,11 +1475,12 @@ script.on_nth_tick(18520, function()
   local inserted = inventory and inventory.insert{name = AGI_MODEL, count = 1} or 0
   storage.awaiting_victory = inserted == 1
 end)
+
 EOF_LUA
 
 echo "Validation temp dir: $tmp"
 python3 -m unittest tests.test_bitermotors_mod
-python3 - "$repo_root/mod/bitermotors_0.1.1/data.lua" "$read_data" "$repo_root/mod/bitermotors_0.1.1" <<'PY'
+python3 - "$bitermotors_mod_source/data.lua" "$read_data" "$bitermotors_mod_source" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -1494,7 +1499,7 @@ if missing:
     raise SystemExit("missing graphics references:\n" + "\n".join(missing))
 print("Graphics references OK.")
 PY
-python3 - "$repo_root/mod/bitermotors_0.1.1/control.lua" <<'PY'
+python3 - "$bitermotors_mod_source/control.lua" <<'PY'
 import sys
 from pathlib import Path
 
@@ -1510,14 +1515,14 @@ for marker, description in required_markers.items():
         raise SystemExit(f"missing {description}: {marker}")
 print("Orbital cooling/reset runtime markers OK.")
 PY
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --dump-data >/tmp/bitermotors-dump-data.log 2>&1
-if grep -qE ' Error |Error while loading|Modifications: ' /tmp/bitermotors-dump-data.log; then
-  cat /tmp/bitermotors-dump-data.log
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --dump-data >"$tmp/dump-data.log" 2>&1; then
+  tail -120 "$tmp/dump-data.log" >&2
   exit 1
 fi
+bitermotors_check_log "$tmp/dump-data.log" --expect-marker Goodbye
 python3 - \
   "$tmp/script-output/data-raw-dump.json" \
-  "$repo_root/mod/bitermotors_0.1.1/locale/en/bitermotors.cfg" <<'PY'
+  "$bitermotors_mod_source/locale/en/bitermotors.cfg" <<'PY'
 import json
 import math
 import sys
@@ -1525,6 +1530,18 @@ from pathlib import Path
 
 data = json.loads(Path(sys.argv[1]).read_text())
 locale_path = Path(sys.argv[2])
+
+charge_categories = {
+    "bitermotors-electric-drive-charge": "bitermotors-electric-drive",
+    "bitermotors-cybertrain-drive-charge": "bitermotors-cybertrain-drive",
+    "bitermotors-espider-drive-charge": "bitermotors-espider-drive",
+    "bitermotors-espider-reserve-charge": "bitermotors-espider-drive",
+}
+for item_name, category in charge_categories.items():
+    item = data["item"][item_name]
+    if item.get("fuel_categories") != [category] or "fuel_category" in item:
+        raise SystemExit(f"drive-charge fuel categories mismatch: {item_name}: {item}")
+print("Current drive-charge item fuel categories OK.")
 
 locale_keys = {}
 section = None
@@ -2488,27 +2505,20 @@ if reserve_fuel.get("fuel_top_speed_multiplier") != 0.1:
     raise SystemExit(f"eSpider limp-home fuel speed mismatch: {reserve_fuel}")
 print("eSpider native vehicle prototypes OK.")
 PY
-if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >/tmp/bitermotors-create.log 2>&1; then
-  tail -120 /tmp/bitermotors-create.log >&2
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$tmp/create.log" 2>&1; then
+  tail -120 "$tmp/create.log" >&2
   exit 1
 fi
-if grep -qE ' errored when running|Error:|Error while loading|Modifications: ' /tmp/bitermotors-create.log; then
-  cat /tmp/bitermotors-create.log
-  exit 1
-fi
-if grep -qE "non-recoverable error|Error while running event" /tmp/bitermotors-create.log; then
-  tail -80 /tmp/bitermotors-create.log >&2
-  exit 1
-fi
+bitermotors_check_log "$tmp/create.log" --expect-marker Goodbye
+[[ -s "$save" ]] || { echo "Engine did not create the validation save" >&2; exit 1; }
 rm -f "$report"
-if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --benchmark "$save" --benchmark-ticks 18580 --benchmark-runs 1 >/tmp/bitermotors-benchmark.log 2>&1; then
-  tail -120 /tmp/bitermotors-benchmark.log >&2
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --benchmark "$save" --benchmark-ticks 18580 --benchmark-runs 1 >"$tmp/benchmark.log" 2>&1; then
+  tail -120 "$tmp/benchmark.log" >&2
   exit 1
 fi
-if grep -qE "non-recoverable error|Error while running event" /tmp/bitermotors-benchmark.log; then
-  tail -120 /tmp/bitermotors-benchmark.log >&2
-  exit 1
-fi
+bitermotors_check_log "$tmp/benchmark.log" --expect-updates 18580 --expect-marker Goodbye
+python3 "$repo_root/scripts/validation_support.py" report "$report" \
+  --require-status validation_complete --minimum-tick 18540
 
 python3 - "$report" <<'PY'
 import json
