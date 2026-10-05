@@ -6,21 +6,55 @@ design requirements.
 
 ## Release Objective
 
-Ship a stable public beta for Factorio 2.1 Space Age that supports a complete
-new-world campaign from the crash landing through a physical AGI victory.
+Ship a stable **v1.0** for a validated Factorio 2.1 Space Age build, supporting
+a complete new-world campaign from the crash landing through a physical AGI
+victory. First stabilize and freeze the campaign, then complete Luke's final
+fresh playthrough with only minor balance adjustments. Do not use that campaign
+to discover unfinished endgame logistics or redesign core mechanics.
 
-Beta begins the public save-compatibility contract. It requires a feature-frozen
-and finishable campaign, release soak evidence, and an exact-archive rehearsal.
-Final art polish and a gameplay trailer may continue during beta when they do
-not obscure mechanics or progression.
+The first public archive begins the public save-compatibility contract, whether
+published as a beta or v1. It requires a finishable campaign, release soak
+evidence, and an exact-archive rehearsal. Optional art polish and a trailer must
+not delay a proven ending.
+
+### Current Review And Consecutive Plan
+
+The [2026-10-05 v1 readiness review](docs/v1-readiness-review.md) is the current
+implementation plan. Reviewed commit: `54c12ac`; installed engine: **2.1.20**.
+The unmodified mod **does not load** on that build because hidden drive-charge
+items use removed `fuel_category` fields. Passing Python tests and historical
+2.1.14 archive results are not current release qualification.
+
+Complete these phases in order; the review defines their findings, artifacts,
+and acceptance tests:
+
+1. **Current-version baseline:** compatibility and trustworthy validators/soaks.
+2. **Authoritative progression:** production/sales accounting, customer state,
+   capacity sharing, service health, and recycling correctness.
+3. **Physical endgame:** practical compressed payload, fixed final training
+   contract, real delivery, cooling/power recovery, and reliable victory.
+4. **Design freeze:** prototype-backed economy/guidance and functional art QA.
+5. **Qualification:** terrestrial/orbital soaks, settlement scaling, persistence,
+   and multiplayer tests against the exact candidate archive.
+6. **RC rehearsal:** clean install, package/provenance, and outside-player check.
+7. **Final fresh playthrough:** real earnings, orbital output, delivery, and
+   uninterrupted AGI completion with a frozen engine/mod configuration.
+8. **V1 publication:** validated 1.0.0 archive, tag, portal download verification.
+
+No phase is complete yet. The final playthrough begins only after Phases 1-6.
+The recommended compressed-Dataset transport and quality/beacon-independent
+60-minute, 10 GW finale require design approval before implementation. No new
+company, planet, battery chemistry, or future feature branch belongs in this
+release sequence.
 
 Every development day should close at least one public-release gap:
 
 1. Choose a release gate, not an unrelated feature.
 2. Implement the smallest complete slice.
-3. Add focused static coverage.
+3. Add focused behavioral regressions; static coverage alone is insufficient.
 4. Validate non-trivial mod changes in an isolated real Factorio process.
-5. Preserve Luke's active playtest save when the change affects it.
+5. Back up any player save before live operations; use isolated copies for
+   validation. A fresh final campaign does not require migrating private alphas.
 6. Commit and push the completed slice.
 
 ## Product Identity
@@ -96,9 +130,9 @@ not a second simulated company.
   cooldown. A new customer settlement may still bring one hostile worm, so
   growth remains useful and dangerous without scaling linearly with every stall.
 
-### Approved Easier-Balance Target
+### Current Easier-Balance Baseline
 
-The next balance slice keeps the same products, profits, `5,000` consumer-sale
+The intended balance keeps the same products, profits, `5,000` consumer-sale
 Bitertaxi gate, `1B` cumulative AI Token objective, and final AGI endgame. It
 reduces the capital squeeze and lets developed settlements support continued
 sales:
@@ -119,10 +153,10 @@ sales:
   playtest feedback, each fleet now costs 20 Dollars; a full center therefore
   targets approximately a 42-minute direct-capital payback at saturation.
 
-The simulator and economy report are the source of truth for these balance
-assumptions. The corresponding runtime values and replacement invariants pass
-isolated Factorio smoke tests; fresh-campaign playtesting remains the tuning
-gate.
+The simulator and economy report record these assumptions. The v1 review found
+accounting defects and missing model costs; reconcile both with final prototypes
+and behavioral tests before treating them as reliable campaign evidence.
+Historical fixture smoke tests are not proof of correct fresh-world sale gates.
 
 ### Vehicles And Manufacturing
 
@@ -167,7 +201,8 @@ platforms.
 - **Orbital Datacenter Core**
   - Space-only 6x6 compute machine.
   - Draws 250 MW while operating.
-  - Consumes 1 Dollar per 30-second batch.
+  - Consumes 1 Dollar per recipe batch: 30 recipe-seconds, or 20 seconds in a
+    normal-quality core at its current 1.5 crafting speed before other effects.
   - Produces 10,000 physical AI Tokens per batch.
 - **Orbital Radiator Panel**
   - Space-only cooling infrastructure.
@@ -193,14 +228,19 @@ Cumulative orbital output opens three explicit scale projects:
 - **10M Tokens: Grid-scale Energy**
   - Costs 15,000 Dollars plus science.
   - Unlocks 50,000-token batches, 3 MW Tandem Solar Arrays, and 1 GJ Grid
-    Grid Batteries as upgrades for the terrestrial energy products.
+    Batteries as upgrades for the terrestrial energy products.
 - **100M Tokens: Hyperscale Training**
   - Costs 30,000 Dollars plus science.
   - Unlocks 100,000-token batches and the final Planetary Energy Grid research.
 
 ### AGI Victory
 
-The final progression contract is:
+The intended final progression contract is below. The current implementation
+does not yet enforce the fixed time/power or completion semantics, and its raw
+token transport/controller packaging is impractical at the intended scale.
+Resolve findings R03-R05 in the v1 review before acceptance testing this ending.
+
+The current recipe sequence is:
 
 1. Produce 1,000,000,000 cumulative AI Tokens.
 2. Package Tokens in 50,000-token AGI Training Datasets.
@@ -221,6 +261,11 @@ recipe and uninterrupted 10-gigawatt run ensure that the terrestrial factory,
 capital loop, and power grid remain part of the finale.
 
 ## Public Beta Gates
+
+The following gates preserve prior implementation work and **dated** evidence.
+They are not a current pass certificate. The consecutive v1 plan above now
+governs remaining work; do not re-open completed naming work or add features
+merely to fill the old beta sequence.
 
 ### Gate 1: Product Coherence
 
@@ -295,7 +340,7 @@ Status: **partially complete**
 - [ ] Validate save/load, reconnect, multiplayer join, and configuration-change
       behavior.
 
-Current release-candidate baseline (Factorio 2.1.14):
+Historical release-candidate baseline (Factorio 2.1.14; not requalified on 2.1.20):
 
 - Luke's protected late-terrestrial save, containing 221 settlements, 9,229
   represented owners, 156 chargers, 20 Sales Offices, and about 2,000 visible
@@ -342,7 +387,7 @@ Status: **functional, not final**
 
 ### Gate 6: Compatibility Contract
 
-Status: **archive validated**
+Status: **historically archive validated on 2.1.14; current 2.1.20 load blocked**
 
 The checked items below were validated locally with the Factorio 2.1.14 engine
 using an isolated user directory and the exact packaged archive. CI reproduces
@@ -424,7 +469,9 @@ These are candidates only after the release gates above:
 - No custom launch-service products or commercial SpaceX simulation.
 - No Vulcanus, Fulgora, Gleba, or Aquilo campaign support.
 - No military-science requirement except the intentionally humorous Customer
-  Referral Program research.
+  Referral Program research on the commercial critical path. The optional
+  Megatruck's Tank prerequisite is an existing exception to confirm in the
+  pre-freeze design pass; military research must not gate the AI ending.
 - No invisible engineering-data, bandwidth-token, launch-credit, or capex
   currencies.
 - No automatic compatibility guarantee for world-overhaul or enemy-overhaul
