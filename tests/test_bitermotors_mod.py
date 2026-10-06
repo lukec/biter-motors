@@ -3036,7 +3036,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("20,000 AGI Training Datasets", roadmap)
         self.assertIn("100 Capital Allocations", roadmap)
         self.assertIn("Sustain the controller's 10 GW draw for 20 minutes", roadmap)
-        self.assertIn("physical AGI Model triggers victory", roadmap)
+        self.assertIn("Native completion produces one physical AGI Model and triggers victory once", roadmap)
         self.assertNotIn("Kardashev", roadmap)
 
     def test_customer_reconciliation_is_not_per_second(self):
@@ -3278,7 +3278,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('"bitermotors-planetary-grid-segment"', data)
         self.assertNotIn("bitermotors-k1-knowledge", data)
         self.assertIn('AGI_TOKEN_GATE = 1000000000', control)
-        self.assertIn('controller_has_agi_model(controller)', control)
+        self.assertIn('record_agi_training_completion', control)
+        self.assertNotIn('controller_has_agi_model', control)
+        self.assertNotIn('finish_completed_agi_training', control)
         self.assertIn('sync_agi_training_unlock(force, true)', control)
         self.assertIn('function cumulative_ai_tokens_generated(force)', control)
         self.assertNotIn(
@@ -3361,14 +3363,15 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('status == defines.entity_status.low_power', control)
         self.assertIn('status == defines.entity_status.no_power', control)
         self.assertIn('entity.energy < entity.electric_buffer_size * 0.1', control)
-        self.assertIn('entity.crafting_progress = 0', control)
+        self.assertIn('entity.crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0', control)
         self.assertIn('entity.disabled_by_script = true', control)
         self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)
         self.assertIn('entity.disabled_by_script = false', control)
         one_tick = control[control.index("script.on_nth_tick(1"):control.index("script.on_nth_tick(6")]
         self.assertIn("reset_underpowered_compute_progress()", one_tick)
         self.assertIn("process_ev_self_drivings()", one_tick)
-        self.assertIn('while processed < 32', control)
+        self.assertIn('local budget = math.min(32, #queue.units)', control)
+        self.assertIn('while processed < budget', control)
         self.assertIn('track_bitermotors_compute_machine(entity)', control)
         self.assertIn('rebuild_bitermotors_compute_machines()', control)
         self.assertIn('function endgame_status(force)', control)

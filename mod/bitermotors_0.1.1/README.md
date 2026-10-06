@@ -112,7 +112,10 @@ The Planetary Energy Grid Controller consumes:
 - 10,000 Processing Units
 
 The controller must sustain 10 GW for 20 uninterrupted minutes. Low power resets
-the run. Producing one physical AGI Model wins the campaign.
+the run but retains its committed inputs for a retry. Quality and modules cannot
+speed up or reduce the power cost of final training. A genuine completed run
+produces one physical AGI Model and wins the campaign; extracting that Model
+does not cancel victory. Continued play remains available.
 
 ## Interface
 

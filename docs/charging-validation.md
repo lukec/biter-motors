@@ -127,9 +127,11 @@ default macOS Steam paths.
 
 ## Remaining Gates
 
-Phase 3 must resolve Dataset transport, earned AI accounting, cooling/power
-recovery, fixed final training, and reliable victory. The proposed compression
-and final time/power contract require a design decision before implementation.
+The subsequent [AI accounting slice](ai-accounting-validation.md) and
+[full-duration finale slice](finale-validation.md) implement the approved
+compression, native earned ledger, fixed time/power, and once-only victory.
+Phase 3 still must qualify real Dataset transport and complete orbital
+cooling/power recovery.
 
 Later qualification still needs all charger tiers in larger worlds, natural
 taxi attrition/growth, physical commutes, representative caps, two forces,

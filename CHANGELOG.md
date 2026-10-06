@@ -46,10 +46,21 @@ development namespace migration.
   and machine removal cancels undelivered liabilities without losing earned work.
 - Added isolated two-platform AI accounting, native milestone and inserter
   extraction tests with pending-bonus/in-progress-craft save/reload coverage.
-  Final cargo delivery and fixed full-duration victory qualification remain open.
+  Final cargo delivery and complete orbital cooling qualification remain open.
 - Shortened the AGI Training Run's base recipe and progress target from 60 to
-  20 minutes, retaining 10 GW and all final inputs. Quality/beacon-independent
-  timing and genuine completion qualification remain the next finale slice.
+  20 minutes, retaining 10 GW and all final inputs.
+- Fixed final-controller speed at every quality and disabled module, beacon,
+  surface, and local effects; training draws 10 GW with no idle drain.
+- Replaced output-presence victory polling with earned native training
+  completion. Inserting a Model cannot win; extraction, recipe changes, and
+  removal after completion cannot erase victory. Continued play is supported.
+- Separated final-controller power monitoring from orbital workloads. A
+  brownout scraps progress, retains committed inputs, and retries after power
+  recovery; a native red status explains the hold.
+- Added an isolated full-duration finale fixture with real billion-equivalent
+  computation, quality/beacon checks, integrated energy measurements, partial
+  and total outages, native Model extraction, and midrun/failed-state/won reloads.
+  Real cargo delivery and campaign qualification remain release gates.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

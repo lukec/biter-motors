@@ -170,6 +170,11 @@ two-platform computation, compressed Datasets, native recipe events, packaging,
 and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
 `scripts/validate-bitermotors-ai.sh`; it does not yet qualify final cargo delivery
 or the complete AGI victory run.
+The separate [finale evidence](docs/finale-validation.md) covers complete native
+20-minute runs, actual 10 GW consumption, quality/effect isolation, outages,
+Model extraction, and native checkpoint/reload. Reproduce it with
+`scripts/validate-bitermotors-finale.sh`. Its supplied infrastructure is not a
+fresh campaign or a cargo-delivery test.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.

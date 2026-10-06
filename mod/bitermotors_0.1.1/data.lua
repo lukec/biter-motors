@@ -1493,6 +1493,20 @@ local planetary_grid_controller = copied_assembler(
   1
 )
 planetary_grid_controller.energy_source.emissions_per_minute = nil
+planetary_grid_controller.energy_source.drain = "0W"
+planetary_grid_controller.allowed_effects = {}
+planetary_grid_controller.effect_receiver = {
+  uses_module_effects = false,
+  uses_beacon_effects = false,
+  uses_surface_effects = false,
+  uses_local_effects = false
+}
+planetary_grid_controller.quality_affects_energy_usage = false
+planetary_grid_controller.quality_affects_module_slots = false
+planetary_grid_controller.crafting_speed_quality_multiplier = {}
+for quality_name in pairs(data.raw.quality) do
+  planetary_grid_controller.crafting_speed_quality_multiplier[quality_name] = 1
+end
 planetary_grid_controller.graphics_set = generated_entity_animation("planetary-grid-controller", 0.19, {
   working_animation("grid-charge-stages", 128, 128, 0.42, {0, -0.25}, 0.12, true)
 })
@@ -2228,7 +2242,7 @@ data:extend({
       {type = "item", name = "processing-unit", amount = 10000}
     },
     {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 1200,
-    {allow_productivity = false, allow_quality = false}
+    {allow_productivity = false, allow_quality = false, raise_on_crafted = true}
   )
 })
 

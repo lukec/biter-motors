@@ -37,6 +37,13 @@ changes that policy.
 - Count compute through native recipe-completion events with the event's recipe
   and product quality, not sampled current recipes or raw item statistics.
   Packaging is not new compute; undelivered scripted bonuses are not earned.
+- Completion callbacks follow the final energy draw. A depleted callback-time
+  buffer is not proof of an interrupted run; use the prior power-failure state.
+- Setting native crafting progress to exact zero cancels its committed batch.
+  Retained-input resets need a negligible positive sentinel and a native restart
+  test with no replacement ingredients, including an outage checkpoint/reload.
+- Electric-network statistics use input for consumption and output for generation.
+  Do not reuse the item-production direction rule; preserve quality in probes.
 
 ## Verification
 

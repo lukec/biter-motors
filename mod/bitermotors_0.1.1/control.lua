@@ -154,6 +154,9 @@ AGI_TRAINING_RECIPE_NAME = "bitermotors-agi-training-run"
 AGI_MODEL_ITEM_NAME = "bitermotors-agi-model"
 AGI_TOKEN_GATE = 1000000000
 AGI_TRAINING_SECONDS = 1200
+AGI_TRAINING_POWER_WATTS = 10000000000
+AGI_MINIMUM_BUFFER_FRACTION = 0.9
+AGI_RESET_PROGRESS = 1e-12
 BITERMOTORS_COMPUTE_RECIPES = {
   ["bitermotors-terrestrial-datacenter"] = true,
   [ORBITAL_DATACENTER_CORE_NAME] = true,
@@ -1083,6 +1086,18 @@ function bitermotors_compute_queue()
   return storage.bitermotors_compute_queue
 end
 
+function agi_training_power_queue()
+  storage.bitermotors_agi_power_queue = PowerQueue.ensure(storage.bitermotors_agi_power_queue)
+  return storage.bitermotors_agi_power_queue
+end
+
+function agi_training_power_failed(entity)
+  return entity.status == defines.entity_status.no_power
+    or entity.status == defines.entity_status.low_power
+    or (entity.electric_buffer_size > 0
+      and entity.energy < entity.electric_buffer_size * AGI_MINIMUM_BUFFER_FRACTION)
+end
+
 function orbital_radiator_panels()
   storage.bitermotors_orbital_radiator_panels =
     storage.bitermotors_orbital_radiator_panels or {}
@@ -1178,7 +1193,8 @@ end
 function track_bitermotors_compute_machine(entity)
   if entity and entity.valid and entity.unit_number and BITERMOTORS_COMPUTE_RECIPES[entity.name] then
     bitermotors_compute_machines()[entity.unit_number] = entity
-    local queue = bitermotors_compute_queue()
+    local queue = entity.name == GRID_CONTROLLER_NAME
+      and agi_training_power_queue() or bitermotors_compute_queue()
     if not queue.members[entity.unit_number] then
       PowerQueue.track(queue, entity.unit_number)
     end
@@ -1190,8 +1206,9 @@ end
 
 function rebuild_bitermotors_compute_machines()
   storage.bitermotors_compute_machines = {}
-  storage.bitermotors_compute_power_failures = {}
+  storage.bitermotors_compute_power_failures = storage.bitermotors_compute_power_failures or {}
   storage.bitermotors_compute_queue = {units = {}, index = 1, members = {}}
+  storage.bitermotors_agi_power_queue = {units = {}, index = 1, members = {}}
   storage.bitermotors_orbital_radiator_panels = {}
   local names = {}
   for name in pairs(BITERMOTORS_COMPUTE_RECIPES) do names[#names + 1] = name end
@@ -1203,13 +1220,18 @@ function rebuild_bitermotors_compute_machines()
       track_orbital_radiator_panel(entity)
     end
   end
+  for unit_number in pairs(bitermotors_compute_power_failures()) do
+    if not bitermotors_compute_machines()[unit_number] then
+      bitermotors_compute_power_failures()[unit_number] = nil
+    end
+  end
   refresh_orbital_cooling_assignments()
 end
 
-function reset_underpowered_compute_progress()
-  local queue = bitermotors_compute_queue()
+local function reset_compute_queue_progress(queue)
   local processed = 0
-  while processed < 32 and #queue.units > 0 do
+  local budget = math.min(32, #queue.units)
+  while processed < budget and #queue.units > 0 do
     local unit_number = PowerQueue.next(queue)
     processed = processed + 1
     local entity = bitermotors_compute_machines()[unit_number]
@@ -1223,8 +1245,10 @@ function reset_underpowered_compute_progress()
         local power_recovered = entity.electric_buffer_size <= 0
           or entity.energy >= entity.electric_buffer_size * 0.9
         local cooling_recovered = orbital_core_has_cooling(entity)
-        if power_recovered and cooling_recovered then
+        if power_recovered and cooling_recovered
+          and (not failure.retry_tick or game.tick >= failure.retry_tick) then
           entity.disabled_by_script = false
+          if entity.name == GRID_CONTROLLER_NAME then entity.custom_status = nil end
           bitermotors_compute_power_failures()[unit_number] = nil
         end
         goto continue
@@ -1237,19 +1261,36 @@ function reset_underpowered_compute_progress()
         or (status == defines.entity_status.low_power
           and entity.electric_buffer_size > 0
           and entity.energy < entity.electric_buffer_size * 0.1)
+      if entity.name == GRID_CONTROLLER_NAME then
+        power_failed = agi_training_power_failed(entity)
+      end
       local cooling_failed = not orbital_core_has_cooling(entity)
       if recipe_matches and (entity.crafting_progress or 0) > 0
         and (power_failed or cooling_failed) then
-        entity.crafting_progress = 0
+        -- Native zero cancels the committed batch; a negligible positive value retains its inputs.
+        entity.crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0
         entity.disabled_by_script = true
         bitermotors_compute_power_failures()[unit_number] = {
           power = power_failed,
-          cooling = cooling_failed
+          cooling = cooling_failed,
+          retry_tick = entity.name == GRID_CONTROLLER_NAME and game.tick + 60 or nil
         }
+        if entity.name == GRID_CONTROLLER_NAME then
+          entity.custom_status = {
+            diode = defines.entity_status_diode.red,
+            label = {"bitermotors-status.agi-power-reset"}
+          }
+        end
       end
     end
     ::continue::
   end
+end
+
+function reset_underpowered_compute_progress()
+  -- Final training cannot wait behind a large orbital compute registry.
+  reset_compute_queue_progress(agi_training_power_queue())
+  reset_compute_queue_progress(bitermotors_compute_queue())
 end
 
 function sync_agi_training_unlock(force, announce)
@@ -8428,7 +8469,9 @@ function agi_training_status(force)
       local recipe = current_recipe_name(controller)
       if recipe == AGI_TRAINING_RECIPE_NAME then
         active = active + 1
-        progress = math.max(progress, controller.crafting_progress or 0)
+        if not bitermotors_compute_power_failures()[unit_number] then
+          progress = math.max(progress, controller.crafting_progress or 0)
+        end
       end
     end
   end
@@ -8439,6 +8482,9 @@ function agi_training_status(force)
     active_controllers = active,
     progress = progress,
     training_seconds = AGI_TRAINING_SECONDS,
+    required_power_watts = AGI_TRAINING_POWER_WATTS,
+    minimum_buffer_fraction = AGI_MINIMUM_BUFFER_FRACTION,
+    victory = storage.bitermotors_agi_victory and storage.bitermotors_agi_victory[force.name],
     completed = victory_forces()[force.name] == true
   }
 end
@@ -8485,7 +8531,7 @@ function endgame_status(force)
   }
 end
 
-function trigger_victory(force, controller)
+local function trigger_victory(force, controller, quality)
   if not force or not force.valid then
     return
   end
@@ -8498,6 +8544,10 @@ function trigger_victory(force, controller)
   storage.bitermotors_agi_victory = storage.bitermotors_agi_victory or {}
   storage.bitermotors_agi_victory[force.name] = {
     tick = game.tick,
+    source = "native-training-completion",
+    training_seconds = AGI_TRAINING_SECONDS,
+    required_power_watts = AGI_TRAINING_POWER_WATTS,
+    model_quality = quality,
     cumulative_ai_tokens = cumulative_ai_tokens_generated(force),
     surface = controller and controller.valid and controller.surface.name or nil,
     position = controller and controller.valid and controller.position or nil
@@ -8511,34 +8561,14 @@ function trigger_victory(force, controller)
   }
 end
 
-function controller_has_agi_model(entity)
-  local inventory_id = crafter_output_inventory_id()
-  if not inventory_id then
-    return false
-  end
-
-  local inventory = entity.get_inventory(inventory_id)
-  if not inventory or not inventory.valid then
-    return false
-  end
-
-  return inventory.get_item_count(AGI_MODEL_ITEM_NAME) > 0
-end
-
-function finish_completed_agi_training(force)
-  if not force or not force.valid then
-    return
-  end
-
-  local controllers = grid_controllers()
-  for unit_number, controller in pairs(controllers) do
-    if not controller.valid then
-      controllers[unit_number] = nil
-    elseif controller.force == force and controller_has_agi_model(controller) then
-      trigger_victory(force, controller)
-      return
-    end
-  end
+function record_agi_training_completion(event)
+  -- This event follows the final energy draw; its depleted buffer is not a brownout.
+  local controller = event.entity
+  if event.recipe ~= AGI_TRAINING_RECIPE_NAME or event.bonus
+    or not controller or not controller.valid or controller.name ~= GRID_CONTROLLER_NAME
+    or cumulative_ai_tokens_generated(controller.force) < AGI_TOKEN_GATE
+    or bitermotors_compute_power_failures()[controller.unit_number] then return end
+  trigger_victory(controller.force, controller, event.product_quality)
 end
 
 function clear_office_buyer_reservation(office_unit_number)
@@ -12136,6 +12166,8 @@ end
 for recipe_name in pairs(AiAccounting.recipes) do
   script.on_event(prototypes.recipe[recipe_name].on_crafted_event, record_ai_compute_completion)
 end
+script.on_event(prototypes.recipe[AGI_TRAINING_RECIPE_NAME].on_crafted_event,
+  record_agi_training_completion)
 
 script.on_init(function()
   storage.bitermotors_ev_self_driving = EvSelfDriving.ensure(nil)
@@ -12641,6 +12673,7 @@ for _, event_name in pairs({
 		        bitermotors_compute_machines()[unit_number] = nil
 		        bitermotors_compute_power_failures()[unit_number] = nil
 		        bitermotors_compute_queue().members[unit_number] = nil
+		        agi_training_power_queue().members[unit_number] = nil
 		        if orbital_radiator_panels()[unit_number] then
 		          orbital_radiator_panels()[unit_number] = nil
 		          mark_orbital_cooling_dirty()
@@ -12724,9 +12757,6 @@ script.on_nth_tick(30, function()
   feed_tracked_electric_vehicles()
   accelerate_consumer_ev_sales()
   check_first_prototype_sales()
-  for _, force in pairs(game.forces) do
-    finish_completed_agi_training(force)
-  end
 end)
 
 function process_bitermotors_second_housekeeping()

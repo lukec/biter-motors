@@ -2,8 +2,9 @@
 
 Date: **2026-10-06**. Phase 3's payload/accounting slice addresses R16 and
 implements the compressed production/packaging portion of R03. **Phase 3 is not
-complete:** cargo-pod delivery, the fixed finale, and full-duration victory
-qualification remain open. Mod: **Biter Motors 0.1.1**, fresh worlds only.
+complete:** cargo-pod delivery and complete orbital cooling qualification
+remain open. The subsequent [finale slice](finale-validation.md) implements
+fixed full-duration training and native victory. Mod: **Biter Motors 0.1.1**, fresh worlds only.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 
 ## Approved Contract
@@ -12,8 +13,8 @@ Luke approved the following contracts on 2026-10-06:
 
 - One Training Dataset represents **50,000 computed AI Token equivalents**.
 - The final run requires **20 uninterrupted simulation minutes at 10 GW**,
-  independent of quality/beacons. That fixed finale is the next implementation
-  slice; the existing controller does not yet enforce it.
+  independent of quality/beacons. That finale is implemented and tested in the
+  separate [full-duration fixture](finale-validation.md).
 
 The final duration was revised from 60 to 20 minutes later the same day; this
 does not change the accounting evidence or retroactively validate the finale.
@@ -116,9 +117,13 @@ The runner rejects stale same-version archives.
 
 ## Exact Tested Archive
 
-Source and the exact `bitermotors_0.1.1.zip` pass the AI fixture with identical
+This section records the earlier payload/accounting slice's archive, not the
+subsequent finale candidate. See [finale evidence](finale-validation.md) for
+the newer exact source/package validation.
+
+Source and the exact `bitermotors_0.1.1.zip` passed the AI fixture with identical
 **43 policy, 26 world, and 9 reload assertions** and the same ledger totals.
-The package matches the current source/packaging manifest byte-for-byte.
+That package matched its source/packaging manifest byte-for-byte.
 SHA-256:
 
 ```text
@@ -152,9 +157,5 @@ Package: `/tmp/bitermotors-phase3-ai-release/bitermotors_0.1.1.zip`.
 
 - Real hub, cargo-pod, landing-pad, and controller input delivery at the intended
   scale, rather than inventory setup or a small inserter-only test.
-- Quality/beacon-independent 20-minute, 10 GW final training; genuine completion
-  latching rather than presence of an output item.
 - Full cooling-allocation, removal, brownout/reset, and recovery qualification.
-- Full-duration normal/quality runs, immediate Model extraction, controller
-  removal, victory persistence/idempotence, and no victory from an inserted Model.
 - Phase 4 economy/guidance/functional art freeze and Phases 5-6 qualification.

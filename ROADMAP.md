@@ -69,15 +69,20 @@ native-event AI accounting are implemented. The
 compute output, quality, native bonus events, blocked output, immediate recipe
 changes/removal, force isolation, physical inserter extraction, and separate
 reload. Earned Token equivalents exclude inventory transfers, packaging, and
-item-statistics injection. Recovered capital
+item-statistics injection. **R04/R05 are implemented:** the finale is fixed at
+20 uninterrupted simulation minutes and 10 GW across all qualities and ignores
+external effects. Victory latches on native completion, not Model inventory.
+The [finale fixture](docs/finale-validation.md) covers real billion-equivalent
+compute, full-length runs, retained-input outage retries, extraction/removal,
+and save/reload. Recovered capital
 versus operating profit remains an explicit R12 interface/economy follow-on.
 The rest of **Phase 3** and Phases **4-8 remain outstanding**. The final
 playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
 Dataset on 2026-10-06 and revised the quality/beacon-independent finale from
 60 to **20 uninterrupted simulation minutes at 10 GW** the same day. The
 challenge is building and sustaining the grid, not an hour of idle waiting.
-The fixed finale contract and real cargo-pod delivery still need implementation
-and qualification. No new
+Real hub/cargo-pod delivery and complete orbital cooling/reset/recovery still
+need qualification. No new
 company, planet, battery chemistry, or future feature branch belongs in this
 release sequence.
 
@@ -279,10 +284,10 @@ Packaging existing Tokens, recycling, and transfers cannot earn progress again.
 
 ### AGI Victory
 
-The intended final progression contract is below. The current implementation
-does not yet enforce the fixed time/power or completion semantics. Compressed
-compute and ordinary packaging are implemented; the real delivery path still
-needs qualification. Finish R03-R05 in the v1 review before accepting this ending.
+The implemented final progression contract is below. Native computation,
+compressed payload, fixed final time/power, and completion latching have
+focused engine coverage. The real hub/cargo-pod delivery path and complete
+cooling qualification remain Phase 3 gates before accepting this ending.
 
 The current recipe sequence is:
 
@@ -297,9 +302,10 @@ The current recipe sequence is:
    - 100 Grid Battery Arrays
    - 10,000 Processing Units
 6. Sustain the controller's 10 GW draw for 20 minutes.
-7. Any low-power condition scraps the current run.
-8. Producing one physical AGI Model triggers victory and continued play remains
-   available.
+7. Low/no power or a sampled buffer below 90% scraps progress; committed inputs
+   remain available for a full retry after power recovers.
+8. Native completion produces one physical AGI Model and triggers victory once,
+   even if the Model is immediately extracted. Continued play remains available.
 
 The cumulative gate makes orbital scaling practically necessary. The physical
 recipe and uninterrupted 10-gigawatt run ensure that the terrestrial factory,

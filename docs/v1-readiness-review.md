@@ -12,8 +12,9 @@ implementation status is recorded below.
 enough content for v1. Finish and stabilize it rather than add another branch.
 The initial compatibility defect is fixed in Phase 1; Phase 2 is complete with
 accounting, mixed-population persistence, recycling/salvage, and charging/service
-fixes. Victory defects remain. The finale also has a physical-item logistics
-grind that must be resolved before a campaign can fairly test its balance.
+fixes. Native victory and the fixed finale are implemented in Phase 3. Real
+payload delivery and complete cooling qualification remain open before a
+campaign can fairly test endgame balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
 playthrough with only small numerical tuning, then a **1.0.0** public release.
@@ -172,6 +173,13 @@ inventory must not count as a completed run. Keep victory idempotent per force.
 inserter, immediate pickup, controller removal, and save/reload around the
 completion boundary. Zero completed runs must never win.
 
+**Implemented 2026-10-06:** native AGI recipe completion now latches victory
+once per force after the earned billion-equivalent gate. Output insertion
+cannot win; later extraction, recipe changes, removal, or Continue cannot
+cancel/replay completion. The [finale fixture](finale-validation.md) exercises
+full native runs, immediate extraction, a real output inserter, controller
+removal, near-completion checkpoint, and completed-world reload.
+
 ### R05: Quality And Beacons Bypass The Advertised Final Challenge [P1]
 
 **Evidence:** engine reproduction. The controller inherits quality speed and
@@ -194,6 +202,15 @@ The historical engine reproduction above describes the original one-hour recipe.
 **Acceptance:** normal through legendary, speed/efficiency beacons, full power,
 partial power, total loss, and restored power all satisfy the same final-run
 contract. Define the low-power threshold and buffer tolerance explicitly.
+
+**Implemented 2026-10-06:** every quality runs at speed one and 10 GW; module,
+beacon, surface, and local effects are disabled. A separate bounded monitor
+scraps progress on low/no power or a sampled buffer below 90%, holds retry for
+one second, and preserves the committed batch. Exact native zero cancels that
+batch, so the reset uses a negligible positive sentinel (displayed as 0%).
+Completion callbacks see the final post-draw buffer; prior failure state, not
+that buffer, guards completion. The [finale fixture](finale-validation.md)
+measures full-duration energy and reloads a failed controller before recovery.
 
 ### R06: Physical Purchases Exhaust Untouched Virtual Prospects [P1]
 
@@ -470,8 +487,9 @@ the engine materializes output, including native bonus crafts; research bonuses
 count only when inserted, retain event product quality, and discard undelivered
 liabilities on removal. Packaging and item statistics do not earn progress.
 The [source/exact-archive fixture](ai-accounting-validation.md) covers these
-accounting boundaries. Cooling/power qualification and the full native finale
-remain separate Phase 3 gates, not implied by this accounting slice.
+accounting boundaries. The [subsequent finale slice](finale-validation.md)
+qualifies final training separately. Complete orbital cooling/power and real
+cargo delivery remain Phase 3 gates, not implied by accounting coverage.
 
 ## Design Freeze Recommendations
 
@@ -676,12 +694,12 @@ changes; no removed-planet materials appear through recycling.
 - [x] Approve and implement compressed Datasets/cheap packaging from R03.
 - [x] Replace sampled AI cycles with native, token-equivalent completion
       accounting and adversarial persistence/conservation coverage from R16.
-- [ ] Latch real AGI completion and enforce the intended time/power contract.
+- [x] Latch real AGI completion and enforce the intended time/power contract.
 - [ ] Cover AI accounting boundaries, cooling allocation, blocked outputs,
       brownout recovery, platform removal, and recipe changes.
 - [ ] Build a native endgame fixture with two platforms, real hub/cargo-pod
       delivery, terrestrial research, payload loading, and powered training.
-- [ ] Run the actual full-length final training with no injected completion or
+- [x] Run the actual full-length final training with no injected completion or
       accelerated final crafting; remove the Model immediately as a second case.
 
 **Deliverables:** endgame fixes, revised contract, complete native delivery/win tests.
@@ -694,9 +712,15 @@ under every supported quality/output-extraction configuration.
 Datasets preserve time, capital, and computed output rates; cheap packaging
 does not earn progress again. Native recipe-switch, productivity, quality,
 blocked output/bonus, immediate removal, force isolation, milestone, inserter,
-platform deletion, and separate-reload cases pass. Remaining Phase 3 work is
-fixed final time/power, native completion latching, full real cargo delivery,
-and complete cooling/power/full-duration victory qualification.
+platform deletion, and separate-reload cases pass.
+
+**Finale slice implemented 2026-10-06:** [verification](finale-validation.md).
+Native earned computation opens the billion-equivalent gate. Ten actual final
+runs exercise all qualities, speed/efficiency beacons, local effects,
+extraction/removal, brownout/total outage, failed-state reload, and retained-input
+recovery. Separate completed-world reload checks the once-only victory latch.
+Remaining Phase 3 work is full real cargo delivery and complete orbital
+cooling/power allocation, reset, and recovery qualification.
 
 ### Phase 4: Freeze Economy, Guidance, And Functional Art
 
@@ -802,11 +826,12 @@ ending. Public patch-save support begins with the first public archive.
 
 Continue **Phase 3 physical endgame**. The 50,000-equivalent Dataset and fixed
 20-minute, 10 GW finale contracts are approved; compressed production,
-ordinary packaging, and native compute accounting are implemented. Next enforce
-the quality/beacon-independent final contract and latch genuine completion,
-then qualify real multi-platform cargo delivery and cooling/power reset/recovery.
-Run the whole uninterrupted finale with immediate output extraction as a second
-case. Packaging must remain outside the earned-compute ledger.
+ordinary packaging, native compute accounting, and full native final training
+are implemented. Next qualify real multi-platform hub/cargo-pod/landing-pad
+delivery into the final controller and complete orbital cooling/power
+allocation, removal, reset, and recovery. Use genuinely computed payloads and
+real delivery; do not substitute inventory setup for transport. Packaging must
+remain outside the earned-compute ledger.
 Phase 2 is qualified within the recorded fixture bounds, not as a full campaign
 or scale/GUI sign-off. Track recovered capital versus profit with R12.
 

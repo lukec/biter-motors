@@ -102,7 +102,8 @@ missing/duplicate/early report sentinels, missing save, or failed assertions.
 ## Next Slice
 
 R06/R07 were subsequently fixed and qualified in the
-[customer-state slice](customer-state-validation.md). Continue Phase 2 with
-rewritten recycling/chemistry salvage, then contested charging/service health.
-Physical orbital delivery and the final training contract remain Phase 3;
+[customer-state slice](customer-state-validation.md). Phase 2 is now complete
+through [recycling](recycling-validation.md) and [charging](charging-validation.md).
+The subsequent [full-duration finale](finale-validation.md) qualifies final
+training. Physical orbital delivery and complete cooling recovery remain Phase 3;
 the final acceptance campaign still waits for Phases 1-6.

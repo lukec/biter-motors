@@ -1082,17 +1082,19 @@ script.on_nth_tick(5220, function()
 end)
 
 script.on_nth_tick(1, function()
-  if not storage.awaiting_victory or storage.victory_reported or not game.finished then
+  if not storage.inserted_model_tick or storage.insertion_reported
+    or game.tick <= storage.inserted_model_tick + 30 then
     return
   end
-  storage.victory_reported = true
+  storage.insertion_reported = true
   local surface = game.get_surface(storage.surface_index or 1)
   local controller = surface and find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local output = controller and controller.get_inventory(output_inventory_id())
   write_report{
     tick = game.tick,
-    status = "victory",
+    status = "inserted_model_rejected",
     agi_models = output and output.get_item_count(AGI_MODEL) or -1,
+    victory = remote.call("bitermotors", "agi_training_status", "player").completed,
     game_finished = safe_value(function() return game.finished end)
   }
   write_report{status = "validation_complete", tick = game.tick}
@@ -1493,7 +1495,8 @@ script.on_nth_tick(18520, function()
   local controller = surface and find_unit(surface, CONTROLLER, storage.controller_unit_number)
   local inventory = controller and controller.get_inventory(output_inventory_id())
   local inserted = inventory and inventory.insert{name = AGI_MODEL, count = 1} or 0
-  storage.awaiting_victory = inserted == 1
+  assert(inserted == 1, "could not seed the negative output-insertion case")
+  storage.inserted_model_tick = game.tick
 end)
 
 EOF_LUA
@@ -1527,7 +1530,7 @@ control = Path(sys.argv[1]).read_text()
 required_markers = {
     "ORBITAL_RADIATORS_PER_CORE = 8": "eight-radiator orbital cooling rule",
     "orbital_core_has_cooling": "orbital cooling assignment",
-    "crafting_progress = 0": "compute run reset on service loss",
+    "crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0": "compute run reset on service loss",
     "defines.entity_status.low_power": "low-power handling",
 }
 for marker, description in required_markers.items():
@@ -1783,6 +1786,21 @@ if {row["name"]: row["amount"] for row in capital_recipe["ingredients"]} != {"bi
 controller = data["assembling-machine"]["bitermotors-planetary-grid-controller"]
 if controller["energy_usage"] != "10GW":
     raise SystemExit(f"Planetary Grid Controller must draw 10 GW: {controller['energy_usage']}")
+if agi_recipe.get("raise_on_crafted") is not True:
+    raise SystemExit("AGI victory must use the native recipe-completion event")
+if controller.get("allowed_effects") not in ([], {}):
+    raise SystemExit("Final training cannot receive module/beacon effects")
+receiver = controller.get("effect_receiver", {})
+for source in ("uses_module_effects", "uses_beacon_effects", "uses_surface_effects", "uses_local_effects"):
+    if receiver.get(source) is not False:
+        raise SystemExit(f"Final training must reject {source}")
+speed_by_quality = controller.get("crafting_speed_quality_multiplier", {})
+if any(speed_by_quality.get(quality) != 1 for quality in data["quality"]):
+    raise SystemExit("Every supported final-controller quality must run at speed one")
+if controller.get("quality_affects_energy_usage") or controller.get("quality_affects_module_slots"):
+    raise SystemExit("Quality must not reduce final power or add module slots")
+if controller.get("module_slots", 0) != 0 or controller["energy_source"].get("drain") != "0W":
+    raise SystemExit("Final training must have zero module slots and idle drain")
 controller_recipe = data["recipe"]["bitermotors-planetary-grid-controller"]
 controller_ingredients = {
     row["name"]: row["amount"] for row in controller_recipe["ingredients"]
@@ -2636,7 +2654,7 @@ if not any(reason in blocked_reasons for reason in (
     "EV remained stuck after three route attempts",
 )):
     raise SystemExit(f"blocked Biter Motors EV route did not abort cleanly: {checked}")
-victory = next((record for record in records if record.get("status") == "victory"), None)
+insertion = next((record for record in records if record.get("status") == "inserted_model_rejected"), None)
 growth = next((record for record in records if record.get("status") == "customer_growth"), None)
 brownout = next((record for record in records if record.get("status") == "customer_brownout"), None)
 overload = next((record for record in records if record.get("status") == "customer_overload"), None)
@@ -3042,11 +3060,11 @@ if checked.get("logistic_roboports") != 0:
     raise SystemExit(f"smoke test should prove charger output without a logistics network: {checked}")
 if not checked.get("agi_training_unlocked") or not checked.get("agi_training_selected"):
     raise SystemExit(f"one-billion-token gate did not unlock/select AGI training: {checked}")
-if victory is None or victory.get("agi_models") != 1:
-    raise SystemExit(f"AGI Model should remain in controller output after victory: {victory}")
-game_finished = victory.get("game_finished", {})
-if not (game_finished.get("ok") and game_finished.get("value") is True):
-    raise SystemExit(f"game.finished was not true: {victory}")
+if insertion is None or insertion.get("agi_models") != 1 or insertion.get("victory") is not False:
+    raise SystemExit(f"An inserted AGI Model must not win: {insertion}")
+game_finished = insertion.get("game_finished", {})
+if not (game_finished.get("ok") and game_finished.get("value") is False):
+    raise SystemExit(f"An inserted Model finished the game: {insertion}")
 print("Smoke report OK:", json.dumps(checked, sort_keys=True))
 PY
 
