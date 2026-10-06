@@ -178,6 +178,7 @@ function ChargerAllocator.allocate(station_specs, demand, options)
       stall_loads = {},
       stall_settlements = {},
       total_capacity = total_capacity,
+      demanding_settlements = 0,
       remaining_capacity = total_capacity,
       total_requested_evs = 0,
       customer_requested_stalls = 0,
@@ -186,6 +187,9 @@ function ChargerAllocator.allocate(station_specs, demand, options)
     }
     assignments[spec.key] = assignment
     for _, candidate in ipairs(spec.candidates or {}) do
+      if (demand[candidate.key] or 0) > 0 then
+        assignment.demanding_settlements = assignment.demanding_settlements + 1
+      end
       if not candidate_pairs_by_key[candidate.key] then
         candidate_pairs_by_key[candidate.key] = {}
         candidate_keys[#candidate_keys + 1] = candidate.key
@@ -211,7 +215,8 @@ function ChargerAllocator.allocate(station_specs, demand, options)
     if pair then
       local unmet = (demand[key] or 0) - (requested_capacity[key] or 0)
       local candidate_pairs = candidate_pairs_by_key[key] or {}
-      local chunk_size = #candidate_pairs == 1
+      -- One reachable charger does not mean its capacity is uncontested.
+      local chunk_size = #candidate_pairs == 1 and pair.assignment.demanding_settlements == 1
         and unmet
         or pair.assignment.spec.evs_per_stall
       local amount = math.min(

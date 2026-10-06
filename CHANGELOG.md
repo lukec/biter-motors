@@ -27,6 +27,15 @@ development namespace migration.
   carrying hidden EV drive-charge items into storage when mining a vehicle.
 - Added an isolated native Recycler/salvage fixture with a real server-written
   checkpoint and separate-process reload; no live save changes are required.
+- Restored stall-sized fair sharing for contested chargers while retaining bulk
+  allocation for genuinely uncontested demand, including proportional brownouts.
+- Unified settlement service health across rebuilds, refreshes, mood, alerts,
+  inspectors, and growth. Adequate Bitertaxi coverage remains an independent
+  route; deficient neighbors do not contribute healthy expansion utilization.
+- Made organic growth run once per healthy settlement, including taxi-only
+  homes, and count each pending buyer only once across EV models and offices.
+- Added isolated charging regressions for removal, brownouts, grace-period
+  hostility, recovery, virtual-buyer balancing, and separate-process reload.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

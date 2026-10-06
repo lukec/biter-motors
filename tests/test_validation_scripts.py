@@ -14,6 +14,7 @@ ISOLATED_VALIDATORS = (
     "validate-bitermotors-battery-resources.sh",
     "validate-bitermotors-bitertaxi-runtime.sh",
     "validate-bitermotors-recycling.sh",
+    "validate-bitermotors-charging.sh",
     "benchmark-bitermotors-scale.sh",
     "benchmark-bitermotors-playtest-save.sh",
 )
@@ -99,6 +100,17 @@ class ValidationScriptContracts(unittest.TestCase):
         self.assertIn('reload["tick"] > reload["saved_tick"]', script)
         self.assertIn('--bind 127.0.0.1', script)
         self.assertIn('kill -INT "$server_pid"', script)
+
+    def test_charging_requires_all_native_cases_and_advancing_reload(self):
+        script = self.read_script("validate-bitermotors-charging.sh")
+        self.assertIn('zip(rows, (137, 100, 14))', script)
+        self.assertIn('service.get("native_scenes") == 4', script)
+        self.assertIn('service.get("pending_transactions") == 2', script)
+        self.assertIn('service["cache_cycles"] >= 3', script)
+        self.assertIn('reload["tick"] > reload["saved_tick"]', script)
+        self.assertIn('--bind 127.0.0.1', script)
+        self.assertIn('kill -INT "$server_pid"', script)
+        self.assertIn('--require-status reload_passed --minimum-tick 1', script)
 
 
 if __name__ == "__main__":

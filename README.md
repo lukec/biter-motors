@@ -162,6 +162,9 @@ scripts/validate-bitermotors-mod.sh
 ```
 
 Additional focused validators and scale benchmarks live in `scripts/`.
+The [charging/service evidence](docs/charging-validation.md) documents the native
+fairness, brownout, taxi-only, growth, and save/reload fixture; reproduce it with
+`scripts/validate-bitermotors-charging.sh`.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.

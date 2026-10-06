@@ -44,7 +44,7 @@ and acceptance tests:
    uninterrupted AGI completion with a frozen engine/mod configuration.
 8. **V1 publication:** validated 1.0.0 archive, tag, portal download verification.
 
-**Phase 2 is in progress:** production, confirmed sales, and profit accounting
+**Phase 2 is complete:** production, confirmed sales, and profit accounting
 have been separated and validated in isolated native worlds and the exact ZIP.
 The [accounting evidence](docs/accounting-validation.md) includes genuine
 manufacturing, customer-backed sales, canceled transactions, quality, and a
@@ -57,8 +57,14 @@ sales, cancellation, death, save/reload, and configuration-change tests.
 damaged packs wait intact for 90% recovery, and ambiguous vehicle/charger scrap
 cannot invent advanced chemistry. The [recycling evidence](docs/recycling-validation.md)
 includes native crafting, quality, vehicle destruction, robot mining, and a
-separate partial-batch save/reload. Capacity fairness and service health remain;
-the immediate next slice is **R09/R10**, including virtual-buyer pool balancing.
+separate partial-batch save/reload. **R09/R10 are now fixed:** contested chargers
+share stall-sized capacity; taxi/private service health, mood, alerts, and local
+growth agree; pending buyers count once across models. The
+[charging evidence](docs/charging-validation.md) records native removal,
+brownouts, grace/anger/recovery, multi-office transactions, and separate reload.
+All four focused regressions and broad smoke pass on source and the exact ZIP.
+The immediate next slice is **Phase 3 physical endgame**; recovered capital
+versus operating profit remains an explicit R12 interface/economy follow-on.
 Phases **3-8 remain outstanding**. The final playthrough begins only after Phases 1-6.
 The recommended compressed-Dataset transport and quality/beacon-independent
 60-minute, 10 GW finale require design approval before implementation. No new

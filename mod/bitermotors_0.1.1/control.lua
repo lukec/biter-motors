@@ -10,6 +10,7 @@ ProductionHistory = require("runtime.production_history")
 CustomerSales = require("runtime.customer_sales")
 CustomerPopulation = require("runtime.customer_population")
 ChargerAllocator = require("runtime.charger_allocator")
+SettlementService = require("runtime.settlement_service")
 SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
 ReservationPlanner = require("runtime.reservation_planner")
@@ -4795,6 +4796,7 @@ function market_service_references_valid(service)
     or not service.demand_by_settlement_key
     or not service.powered_assignments
     or not service.operational_keys
+    or not service.health_by_settlement_key
     or not service.prospects_by_settlement_key
     or not service.bitertaxi_service then
     return false
@@ -4904,6 +4906,41 @@ function rebuild_assignment_operational_settlements(service)
   end
 end
 
+function refresh_customer_settlement_health(force, service, advance_mood)
+  clear_table(service.operational_keys)
+  clear_table(service.health_by_settlement_key)
+  clear_table(service.served_keys)
+  clear_table(service.served_settlements)
+  clear_table(service.angry_keys)
+  service.stranded_evs = 0
+  service.underserved_settlements = 0
+  service.bitertaxi_service = bitertaxi_service_for_force(force)
+  local summary = service.vehicle_summary or active_customer_vehicle_summary(force)
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    local key = settlement_key(settlement.surface, settlement)
+    local health = SettlementService.evaluate(
+      settlement_vehicle_count(summary, settlement),
+      service.capacity_by_settlement_key[key],
+      service.powered_capacity_by_settlement_key[key],
+      service.bitertaxi_service.served_by_settlement_key[key] == true
+    )
+    service.health_by_settlement_key[key] = health
+    if health.operational then service.operational_keys[key] = true end
+    service.stranded_evs = service.stranded_evs + health.missing
+    if health.missing > 0 then
+      service.underserved_settlements = service.underserved_settlements + 1
+    end
+    local friendly, angry = settlement_friendly_after_service_check(force, key,
+      health.operational, advance_mood == true)
+    if friendly then
+      service.served_keys[key] = true
+      service.served_settlements[#service.served_settlements + 1] = settlement
+    elseif angry then
+      service.angry_keys[key] = true
+    end
+  end
+end
+
 customer_service_for_force = function(force, advance_mood)
   local generation = bitermotors_market_generation()[force.index] or 0
   local cached = bitermotors_market_cache()[force.index]
@@ -4911,25 +4948,7 @@ customer_service_for_force = function(force, advance_mood)
     and cached.generation == generation then
     if market_service_references_valid(cached.service) then
       if advance_mood then
-        local service = cached.service
-        service.served_keys = {}
-        service.served_settlements = {}
-        service.angry_keys = {}
-        for _, settlement in pairs(service.candidate_settlements or {}) do
-          local key = settlement_key(settlement.surface, settlement)
-          local friendly, angry = settlement_friendly_after_service_check(
-            force,
-            key,
-            service.operational_keys[key] == true,
-            true
-          )
-          if friendly then
-            service.served_keys[key] = true
-            service.served_settlements[#service.served_settlements + 1] = settlement
-          elseif angry then
-            service.angry_keys[key] = true
-          end
-        end
+        refresh_customer_service_power_capacity(force, cached.service, true)
       end
       storage.bitermotors_perf_counters = storage.bitermotors_perf_counters or {}
       storage.bitermotors_perf_counters.market_snapshot_cache_hits =
@@ -4951,6 +4970,7 @@ customer_service_for_force = function(force, advance_mood)
     capacity_by_settlement_key = {},
     prospects_by_settlement_key = {},
     operational_keys = {},
+    health_by_settlement_key = {},
     served_keys = {},
     served_settlements = {},
     angry_keys = {},
@@ -5013,38 +5033,12 @@ customer_service_for_force = function(force, advance_mood)
 
   service.assignments = allocation.assignments
   refresh_customer_service_power_allocation(service)
-  service.bitertaxi_service = bitertaxi_service_for_force(force)
-
   for _, settlement in pairs(candidates) do
     local key = settlement_key(settlement.surface, settlement)
     customer_settlement_market_forces()[key] = force.name
-    local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
-    local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
-    local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
-    service.capacity_by_settlement_key[key] = assigned_capacity
-    if service.bitertaxi_service.served_by_settlement_key[key]
-      or (vehicle_count == 0 and assigned_capacity > 0)
-      or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
-      service.operational_keys[key] = true
-    end
-    if vehicle_count > powered_capacity then
-      service.stranded_evs = service.stranded_evs + (vehicle_count - powered_capacity)
-      service.underserved_settlements = service.underserved_settlements + 1
-    end
-    local friendly, angry = settlement_friendly_after_service_check(
-      force,
-      key,
-      service.operational_keys[key] == true,
-      advance_mood == true
-    )
-    if friendly then
-      service.served_keys[key] = true
-      service.served_settlements[#service.served_settlements + 1] = settlement
-    elseif angry then
-      service.angry_keys[key] = true
-    end
+    service.capacity_by_settlement_key[key] = service.assigned_capacity_by_settlement_key[key] or 0
   end
-
+  refresh_customer_settlement_health(force, service, advance_mood)
   rebuild_assignment_operational_settlements(service)
 
   if service.powered_stall_capacity > 0 then
@@ -5067,28 +5061,10 @@ customer_service_for_force = function(force, advance_mood)
   return service
 end
 
-function refresh_customer_service_power_capacity(force, service)
+function refresh_customer_service_power_capacity(force, service, advance_mood)
   if not force or not service then return service end
-  clear_table(service.operational_keys)
-  service.stranded_evs = 0
-  service.underserved_settlements = 0
   refresh_customer_service_power_allocation(service)
-
-  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(force)
-  for _, settlement in pairs(service.candidate_settlements or {}) do
-    local key = settlement_key(settlement.surface, settlement)
-    local vehicle_count = settlement_vehicle_count(vehicle_summary, settlement)
-    local assigned_capacity = service.capacity_by_settlement_key[key] or 0
-    local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
-    if (vehicle_count == 0 and assigned_capacity > 0)
-      or (vehicle_count > 0 and vehicle_count <= powered_capacity) then
-      service.operational_keys[key] = true
-    end
-    if vehicle_count > powered_capacity then
-      service.stranded_evs = service.stranded_evs + (vehicle_count - powered_capacity)
-      service.underserved_settlements = service.underserved_settlements + 1
-    end
-  end
+  refresh_customer_settlement_health(force, service, advance_mood)
   rebuild_assignment_operational_settlements(service)
   service.average_evs_per_stall = service.powered_stall_capacity > 0 and math.floor(
     service.supported_ev_capacity / service.powered_stall_capacity + 0.5
@@ -6586,25 +6562,19 @@ function update_customer_settlement_map_tags(force, disrupted)
 end
 
 function update_customer_settlement_alerts(force, service)
-  local vehicle_summary = active_customer_vehicle_summary(force)
   local disrupted = {}
   for _, settlement in pairs(service.candidate_settlements or {}) do
     if settlement.valid then
       local key = settlement_key(settlement.surface, settlement)
-      local vehicle_count = vehicle_summary.by_settlement[key] or 0
-      local assigned_capacity = service.assigned_capacity_by_settlement_key[key] or 0
-      local powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
-      if vehicle_count > powered_capacity then
-        local capacity_missing = math.max(0, vehicle_count - assigned_capacity)
-        local power_missing = math.max(
-          0,
-          math.min(vehicle_count, assigned_capacity) - powered_capacity
-        )
+      local health = service.health_by_settlement_key[key]
+      if health and health.missing > 0 then
+        local capacity_missing = health.capacity_missing
+        local power_missing = health.power_missing
         disrupted[key] = {
           settlement = settlement,
           kind = capacity_missing > 0
             and (power_missing > 0 and "mixed" or "capacity") or "power",
-          missing = vehicle_count - powered_capacity,
+          missing = health.missing,
           capacity_missing = capacity_missing,
           power_missing = power_missing,
           recommendation = charging_capacity_recommendation(force, capacity_missing)
@@ -7076,6 +7046,15 @@ local function grow_customer_settlement(station, state)
   return settlement
 end
 
+function customer_assignment_healthy_stalls(service, assignment)
+  local config = station_config(assignment.station)
+  local healthy_evs = 0
+  for key, count in pairs(assignment.load_by_settlement_key or {}) do
+    if service.operational_keys[key] then healthy_evs = healthy_evs + count end
+  end
+  return math.min(math.ceil(healthy_evs / config.evs_per_stall), assignment.powered_stalls or 0)
+end
+
 local function process_customer_growth(force)
   if not player_market_force(force) then
     return
@@ -7099,14 +7078,9 @@ local function process_customer_growth(force)
       local state = states[unit_number] or {progress = 0, colonies = 0}
       states[unit_number] = state
       local config = station_config(station)
-      local active_stalls = math.min(
-        assignment.requested_stalls or 0,
-        assignment.powered_stalls or 0
-      )
+      local active_stalls = customer_assignment_healthy_stalls(service, assignment)
       local spare_stalls = config.stalls - assignment.requested_stalls
-      local local_service_healthy =
-        (assignment.powered_stalls or 0) >= (assignment.requested_stalls or 0)
-      if local_service_healthy and active_stalls > 0 and spare_stalls > 0 then
+      if active_stalls > 0 and spare_stalls > 0 then
         local utilization = active_stalls / config.stalls
         local growth_rate = (0.25 + 0.75 * utilization) * referral_multiplier
         state.progress = math.min(
@@ -7123,30 +7097,26 @@ local function process_customer_growth(force)
           }
         end
       end
-      for _, settlement in pairs(assignment.settlements or {}) do
-        if settlement and settlement.valid then
-          local key = settlement_key(settlement.surface, settlement)
-          local population = customer_settlement_populations()[key]
-          if population then
-            local total = customer_total_population(population)
-            if not population.organic_growth_baseline then
-              population.organic_growth_baseline = math.max(1, total)
-              population.organic_growth_cap = math.max(
-                population.organic_growth_baseline,
-                population.organic_growth_baseline
-                  * CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER
-              )
-              population.next_organic_growth_tick = game.tick + organic_interval
-            end
-            if local_service_healthy
-              and total < (population.organic_growth_cap or total)
-              and game.tick >= (population.next_organic_growth_tick or game.tick) then
-              CustomerPopulation.add_unowned(population, 1)
-              population.next_organic_growth_tick = game.tick + organic_interval
-              organic_growth = organic_growth + 1
-            end
-          end
-        end
+    end
+  end
+  -- Grow each healthy home once, including taxi-only homes, not once per charger.
+  for _, settlement in pairs(service.candidate_settlements or {}) do
+    local key = settlement_key(settlement.surface, settlement)
+    local population = customer_settlement_populations()[key]
+    if population then
+      local total = customer_total_population(population)
+      if not population.organic_growth_baseline then
+        population.organic_growth_baseline = math.max(1, total)
+        population.organic_growth_cap = population.organic_growth_baseline
+          * CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER
+        population.next_organic_growth_tick = game.tick + organic_interval
+      end
+      if service.operational_keys[key]
+        and total < (population.organic_growth_cap or total)
+        and game.tick >= (population.next_organic_growth_tick or game.tick) then
+        CustomerPopulation.add_unowned(population, 1)
+        population.next_organic_growth_tick = game.tick + organic_interval
+        organic_growth = organic_growth + 1
       end
     end
   end
@@ -7436,16 +7406,12 @@ local function show_station_info_panel(player, station)
     or {en_route = 0, charging = 0}
   local underserved_here = 0
   local seen_settlements = {}
-  local vehicle_summary = service.vehicle_summary or active_customer_vehicle_summary(station.force)
   for _, settlement in pairs(assignment and assignment.settlements or {}) do
     if settlement and settlement.valid then
       local key = settlement_key(settlement.surface, settlement)
       if not seen_settlements[key] then
-        underserved_here = underserved_here + math.max(
-          0,
-          (vehicle_summary.by_settlement[key] or 0)
-            - (service.powered_capacity_by_settlement_key[key] or 0)
-        )
+        local health = service.health_by_settlement_key[key]
+        underserved_here = underserved_here + (health and health.missing or 0)
         seen_settlements[key] = true
       end
     end
@@ -9307,10 +9273,7 @@ function eligible_customer_buyers(office, sale)
   local needed = sale.vehicles
   local service = customer_service_for_force(office.force)
   local vehicle_summary = active_customer_vehicle_summary(office.force)
-  local reserved_by_settlement = reserved_customer_buyers_by_settlement(
-    office.force,
-    sale.item
-  )
+  local reserved_by_settlement = reserved_customer_buyers_by_settlement(office.force)
   local pools = {}
   for key in pairs(service.served_keys) do
     local assigned_station = service.assignment_by_settlement_key[key]
@@ -9319,7 +9282,6 @@ function eligible_customer_buyers(office, sale)
     local population = customer_settlement_populations()[key]
     local load = (vehicle_summary.by_settlement[key] or 0)
       + (reserved_by_settlement[key] or 0)
-      + (population and population.virtual_reserved or 0)
     local settlement_in_office_coverage = population
       and population.surface_index == office.surface.index
       and within_radius(office, {position = population.position}, SALES_OFFICE_CUSTOMER_RADIUS)
@@ -9431,6 +9393,7 @@ function sales_office_buyer_status(office)
   local owned = 0
   local capacity = 0
   local powered_capacity = 0
+  local underserved = 0
   local friendly_settlements = 0
   local assigned = 0
   local service_blocked = 0
@@ -9471,6 +9434,8 @@ function sales_office_buyer_status(office)
       )
       capacity = capacity + (service.capacity_by_settlement_key[key] or 0)
       powered_capacity = powered_capacity + (service.powered_capacity_by_settlement_key[key] or 0)
+      local health = service.health_by_settlement_key[key]
+      underserved = underserved + (health and health.missing or 0)
     else
       missing_populations = missing_populations + 1
     end
@@ -9488,7 +9453,7 @@ function sales_office_buyer_status(office)
     owned = owned,
     capacity = capacity,
     powered_capacity = powered_capacity,
-    underserved = math.max(0, owned - powered_capacity),
+    underserved = underserved,
     friendly_settlements = friendly_settlements,
     unowned = available + assigned + service_blocked,
     raw_unowned = math.max(0, customers - owned),
@@ -11801,12 +11766,12 @@ local function show_customer_settlement_info_panel(player, settlement)
 
   local local_powered_capacity = service.powered_capacity_by_settlement_key[key] or 0
   local local_assigned_capacity = service.capacity_by_settlement_key[key] or 0
-  local local_underserved = math.max(0, settlement_vehicles - local_powered_capacity)
-  local local_capacity_missing = math.max(0, settlement_vehicles - local_assigned_capacity)
-  local local_power_missing = math.max(
-    0,
-    math.min(settlement_vehicles, local_assigned_capacity) - local_powered_capacity
-  )
+  local health = service.health_by_settlement_key[key]
+    or SettlementService.evaluate(settlement_vehicles, local_assigned_capacity,
+      local_powered_capacity, bitertaxi_served)
+  local local_underserved = health.missing
+  local local_capacity_missing = health.capacity_missing
+  local local_power_missing = health.power_missing
   local status = friendly and (
       bitertaxi_served and "customer - Bitertaxi service"
       or local_underserved > 0 and "customer - charging underserved"
@@ -13269,6 +13234,84 @@ remote.add_interface("bitermotors", {
     table.sort(rows, function(left, right) return left.key < right.key end)
     return rows
   end,
+  customer_service_status = function(force_name)
+    local force = game.forces[force_name or "player"]
+    if not force then return nil end
+    local service = customer_service_for_force(force)
+    local pending = reserved_customer_buyers_by_settlement(force)
+    local rows, stations, transactions = {}, {}, {}
+    for _, settlement in pairs(service.candidate_settlements or {}) do
+      local key = settlement_key(settlement.surface, settlement)
+      local health = service.health_by_settlement_key[key]
+      local population = customer_settlement_populations()[key]
+      local mood = customer_settlement_moods(force)[key] or {}
+      rows[#rows + 1] = {
+        key = key, route = health.route, operational = health.operational,
+        owned = service.demand_by_settlement_key[key] or 0,
+        assigned = service.capacity_by_settlement_key[key] or 0,
+        powered = service.powered_capacity_by_settlement_key[key] or 0,
+        missing = health.missing, capacity_missing = health.capacity_missing,
+        power_missing = health.power_missing,
+        friendly = service.served_keys[key] == true, angry = service.angry_keys[key] == true,
+        deficit_since = mood.deficit_since, next_check_tick = mood.next_check_tick,
+        pending = pending[key] or 0,
+        virtual_unowned = population and population.virtual_unowned or 0,
+        next_growth_tick = population and population.next_organic_growth_tick
+      }
+    end
+    for unit_number, assignment in pairs(service.assignments or {}) do
+      stations[#stations + 1] = {
+        unit_number = unit_number, requested = assignment.requested_stalls,
+        powered = assignment.powered_stalls,
+        healthy = customer_assignment_healthy_stalls(service, assignment),
+        growth = (customer_growth_states()[unit_number] or {}).progress or 0
+      }
+    end
+    for office, reservation in pairs(office_buyer_reservations()) do
+      for _, buyer in pairs(reservation.buyers or {}) do
+        local home = type(buyer) == "table" and buyer or customer_home_settlements()[buyer]
+        if home and home.market_force_name == force.name then
+          transactions[#transactions + 1] = {
+            office = office, key = home.settlement_key,
+            virtual = type(buyer) == "table", recipe = reservation.recipe_name
+          }
+        end
+      end
+    end
+    table.sort(rows, function(left, right) return left.key < right.key end)
+    table.sort(stations, function(left, right) return left.unit_number < right.unit_number end)
+    table.sort(transactions, function(left, right) return left.office < right.office end)
+    return {settlements = rows, stations = stations, transactions = transactions,
+      stranded = service.stranded_evs, underserved = service.underserved_settlements}
+  end,
+  test_charging_seed_population = function(settlement, owned, prospects)
+    if not script.active_mods["bitermotors_charging"] then return false end
+    if not settlement or not settlement.valid or not is_customer_settlement_entity(settlement)
+      or type(owned) ~= "number" or type(prospects) ~= "number"
+      or owned ~= math.floor(owned) or prospects ~= math.floor(prospects)
+      or owned < 0 or prospects < 0 or owned + prospects > 1000 then return false end
+    local force = game.forces.player
+    local key, population = customer_settlement_population(settlement, force)
+    CustomerPopulation.add_unowned(population, owned + prospects)
+    for _ = 1, owned do assert(CustomerPopulation.purchase(population, PROTOTYPE_ROADSTER_NAME)) end
+    CustomerAggregates.add_virtual(storage, {vehicle = PROTOTYPE_ROADSTER_NAME,
+      settlement_key = key, market_force_name = force.name}, owned)
+    mark_bitermotors_market_dirty(force, "customer-lifecycle-repaired")
+    return key
+  end,
+  test_charging_growth_due = function(force_name)
+    if not script.active_mods["bitermotors_charging"] then return false end
+    local force = game.forces[force_name or "player"]
+    if not force then return false end
+    local service = customer_service_for_force(force)
+    for _, settlement in pairs(service.candidate_settlements or {}) do
+      local key = settlement_key(settlement.surface, settlement)
+      local population = customer_settlement_populations()[key]
+      if population then population.next_organic_growth_tick = game.tick end
+    end
+    process_customer_growth(force)
+    return true
+  end,
   sync_sales_offices = function()
     sync_sales_office_buyers()
     local enabled = 0
@@ -13318,11 +13361,7 @@ remote.add_interface("bitermotors", {
           owned = vehicle_summary.by_settlement[key] or 0,
           capacity = service.capacity_by_settlement_key[key] or 0,
           powered_capacity = service.powered_capacity_by_settlement_key[key] or 0,
-          underserved = math.max(
-            0,
-            (vehicle_summary.by_settlement[key] or 0)
-              - (service.powered_capacity_by_settlement_key[key] or 0)
-          )
+          underserved = service.health_by_settlement_key[key].missing
         }
       end
       local buyer_status = sales_office_buyer_status(office)

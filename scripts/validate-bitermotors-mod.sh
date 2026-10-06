@@ -570,6 +570,7 @@ script.on_init(function()
   storage.solar_array_unit_number = solar_array.unit_number
   storage.grid_battery_unit_number = grid_battery.unit_number
   storage.power_source_unit_number = power_source.unit_number
+  storage.bitertaxi_power_source_unit_number = bitertaxi_power.unit_number
   storage.roadster_unit_number = roadster.unit_number
   storage.self_driving_ev_unit_number = self_driving_ev.unit_number
   storage.self_driving_ev_initial_position = {
@@ -1406,11 +1407,14 @@ script.on_nth_tick(18200, function()
     spawner_growth = #surface.find_entities_filtered{type = "unit-spawner"} - (storage.initial_spawner_count or 0),
     worm_growth = #surface.find_entities_filtered{type = "turret", name = WORM} - (storage.initial_worm_count or 0)
   }
-  local power_source = find_unit(surface, POWER_SOURCE, storage.power_source_unit_number)
-  if power_source then
-    power_source.power_production = 0
-    power_source.output_flow_limit = 0
-    power_source.energy = 0
+  -- The depot overlaps these homes: both alternative service routes must lose power.
+  for _, unit_number in ipairs({storage.power_source_unit_number, storage.bitertaxi_power_source_unit_number}) do
+    local power_source = find_unit(surface, POWER_SOURCE, unit_number)
+    if power_source then
+      power_source.power_production = 0
+      power_source.output_flow_limit = 0
+      power_source.energy = 0
+    end
   end
 end)
 
@@ -1422,6 +1426,7 @@ script.on_nth_tick(18320, function()
     tick = game.tick,
     status = "customer_overload",
     market = market,
+    service = remote.call("bitermotors", "customer_service_status", "player"),
     underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface),
     sales_offices = remote.call("bitermotors", "sales_office_status", "player")
   }
@@ -1430,10 +1435,12 @@ end)
 script.on_nth_tick(18380, function()
   if game.tick < 18380 then return end
   local surface = game.get_surface(storage.surface_index or 1)
-  local power_source = find_unit(surface, POWER_SOURCE, storage.power_source_unit_number)
-  if power_source then
-    power_source.power_production = 10000000
-    power_source.output_flow_limit = 10000000
+  for _, unit_number in ipairs({storage.power_source_unit_number, storage.bitertaxi_power_source_unit_number}) do
+    local power_source = find_unit(surface, POWER_SOURCE, unit_number)
+    if power_source then
+      power_source.power_production = 10000000
+      power_source.output_flow_limit = 10000000
+    end
   end
 end)
 

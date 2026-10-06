@@ -10,9 +10,9 @@ implementation status is recorded below.
 
 **Do not start the final acceptance playthrough yet.** The terrestrial game has
 enough content for v1. Finish and stabilize it rather than add another branch.
-The initial compatibility defect is fixed in Phase 1; Phase 2 has corrected
-accounting, mixed-population persistence, and recycling/salvage. Charging/service
-and victory defects remain. The finale also has a physical-item logistics
+The initial compatibility defect is fixed in Phase 1; Phase 2 is complete with
+accounting, mixed-population persistence, recycling/salvage, and charging/service
+fixes. Victory defects remain. The finale also has a physical-item logistics
 grind that must be resolved before a campaign can fairly test its balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
@@ -279,6 +279,14 @@ per-model reserved-by-settlement count (which includes virtual tickets) and
 therefore count twice for buyer-pool balancing. Count each pending buyer once
 and cover multiple offices/models when qualifying this fairness slice.
 
+**Implemented 2026-10-06:** the bulk shortcut now requires both one reachable
+charger and one demanding settlement at that charger. Contested capacity uses
+bounded stall-sized heap rounds, including brownouts, while uncontested demand
+retains bulk allocation. Pending buyers count once across all EV models.
+Ten native-Lua allocator cases and actual charger removal/brownout/restoration
+plus multi-office virtual-ticket tests pass on source and the exact ZIP. See
+[charging validation](charging-validation.md) for rounding and scaling limits.
+
 ### R10: Service Health And Growth Use Divergent Predicates [P2]
 
 **Evidence:** source trace and a bounded timing simulation. Initial service at
@@ -299,6 +307,17 @@ alternative routes to adequate service, not mutually dependent requirements.
 and unrelated infrastructure edits. One deficient neighbor neither blocks nor
 unfairly accelerates healthy neighbors. Outages recover within the intended
 grace/mood policy.
+
+**Implemented 2026-10-06:** one pure settlement-health policy now drives rebuild,
+cached power/mood refresh, alerts, inspectors, and growth. Fully served taxi-only
+homes stay healthy across six cache cycles and unrelated pole edits. Organic
+growth runs once per healthy home, including taxi-only homes; deficient neighbors
+do not contribute healthy charger-expansion utilization. A real outage respects
+the native grace, eventually triggers stochastic anger, then clears it on
+recovery. Separate engine reload preserves restored service and pending buyers.
+Source/exact-ZIP tests and prior accounting/customer/recycling/broad regressions
+pass. See [charging validation](charging-validation.md); this is not long-soak,
+all-tier, multiplayer, or native GUI qualification.
 
 ### R11: Commodity Premium EV Wrecks Yield Advanced-Chemistry Materials [P2]
 
@@ -594,11 +613,11 @@ soak, full campaign, or final training qualification is claimed by Phase 1.
 
 - [x] Correct production/sales/profit accounting and replace inverted assertions.
 - [x] Fix mixed physical/virtual purchase history and virtual-only rebuilds.
-- [ ] Restore contested capacity fairness and unify service-health predicates.
+- [x] Restore contested capacity fairness and unify service-health predicates.
 - [x] Reconcile rewritten reverse recipes and legacy chemistry salvage.
 - [x] Add executable mixed-customer lifecycle and persistence fixtures.
 - [x] Add executable recycling/salvage and partial-batch persistence fixtures.
-- [ ] Complete executable charging/service fixtures.
+- [x] Complete executable charging/service fixtures.
 
 **Accounting slice complete 2026-10-05:** [verification and exact ZIP](accounting-validation.md).
 152 Python tests, source/archive broad smoke, and source/archive accounting
@@ -617,8 +636,15 @@ R06/R07; R08/R11 were still outstanding at its completion.
 and both recovery routes; native fixtures pass 52 policy, 480 world, and 26
 separate-reload assertions. Real bot deconstruction does not leak hidden fuel or
 duplicate salvage. Source/archive accounting, customer lifecycle, and broad smoke
-remain passing. R08/R11 are addressed. Phase 2 remains open for **R09/R10**:
-contested capacity sharing, one service-health predicate, and buyer-pool fairness.
+remain passing. R08/R11 were addressed; R09/R10 were still open at that slice.
+
+**Charging/service slice complete 2026-10-06:** [verification and exact ZIP](charging-validation.md).
+178 Python tests pass. Source/archive charging fixtures pass 137 policy, 1,196
+world, and 14 separate-reload assertions: contested capacity, actual power,
+taxi-only service, local growth, pending-ticket balancing, and native grace/mood
+recovery. Prior accounting, customer-state, recycling, and broad smoke pass on
+both source and the current archive. **Phase 2 is complete.** R12's capital
+recovery/profit label remains a Phase 4 economy/interface follow-on.
 
 **Deliverables:** R02/R06-R11 fixes, conservation and progression regressions.
 **Exit gate:** no recipe unlock from unsold cars; exact production/sale milestones;
@@ -743,16 +769,14 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Continue **Phase 2** with **R09/R10**: restore fair contested charging allocation,
-unify settlement service health across rebuild/refresh/mood/growth, and count
-pending virtual buyers once in pool balancing. Test equal/unequal demand, partial
-power, taxi-only service, infrastructure edits, and multiple offices/models.
-Accounting, mixed-population persistence, and recycling are qualified within
-the bounds recorded above. Track recovered capital versus profit with R12.
-Decide the compressed-Dataset and fixed final controller contracts before
-Phase 3; everything else can follow
-the existing mechanics without another broad design round.
+Begin **Phase 3 physical endgame** after deciding the compressed-Dataset and
+fixed final controller contracts. Implement token-equivalent conservation and
+practical payload production/packaging, then real multi-platform delivery,
+cooling/power reset/recovery, and latched full-duration victory. Keep separate
+terrestrial/orbital accounting; packaging must not mint earned progress.
+Phase 2 is qualified within the recorded fixture bounds, not as a full campaign
+or scale/GUI sign-off. Track recovered capital versus profit with R12.
 
 The original review changed planning/documentation only. Phase 1 and the Phase 2
-accounting/customer-state/recycling slices record their implemented fixes above; none
+accounting/customer-state/recycling/charging slices record their implemented fixes above; none
 qualifies a release or authorizes restarting Luke's game.

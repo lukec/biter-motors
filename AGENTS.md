@@ -31,6 +31,9 @@ changes that policy.
   ten; automatic self-recycling fallbacks can silently consume the partial batch.
 - Shared product items do not retain ingredient provenance. Use conservative
   salvage, not research state or lifetime sales, to infer their battery chemistry.
+- One reachable charger does not imply uncontested capacity. Preserve bounded,
+  stall-sized sharing, and use the same settlement-health policy for mood,
+  growth, alerts, and inspectors; adequate Bitertaxi service is an alternative.
 
 ## Verification
 

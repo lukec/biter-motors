@@ -20,6 +20,10 @@ Version: 0.1.1
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
   Bugfixes:
+    - Contested chargers share capacity in stall-sized rounds instead of starving equal neighboring settlements.
+    - Settlement mood, growth, alerts, and inspectors use the same private-charging or Bitertaxi service-health rule.
+    - Healthy taxi-only settlements grow; deficient neighbors do not inflate healthy charger expansion utilization.
+    - Pending buyers are counted once across EV models when balancing Sales Offices between settlements.
     - Regenerates rewritten vanilla recycling outputs from terrestrial ingredients instead of removed planetary materials.
     - Damaged battery packs wait intact for a ten-pack batch and recover exactly 36 cells without productivity.
     - Shared Premium EVs and anonymous charger incidents no longer invent advanced battery chemistry.

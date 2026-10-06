@@ -121,8 +121,9 @@ The prototype checker can also inspect an existing final engine dump directly.
 
 ## Remaining Gates
 
-Next: **R09/R10** contested charger fairness, consistent taxi/private service
-health, and buyer-pool virtual-reservation balancing. Phase 3 owns physical
+**R09/R10** were subsequently fixed and qualified in the
+[charging/service slice](charging-validation.md), completing Phase 2. Its report
+identifies the newer archive and reruns of this recycling regression. Phase 3 owns physical
 orbital delivery and full final training. Later qualification must cover natural
 taxi attrition, larger worlds, connected players, and long-running service.
 
