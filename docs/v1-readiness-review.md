@@ -147,6 +147,14 @@ landing-pad unloading, and controller loading move the complete intended final
 payload without direct inventory insertion. Keep logistics meaningful, but do
 not require billions of identical transport operations.
 
+**Partial implementation 2026-10-06:** Luke approved 50,000-equivalent Datasets.
+Grid-scale/hyperscale cores now produce one/two directly per unchanged compute
+batch; existing Token outputs remain for science. Packaging moved to ordinary
+assemblers/Biterfactories. Native Dataset output and inserter extraction are
+tested in [AI accounting validation](ai-accounting-validation.md). Full hub,
+cargo-pod, landing-pad, and final-controller delivery remains open; R03 is not
+yet a closed logistics gate.
+
 ### R04: Removing The Finished Model Can Prevent Victory [P1]
 
 **Evidence:** engine reproduction. `controller_has_agi_model` at
@@ -453,6 +461,15 @@ orbital tracks and prevent repackaging from minting cumulative progress.
 save/reload, and two-force/two-platform scenarios keep physical payload and
 earned-equivalent ledger consistent with the documented policy.
 
+**Implemented 2026-10-06:** approved compute recipes raise native completion
+events. The ledger counts their exact deterministic output equivalents when
+the engine materializes output, including native bonus crafts; research bonuses
+count only when inserted, retain event product quality, and discard undelivered
+liabilities on removal. Packaging and item statistics do not earn progress.
+The [source/exact-archive fixture](ai-accounting-validation.md) covers these
+accounting boundaries. Cooling/power qualification and the full native finale
+remain separate Phase 3 gates, not implied by this accounting slice.
+
 ## Design Freeze Recommendations
 
 ### Keep The Existing Campaign
@@ -499,10 +516,10 @@ Recommended implementation:
 6. Keep the final 20,000-Dataset input and test actual delivery from multiple
    platforms. The final controller exists to train, not spend five hours boxing.
 
-This uses an existing item rather than adding another currency. It needs
-Luke's design approval before implementation. Choose dataset stack size/weight
-from intended cargo/logistics cost, and test any packaging/category change
-against Biterfactory productivity and quality permissions.
+This uses an existing item rather than adding another currency. Luke approved
+it on 2026-10-06. Dataset stack size/weight and packaging now have native
+prototype, AM2/Biterfactory, and accounting coverage. The full cargo delivery
+gate remains open.
 
 ### Final Run And Recovery
 
@@ -653,7 +670,9 @@ changes; no removed-planet materials appear through recycling.
 
 ### Phase 3: Finish The Physical Endgame
 
-- [ ] Approve and implement compressed Datasets/cheap packaging from R03.
+- [x] Approve and implement compressed Datasets/cheap packaging from R03.
+- [x] Replace sampled AI cycles with native, token-equivalent completion
+      accounting and adversarial persistence/conservation coverage from R16.
 - [ ] Latch real AGI completion and enforce the intended time/power contract.
 - [ ] Cover AI accounting boundaries, cooling allocation, blocked outputs,
       brownout recovery, platform removal, and recipe changes.
@@ -666,6 +685,15 @@ changes; no removed-planet materials appear through recycling.
 **Exit gate:** 1B earned equivalents reconcile; final inputs arrive through real
 logistics; cooling and power failures reset/recover; the complete run wins once
 under every supported quality/output-extraction configuration.
+
+**Payload/accounting slice complete 2026-10-06:**
+[verification](ai-accounting-validation.md). Grid-scale/hyperscale direct
+Datasets preserve time, capital, and computed output rates; cheap packaging
+does not earn progress again. Native recipe-switch, productivity, quality,
+blocked output/bonus, immediate removal, force isolation, milestone, inserter,
+platform deletion, and separate-reload cases pass. Remaining Phase 3 work is
+fixed final time/power, native completion latching, full real cargo delivery,
+and complete cooling/power/full-duration victory qualification.
 
 ### Phase 4: Freeze Economy, Guidance, And Functional Art
 
@@ -769,11 +797,13 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Begin **Phase 3 physical endgame** after deciding the compressed-Dataset and
-fixed final controller contracts. Implement token-equivalent conservation and
-practical payload production/packaging, then real multi-platform delivery,
-cooling/power reset/recovery, and latched full-duration victory. Keep separate
-terrestrial/orbital accounting; packaging must not mint earned progress.
+Continue **Phase 3 physical endgame**. The 50,000-equivalent Dataset and fixed
+60-minute, 10 GW finale contracts are approved; compressed production,
+ordinary packaging, and native compute accounting are implemented. Next enforce
+the quality/beacon-independent final contract and latch genuine completion,
+then qualify real multi-platform cargo delivery and cooling/power reset/recovery.
+Run the whole uninterrupted finale with immediate output extraction as a second
+case. Packaging must remain outside the earned-compute ledger.
 Phase 2 is qualified within the recorded fixture bounds, not as a full campaign
 or scale/GUI sign-off. Track recovered capital versus profit with R12.
 

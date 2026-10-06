@@ -63,11 +63,19 @@ growth agree; pending buyers count once across models. The
 [charging evidence](docs/charging-validation.md) records native removal,
 brownouts, grace/anger/recovery, multi-office transactions, and separate reload.
 All four focused regressions and broad smoke pass on source and the exact ZIP.
-The immediate next slice is **Phase 3 physical endgame**; recovered capital
+**Phase 3 is in progress:** compressed Dataset output, ordinary packaging, and
+native-event AI accounting are implemented. The
+[AI payload/accounting evidence](docs/ai-accounting-validation.md) records real
+compute output, quality, native bonus events, blocked output, immediate recipe
+changes/removal, force isolation, physical inserter extraction, and separate
+reload. Earned Token equivalents exclude inventory transfers, packaging, and
+item-statistics injection. Recovered capital
 versus operating profit remains an explicit R12 interface/economy follow-on.
-Phases **3-8 remain outstanding**. The final playthrough begins only after Phases 1-6.
-The recommended compressed-Dataset transport and quality/beacon-independent
-60-minute, 10 GW finale require design approval before implementation. No new
+The rest of **Phase 3** and Phases **4-8 remain outstanding**. The final
+playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
+Dataset and quality/beacon-independent **60-minute, 10 GW finale** on 2026-10-06.
+The fixed finale contract and real cargo-pod delivery still need implementation
+and qualification. No new
 company, planet, battery chemistry, or future feature branch belongs in this
 release sequence.
 
@@ -241,8 +249,8 @@ platforms.
     agricultural science.
 
 Every orbital training batch resets to zero on low power or inadequate cooling.
-AI Tokens must physically return to Nauvis by cargo pod. Space does not beam
-energy to the planet.
+Tokens for science and compact Training Datasets for the finale must physically
+return to Nauvis by cargo pod. Space does not beam energy to the planet.
 
 Cumulative orbital output opens three explicit scale projects:
 
@@ -251,24 +259,35 @@ Cumulative orbital output opens three explicit scale projects:
   - Unlocks 25,000-token orbital batches.
 - **10M Tokens: Grid-scale Energy**
   - Costs 15,000 Dollars plus science.
-  - Unlocks 50,000-token batches, 3 MW Tandem Solar Arrays, and 1 GJ Grid
+  - Unlocks 50,000-token batches or one directly computed Training Dataset per
+    batch, ordinary Dataset packaging, 3 MW Tandem Solar Arrays, and 1 GJ Grid
     Batteries as upgrades for the terrestrial energy products.
 - **100M Tokens: Hyperscale Training**
   - Costs 30,000 Dollars plus science.
-  - Unlocks 100,000-token batches and the final Planetary Energy Grid research.
+  - Unlocks 100,000-token batches or two directly computed Training Datasets
+    per batch, and the final Planetary Energy Grid research.
+
+Both payload forms use the same Dollars, recipe time, power, and cooling as
+their tier. Each Dataset represents 50,000 Token equivalents; 20,000 Datasets
+embody the billion-equivalent final payload. Datasets stack to 1,000 and weigh
+1 kg each (1,000 per standard cargo payload, 20 payloads for the final inputs).
+This is prototype cargo arithmetic, not yet a real cargo-pod delivery test.
+Separate native completion ledgers track terrestrial and orbital computation.
+Packaging existing Tokens, recycling, and transfers cannot earn progress again.
 
 ### AGI Victory
 
 The intended final progression contract is below. The current implementation
-does not yet enforce the fixed time/power or completion semantics, and its raw
-token transport/controller packaging is impractical at the intended scale.
-Resolve findings R03-R05 in the v1 review before acceptance testing this ending.
+does not yet enforce the fixed time/power or completion semantics. Compressed
+compute and ordinary packaging are implemented; the real delivery path still
+needs qualification. Finish R03-R05 in the v1 review before accepting this ending.
 
 The current recipe sequence is:
 
-1. Produce 1,000,000,000 cumulative AI Tokens.
-2. Package Tokens in 50,000-token AGI Training Datasets.
-3. Package Dollars in 500-Dollar Capital Allocations.
+1. Compute 1,000,000,000 cumulative AI Token equivalents.
+2. Produce compact Training Datasets directly in grid-scale/hyperscale orbital
+   cores, or package existing Tokens in ordinary assemblers or Biterfactories.
+3. Package Dollars in 500-Dollar Capital Allocations using ordinary industry.
 4. Build a Planetary Energy Grid Controller.
 5. Supply:
    - 20,000 AGI Training Datasets

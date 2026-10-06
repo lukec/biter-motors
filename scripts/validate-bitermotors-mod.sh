@@ -1098,8 +1098,9 @@ script.on_nth_tick(1, function()
   write_report{status = "validation_complete", tick = game.tick}
 end)
 
-script.on_nth_tick(3780, function()
-  if game.tick < 3780 then
+-- Native statistics settle after the 30/60-tick income mutation callbacks.
+script.on_nth_tick(3781, function()
+  if game.tick < 3781 then
     return
   end
   local surface = game.get_surface(storage.surface_index or 1)
@@ -1748,14 +1749,15 @@ if set(data["technology"]["epic-quality"].get("prerequisites", [])) != {"quality
 if set(data["technology"]["legendary-quality"].get("prerequisites", [])) != {"epic-quality", "bitermotors-orbital-compute"}:
     raise SystemExit("Legendary Quality must be re-homed to Nauvis orbital compute")
 agi_gate = data["technology"].get("bitermotors-planetary-energy-grid")
-if not agi_gate or "bitermotors-package-agi-training-dataset" not in {
-    effect.get("recipe") for effect in agi_gate.get("effects", [])
+dataset_gate = data["technology"].get("bitermotors-grid-scale-energy")
+if not agi_gate or not dataset_gate or "bitermotors-package-agi-training-dataset" not in {
+    effect.get("recipe") for effect in dataset_gate.get("effects", [])
     if effect.get("type") == "unlock-recipe"
 } or "bitermotors-package-capital-allocation" not in {
     effect.get("recipe") for effect in agi_gate.get("effects", [])
     if effect.get("type") == "unlock-recipe"
 }:
-    raise SystemExit("Final AGI technology must unlock the physical training inputs")
+    raise SystemExit("Grid-scale and final AGI technologies must unlock physical packaging")
 if set(agi_gate.get("prerequisites", [])) != {
     "bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power",
 }:
@@ -2063,6 +2065,34 @@ for recipe_name, expected_tokens in {
     )
     if ingredients != {"bitermotors-dollar": 1} or tokens != expected_tokens:
         raise SystemExit(f"Orbital milestone recipe mismatch: {recipe_name} {recipe}")
+for tier, datasets in (("grid-scale", 1), ("hyperscale", 2)):
+    name = f"bitermotors-orbital-ai-dataset-{tier}"
+    recipe = data["recipe"][name]
+    if ({row["name"]: row["amount"] for row in recipe["ingredients"]} != {"bitermotors-dollar": 1}
+            or {row["name"]: row["amount"] for row in recipe["results"]} != {"bitermotors-agi-training-dataset": datasets}
+            or recipe["energy_required"] != 30
+            or recipe.get("categories") != ["bitermotors-orbital-compute"]
+            or recipe.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]
+            or recipe.get("raise_on_crafted") is not True
+            or recipe.get("allow_quality") is not False):
+        raise SystemExit(f"Compressed compute prototype mismatch: {name} {recipe}")
+    technology = "bitermotors-grid-scale-energy" if tier == "grid-scale" else "bitermotors-hyperscale-training"
+    if name not in {effect.get("recipe") for effect in data["technology"][technology]["effects"]}:
+        raise SystemExit(f"Compressed compute lacks matching research unlock: {name}")
+for name in ("bitermotors-package-agi-training-dataset", "bitermotors-package-capital-allocation"):
+    recipe = data["recipe"][name]
+    if (recipe.get("categories") != ["advanced-crafting"]
+            or recipe.get("allow_productivity") is not False
+            or recipe.get("allow_quality") is not False
+            or recipe.get("raise_on_crafted", False)):
+        raise SystemExit(f"Packaging must be ordinary, non-multiplying industry: {name}")
+for name in ("bitermotors-agi-training-dataset", "bitermotors-capital-allocation", "bitermotors-agi-model"):
+    if "always-show" not in data["item"][name].get("flags", []):
+        raise SystemExit(f"Endgame payload must remain filterable before unlock: {name}")
+dataset = data["item"]["bitermotors-agi-training-dataset"]
+if dataset["stack_size"] != 1000 or dataset["weight"] != 1000:
+    raise SystemExit(f"Compressed Dataset cargo contract mismatch: {dataset}")
+print("Compressed AI payload and packaging prototypes OK.")
 for technology_name in (
     "bitermotors-orbital-cluster-training",
     "bitermotors-grid-scale-energy",

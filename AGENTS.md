@@ -34,6 +34,9 @@ changes that policy.
 - One reachable charger does not imply uncontested capacity. Preserve bounded,
   stall-sized sharing, and use the same settlement-health policy for mood,
   growth, alerts, and inspectors; adequate Bitertaxi service is an alternative.
+- Count compute through native recipe-completion events with the event's recipe
+  and product quality, not sampled current recipes or raw item statistics.
+  Packaging is not new compute; undelivered scripted bonuses are not earned.
 
 ## Verification
 

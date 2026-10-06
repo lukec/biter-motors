@@ -270,8 +270,8 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_scripted_generated_outputs_record_positive_production_flow(self):
         control = (MOD / "control.lua").read_text()
         for start, end, flows in (
-            ("function track_ai_efficiency_progress()", "function ",
-             (("\"bitermotors-ai-token\"", "inserted"),)),
+            ("function flush_ai_machine_bonus(", "function ",
+             (('{name = "bitermotors-ai-token", quality = quality}', "inserted"),)),
             ("generate_station_wrecks = function(", "local function reservation_print_progress(",
              (("WRECKED_EV_NAME", "inserted"),)),
             ("function process_bitertaxi_depots()", "function cleanup_orphaned_bitertaxi_depot_power()",
@@ -2587,9 +2587,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("track_ai_efficiency_progress()", control)
         self.assertIn("ai_efficiency_status", control)
         self.assertIn("function ai_efficiency_track_status", control)
-        self.assertIn("function ai_tokens_per_completed_cycle", control)
+        self.assertIn("function record_ai_compute_completion", control)
         self.assertIn("if config.milestones then", control)
-        self.assertIn("local bonus_cycles = math.floor(bonus_progress + 0.000001)", control)
+        self.assertIn("AiAccounting.record(track, event.recipe", control)
         self.assertIn('name = "bitermotors-ai-token"', control)
         self.assertIn("Capital burn: 20 Dollars per 30-second cycle", control)
         self.assertIn("AI output:", control)
@@ -3032,7 +3032,7 @@ class BiterMotorsModTest(unittest.TestCase):
     def test_agi_victory_roadmap_replaces_legacy_ending(self):
         roadmap = (ROOT / "ROADMAP.md").read_text()
         self.assertIn("### AGI Victory", roadmap)
-        self.assertIn("1,000,000,000 cumulative AI Tokens", roadmap)
+        self.assertIn("1,000,000,000 cumulative AI Token equivalents", roadmap)
         self.assertIn("20,000 AGI Training Datasets", roadmap)
         self.assertIn("100 Capital Allocations", roadmap)
         self.assertIn("Sustain the controller's 10 GW draw for 60 minutes", roadmap)
@@ -3281,7 +3281,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('controller_has_agi_model(controller)', control)
         self.assertIn('sync_agi_training_unlock(force, true)', control)
         self.assertIn('function cumulative_ai_tokens_generated(force)', control)
-        self.assertIn(
+        self.assertNotIn(
             'math.max(count_item_produced_raw(force, "bitermotors-ai-token"), tracked)',
             control,
         )
@@ -3436,7 +3436,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("if not market_force_name then return end", control)
         self.assertIn('registered_bitermotors_entities("sales_offices")', control)
         self.assertIn('registered_bitermotors_entities("stations", force, surface)', control)
-        self.assertIn('registered_bitermotors_entities("ai_machines", force)', control)
+        self.assertIn('prototypes.recipe[recipe_name].on_crafted_event', control)
         self.assertIn('registered_bitermotors_entities("energy_products", force)', control)
         self.assertIn("performance_status = function", control)
         self.assertIn('require("runtime.timing_wheel")', control)

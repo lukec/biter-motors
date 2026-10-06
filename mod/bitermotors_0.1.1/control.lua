@@ -14,6 +14,7 @@ SettlementService = require("runtime.settlement_service")
 SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
 ReservationPlanner = require("runtime.reservation_planner")
+AiAccounting = require("runtime.ai_accounting")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -1319,6 +1320,9 @@ function ai_efficiency_track_status(force, track_name)
   end
   return {
     generated = math.floor(track.generated or 0),
+    native_generated = track.native_generated or 0,
+    bonus_generated = track.bonus_generated or 0,
+    pending_bonus = track.pending_bonus_total or 0,
     researched_level = level,
     productivity_bonus = productivity_bonus,
     tokens_per_cycle = tokens_per_cycle,
@@ -1335,9 +1339,9 @@ function cumulative_ai_tokens_generated(force)
     local status = ai_efficiency_track_status(force, track_name)
     tracked = tracked + (status and status.generated or 0)
   end
-  -- Item production statistics can omit AI Token recipe output. The completed-
-  -- cycle ledger is authoritative, while max() preserves older seeded saves.
-  return math.max(count_item_produced_raw(force, "bitermotors-ai-token"), tracked)
+  -- Only approved compute completions and delivered research bonuses earn
+  -- progress. Inventory transfers, packaging, recycling, and statistics do not.
+  return tracked
 end
 
 function update_ai_efficiency_unlocks(force, track_name, track)
@@ -1363,80 +1367,90 @@ function update_ai_efficiency_unlocks(force, track_name, track)
   end
 end
 
-function ai_tokens_per_completed_cycle(machine, config)
-  if not config.tokens_by_recipe then
-    return config.tokens_per_cycle
+function ensure_ai_track(force, track_name)
+  local all_progress = ai_efficiency_progress()
+  all_progress[force.index] = all_progress[force.index] or {}
+  local track = AiAccounting.ensure(all_progress[force.index][track_name])
+  all_progress[force.index][track_name] = track
+  return track
+end
+
+function ai_bonus_queue()
+  storage.bitermotors_ai_bonus_queue = PowerQueue.ensure(storage.bitermotors_ai_bonus_queue)
+  storage.bitermotors_ai_bonus_machines = storage.bitermotors_ai_bonus_machines or {}
+  return storage.bitermotors_ai_bonus_queue
+end
+
+function discard_ai_machine_bonus(unit_number)
+  local pending = storage.bitermotors_ai_bonus_machines
+  local entry = pending and pending[unit_number]
+  if not entry then return end
+  local progress = ai_efficiency_progress()[entry.force_index]
+  local track = progress and progress[entry.track_name]
+  if track then AiAccounting.discard_pending(track, unit_number) end
+  pending[unit_number] = nil
+end
+
+function flush_ai_machine_bonus(machine, track)
+  local output = machine.get_inventory(defines.inventory.crafter_output)
+  if not output then return end
+  for quality, count in pairs(track.pending_bonus[machine.unit_number] or {}) do
+    local inserted = output.insert{name = "bitermotors-ai-token", quality = quality, count = count}
+    if inserted > 0 then
+      local statistics = machine.force.get_item_production_statistics(machine.surface)
+      statistics.on_flow({name = "bitermotors-ai-token", quality = quality}, inserted)
+      AiAccounting.deliver_bonus(track, machine.unit_number, quality, inserted)
+    end
   end
-  local ok, recipe = pcall(function()
-    return machine.get_recipe()
-  end)
-  return ok and recipe and config.tokens_by_recipe[recipe.name] or config.tokens_per_cycle
+end
+
+function record_ai_compute_completion(event)
+  local recipe = AiAccounting.recipes[event.recipe]
+  local machine = event.entity
+  if not recipe or not machine or not machine.valid or not machine.unit_number
+    or machine.name ~= AI_EFFICIENCY_TRACKS[recipe.track].entity then return end
+  local force = machine.force
+  local old_bonus = storage.bitermotors_ai_bonus_machines
+    and storage.bitermotors_ai_bonus_machines[machine.unit_number]
+  if old_bonus and old_bonus.force_index ~= force.index then
+    discard_ai_machine_bonus(machine.unit_number)
+  end
+  local track = ensure_ai_track(force, recipe.track)
+  AiAccounting.record(track, event.recipe, machine.unit_number, event.product_quality,
+    event.bonus, researched_ai_efficiency_level(force, AI_EFFICIENCY_TRACKS[recipe.track]))
+  if track.pending_bonus[machine.unit_number] then
+    local queue = ai_bonus_queue()
+    storage.bitermotors_ai_bonus_machines[machine.unit_number] = {
+      entity = machine, force_index = force.index, track_name = recipe.track
+    }
+    PowerQueue.track(queue, machine.unit_number)
+  end
 end
 
 function track_ai_efficiency_progress()
-  local all_progress = ai_efficiency_progress()
+  local queue = ai_bonus_queue()
+  -- Only blocked research bonuses need polling; native computation is event-led.
+  for _ = 1, math.min(32, #queue.units) do
+    local unit_number = PowerQueue.next(queue)
+    local entry = storage.bitermotors_ai_bonus_machines[unit_number]
+    local machine = entry and entry.entity
+    if machine and machine.valid and machine.force.index == entry.force_index then
+      local track = ensure_ai_track(machine.force, entry.track_name)
+      flush_ai_machine_bonus(machine, track)
+      if not track.pending_bonus[unit_number] then
+        storage.bitermotors_ai_bonus_machines[unit_number] = nil
+        PowerQueue.remove_current(queue, unit_number)
+      end
+    else
+      discard_ai_machine_bonus(unit_number)
+      PowerQueue.remove_current(queue, unit_number)
+    end
+  end
   for _, force in pairs(game.forces) do
-    if force.name ~= "enemy" and force.name ~= "neutral" and force.name ~= CUSTOMER_FORCE_NAME then
-      all_progress[force.index] = all_progress[force.index] or {}
-      for track_name, config in pairs(AI_EFFICIENCY_TRACKS) do
-        if researched(force, config.technology) then
-          local track = all_progress[force.index][track_name] or {
-            generated = 0,
-            machines = {},
-            bonus_progress = {},
-            pending_bonus = {}
-          }
-          all_progress[force.index][track_name] = track
-          track.bonus_progress = track.bonus_progress or {}
-          track.pending_bonus = track.pending_bonus or {}
-          local seen = {}
-          local level = researched_ai_efficiency_level(force, config)
-          for _, machine in pairs(registered_bitermotors_entities("ai_machines", force)) do
-            if machine.name == config.entity and machine.valid and machine.unit_number then
-              seen[machine.unit_number] = true
-              local output_inventory = machine.get_inventory(
-                defines.inventory.crafter_output or defines.inventory.assembling_machine_output
-              )
-              local pending_bonus = track.pending_bonus[machine.unit_number] or 0
-              if output_inventory and pending_bonus > 0 then
-                local inserted = output_inventory.insert{name = "bitermotors-ai-token", count = pending_bonus}
-                if inserted > 0 then
-                  local statistics = force.get_item_production_statistics(machine.surface)
-                  statistics.on_flow("bitermotors-ai-token", inserted)
-                end
-                track.pending_bonus[machine.unit_number] = pending_bonus - inserted
-                track.pending_bonus_total = math.max(0, (track.pending_bonus_total or 0) - inserted)
-                track.generated = track.generated + inserted
-              end
-              local finished = safe_products_finished(machine)
-              local previous = track.machines[machine.unit_number]
-              if previous ~= nil and finished > previous then
-                local completed_cycles = finished - previous
-                local tokens_per_cycle = ai_tokens_per_completed_cycle(machine, config)
-                if config.technology_prefix then
-                  local bonus_progress = (track.bonus_progress[machine.unit_number] or 0)
-                    + completed_cycles * level * 0.1
-                  local bonus_cycles = math.floor(bonus_progress + 0.000001)
-                  track.bonus_progress[machine.unit_number] = bonus_progress - bonus_cycles
-                  local bonus_tokens = bonus_cycles * tokens_per_cycle
-                  track.pending_bonus[machine.unit_number] =
-                    (track.pending_bonus[machine.unit_number] or 0) + bonus_tokens
-                  track.pending_bonus_total = (track.pending_bonus_total or 0) + bonus_tokens
-                end
-                track.generated = track.generated + completed_cycles * tokens_per_cycle
-              end
-              track.machines[machine.unit_number] = finished
-            end
-          end
-          for unit_number in pairs(track.machines) do
-            if not seen[unit_number] then
-              track.machines[unit_number] = nil
-              track.bonus_progress[unit_number] = nil
-              track.pending_bonus[unit_number] = nil
-            end
-          end
-          update_ai_efficiency_unlocks(force, track_name, track)
-        end
+    if force.name ~= "enemy" and force.name ~= "neutral"
+      and force.name ~= CUSTOMER_FORCE_NAME and force.name ~= ROAD_RAGE_FORCE_NAME then
+      for track_name in pairs(AI_EFFICIENCY_TRACKS) do
+        update_ai_efficiency_unlocks(force, track_name, ensure_ai_track(force, track_name))
       end
       sync_agi_training_unlock(force, true)
     end
@@ -10276,20 +10290,20 @@ local function current_progress_objective(snapshot)
   elseif snapshot.grid_battery_arrays == 0 then
     return "Grid-scale energy", "Upgrade a Grid Battery into a Grid Battery Array.", "Each Grid Battery Array stores 1 GJ and can charge or discharge at 50 MW."
   elseif snapshot.orbital_ai_tokens_generated < 100000000 then
-    return "Hyperscale AI", "Generate 100 million cumulative orbital AI Tokens.", string.format(
-      "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens per Dollar.",
+    return "Hyperscale AI", "Generate 100 million cumulative orbital AI Token equivalents.", string.format(
+      "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens or one Training Dataset per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.hyperscale_training_researched then
-    return "Hyperscale AI", "Research Hyperscale Training.", "Invest 30,000 Dollars plus science to unlock 100,000-token orbital batches and Planetary Energy Grid research."
+    return "Hyperscale AI", "Research Hyperscale Training.", "Invest 30,000 Dollars plus science to unlock 100,000 Tokens or two Training Datasets per orbital batch, and Planetary Energy Grid research."
   elseif not snapshot.planetary_grid_researched then
     return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles through space science plus AI Tokens; prepare a reliable 10 GW terrestrial supply."
   elseif snapshot.grid_controllers == 0 then
     return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 10 GW training facility. Any low-power condition scraps the entire active training run."
   elseif not snapshot.agi_training_unlocked then
-    return "AGI scale", "Generate one billion cumulative AI Tokens.", "Terrestrial compute can begin the climb, but orbital compute is required to reach this scale. Tokens already spent still count."
+    return "AGI scale", "Generate one billion cumulative AI Token equivalents.", "Terrestrial compute can begin the climb, but orbital compute provides endgame scale. Each computed Training Dataset counts as 50,000 Tokens. Spent output still counts; repackaging does not count again."
   elseif not snapshot.victory then
-    return "AGI training", "Complete the AGI Training Run.", "Package 1B AI Tokens into 20,000 datasets and 50,000 Dollars into 100 allocations; add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
+    return "AGI training", "Complete the AGI Training Run.", "Return 20,000 Training Datasets from orbital compute (or package existing Tokens in assemblers), and package 50,000 Dollars into 100 allocations. Add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
   end
   return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end
@@ -11603,13 +11617,19 @@ local function show_manufacturer_info_panel(player, entity)
       local status = ai_efficiency_track_status(entity.force, "orbital")
       local cooling = orbital_cooling_status(entity.force)
       local selected_recipe = current_recipe_name(entity)
-      local selected_output = ORBITAL_AI_RECIPE_TOKENS[selected_recipe] or status.tokens_per_cycle
+      local compute_recipe = AiAccounting.recipes[selected_recipe]
+      local selected_output = compute_recipe and compute_recipe.tokens or status.tokens_per_cycle
+      local datasets = selected_recipe and string.find(selected_recipe, "orbital-ai-dataset", 1, true)
       add_station_info_label(panel, "Capital burn: 1 Dollar per 30-second cycle")
       add_station_info_label(panel, string.format(
-        "AI output: %g Tokens/cycle (%g/minute at full power)",
+        "AI output: %g Token equivalents/cycle (%g/minute at full power)",
         selected_output,
-        selected_output * 2
+        selected_output * entity.crafting_speed * 60 / 30
       ))
+      if datasets then
+        add_station_info_label(panel, string.format("Payload: %g Training Datasets/cycle (50,000 Tokens each)",
+          selected_output / AiAccounting.dataset_tokens))
+      end
       add_station_info_label(panel, status.next_threshold
         and string.format(
           "Orbital scale: %d / %d cumulative Tokens toward the next research milestone",
@@ -11624,7 +11644,9 @@ local function show_manufacturer_info_panel(player, entity)
         cooling.radiators,
         cooling.required_radiators
       ))
-      add_station_info_label(panel, "Logistics: return physical AI Tokens to Nauvis by cargo pod.")
+      add_station_info_label(panel, datasets
+        and "Logistics: return compact Training Datasets to Nauvis by cargo pod."
+        or "Logistics: return physical AI Tokens for science; grid-scale compute also offers compact Training Datasets.")
     end
   end
 
@@ -12109,6 +12131,10 @@ local function sync_biter_customer_diplomacy()
     road_rage.set_friend(enemy, false)
     enemy.set_friend(road_rage, false)
   end
+end
+
+for recipe_name in pairs(AiAccounting.recipes) do
+  script.on_event(prototypes.recipe[recipe_name].on_crafted_event, record_ai_compute_completion)
 end
 
 script.on_init(function()
@@ -12607,6 +12633,7 @@ for _, event_name in pairs({
 		        local cybertrain_power = cybertrain_runtime.stop_power[unit_number]
 		        if cybertrain_power and cybertrain_power.valid then cybertrain_power.destroy() end
 		        cybertrain_runtime.stop_power[unit_number] = nil
+	        discard_ai_machine_bonus(unit_number)
 	        untrack_bitermotors_entity(unit_number)
 	        destroy_bitermotors_runtime_visual(unit_number)
 	        destroy_charger_stall_visuals(unit_number)
@@ -13163,10 +13190,7 @@ remote.add_interface("bitermotors", {
     for track_name, generated in pairs(generated_by_track) do
       local track = force_progress[track_name] or {}
       track.generated = generated
-      track.machines = track.machines or {}
-      track.bonus_progress = track.bonus_progress or {}
-      track.pending_bonus = track.pending_bonus or {}
-      force_progress[track_name] = track
+      force_progress[track_name] = AiAccounting.ensure(track)
       update_ai_efficiency_unlocks(force, track_name, track)
     end
     sync_agi_training_unlock(force, false)

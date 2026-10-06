@@ -899,9 +899,15 @@ data:extend({
     flags = {"always-show"},
     weight = 1
   }),
-  item("bitermotors-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 10000),
-  item("bitermotors-capital-allocation", dollar_icon, "bitermotors-capital", "b[capital-allocation]", 10000),
-  item("bitermotors-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1),
+  item("bitermotors-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 1000, {
+    flags = {"always-show"}, weight = 1000, auto_recycle = false
+  }),
+  item("bitermotors-capital-allocation", dollar_icon, "bitermotors-capital", "b[capital-allocation]", 100, {
+    flags = {"always-show"}, auto_recycle = false
+  }),
+  item("bitermotors-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1, {
+    flags = {"always-show"}, auto_recycle = false
+  }),
 
   item("bitermotors-nickel-ore", generated_icon("nickel-ore"), "raw-resource", "z-a[nickel-ore]", 50),
   item("bitermotors-nickel-sulfate", generated_icon("nickel-sulfate"), "bitermotors-components", "a-a[nickel-sulfate]", 100),
@@ -2194,15 +2200,25 @@ data:extend({
       }
     }
   ),
-  recipe("bitermotors-package-agi-training-dataset", {"bitermotors-planetary-grid"}, "science-pack", "h[agi-training-dataset]",
+  recipe("bitermotors-orbital-ai-dataset-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e3[orbital-ai-dataset-grid-scale]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 30,
+    {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
+  ),
+  recipe("bitermotors-orbital-ai-dataset-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e4[orbital-ai-dataset-hyperscale]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 30,
+    {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
+  ),
+  recipe("bitermotors-package-agi-training-dataset", {"advanced-crafting"}, "science-pack", "h[agi-training-dataset]",
     {{type = "item", name = "bitermotors-ai-token", amount = 50000}},
     {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 1,
-    {allow_productivity = false, allow_quality = false}
+    {allow_productivity = false, allow_quality = false, auto_recycle = false}
   ),
-  recipe("bitermotors-package-capital-allocation", {"bitermotors-planetary-grid"}, "bitermotors-capital", "b[capital-allocation]",
+  recipe("bitermotors-package-capital-allocation", {"advanced-crafting"}, "bitermotors-capital", "b[capital-allocation]",
     {{type = "item", name = "bitermotors-dollar", amount = 500}},
     {{type = "item", name = "bitermotors-capital-allocation", amount = 1}}, 1,
-    {allow_productivity = false, allow_quality = false}
+    {allow_productivity = false, allow_quality = false, auto_recycle = false}
   ),
   recipe("bitermotors-agi-training-run", {"bitermotors-planetary-grid"}, "science-pack", "i[agi-training-run]",
     {
@@ -2436,6 +2452,8 @@ data:extend({
     {"bitermotors-orbital-cluster-training"},
     {
       unlock("bitermotors-orbital-ai-token-grid-scale"),
+      unlock("bitermotors-orbital-ai-dataset-grid-scale"),
+      unlock("bitermotors-package-agi-training-dataset"),
       unlock("bitermotors-tandem-solar-array"),
       unlock("bitermotors-grid-battery-array")
     },
@@ -2457,7 +2475,8 @@ data:extend({
     "__base__/graphics/technology/processing-unit.png",
     {"bitermotors-grid-scale-energy"},
     {
-      unlock("bitermotors-orbital-ai-token-hyperscale")
+      unlock("bitermotors-orbital-ai-token-hyperscale"),
+      unlock("bitermotors-orbital-ai-dataset-hyperscale")
     },
     3000,
     {
@@ -2524,7 +2543,6 @@ data:extend({
     {"bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power"},
     {
       unlock("bitermotors-planetary-grid-controller"),
-      unlock("bitermotors-package-agi-training-dataset"),
       unlock("bitermotors-package-capital-allocation")
     },
     2500,
@@ -2771,11 +2789,18 @@ for _, recipe_name in pairs({
   "bitermotors-orbital-ai-token-cluster",
   "bitermotors-orbital-ai-token-grid-scale",
   "bitermotors-orbital-ai-token-hyperscale",
+  "bitermotors-orbital-ai-dataset-grid-scale",
+  "bitermotors-orbital-ai-dataset-hyperscale",
   "bitermotors-package-agi-training-dataset",
   "bitermotors-package-capital-allocation",
   "bitermotors-agi-training-run"
 }) do
   data.raw.recipe[recipe_name].allow_quality = false
+end
+
+for recipe_name in pairs(require("runtime.ai_accounting").recipes) do
+  data.raw.recipe[recipe_name].raise_on_crafted = true
+  data.raw.recipe[recipe_name].auto_recycle = false
 end
 
 local customer_vehicle_classes = {

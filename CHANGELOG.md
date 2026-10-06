@@ -36,6 +36,17 @@ development namespace migration.
   homes, and count each pending buyer only once across EV models and offices.
 - Added isolated charging regressions for removal, brownouts, grace-period
   hostility, recovery, virtual-buyer balancing, and separate-process reload.
+- Added direct compact Training Dataset output at grid-scale and hyperscale
+  orbital tiers, preserving compute rates and Dollar costs. Each Dataset
+  represents 50,000 computed Token equivalents and stacks to 1,000.
+- Moved Dataset and Capital Allocation packaging into ordinary assemblers and
+  Biterfactories; packaging cannot gain productivity or earn compute progress.
+- Replaced AI cycle sampling with native recipe-completion accounting. Research
+  bonuses preserve product quality, blocked bonuses count only on delivery,
+  and machine removal cancels undelivered liabilities without losing earned work.
+- Added isolated two-platform AI accounting, native milestone and inserter
+  extraction tests with pending-bonus/in-progress-craft save/reload coverage.
+  Final cargo delivery and fixed full-duration victory qualification remain open.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

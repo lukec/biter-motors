@@ -165,6 +165,11 @@ Additional focused validators and scale benchmarks live in `scripts/`.
 The [charging/service evidence](docs/charging-validation.md) documents the native
 fairness, brownout, taxi-only, growth, and save/reload fixture; reproduce it with
 `scripts/validate-bitermotors-charging.sh`.
+The [AI payload/accounting evidence](docs/ai-accounting-validation.md) describes
+two-platform computation, compressed Datasets, native recipe events, packaging,
+and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
+`scripts/validate-bitermotors-ai.sh`; it does not yet qualify final cargo delivery
+or the complete AGI victory run.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.
