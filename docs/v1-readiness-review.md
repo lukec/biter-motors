@@ -108,6 +108,18 @@ Native and scripted profit immediately agree with the Progress panel. Test
 isolated mineral/intermediate storage, quality variants, save/reload, and a
 deliberate statistics reset.
 
+**Accounting slice implemented 2026-10-05:** production reads now sum every
+quality on each surface, consumption is separate, and recorded production
+survives an observed statistics reset without scanning inventories. Sales start
+at zero and only successful customer assignments advance the ledger. Completion
+is processed before replacing a buyer reservation; inserted coins and generic
+vehicle consumption no longer establish first-sale history. Scripted output
+uses positive production flow. See [accounting validation](accounting-validation.md)
+for native 99/100 and 249/250 production, native 49/50 Roadster sales, remaining
+sold-car boundary policy fixtures, canceled-sale and persistence evidence. This
+does not qualify mixed populations, every customer lifecycle race, or the AI
+recipe/provenance boundaries in R16; those remain in the subsequent phases.
+
 ### R03: The Finale Moves A Billion Items And Packages Them At 10 GW [P1]
 
 **Evidence:** recipe/prototype arithmetic, not a full logistics benchmark.
@@ -527,11 +539,19 @@ soak, full campaign, or final training qualification is claimed by Phase 1.
 
 ### Phase 2: Make Progression And Customer State Authoritative
 
-- [ ] Correct production/sales/profit accounting and replace inverted assertions.
+- [x] Correct production/sales/profit accounting and replace inverted assertions.
 - [ ] Fix mixed physical/virtual purchase history and virtual-only rebuilds.
 - [ ] Restore contested capacity fairness and unify service-health predicates.
 - [ ] Reconcile rewritten reverse recipes and legacy chemistry salvage.
-- [ ] Add executable Lua fixtures or engine tests, not only string assertions.
+- [ ] Complete executable customer/recycling fixtures; accounting Lua/native
+      fixtures are already present.
+
+**Accounting slice complete 2026-10-05:** [verification and exact ZIP](accounting-validation.md).
+152 Python tests, source/archive broad smoke, and source/archive accounting
+fixtures pass. The latter execute the production/sales policy in Factorio, earn
+50 customer-backed Roadster sales, reject a canceled Premium sale, and reload
+an actual server-written checkpoint in a separate process. Phase 2 remains
+open for R06-R11, with R06/R07 the immediate next slice.
 
 **Deliverables:** R02/R06-R11 fixes, conservation and progression regressions.
 **Exit gate:** no recipe unlock from unsold cars; exact production/sale milestones;
@@ -656,12 +676,13 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Start **Phase 2** with R02's authoritative counter and transaction fixtures.
-These determine whether any later balance or
-milestone evidence is meaningful. Decide the compressed-Dataset and fixed final
-controller contracts before Phase 3; everything else can follow the existing
-mechanics without another broad design round.
+Continue **Phase 2** with R06/R07: separate physical and virtual purchase
+histories, conserve ownership across replacements, and retain virtual-only
+settlements through rebuilds. R02's authoritative accounting slice is complete
+and qualified within the bounds recorded above. Decide the compressed-Dataset
+and fixed final controller contracts before Phase 3; everything else can follow
+the existing mechanics without another broad design round.
 
-The original review changed planning/documentation only. Phase 1 now records
-its implemented fixes above; neither step qualifies a release or authorizes
-restarting Luke's game.
+The original review changed planning/documentation only. Phase 1 and the Phase 2
+accounting slice now record their implemented fixes above; neither qualifies a
+release or authorizes restarting Luke's game.

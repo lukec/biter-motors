@@ -7,6 +7,7 @@ PowerQueue = require("runtime.power_queue")
 UiRefresh = require("runtime.ui_refresh")
 EvSelfDriving = require("runtime.ev_self_driving")
 ProductionHistory = require("runtime.production_history")
+CustomerSales = require("runtime.customer_sales")
 ChargerAllocator = require("runtime.charger_allocator")
 SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
@@ -975,17 +976,40 @@ local function safe_products_finished(entity)
 end
 
 function count_item_produced(force, item_name)
-  if item_name == PREMIUM_EV_NAME then
-    return count_premium_evs_produced(force)
+  local histories = production_history_by_force()
+  histories[force.name] = histories[force.name] or {}
+  local history = histories[force.name][item_name] or {}
+  histories[force.name][item_name] = history
+  for _, surface in pairs(game.surfaces) do
+    local statistics = force.get_item_production_statistics(surface)
+    local _, state = ProductionHistory.observe(
+      history[surface.index], item_statistics_count(statistics, item_name, true)
+    )
+    history[surface.index] = state
   end
-  return count_item_produced_raw(force, item_name)
+  local count = 0
+  -- Keep earned production even if its surface has subsequently been deleted.
+  for _, state in pairs(history) do
+    count = count + state.total
+  end
+  return count
+end
+
+function item_statistics_count(statistics, item_name, production)
+  local count = 0
+  for quality_name in pairs(prototypes.quality) do
+    local item = {name = item_name, quality = quality_name}
+    count = count + (production and statistics.get_input_count(item)
+      or statistics.get_output_count(item))
+  end
+  return count
 end
 
 function count_item_produced_raw(force, item_name)
   local count = 0
   for _, surface in pairs(game.surfaces) do
     local statistics = force.get_item_production_statistics(surface)
-    count = count + (statistics.output_counts[item_name] or 0)
+    count = count + item_statistics_count(statistics, item_name, true)
   end
   return count
 end
@@ -994,7 +1018,7 @@ function count_item_consumed_raw(force, item_name)
   local count = 0
   for _, surface in pairs(game.surfaces) do
     local statistics = force.get_item_production_statistics(surface)
-    count = count + (statistics.input_counts[item_name] or 0)
+    count = count + item_statistics_count(statistics, item_name, false)
   end
   return count
 end
@@ -1005,116 +1029,25 @@ function production_history_by_force()
   return storage.bitermotors_production_history_by_force
 end
 
-TRANSPORT_LINE_ENTITY_TYPES = {
-  ["transport-belt"] = true,
-  ["underground-belt"] = true,
-  ["splitter"] = true,
-  ["loader"] = true,
-  ["loader-1x1"] = true
-}
-
-function unique_inventory_ids()
-  if bitermotors_unique_inventory_ids then return bitermotors_unique_inventory_ids end
-  local seen = {}
-  bitermotors_unique_inventory_ids = {}
-  for _, inventory_id in pairs(defines.inventory) do
-    if not seen[inventory_id] then
-      seen[inventory_id] = true
-      bitermotors_unique_inventory_ids[#bitermotors_unique_inventory_ids + 1] = inventory_id
-    end
-  end
-  table.sort(bitermotors_unique_inventory_ids)
-  return bitermotors_unique_inventory_ids
-end
-
-function count_premium_ev_stock(force)
-  local count = 0
-  local inventory_ids = unique_inventory_ids()
-  for _, surface in pairs(game.surfaces) do
-    for _, entity in pairs(surface.find_entities_filtered{force = force}) do
-      if entity.type ~= "character" then
-        if entity.name == PREMIUM_EV_NAME then count = count + 1 end
-        for _, inventory_id in pairs(inventory_ids) do
-          local ok, inventory = pcall(function()
-            return entity.get_inventory(inventory_id)
-          end)
-          if ok and inventory and inventory.valid then
-            count = count + inventory.get_item_count(PREMIUM_EV_NAME)
-          end
-        end
-        if entity.type == "inserter"
-          and entity.held_stack.valid_for_read
-          and entity.held_stack.name == PREMIUM_EV_NAME then
-          count = count + entity.held_stack.count
-        end
-        if TRANSPORT_LINE_ENTITY_TYPES[entity.type] then
-          local max_line = entity.get_max_transport_line_index()
-          for line_index = 1, max_line do
-            count = count + entity.get_transport_line(line_index)
-              .get_item_count(PREMIUM_EV_NAME)
-          end
-        end
-      end
-    end
-    for _, entity in pairs(surface.find_entities_filtered{type = "item-entity"}) do
-      if entity.stack and entity.stack.valid_for_read
-        and entity.stack.name == PREMIUM_EV_NAME then
-        count = count + entity.stack.count
-      end
-    end
-  end
-  for _, player in pairs(force.players) do
-    local main = player.get_main_inventory()
-    if main then count = count + main.get_item_count(PREMIUM_EV_NAME) end
-    local ok, trash = pcall(function()
-      return player.get_inventory(defines.inventory.character_trash)
-    end)
-    if ok and trash then count = count + trash.get_item_count(PREMIUM_EV_NAME) end
-  end
-  return count
-end
-
-function premium_ev_production_history(force)
-  local histories = production_history_by_force()
-  histories[force.name] = ProductionHistory.ensure(histories[force.name])
-  return histories[force.name]
-end
-
 function count_premium_evs_produced(force)
-  local raw = count_item_produced_raw(force, PREMIUM_EV_NAME)
-  local consumed = count_item_consumed_raw(force, PREMIUM_EV_NAME)
-  local state = premium_ev_production_history(force)
-  local statistics_reset = state.reconciled and raw < state.last_raw
-  local proven_floor = consumed
-  if not state.reconciled or statistics_reset then
-    proven_floor = consumed + count_premium_ev_stock(force)
-  end
-  local was_reconciled = state.reconciled
-  local total
-  total, state = ProductionHistory.observe(state, raw, proven_floor)
-  production_history_by_force()[force.name] = state
-  if not was_reconciled and total > raw and not state.announced then
-    state.announced = true
-    force.print(string.format(
-      "[Biter Motors] Reconciled Premium EV production history: %d lifetime vehicles (%d native production-stat count).",
-      total,
-      raw
-    ))
-  end
-  return total
+  return count_item_produced(force, PREMIUM_EV_NAME)
 end
 
 function premium_ev_production_history_status(force)
   local total = count_premium_evs_produced(force)
-  local state = premium_ev_production_history(force)
+  local offset = 0
+  local reset_count = 0
+  for _, state in pairs(production_history_by_force()[force.name][PREMIUM_EV_NAME]) do
+    offset = offset + state.offset
+    reset_count = reset_count + state.reset_count
+  end
   return {
     total = total,
     raw = count_item_produced_raw(force, PREMIUM_EV_NAME),
     consumed = count_item_consumed_raw(force, PREMIUM_EV_NAME),
-    offset = state.offset,
-    reset_count = state.reset_count,
-    last_proven_floor = state.last_proven_floor,
-    reconciled = state.reconciled
+    offset = offset,
+    reset_count = reset_count,
+    reconciled = true
   }
 end
 
@@ -1122,7 +1055,7 @@ function count_fluid_produced(force, fluid_name)
   local count = 0
   for _, surface in pairs(game.surfaces) do
     local statistics = force.get_fluid_production_statistics(surface)
-    count = count + (statistics.output_counts[fluid_name] or 0)
+    count = count + statistics.get_input_count(fluid_name)
   end
   return count
 end
@@ -1467,10 +1400,7 @@ function track_ai_efficiency_progress()
                 local inserted = output_inventory.insert{name = "bitermotors-ai-token", count = pending_bonus}
                 if inserted > 0 then
                   local statistics = force.get_item_production_statistics(machine.surface)
-                  statistics.set_output_count(
-                    "bitermotors-ai-token",
-                    statistics.get_output_count("bitermotors-ai-token") + inserted
-                  )
+                  statistics.on_flow("bitermotors-ai-token", inserted)
                 end
                 track.pending_bonus[machine.unit_number] = pending_bonus - inserted
                 track.pending_bonus_total = math.max(0, (track.pending_bonus_total or 0) - inserted)
@@ -4133,86 +4063,33 @@ local function count_covered_biter_settlements(force)
   return count
 end
 
-local function customer_ev_sales_by_force()
-  storage.bitermotors_customer_ev_sales = storage.bitermotors_customer_ev_sales or {}
-  return storage.bitermotors_customer_ev_sales
-end
-
-local function historical_customer_ev_sales(force)
-  local totals = {
-    ["bitermotors-prototype-roadster"] = 0,
-    ["bitermotors-premium-ev"] = 0,
-    ["bitermotors-mass-market-ev"] = 0,
-    ["bitermotors-megatruck"] = 0,
-    ["bitermotors-bitertaxi-fleet"] = 0
-  }
-  for _, surface in pairs(game.surfaces) do
-    local statistics = force.get_item_production_statistics(surface)
-    totals["bitermotors-prototype-roadster"] = totals["bitermotors-prototype-roadster"]
-      + (statistics.get_input_count("bitermotors-prototype-roadster") or 0)
-    totals["bitermotors-premium-ev"] = totals["bitermotors-premium-ev"]
-      + (statistics.get_input_count("bitermotors-premium-ev") or 0)
-    local mass_market_inputs = statistics.get_input_count("bitermotors-mass-market-ev") or 0
-    local bitertaxi_manufacturing_inputs = statistics.get_input_count("bitermotors-autonomy-computer") or 0
-    totals["bitermotors-mass-market-ev"] = totals["bitermotors-mass-market-ev"]
-      + math.max(0, mass_market_inputs - bitertaxi_manufacturing_inputs)
-    totals["bitermotors-megatruck"] = totals["bitermotors-megatruck"]
-      + (statistics.get_input_count("bitermotors-megatruck") or 0)
-    totals["bitermotors-bitertaxi-fleet"] = totals["bitermotors-bitertaxi-fleet"]
-      + (statistics.get_input_count("bitermotors-bitertaxi-fleet") or 0)
-  end
-  return totals
-end
-
 local function sold_customer_evs(force)
   if not force or not force.valid then
     return {}
   end
-  local sales = customer_ev_sales_by_force()
-  if not sales[force.name] then
-    sales[force.name] = historical_customer_ev_sales(force)
-  end
-  return sales[force.name]
+  return CustomerSales.ensure(storage, force.name)
 end
 
-local function record_customer_ev_sales(force, recipe_name, completed_crafts)
+local function record_customer_ev_sales(force, recipe_name, assigned)
   local sale = CUSTOMER_EV_SALE_RECIPES[recipe_name]
-  if not sale or completed_crafts <= 0 then
+  if not sale or assigned <= 0 then
     return 0
   end
-  local totals = sold_customer_evs(force)
-  local vehicles = completed_crafts * sale.vehicles
-  totals[sale.item] = (totals[sale.item] or 0) + vehicles
+  local vehicles = CustomerSales.record(storage, force.name, sale.item, assigned)
   sync_ev_sales_recipe_gates(force, true)
   return vehicles
 end
 
 function lifetime_customer_ev_sales_size(force)
-  local tracked = sold_customer_evs(force)
-  local historical = historical_customer_ev_sales(force)
-  local total = 0
-  for item_name, count in pairs(historical) do
-    tracked[item_name] = math.max(tracked[item_name] or 0, count)
-  end
-  for _, count in pairs(tracked) do
-    total = total + count
-  end
-  return math.max(0, math.floor(total))
+  return CustomerSales.total(sold_customer_evs(force))
 end
 
 function consumer_ev_sales_total(force)
-  local totals = sold_customer_evs(force)
-  return math.max(0, math.floor(
-    (totals["bitermotors-prototype-roadster"] or 0)
-    + (totals["bitermotors-premium-ev"] or 0)
-    + (totals["bitermotors-mass-market-ev"] or 0)
-    + (totals["bitermotors-megatruck"] or 0)
-  ))
+  return CustomerSales.consumer_total(sold_customer_evs(force))
 end
 
 function ev_sales_gate_progress(force, gate)
-  if gate.total_consumer_sales then return consumer_ev_sales_total(force) end
-  return math.max(0, math.floor(sold_customer_evs(force)[gate.item] or 0))
+  return CustomerSales.gate_progress(sold_customer_evs(force), gate)
 end
 
 function ev_sales_gate_announcements()
@@ -7777,7 +7654,7 @@ generate_station_wrecks = function(station, completed_charges)
   local inserted = inventory.insert{name = WRECKED_EV_NAME, count = wrecks}
   if inserted > 0 then
     local statistics = station.force.get_item_production_statistics(station.surface)
-    statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + inserted)
+    statistics.on_flow(WRECKED_EV_NAME, inserted)
     unlock_vehicle_recycling(station.force)
     insert_battery_retirement_scrap(inventory, station.force, inserted)
   end
@@ -8163,7 +8040,7 @@ function process_bitertaxi_depots()
             state.dollars = state.dollars + inserted
             if inserted > 0 then
               local statistics = center.force.get_item_production_statistics(center.surface)
-              statistics.set_output_count(DOLLAR_NAME, statistics.get_output_count(DOLLAR_NAME) + inserted)
+              statistics.on_flow(DOLLAR_NAME, inserted)
               announce_first_bitertaxi_depot(center.force)
             end
           end
@@ -8184,7 +8061,7 @@ function process_bitertaxi_depots()
               local damaged_packs = output.insert{name = DAMAGED_LFP_PACK_NAME, count = removed * 16}
               if wrecks > 0 then
                 local statistics = center.force.get_item_production_statistics(center.surface)
-                statistics.set_output_count(WRECKED_EV_NAME, statistics.get_output_count(WRECKED_EV_NAME) + wrecks)
+                statistics.on_flow(WRECKED_EV_NAME, wrecks)
                 unlock_vehicle_recycling(center.force)
               end
               if damaged_packs > 0 then unlock_battery_material_recovery(center.force) end
@@ -8248,37 +8125,11 @@ local function first_entity_placement_hints()
 end
 
 local function force_has_first_prototype_sale_history(force)
-  if not force then
-    return false
-  end
-
-  for _, surface in pairs(game.surfaces) do
-    local ok, consumed_count = pcall(function()
-      local statistics = force.get_item_production_statistics(surface)
-      return statistics.output_counts[PROTOTYPE_ROADSTER_NAME] or 0
-    end)
-    if ok and consumed_count > 0 then
-      return true
-    end
-  end
-  return false
+  return force and (sold_customer_evs(force)[PROTOTYPE_ROADSTER_NAME] or 0) > 0 or false
 end
 
 local function force_has_first_premium_sale_history(force)
-  if not force then
-    return false
-  end
-
-  for _, surface in pairs(game.surfaces) do
-    local ok, consumed_count = pcall(function()
-      local statistics = force.get_item_production_statistics(surface)
-      return statistics.output_counts[PREMIUM_EV_NAME] or 0
-    end)
-    if ok and consumed_count > 0 then
-      return true
-    end
-  end
-  return false
+  return force and (sold_customer_evs(force)[PREMIUM_EV_NAME] or 0) > 0 or false
 end
 
 function first_prototype_sale_unlocked(force)
@@ -8297,7 +8148,10 @@ end
 
 local function track_sales_office(entity)
   if entity and entity.valid and entity.name == SALES_OFFICE_NAME and entity.unit_number then
-    sales_office_products_finished()[entity.unit_number] = safe_products_finished(entity)
+    local products = sales_office_products_finished()
+    if products[entity.unit_number] == nil then
+      products[entity.unit_number] = safe_products_finished(entity)
+    end
   end
 end
 
@@ -8311,11 +8165,16 @@ local function rebuild_grid_controllers()
 end
 
 local function rebuild_sales_offices()
-  storage.bitermotors_sales_office_products_finished = {}
+  local products = sales_office_products_finished()
+  local seen = {}
   for _, surface in pairs(game.surfaces) do
     for _, office in pairs(surface.find_entities_filtered{name = SALES_OFFICE_NAME}) do
+      seen[office.unit_number] = true
       track_sales_office(office)
     end
+  end
+  for unit_number in pairs(products) do
+    if not seen[unit_number] then products[unit_number] = nil end
   end
 end
 
@@ -9878,6 +9737,7 @@ end
 
 function sync_sales_office_buyer(office)
   if not office.valid or not office.unit_number then return end
+  process_sales_office_completions(office)
   local recipe = office.get_recipe()
   local recipe_name = recipe and recipe.name
   local sale = recipe_name and CUSTOMER_EV_SALE_RECIPES[recipe_name]
@@ -9998,7 +9858,7 @@ function award_bitertaxi_audio_revenue(office, completed_crafts)
   progress[office.unit_number] = accumulated - inserted
   if inserted > 0 then
     local statistics = office.force.get_item_production_statistics(office.surface)
-    statistics.set_output_count(DOLLAR_NAME, statistics.get_output_count(DOLLAR_NAME) + inserted)
+    statistics.on_flow(DOLLAR_NAME, inserted)
   end
   return inserted
 end
@@ -10061,10 +9921,7 @@ function award_customer_replacement_wrecks(office, replacements)
   progress[office.force.index] = accumulated - inserted
   if inserted > 0 then
     local statistics = office.force.get_item_production_statistics(office.surface)
-    statistics.set_output_count(
-      WRECKED_EV_NAME,
-      statistics.get_output_count(WRECKED_EV_NAME) + inserted
-    )
+    statistics.on_flow(WRECKED_EV_NAME, inserted)
     unlock_vehicle_recycling(office.force)
   end
   return inserted
@@ -10141,51 +9998,44 @@ function complete_reserved_vehicle_sale(office, recipe_name)
     assigned = assigned,
     tick = game.tick
   }
+  record_customer_ev_sales(office.force, recipe_name, assigned)
   mark_bitermotors_market_dirty(office.force, "vehicle-sale")
   return assigned
 end
 
-local function office_has_prototype_sale_output(office)
-  local inventory_id = crafter_output_inventory_id()
-  if not inventory_id then
-    return false
+function process_sales_office_completions(office)
+  if not office or not office.valid or not office.unit_number then return end
+  local products_by_unit = sales_office_products_finished()
+  local products = safe_products_finished(office)
+  local reservation = office_buyer_reservations()[office.unit_number]
+  local previous_products = products_by_unit[office.unit_number] or products
+  local completed_crafts = math.max(0, products - previous_products)
+  -- Attribute completion before validation can replace or cancel the reservation.
+  local recipe_name = reservation and reservation.recipe_name or current_recipe_name(office)
+  products_by_unit[office.unit_number] = products
+  if completed_crafts <= 0 then return end
+  if recipe_name == GRID_BATTERY_SALE_RECIPE then
+    complete_grid_battery_sale(office)
+    return
   end
-
-  local inventory = office.get_inventory(inventory_id)
-  return inventory and inventory.valid and inventory.get_item_count(DOLLAR_NAME) > 0
+  local assigned = complete_reserved_vehicle_sale(office, recipe_name)
+  if assigned <= 0 then return end
+  if recipe_name == FIRST_PROTOTYPE_SALE_RECIPE then
+    unlock_roadster_sales(office.force)
+    announce_first_ev_production_line_hint(office.force)
+  elseif recipe_name == PREMIUM_EV_SALE_RECIPE then
+    announce_first_premium_ev_sale(office.force)
+  elseif recipe_name == MASS_MARKET_EV_SALE_RECIPE then
+    announce_first_mass_market_ev_sale(office.force)
+  elseif recipe_name == BITERTAXI_SALE_RECIPE then
+    award_bitertaxi_audio_revenue(office, assigned / CUSTOMER_EV_SALE_RECIPES[recipe_name].vehicles)
+    announce_first_bitertaxi_depot(office.force)
+  end
 end
 
 local function check_first_prototype_sales()
-  local products_by_unit = sales_office_products_finished()
   for _, office in pairs(registered_bitermotors_entities("sales_offices")) do
-      if office.valid and office.unit_number then
-        local products = safe_products_finished(office)
-        local previous_products = products_by_unit[office.unit_number] or products
-        local recipe_name = current_recipe_name(office)
-        local completed_crafts = math.max(0, products - previous_products)
-        if completed_crafts > 0 then
-          if recipe_name == GRID_BATTERY_SALE_RECIPE then
-            complete_grid_battery_sale(office)
-          else
-            complete_reserved_vehicle_sale(office, recipe_name)
-          end
-          record_customer_ev_sales(office.force, recipe_name, completed_crafts)
-        end
-        if recipe_name == FIRST_PROTOTYPE_SALE_RECIPE then
-          if office_has_prototype_sale_output(office) or completed_crafts > 0 then
-            unlock_roadster_sales(office.force)
-            announce_first_ev_production_line_hint(office.force)
-          end
-        elseif recipe_name == PREMIUM_EV_SALE_RECIPE and completed_crafts > 0 then
-          announce_first_premium_ev_sale(office.force)
-        elseif recipe_name == MASS_MARKET_EV_SALE_RECIPE and completed_crafts > 0 then
-          announce_first_mass_market_ev_sale(office.force)
-        elseif recipe_name == BITERTAXI_SALE_RECIPE and completed_crafts > 0 then
-          award_bitertaxi_audio_revenue(office, completed_crafts)
-          announce_first_bitertaxi_depot(office.force)
-        end
-        products_by_unit[office.unit_number] = products
-      end
+    process_sales_office_completions(office)
   end
 end
 

@@ -235,11 +235,12 @@ script.on_init(function()
   end
   local production_statistics = force.get_item_production_statistics(surface)
   storage.foundry_enabled_before_qualification = force.technologies.foundry.enabled
-  production_statistics.set_output_count("bitermotors-premium-ev", 100)
+  -- Broad fixture qualification, not evidence of native campaign production.
+  production_statistics.set_input_count("bitermotors-premium-ev", 100)
   local chemistry = force.technologies["bitermotors-advanced-battery-chemistry"]
   remote.call("bitermotors", "progress_status", force.name)
   storage.advanced_battery_chemistry_enabled_at_100 = chemistry.enabled
-  production_statistics.set_output_count("bitermotors-premium-ev", 250)
+  production_statistics.set_input_count("bitermotors-premium-ev", 250)
   remote.call("bitermotors", "progress_status", force.name)
   storage.advanced_battery_chemistry_enabled_at_250 = chemistry.enabled
   chemistry.researched = true
@@ -373,8 +374,9 @@ script.on_init(function()
       count = count
     }
   end
-  production_statistics.set_input_count(PREMIUM_EV, 156)
-  production_statistics.set_output_count(PREMIUM_EV, 0)
+  -- Stock, placed vehicles, and consumption must not inflate observed production.
+  production_statistics.set_output_count(PREMIUM_EV, 156)
+  production_statistics.set_input_count(PREMIUM_EV, 0)
   storage.premium_ev_history_after_reset =
     remote.call("bitermotors", "premium_ev_production_history", force.name)
   for x = 372, 388 do
@@ -726,6 +728,7 @@ script.on_nth_tick(120, function()
   end
   local surface = game.get_surface(storage.surface_index or 1)
   local statistics = game.forces.player.get_item_production_statistics(surface)
+  -- Manufacturing and generic consumption are deliberately not confirmed sales.
   statistics.set_input_count(PROTOTYPE_ROADSTER, 1)
   statistics.set_output_count(PROTOTYPE_ROADSTER, 1)
   storage.customer_ev_seeded = true
@@ -1320,6 +1323,15 @@ script.on_nth_tick(3780, function()
     self_driving_goal_distance = self_driving_goal_distance,
     self_driving = self_driving_status,
     terrestrial_datacenter_created = datacenter ~= nil,
+    terrestrial_datacenter_diagnostics = datacenter and {
+      recipe = datacenter.get_recipe() and datacenter.get_recipe().name,
+      status = tostring(datacenter.status),
+      disabled_by_script = datacenter.disabled_by_script,
+      energy = datacenter.energy,
+      electric_buffer_size = datacenter.electric_buffer_size,
+      crafting_progress = datacenter.crafting_progress,
+      products_finished = datacenter.products_finished
+    } or nil,
     terrestrial_datacenter_dollars_remaining = datacenter_input and datacenter_input.get_item_count(DOLLAR) or -1,
     terrestrial_datacenter_tokens = datacenter_output and datacenter_output.get_item_count("bitermotors-ai-token") or -1,
     terrestrial_datacenter_productivity_bonus = datacenter and datacenter.productivity_bonus or -1,
@@ -2711,12 +2723,12 @@ if checked.get("advanced_battery_chemistry_enabled_at_100"):
 if not checked.get("advanced_battery_chemistry_enabled_at_250"):
     raise SystemExit(f"Advanced Battery Chemistry did not unlock after 250 Premium EVs: {checked}")
 premium_history = checked.get("premium_ev_history_after_reset") or {}
-if premium_history.get("total") != 280:
-    raise SystemExit(f"Premium EV lifetime history did not reconcile sold, stocked, and placed vehicles: {checked}")
+if premium_history.get("total") != 250:
+    raise SystemExit(f"Premium EV lifetime history changed from stock, placement, or consumption: {checked}")
 if premium_history.get("raw") != 0 or premium_history.get("reset_count", 0) < 1:
     raise SystemExit(f"Premium EV lifetime history did not survive a native statistics reset: {checked}")
-if premium_history.get("last_proven_floor") != 280:
-    raise SystemExit(f"Premium EV lifetime history recorded the wrong proven floor: {checked}")
+if premium_history.get("consumed") != 156:
+    raise SystemExit(f"Premium EV consumption diagnostic did not read native output statistics: {checked}")
 if not checked.get("biterfactory_recipe_enabled"):
     raise SystemExit(f"The 100-vehicle Premium EV pilot did not unlock the Biterfactory recipe: {checked}")
 if not checked.get("logistic_system_available_before_sales"):
@@ -2867,7 +2879,7 @@ if checked.get("covered_biter_settlements", 0) < 1:
     raise SystemExit(f"biter customer settlement was not covered by charging network: {checked}")
 preproduction_market = checked.get("preproduction_market", {})
 if preproduction_market.get("customer_ev_fleet") != 0 or preproduction_market.get("active_customer_stalls") != 0:
-    raise SystemExit(f"charging utilization should be zero before the first EV is produced: {checked}")
+    raise SystemExit(f"charging utilization should be zero before the first confirmed EV sale: {checked}")
 if checked.get("market", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"expected three living Bitertaxi owners in the active customer fleet: {checked}")
 charger_allocator = checked.get("charger_allocator", {})
@@ -2909,6 +2921,21 @@ if progress.get("stage") != "Prototype market validation" or progress.get("objec
     raise SystemExit(f"Biter Motors progress status did not identify the next concrete objective: {checked}")
 if progress.get("snapshot", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"Biter Motors progress snapshot did not expose live EV market state: {checked}")
+sales_snapshot = progress.get("snapshot", {})
+if sales_snapshot.get("customer_ev_sales_lifetime") != 3:
+    raise SystemExit(f"Lifetime EV sales should count only the three confirmed Bitertaxi assignments: {checked}")
+for field in ("roadsters_sold", "premium_evs_sold", "mass_market_evs_sold"):
+    if sales_snapshot.get(field) != 0:
+        raise SystemExit(f"Native production, consumption, or placed stock incorrectly advanced {field}: {checked}")
+# This fixture earns only Grid Battery sales, fleet sales, and depot service income.
+# Inserted office/datacenter/orbital Dollars are stock, not generated profit.
+expected_dollars = (
+    checked["grid_battery_sale_dollars"]
+    + checked["bitertaxi_dollars_produced"]
+    + sum(depot["lifetime_dollars"] for depot in bitertaxi_status)
+)
+if sales_snapshot.get("dollars_produced") != expected_dollars:
+    raise SystemExit(f"Progress profit disagrees with native sales plus scripted depot income ({expected_dollars} Dollars): {checked}")
 if progress.get("snapshot", {}).get("next_charging_step", {}).get("ev_owners_until") != next_charging_step.get("ev_owners_until"):
     raise SystemExit(f"Biter Motors progress forecast diverged from the shared customer market snapshot: {checked}")
 integrity = checked.get("progression_integrity", {})

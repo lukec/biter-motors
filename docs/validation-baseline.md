@@ -1,4 +1,8 @@
-# Current Engine Validation Baseline
+# Phase 1 Engine Validation Baseline
+
+This is the historical Phase 1 archive and evidence. The subsequent
+[accounting slice](accounting-validation.md) changes runtime behavior and has
+its own exact tested archive; the SHA below is not the current checkout.
 
 Date: **2026-10-05**. Release-plan **Phase 1 complete**; the mod remains alpha.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Space Age**.
@@ -89,8 +93,8 @@ scripts/soak-bitermotors-save.sh \
 
 ## Still Required
 
-Proceed with Phase 2's authoritative production/sales/profit accounting and
-behavioral customer/recycling fixtures. Phase 3 must prove the real orbital
+Phase 2's accounting slice is now implemented; complete its remaining
+behavioral customer/recycling fixes and fixtures. Phase 3 must prove the real orbital
 delivery and full-duration victory contract. Player-bearing GUI/landing checks,
 large-world stress, four-hour terrestrial and one-hour orbital soaks, and
 multiplayer/persistence qualification remain outstanding. Do not start the

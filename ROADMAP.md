@@ -44,9 +44,14 @@ and acceptance tests:
    uninterrupted AGI completion with a frozen engine/mod configuration.
 8. **V1 publication:** validated 1.0.0 archive, tag, portal download verification.
 
-Phases **2-8 remain outstanding**. The immediate next slice is authoritative
-production/sales/profit accounting and behavioral transaction fixtures in
-Phase 2. The final playthrough begins only after Phases 1-6.
+**Phase 2 is in progress:** production, confirmed sales, and profit accounting
+have been separated and validated in isolated native worlds and the exact ZIP.
+The [accounting evidence](docs/accounting-validation.md) includes genuine
+manufacturing, customer-backed sales, canceled transactions, quality, and a
+separate save/reload. Mixed physical/virtual customer state, capacity sharing,
+service health, and recycling remain. Phases **3-8 remain outstanding**. The
+immediate next slice is mixed-population purchase history and virtual-only
+settlement rebuilds (R06/R07). The final playthrough begins only after Phases 1-6.
 The recommended compressed-Dataset transport and quality/beacon-independent
 60-minute, 10 GW finale require design approval before implementation. No new
 company, planet, battery chemistry, or future feature branch belongs in this

@@ -84,11 +84,12 @@ local function dollar_diagnostics(player)
   local surfaces = {}
   for _, surface in pairs(game.surfaces) do
     local statistics = player.force.get_item_production_statistics(surface)
-    local count = statistics.get_output_count("bitermotors-dollar") or 0
+    local count = statistics.get_input_count("bitermotors-dollar") or 0
     total = total + count
     surfaces[surface.name] = {
       method = count,
-      output_counts = statistics.output_counts["bitermotors-dollar"] or 0
+      input_counts = statistics.input_counts["bitermotors-dollar"] or 0,
+      consumed = statistics.get_output_count("bitermotors-dollar") or 0
     }
   end
   local offices = {}

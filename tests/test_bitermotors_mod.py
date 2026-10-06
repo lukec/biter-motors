@@ -235,14 +235,144 @@ class BiterMotorsModTest(unittest.TestCase):
         validator = (ROOT / "scripts" / "validate-bitermotors-mod.sh").read_text()
 
         self.assertIn('ProductionHistory = require("runtime.production_history")', control)
-        self.assertIn("function count_premium_ev_stock(force)", control)
         self.assertIn("function count_premium_evs_produced(force)", control)
-        self.assertIn("consumed + count_premium_ev_stock(force)", control)
-        self.assertIn("raw < state.last_raw", control)
+        produced = control[control.index("function count_item_produced(force, item_name)"):
+                           control.index("function count_item_produced_raw(force, item_name)")]
+        self.assertIn("ProductionHistory.observe", produced)
+        self.assertIn("production_history_by_force", produced)
+        self.assertNotIn("count_premium_ev_stock", control)
+        self.assertNotIn("proven_floor", runtime)
         self.assertIn("premium_ev_production_history = function", control)
-        self.assertIn("state.total - raw", runtime)
-        self.assertIn("math.max(state.total, raw + state.offset, floor)", runtime)
+        # Epoch offsets and per-surface reset boundaries are proved by the native harness.
+        self.assertIn("ProductionHistory.observe", runtime)
         self.assertIn("premium_ev_history_after_reset", validator)
+        self.assertIn('premium_history.get("total") != 250', validator)
+        self.assertIn('premium_history.get("consumed") != 156', validator)
+
+    def test_native_statistics_distinguish_production_from_consumption(self):
+        control = (MOD / "control.lua").read_text()
+        produced = control[control.index("function count_item_produced_raw("):
+                           control.index("function count_item_consumed_raw(")]
+        consumed = control[control.index("function count_item_consumed_raw("):
+                           control.index("function production_history_by_force(")]
+        helper = control[control.index("function item_statistics_count("):
+                         control.index("function count_item_produced_raw(")]
+        fluid = control[control.index("function count_fluid_produced("):
+                        control.index("function agi_training_unlocks(")]
+        self.assertIn("item_statistics_count(statistics, item_name, true)", produced)
+        self.assertIn("item_statistics_count(statistics, item_name, false)", consumed)
+        self.assertIn("prototypes.quality", helper)
+        self.assertRegex(helper, r"\{\s*name\s*=\s*item_name,\s*quality\s*=\s*quality_name\s*\}")
+        self.assertRegex(helper, r"production\s+and\s+statistics\.get_input_count\(item\)\s+or\s+statistics\.get_output_count\(item\)")
+        self.assertRegex(fluid, r"statistics\.(?:input_counts\s*\[|get_input_count\s*\()")
+        self.assertNotRegex(fluid, r"statistics\.(?:output_counts\b|get_output_count\b)")
+
+    def test_scripted_generated_outputs_record_positive_production_flow(self):
+        control = (MOD / "control.lua").read_text()
+        for start, end, flows in (
+            ("function track_ai_efficiency_progress()", "function ",
+             (("\"bitermotors-ai-token\"", "inserted"),)),
+            ("generate_station_wrecks = function(", "local function reservation_print_progress(",
+             (("WRECKED_EV_NAME", "inserted"),)),
+            ("function process_bitertaxi_depots()", "function cleanup_orphaned_bitertaxi_depot_power()",
+             (("DOLLAR_NAME", "inserted"), ("WRECKED_EV_NAME", "wrecks"))),
+            ("function award_bitertaxi_audio_revenue(", "function replace_virtual_customer_vehicle(",
+             (("DOLLAR_NAME", "inserted"),)),
+            ("function award_customer_replacement_wrecks(", "function complete_reserved_vehicle_sale(",
+             (("WRECKED_EV_NAME", "inserted"),)),
+        ):
+            with self.subTest(operation=start):
+                offset = control.index(start)
+                operation = control[offset:control.index(end, offset + len(start))]
+                self.assertNotIn("statistics.set_output_count", operation)
+                self.assertNotIn("statistics.set_input_count", operation)
+                for item, count in flows:
+                    self.assertRegex(
+                        operation,
+                        rf"statistics\.on_flow\(\s*{re.escape(item)},\s*{count}\s*\)",
+                    )
+
+    def test_confirmed_sales_ledger_does_not_infer_native_history(self):
+        control = (MOD / "control.lua").read_text()
+        policy = (MOD / "runtime/customer_sales.lua").read_text()
+        ledger = control[control.index("local function sold_customer_evs("):
+                         control.index("function ev_sales_gate_announcements(")]
+        self.assertIn('CustomerSales = require("runtime.customer_sales")', control)
+        self.assertNotIn("historical_customer_ev_sales", control)
+        self.assertNotIn("production_statistics", ledger)
+        self.assertNotIn("completed_crafts * sale.vehicles", ledger)
+        for delegation in (
+            "CustomerSales.ensure(storage, force.name)",
+            "CustomerSales.record(storage, force.name, sale.item, assigned)",
+            "CustomerSales.total(sold_customer_evs(force))",
+            "CustomerSales.consumer_total(sold_customer_evs(force))",
+            "CustomerSales.gate_progress(sold_customer_evs(force), gate)",
+        ):
+            self.assertIn(delegation, ledger)
+        self.assertRegex(policy, r"sales\[force_name\]\s*=\s*sales\[force_name\]\s+or\s*\{\}")
+        self.assertIn("tonumber(assigned)", policy)
+        self.assertIn("totals[item_name] = (totals[item_name] or 0) + vehicles", policy)
+        self.assertNotIn("production_statistics", policy)
+        self.assertNotIn("game.", policy)
+        self.assertNotIn("sale.vehicles", policy)
+        for start, end, item in (
+            ("local function force_has_first_prototype_sale_history(",
+             "local function force_has_first_premium_sale_history(", "PROTOTYPE_ROADSTER_NAME"),
+            ("local function force_has_first_premium_sale_history(",
+             "function first_prototype_sale_unlocked(", "PREMIUM_EV_NAME"),
+        ):
+            history = control[control.index(start):control.index(end)]
+            self.assertIn("sold_customer_evs(force)", history)
+            self.assertIn(item, history)
+            self.assertNotIn("production_statistics", history)
+        assignment = control[control.index("function complete_reserved_vehicle_sale("):
+                             control.index("function process_sales_office_completions(")]
+        self.assertRegex(
+            assignment,
+            r"record_customer_ev_sales\(\s*office\.force,\s*recipe_name,\s*assigned\s*\)",
+        )
+        sync = control[control.index("function sync_sales_office_buyer("):
+                       control.index("function sync_sales_office_buyers(")]
+        self.assertLess(sync.index("process_sales_office_completions(office)"),
+                        sync.index("local reservation = office_buyer_reservations()"))
+        completion = control[control.index("function process_sales_office_completions("):
+                             control.index("local function check_first_prototype_sales(")]
+        self.assertIn("if completed_crafts <= 0 then return end", completion)
+        self.assertIn("if assigned <= 0 then return end", completion)
+        self.assertNotIn("record_customer_ev_sales", completion)
+
+    def test_broad_smoke_seeds_statistics_by_intent_not_confirmed_sales(self):
+        validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()
+        self.assertIn('set_input_count("bitermotors-premium-ev", 100)', validator)
+        self.assertIn('set_input_count("bitermotors-premium-ev", 250)', validator)
+        self.assertIn("set_output_count(PREMIUM_EV, 156)", validator)
+        self.assertIn("set_input_count(PREMIUM_EV, 0)", validator)
+        self.assertIn("set_input_count(PROTOTYPE_ROADSTER, 1)", validator)
+        self.assertIn("set_output_count(PROTOTYPE_ROADSTER, 1)", validator)
+        self.assertIn('sales_snapshot.get("customer_ev_sales_lifetime") != 3', validator)
+        self.assertIn('("roadsters_sold", "premium_evs_sold", "mass_market_evs_sold")', validator)
+        gui = (ROOT / "scripts/validate-bitermotors-gui.sh").read_text()
+        self.assertIn('local count = statistics.get_input_count("bitermotors-dollar")', gui)
+        self.assertIn('input_counts = statistics.input_counts["bitermotors-dollar"]', gui)
+
+    def test_broad_smoke_profit_requires_native_and_scripted_income(self):
+        validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()
+        start = validator.index("expected_dollars = (")
+        end = validator.index('if progress.get("snapshot", {}).get("next_charging_step"', start)
+        gate = compile(validator[start:end], "broad-smoke-profit-gate", "exec")
+        checked = {"grid_battery_sale_dollars": 20, "bitertaxi_dollars_produced": 1}
+        for dollars, valid in ((23, True), (21, False), (2, False), (24, False), (None, False)):
+            with self.subTest(dollars=dollars):
+                context = {
+                    "checked": checked,
+                    "bitertaxi_status": [{"lifetime_dollars": 2, "output_dollars": 0}],
+                    "sales_snapshot": {"dollars_produced": dollars},
+                }
+                if valid:
+                    exec(gate, context)
+                else:
+                    with self.assertRaisesRegex(SystemExit, "Progress profit disagrees"):
+                        exec(gate, context)
 
     def test_bitermotors_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
@@ -2092,7 +2222,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('label = "Wrecked EVs"', control)
         self.assertNotIn('label = "Vehicle recycling"', control)
         self.assertIn('label = "Logistic System"', control)
-        self.assertIn("statistics.output_counts[item_name]", control)
+        self.assertRegex(control, r"statistics\.(?:input_counts\s*\[|get_input_count\s*\()")
         self.assertIn('"bitermotors_dollars_produced_value"', control)
         self.assertIn("EV Reservations", control)
         self.assertNotIn('add_progress_section(content, "Infrastructure"', control)
@@ -2245,7 +2375,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("sync_all_force_unlocks", control)
         self.assertIn("FIRST_CUSTOMER_CHARGER_UNLOCK_RECIPES", control)
         self.assertIn("force.get_item_production_statistics(surface)", control)
-        self.assertIn("statistics.output_counts[PROTOTYPE_ROADSTER_NAME]", control)
+        self.assertIn("sold_customer_evs(force)[PROTOTYPE_ROADSTER_NAME]", control)
         self.assertIn("unlock_roadster_sales", control)
         unlock = control[control.index("local function unlock_roadster_sales"):control.index("local function announce_first_ev_production_line_hint")]
         self.assertIn("local first_unlock = not milestones[force.name]", unlock)
@@ -2386,10 +2516,9 @@ class BiterMotorsModTest(unittest.TestCase):
             self.assertIn(f'"{item_name}"', control)
         self.assertIn("CUSTOMER_EV_SALE_RECIPES", control)
         self.assertIn("record_customer_ev_sales", control)
-        self.assertIn("bitermotors_customer_ev_sales", control)
+        self.assertIn("bitermotors_customer_ev_sales", (MOD / "runtime/customer_sales.lua").read_text())
         self.assertIn('vehicles = 3', control)
-        self.assertIn("historical_customer_ev_sales", control)
-        self.assertIn('statistics.get_input_count("bitermotors-mass-market-ev")', control)
+        self.assertNotIn("historical_customer_ev_sales", control)
         self.assertIn("active_customer_vehicle_summary(force).total", fleet)
         self.assertIn("assignment.requested_stalls", utilization)
         self.assertIn("powered_station_stalls", control)

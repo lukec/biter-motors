@@ -10,21 +10,19 @@ function ProductionHistory.ensure(state)
   return state
 end
 
-function ProductionHistory.observe(state, raw_count, proven_floor)
+function ProductionHistory.observe(state, raw_count)
   state = ProductionHistory.ensure(state)
   local raw = math.max(0, tonumber(raw_count) or 0)
-  local floor = math.max(0, tonumber(proven_floor) or 0)
 
   if state.reconciled and raw < state.last_raw then
-    state.offset = math.max(state.offset, state.total - raw)
+    -- A lower counter starts a new epoch, including production since the reset.
+    state.offset = state.total
     state.reset_count = state.reset_count + 1
   end
 
-  local total = math.max(state.total, raw + state.offset, floor)
-  state.offset = math.max(state.offset, total - raw)
+  local total = math.max(state.total, raw + state.offset)
   state.last_raw = raw
   state.total = total
-  state.last_proven_floor = floor
   state.reconciled = true
   return total, state
 end
