@@ -15,6 +15,18 @@ development namespace migration.
   virtual-only settlements survive population rebuilds and normal mod updates.
 - Prevented Sales Offices from starting a new vehicle transaction before a
   buyer is reserved, without blocking the paperwork needed to start selling.
+- Regenerated all 18 rewritten vanilla recycling recipes from their final
+  terrestrial ingredients, eliminating removed-planet material returns.
+- Preserved small damaged-pack batches for ten-pack, 90% cell recovery instead
+  of allowing the automatic one-pack self-recycling fallback to consume them.
+- Made Premium EV salvage conservative across its two battery recipes; only
+  vehicles with fixed chemistry return advanced packs. Anonymous charger
+  incidents no longer fabricate advanced battery materials.
+- Added one body wreck on player-vehicle destruction, preserved salvage quality,
+  reconciled physical salvage statistics, and stopped construction bots from
+  carrying hidden EV drive-charge items into storage when mining a vehicle.
+- Added an isolated native Recycler/salvage fixture with a real server-written
+  checkpoint and separate-process reload; no live save changes are required.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

@@ -172,7 +172,7 @@ local ADVANCED_BATTERY_CHEMISTRY_RECIPES = {
   "bitermotors-premium-ev-cell-scale"
 }
 PLAYER_VEHICLE_BATTERY_SCRAP = {
-  [PREMIUM_EV_NAME] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
+  -- Premium shares one item between conventional and advanced battery recipes.
   ["bitermotors-mass-market-ev"] = {[DAMAGED_LFP_PACK_NAME] = 4},
   ["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8},
   [BITERTAXI_ITEM_NAME] = {[DAMAGED_LFP_PACK_NAME] = 16},
@@ -7626,24 +7626,6 @@ function unlock_battery_material_recovery(force)
   return true
 end
 
-function insert_battery_retirement_scrap(inventory, force, wrecks)
-  if not inventory or wrecks <= 0 then return 0 end
-  local sales = sold_customer_evs(force)
-  local high_weight = (sales[PREMIUM_EV_NAME] or 0) * 8 + (sales["bitermotors-megatruck"] or 0) * 8
-  local lfp_weight = (sales["bitermotors-mass-market-ev"] or 0) * 4
-  local total_weight = high_weight + lfp_weight
-  if total_weight <= 0 then return 0 end
-  local inserted = 0
-  for _ = 1, wrecks do
-    local high_energy = math.random() * total_weight < high_weight
-    local item_name = high_energy and DAMAGED_HIGH_ENERGY_PACK_NAME or DAMAGED_LFP_PACK_NAME
-    local count = high_energy and 8 or 4
-    inserted = inserted + inventory.insert{name = item_name, count = count}
-  end
-  if inserted > 0 then unlock_battery_material_recovery(force) end
-  return inserted
-end
-
 generate_station_wrecks = function(station, completed_charges)
   local inventory = station_reservation_inventory(station)
   if not inventory or completed_charges <= 0 then return 0 end
@@ -7657,7 +7639,6 @@ generate_station_wrecks = function(station, completed_charges)
     local statistics = station.force.get_item_production_statistics(station.surface)
     statistics.on_flow(WRECKED_EV_NAME, inserted)
     unlock_vehicle_recycling(station.force)
-    insert_battery_retirement_scrap(inventory, station.force, inserted)
   end
   return inserted
 end
@@ -8065,7 +8046,11 @@ function process_bitertaxi_depots()
                 statistics.on_flow(WRECKED_EV_NAME, wrecks)
                 unlock_vehicle_recycling(center.force)
               end
-              if damaged_packs > 0 then unlock_battery_material_recovery(center.force) end
+              if damaged_packs > 0 then
+                local statistics = center.force.get_item_production_statistics(center.surface)
+                statistics.on_flow(DAMAGED_LFP_PACK_NAME, damaged_packs)
+                unlock_battery_material_recovery(center.force)
+              end
             end
           end
         end
@@ -12565,20 +12550,51 @@ for _, event_name in pairs({
 	  end
 	end
 
-function spill_player_vehicle_battery_scrap(entity)
-  local scrap = entity and entity.valid and PLAYER_VEHICLE_BATTERY_SCRAP[entity.name]
-  if not scrap then return end
-  local produced = false
-  for item_name, count in pairs(scrap) do
-    entity.surface.spill_item_stack{
+local function remove_internal_drive_charge(inventory)
+  if not inventory or not inventory.valid then return end
+  for _, fuel_name in ipairs({ELECTRIC_DRIVE_FUEL_NAME, ESPIDER_DRIVE_FUEL_NAME,
+    ESPIDER_RESERVE_FUEL_NAME, CYBERTRAIN_FUEL_NAME}) do
+    local count = inventory.get_item_count(fuel_name)
+    if count > 0 then inventory.remove{name = fuel_name, count = count} end
+  end
+end
+
+for _, event_name in ipairs({defines.events.on_pre_player_mined_item, defines.events.on_robot_pre_mined}) do
+  script.on_event(event_name, function(event)
+    local entity = event.entity
+    if entity and entity.valid and (is_electric_vehicle(entity) or entity.name == CYBERTRAIN_NAME)
+      and entity.burner then
+      remove_internal_drive_charge(entity.burner.inventory)
+    end
+  end)
+end
+
+function spill_player_vehicle_salvage(entity)
+  if not is_electric_vehicle(entity) and not (entity and entity.valid and entity.name == CYBERTRAIN_NAME) then
+    return
+  end
+  local quality = entity.quality.name
+  local statistics = entity.force.get_item_production_statistics(entity.surface)
+  local function spill(item_name, count)
+    local drops = entity.surface.spill_item_stack{
       position = entity.position,
-      stack = {name = item_name, count = count},
+      stack = {name = item_name, count = count, quality = quality},
       enable_looted = true,
       force = entity.force
     }
-    produced = true
+    local spilled = 0
+    for _, drop in pairs(drops) do
+      if drop.valid and drop.stack.valid_for_read then spilled = spilled + drop.stack.count end
+    end
+    if spilled > 0 then statistics.on_flow({name = item_name, quality = quality}, spilled) end
+    return spilled
   end
-  if produced then unlock_battery_material_recovery(entity.force) end
+  if spill(WRECKED_EV_NAME, 1) > 0 then unlock_vehicle_recycling(entity.force) end
+  local packs = 0
+  for item_name, count in pairs(PLAYER_VEHICLE_BATTERY_SCRAP[entity.name] or {}) do
+    packs = packs + spill(item_name, count)
+  end
+  if packs > 0 then unlock_battery_material_recovery(entity.force) end
 end
 
 for _, event_name in pairs({
@@ -12597,29 +12613,14 @@ for _, event_name in pairs({
 	        BITER_SETTLEMENT_NAMES[entity.name] or false
       local removed_customer_unit = unit_number
 	        and customer_unit_registry()[unit_number] ~= nil or false
-	      if event_name == defines.events.on_entity_died then spill_player_vehicle_battery_scrap(entity) end
+	      if event_name == defines.events.on_entity_died then spill_player_vehicle_salvage(entity) end
       local refresh_infrastructure = entity and entity.valid and (is_station(entity)
         or entity.name == SALES_OFFICE_NAME
         or entity.name == BITERTAXI_DEPOT_NAME)
       if event_name == defines.events.on_player_mined_entity
         or event_name == defines.events.on_robot_mined_entity then
         award_small_crash_site_salvage(event)
-        if event.buffer then
-          for _, fuel_name in pairs({
-            ELECTRIC_DRIVE_FUEL_NAME,
-            ESPIDER_DRIVE_FUEL_NAME,
-            ESPIDER_RESERVE_FUEL_NAME
-          }) do
-            local hidden_charge_count = event.buffer.get_item_count(fuel_name)
-            if hidden_charge_count > 0 then
-              event.buffer.remove{name = fuel_name, count = hidden_charge_count}
-            end
-          end
-          local cybertrain_charge_count = event.buffer.get_item_count(CYBERTRAIN_FUEL_NAME)
-          if cybertrain_charge_count > 0 then
-            event.buffer.remove{name = CYBERTRAIN_FUEL_NAME, count = cybertrain_charge_count}
-          end
-        end
+        remove_internal_drive_charge(event.buffer)
       end
       if removed_customer_unit then
         destroy_customer_marker(entity)

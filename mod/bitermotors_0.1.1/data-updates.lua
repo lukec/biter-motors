@@ -1,4 +1,5 @@
 local resource_autoplace = require("resource-autoplace")
+local RecipeRecycling = require("prototypes.recipe_recycling")
 
 local function ingredients(...)
   local result = {}
@@ -40,6 +41,8 @@ local function rewrite_recipe(name, values)
   for key, value in pairs(values) do recipe[key] = value end
   recipe.enabled = false
   recipe.surface_conditions = nil
+  recipe.recycle_to_ingredients_of = nil
+  RecipeRecycling.track(name)
 end
 
 -- Biter Motors is a fresh-world overhaul. Move selected Space Age machines into a

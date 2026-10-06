@@ -53,10 +53,13 @@ keep physical and virtual customers independent, conserve replacement owners,
 and retain virtual-only settlements through rebuilds and normal mod updates.
 The [customer-state evidence](docs/customer-state-validation.md) records real
 sales, cancellation, death, save/reload, and configuration-change tests.
-Capacity fairness, service health, and recycling/salvage remain. Phases **3-8
-remain outstanding**. The immediate next slice is rewritten recycling outputs
-and honest chemistry salvage (R08/R11), followed by charging/service consistency
-(R09/R10). The final playthrough begins only after Phases 1-6.
+**R08/R11 are now fixed:** rewritten reverse recipes match terrestrial builds,
+damaged packs wait intact for 90% recovery, and ambiguous vehicle/charger scrap
+cannot invent advanced chemistry. The [recycling evidence](docs/recycling-validation.md)
+includes native crafting, quality, vehicle destruction, robot mining, and a
+separate partial-batch save/reload. Capacity fairness and service health remain;
+the immediate next slice is **R09/R10**, including virtual-buyer pool balancing.
+Phases **3-8 remain outstanding**. The final playthrough begins only after Phases 1-6.
 The recommended compressed-Dataset transport and quality/beacon-independent
 60-minute, 10 GW finale require design approval before implementation. No new
 company, planet, battery chemistry, or future feature branch belongs in this

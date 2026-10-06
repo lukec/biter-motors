@@ -120,3 +120,5 @@ for _, prototypes in pairs(data.raw) do
     end
   end
 end
+
+require("prototypes.recipe_recycling").refresh()

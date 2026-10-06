@@ -13,6 +13,7 @@ ISOLATED_VALIDATORS = (
     "validate-bitermotors-gui.sh",
     "validate-bitermotors-battery-resources.sh",
     "validate-bitermotors-bitertaxi-runtime.sh",
+    "validate-bitermotors-recycling.sh",
     "benchmark-bitermotors-scale.sh",
     "benchmark-bitermotors-playtest-save.sh",
 )
@@ -88,6 +89,16 @@ class ValidationScriptContracts(unittest.TestCase):
     def test_archive_staging_rejects_stale_or_mismatched_package(self):
         script = (SCRIPTS / "lib" / "bitermotors-validation.sh").read_text()
         self.assertIn('--require-source-match', script)
+
+    def test_recycling_requires_complete_native_cases_and_preserved_partial_batch(self):
+        script = self.read_script("validate-bitermotors-recycling.sh")
+        self.assertIn('zip(rows, (52, 400, 26))', script)
+        self.assertIn('"normal_rewrites": 18', script)
+        self.assertIn('"salvage_cases": 11', script)
+        self.assertIn('reload.get("checkpoint_partial_packs") == 9', script)
+        self.assertIn('reload["tick"] > reload["saved_tick"]', script)
+        self.assertIn('--bind 127.0.0.1', script)
+        self.assertIn('kill -INT "$server_pid"', script)
 
 
 if __name__ == "__main__":

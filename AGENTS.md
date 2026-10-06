@@ -26,6 +26,11 @@ changes that policy.
 - Player-facing currencies and script-produced inventory items must use the
   `always-show` item flag and have prototype-dump coverage so they remain
   selectable in logistic requests and filter pickers while recipes are locked.
+- Regenerate reverse recipes after rewriting vanilla ingredients, using the
+  upstream Recycler generator. Test custom batch recovery with 1-9 items before
+  ten; automatic self-recycling fallbacks can silently consume the partial batch.
+- Shared product items do not retain ingredient provenance. Use conservative
+  salvage, not research state or lifetime sales, to infer their battery chemistry.
 
 ## Verification
 

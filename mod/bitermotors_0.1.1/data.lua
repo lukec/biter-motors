@@ -914,10 +914,12 @@ data:extend({
   item("bitermotors-high-energy-battery-pack", generated_icon("high-energy-battery-pack"), "bitermotors-components", "c-a[high-energy-pack]", 20),
   item("bitermotors-lfp-battery-pack", generated_icon("lfp-battery-pack"), "bitermotors-components", "c-b[lfp-pack]", 20),
   item("bitermotors-damaged-high-energy-battery-pack", generated_icon("damaged-high-energy-battery-pack"), "bitermotors-components", "d-a[damaged-high-energy-pack]", 20, {
-    flags = {"always-show"}
+    flags = {"always-show"},
+    auto_recycle = false
   }),
   item("bitermotors-damaged-lfp-battery-pack", generated_icon("damaged-lfp-battery-pack"), "bitermotors-components", "d-b[damaged-lfp-pack]", 20, {
-    flags = {"always-show"}
+    flags = {"always-show"},
+    auto_recycle = false
   }),
   item("bitermotors-electric-drivetrain", generated_icon("electric-drivetrain"), "bitermotors-components", "b[electric-drivetrain]", 50),
   item("bitermotors-prototype-roadster", generated_icon("prototype-roadster"), "transport", "bitermotors-a[prototype-roadster]", 1, {place_result = "bitermotors-prototype-roadster"}),

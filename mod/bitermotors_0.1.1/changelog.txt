@@ -20,6 +20,11 @@ Version: 0.1.1
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
   Bugfixes:
+    - Regenerates rewritten vanilla recycling outputs from terrestrial ingredients instead of removed planetary materials.
+    - Damaged battery packs wait intact for a ten-pack batch and recover exactly 36 cells without productivity.
+    - Shared Premium EVs and anonymous charger incidents no longer invent advanced battery chemistry.
+    - Destroyed player vehicles yield one quality-matched body wreck plus known packs; mining does not duplicate salvage.
+    - Construction bots no longer carry hidden vehicle drive-charge items into storage after deconstruction.
     - Physical purchases no longer exhaust untouched virtual prospects; replacement history stays distinct for each customer generation.
     - Virtual-only settlements and pending purchases survive population rebuilds and normal mod updates.
     - Sales Offices reserve buyers before starting a vehicle transaction without suppressing required EV paperwork.

@@ -1532,6 +1532,7 @@ if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --dump-d
   exit 1
 fi
 bitermotors_check_log "$tmp/dump-data.log" --expect-marker Goodbye
+python3 "$repo_root/scripts/check-recycling-prototypes.py" "$tmp/script-output/data-raw-dump.json"
 python3 - \
   "$tmp/script-output/data-raw-dump.json" \
   "$bitermotors_mod_source/locale/en/bitermotors.cfg" <<'PY'

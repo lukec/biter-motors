@@ -157,12 +157,25 @@ packs. The player must still supply fresh steel and electronics for all nine.
 Chassis, drivetrains, circuits, quality bonuses, Dollars and science are never
 created by battery recovery.
 
-Vehicle retirement produces damaged packs according to the packs embodied in
-that vehicle class. The existing Wrecked EV remains chassis salvage. Killing
-customer biters does not drop battery scrap; scheduled vehicle retirement,
-Bitertaxi attrition, charger-generated end-of-life events, and destruction of a
-player-owned EV are the supported sources. This prevents deliberate customer
-farming from accelerating the recycling loop.
+The release hardening pass uses conservative provenance: Mass-Market EV
+destruction returns four damaged LFP packs; Megatruck and Cybertrain destruction
+each return eight high-energy packs. Bitertaxi destruction/actual depot retirement
+returns sixteen LFP packs embodied in its four Mass-Market EV inputs. A destroyed
+player vehicle also yields one Wrecked EV for chassis recovery, at its quality.
+
+Both Premium recipes produce the same item with no ingredient history. Premiums
+therefore yield only generic chassis salvage, even after advanced research;
+research state cannot prove which batteries built a particular car. eSpider
+salvage is similarly conservative. Mining returns the reusable vehicle, not an
+additional wreck or damaged packs. Customer deaths, anonymous charger incidents,
+and customer replacements do not create advanced battery materials. Chargers
+still produce their existing occasional generic wrecks; those are not evidence
+that a specific advanced pack or tracked owner was retired.
+
+Damaged-pack items disable automatic self-recycling. One to nine packs wait in
+the Recycler without consumption; adding the tenth selects the intended recovery
+recipe. Native normal/rare runs and a partial-batch save/reload are covered in
+[recycling validation](../docs/recycling-validation.md).
 
 The two chemistries remain separate through recycling. LFP scrap cannot become
 high-nickel cells, and high-nickel scrap cannot become LFP cells.
