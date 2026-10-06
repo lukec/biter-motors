@@ -48,10 +48,15 @@ and acceptance tests:
 have been separated and validated in isolated native worlds and the exact ZIP.
 The [accounting evidence](docs/accounting-validation.md) includes genuine
 manufacturing, customer-backed sales, canceled transactions, quality, and a
-separate save/reload. Mixed physical/virtual customer state, capacity sharing,
-service health, and recycling remain. Phases **3-8 remain outstanding**. The
-immediate next slice is mixed-population purchase history and virtual-only
-settlement rebuilds (R06/R07). The final playthrough begins only after Phases 1-6.
+separate save/reload. **R06/R07 are now fixed:** bounded purchase-history cohorts
+keep physical and virtual customers independent, conserve replacement owners,
+and retain virtual-only settlements through rebuilds and normal mod updates.
+The [customer-state evidence](docs/customer-state-validation.md) records real
+sales, cancellation, death, save/reload, and configuration-change tests.
+Capacity fairness, service health, and recycling/salvage remain. Phases **3-8
+remain outstanding**. The immediate next slice is rewritten recycling outputs
+and honest chemistry salvage (R08/R11), followed by charging/service consistency
+(R09/R10). The final playthrough begins only after Phases 1-6.
 The recommended compressed-Dataset transport and quality/beacon-independent
 60-minute, 10 GW finale require design approval before implementation. No new
 company, planet, battery chemistry, or future feature branch belongs in this

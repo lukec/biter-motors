@@ -10,6 +10,11 @@ development namespace migration.
 - Hardened isolated validators and soak evidence against zero-exit Lua errors,
   stale archives, incomplete probes, paused game time, and truncated timings.
   This establishes a current engine baseline, not full campaign qualification.
+- Separated physical and virtual purchase histories using bounded cohorts.
+  Replacements preserve owner counts, cancellations release reservations, and
+  virtual-only settlements survive population rebuilds and normal mod updates.
+- Prevented Sales Offices from starting a new vehicle transaction before a
+  buyer is reserved, without blocking the paperwork needed to start selling.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

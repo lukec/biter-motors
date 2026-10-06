@@ -8,6 +8,7 @@ UiRefresh = require("runtime.ui_refresh")
 EvSelfDriving = require("runtime.ev_self_driving")
 ProductionHistory = require("runtime.production_history")
 CustomerSales = require("runtime.customer_sales")
+CustomerPopulation = require("runtime.customer_population")
 ChargerAllocator = require("runtime.charger_allocator")
 SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
@@ -2449,6 +2450,10 @@ function customer_settlement_population(settlement, market_force)
       virtual_reserved = 0,
       virtual_reserved_by_vehicle = {},
       virtual_by_vehicle = {},
+      virtual_cohorts = {},
+      virtual_reserved_by_cohort = {},
+      virtual_purchases_by_vehicle = {},
+      physical_purchases_by_vehicle = {},
       purchases_by_vehicle = {}
     }
     populations[key] = population
@@ -2512,15 +2517,7 @@ function customer_population_purchase_count(population, vehicle)
 end
 
 function customer_virtual_purchase_capacity(population, vehicle)
-  if not population or not vehicle then return 0 end
-  local reserved = population.virtual_reserved_by_vehicle
-    and population.virtual_reserved_by_vehicle[vehicle] or 0
-  return math.max(
-    0,
-    customer_virtual_population(population)
-      - customer_population_purchase_count(population, vehicle)
-      - reserved
-  )
+  return CustomerPopulation.capacity(population, vehicle)
 end
 
 function customer_population_available_purchase_accounts(population, force)
@@ -2540,22 +2537,12 @@ function customer_population_available_purchase_accounts(population, force)
 end
 
 function record_customer_population_purchase(population, vehicle, amount)
-  if not population or not vehicle or amount == 0 then return end
-  population.purchases_by_vehicle = population.purchases_by_vehicle or {}
-  population.purchases_by_vehicle[vehicle] = math.max(
-    0,
-    (population.purchases_by_vehicle[vehicle] or 0) + amount
-  )
+  CustomerPopulation.record_physical_purchase(population, vehicle, amount)
 end
 
 function ensure_customer_purchase_histories()
-  if storage.bitermotors_customer_purchase_history_version == 1 then return false end
   for _, population in pairs(customer_settlement_populations()) do
-    population.purchases_by_vehicle = {}
-    population.virtual_reserved_by_vehicle = {}
-    for vehicle, count in pairs(population.virtual_by_vehicle or {}) do
-      record_customer_population_purchase(population, vehicle, count)
-    end
+    CustomerPopulation.rebuild_history(population)
   end
   for unit_number, ownership in pairs(customer_vehicle_owners()) do
     local home = customer_home_settlements()[unit_number]
@@ -2564,7 +2551,6 @@ function ensure_customer_purchase_histories()
       record_customer_population_purchase(population, vehicle, 1)
     end
   end
-  storage.bitermotors_customer_purchase_history_version = 1
   return true
 end
 
@@ -3773,7 +3759,7 @@ function register_customer_unit(entity, settlement, market_force)
   local benchmark = script.active_mods["bitermotors_perf_benchmark"] ~= nil
   if not benchmark and (customer_visible_count() >= CUSTOMER_VISIBLE_GLOBAL_LIMIT
     or population.physical >= CUSTOMER_VISIBLE_PER_SETTLEMENT_LIMIT) then
-    population.virtual_unowned = (population.virtual_unowned or 0) + 1
+    CustomerPopulation.add_unowned(population, 1)
     entity.destroy()
     return false
   end
@@ -3881,16 +3867,45 @@ function rebuild_customer_settlement_population_cache()
     end
   end
 
+  -- Establish valid homes even when no physical representative remains.
+  for key, settlement in pairs(settlements) do
+    local old = previous[key]
+    local force_name = customer_settlement_market_forces()[key]
+      or old and old.market_force_name
+    local market_force = force_name and game.forces[force_name]
+    if market_force and player_market_force(market_force) then
+      local _, population = customer_settlement_population(settlement, market_force)
+      if old then
+        if old.market_force_name == market_force.name then
+          population.virtual_cohorts = old.virtual_cohorts or {}
+        end
+        population.virtual_reserved = old.virtual_reserved or 0
+        population.virtual_reserved_by_vehicle = old.virtual_reserved_by_vehicle or {}
+        population.virtual_reserved_by_cohort = old.virtual_reserved_by_cohort or {}
+        population.organic_growth_baseline = old.organic_growth_baseline
+        population.organic_growth_cap = old.organic_growth_cap
+        population.next_organic_growth_tick = old.next_organic_growth_tick
+      end
+      CustomerPopulation.rebuild_history(population)
+    end
+  end
+
   local restored = 0
   local stale_units = {}
   for unit_number, entity in pairs(customer_unit_registry()) do
     local home = customer_home_settlements()[unit_number]
     local settlement = home and settlements[home.settlement_key]
     local market_force = home and game.forces[home.market_force_name]
-    if entity and entity.valid and settlement and market_force then
+    if entity and entity.valid and settlement and market_force
+      and player_market_force(market_force)
+      and (not customer_settlement_populations()[home.settlement_key]
+        or customer_settlement_populations()[home.settlement_key].market_force_name == market_force.name) then
       local _, population = customer_settlement_population(settlement, market_force)
       population.physical = (population.physical or 0) + 1
       customer_population_members()[unit_number] = home.settlement_key
+      for vehicle in pairs(ensure_customer_ownership_purchases(customer_vehicle_owners()[unit_number])) do
+        record_customer_population_purchase(population, vehicle, 1)
+      end
       watch_customer_unit_destruction(entity)
       restored = restored + 1
     else
@@ -3898,31 +3913,15 @@ function rebuild_customer_settlement_population_cache()
     end
   end
   for _, unit_number in pairs(stale_units) do
-    local home = customer_home_settlements()[unit_number]
-    local ownership = customer_vehicle_owners()[unit_number]
-    local prior_population = home and previous[home.settlement_key]
-    for vehicle in pairs(ensure_customer_ownership_purchases(ownership)) do
-      record_customer_population_purchase(prior_population, vehicle, -1)
-    end
     unregister_customer_unit_number(unit_number)
-  end
-
-  for key, old in pairs(previous) do
-    local population = customer_settlement_populations()[key]
-    if population then
-      population.virtual_unowned = old.virtual_unowned or 0
-      population.virtual_reserved = old.virtual_reserved or 0
-      population.virtual_reserved_by_vehicle = old.virtual_reserved_by_vehicle or {}
-      population.virtual_by_vehicle = old.virtual_by_vehicle or {}
-      population.purchases_by_vehicle = old.purchases_by_vehicle or {}
-      population.organic_growth_baseline = old.organic_growth_baseline
-      population.organic_growth_cap = old.organic_growth_cap
-      population.next_organic_growth_tick = old.next_organic_growth_tick
-    end
   end
   storage.bitermotors_customer_visible_count = restored
   rebuild_customer_vehicle_aggregates()
+  reconcile_office_buyer_reservations()
   rebuild_customer_buyer_queues()
+  for _, force in pairs(game.forces) do
+    if player_market_force(force) then mark_bitermotors_market_dirty(force, "customer-population-rebuild") end
+  end
   return restored, #stale_units
 end
 
@@ -7142,7 +7141,7 @@ local function process_customer_growth(force)
             if local_service_healthy
               and total < (population.organic_growth_cap or total)
               and game.tick >= (population.next_organic_growth_tick or game.tick) then
-              population.virtual_unowned = (population.virtual_unowned or 0) + 1
+              CustomerPopulation.add_unowned(population, 1)
               population.next_organic_growth_tick = game.tick + organic_interval
               organic_growth = organic_growth + 1
             end
@@ -7255,7 +7254,9 @@ end
 function sales_office_reservation_capacity_per_minute(force)
   local capacity = 0
   for _, office in pairs(registered_bitermotors_entities("sales_offices", force)) do
-    if office.valid and not office.disabled_by_script then
+    -- Nominal recipe capacity: script-held offices still need paperwork to start.
+    if office.valid and not office.disabled_by_control_behavior
+      and not office.to_be_deconstructed(force) then
       local recipe = office.get_recipe()
       if recipe and RESERVATION_RECIPES[recipe.name] then
         capacity = capacity + 60 / math.max(0.001, recipe.energy)
@@ -8579,19 +8580,10 @@ function clear_office_buyer_reservation(office_unit_number)
   local reservations = office_buyer_reservations()
   local reservation = reservations[office_unit_number]
   if reservation then
-    local sale = CUSTOMER_EV_SALE_RECIPES[reservation.recipe_name]
     for _, buyer in pairs(reservation.buyers or {}) do
       if type(buyer) == "table" and buyer.virtual then
         local population = customer_settlement_populations()[buyer.settlement_key]
-        if population and sale then
-          population.virtual_reserved = math.max(0, (population.virtual_reserved or 0) - 1)
-          population.virtual_reserved_by_vehicle =
-            population.virtual_reserved_by_vehicle or {}
-          population.virtual_reserved_by_vehicle[sale.item] = math.max(
-            0,
-            (population.virtual_reserved_by_vehicle[sale.item] or 0) - 1
-          )
-        end
+        CustomerPopulation.release(population, buyer)
       elseif buyer_reserved_by_unit()[buyer] == office_unit_number then
         buyer_reserved_by_unit()[buyer] = nil
         local home = customer_home_settlements()[buyer]
@@ -8608,21 +8600,19 @@ end
 
 function reconcile_office_buyer_reservations()
   local populations = customer_settlement_populations()
-  for _, population in pairs(populations) do
-    population.virtual_reserved = 0
-    population.virtual_reserved_by_vehicle = {}
-  end
-
   local offices = {}
   for _, office in pairs(registered_bitermotors_entities("sales_offices")) do
     if office.valid and office.unit_number then
+      process_sales_office_completions(office)
       offices[office.unit_number] = office
     end
+  end
+  for _, population in pairs(populations) do
+    CustomerPopulation.clear_reservations(population)
   end
 
   local reservations = office_buyer_reservations()
   local physical_reservations = {}
-  local virtual_reservations = {}
   local cleared = 0
   for office_unit_number, reservation in pairs(reservations) do
     local office = offices[office_unit_number]
@@ -8637,20 +8627,13 @@ function reconcile_office_buyer_reservations()
       for _, buyer in pairs(reservation.buyers) do
         if type(buyer) == "table" and buyer.virtual then
           local population = populations[buyer.settlement_key]
-          local reserved_by_vehicle = virtual_reservations[buyer.settlement_key] or {}
-          local pending_by_vehicle = pending_virtual[buyer.settlement_key] or {}
-          local already_reserved = (reserved_by_vehicle[sale.item] or 0)
-            + (pending_by_vehicle[sale.item] or 0)
           if not population or population.market_force_name ~= office.force.name
-            or already_reserved >= (
-              customer_virtual_population(population)
-                - customer_population_purchase_count(population, sale.item)
-            ) then
+            or buyer.market_force_name ~= office.force.name
+            or not CustomerPopulation.reserve(population, sale.item, buyer) then
             valid = false
             break
           end
-          pending_virtual[buyer.settlement_key] = pending_by_vehicle
-          pending_by_vehicle[sale.item] = (pending_by_vehicle[sale.item] or 0) + 1
+          pending_virtual[#pending_virtual + 1] = buyer
         else
           local entity = customer_unit_registry()[buyer]
           local home = customer_home_settlements()[buyer]
@@ -8669,30 +8652,16 @@ function reconcile_office_buyer_reservations()
       for unit_number, reserved_office in pairs(pending_physical) do
         physical_reservations[unit_number] = reserved_office
       end
-      for settlement_key_value, by_vehicle in pairs(pending_virtual) do
-        virtual_reservations[settlement_key_value] =
-          virtual_reservations[settlement_key_value] or {}
-        for vehicle, count in pairs(by_vehicle) do
-          virtual_reservations[settlement_key_value][vehicle] =
-            (virtual_reservations[settlement_key_value][vehicle] or 0) + count
-        end
-      end
     else
+      for _, buyer in ipairs(pending_virtual) do
+        CustomerPopulation.release(populations[buyer.settlement_key], buyer)
+      end
       reservations[office_unit_number] = nil
       cleared = cleared + 1
     end
   end
 
   storage.bitermotors_buyer_reserved_by_unit = physical_reservations
-  for settlement_key_value, by_vehicle in pairs(virtual_reservations) do
-    local population = populations[settlement_key_value]
-    if population then
-      population.virtual_reserved_by_vehicle = by_vehicle
-      local total = 0
-      for _, count in pairs(by_vehicle) do total = total + count end
-      population.virtual_reserved = total
-    end
-  end
   if cleared > 0 then rebuild_customer_buyer_queues() end
   return cleared
 end
@@ -9405,14 +9374,17 @@ function eligible_customer_buyers(office, sale)
       buyers[#buyers + 1] = unit_number
       pool.load = pool.load + 1
     elseif pool.virtual_available > 0 then
-      buyers[#buyers + 1] = {
-        virtual = true,
-        settlement_key = pool.key,
-        market_force_name = office.force.name,
-        vehicle = sale.item
-      }
-      pool.virtual_available = pool.virtual_available - 1
-      pool.load = pool.load + 1
+      local ticket = CustomerPopulation.reserve(customer_settlement_populations()[pool.key], sale.item)
+      if ticket then
+        ticket.virtual = true
+        ticket.settlement_key = pool.key
+        ticket.market_force_name = office.force.name
+        buyers[#buyers + 1] = ticket
+        pool.virtual_available = pool.virtual_available - 1
+        pool.load = pool.load + 1
+      else
+        pool.exhausted = true
+      end
     else
       pool.exhausted = true
     end
@@ -9699,6 +9671,11 @@ function reserve_office_buyers(office, recipe_name, sale)
   if #buyers < sale.vehicles
     and self_repair_ready
     and sales_office_buyer_status(office).available >= sale.vehicles then
+    for _, buyer in pairs(buyers) do
+      if type(buyer) == "table" then
+        CustomerPopulation.release(customer_settlement_populations()[buyer.settlement_key], buyer)
+      end
+    end
     rebuild_customer_buyer_queues()
     storage.bitermotors_last_buyer_queue_self_repair_tick = game.tick
     buyers = eligible_customer_buyers(office, sale)
@@ -9708,7 +9685,9 @@ function reserve_office_buyers(office, recipe_name, sale)
   end
   if #buyers < sale.vehicles then
     for _, buyer in pairs(buyers) do
-      if type(buyer) ~= "table" then
+      if type(buyer) == "table" then
+        CustomerPopulation.release(customer_settlement_populations()[buyer.settlement_key], buyer)
+      else
         enqueue_customer_buyer(buyer, customer_home_settlements()[buyer])
       end
     end
@@ -9719,16 +9698,7 @@ function reserve_office_buyers(office, recipe_name, sale)
     buyers = buyers
   }
   for _, buyer in pairs(buyers) do
-    if type(buyer) == "table" and buyer.virtual then
-      local population = customer_settlement_populations()[buyer.settlement_key]
-      if population then
-        population.virtual_reserved = (population.virtual_reserved or 0) + 1
-        population.virtual_reserved_by_vehicle =
-          population.virtual_reserved_by_vehicle or {}
-        population.virtual_reserved_by_vehicle[sale.item] =
-          (population.virtual_reserved_by_vehicle[sale.item] or 0) + 1
-      end
-    else
+    if type(buyer) ~= "table" then
       buyer_reserved_by_unit()[buyer] = office.unit_number
     end
   end
@@ -9757,7 +9727,7 @@ function sync_sales_office_buyer(office)
           if not population
             or (population.virtual_reserved_by_vehicle
               and population.virtual_reserved_by_vehicle[sale.item] or 0) <= 0
-            or customer_population_purchase_count(population, sale.item)
+            or CustomerPopulation.virtual_purchase_count(population, sale.item)
               >= customer_virtual_population(population) then
             valid_reservation = false
             break
@@ -9777,8 +9747,8 @@ function sync_sales_office_buyer(office)
         valid_reservation = reserve_office_buyers(office, recipe_name, sale)
       else
         clear_office_buyer_reservation(office.unit_number)
-        office.disabled_by_script = false
-        valid_reservation = nil
+        -- New inputs must not start another native craft before a buyer is bound.
+        valid_reservation = false
       end
     end
     if valid_reservation ~= nil then
@@ -9863,29 +9833,9 @@ function award_bitertaxi_audio_revenue(office, completed_crafts)
   return inserted
 end
 
-function replace_virtual_customer_vehicle(population, settlement_key_value, market_force_name, vehicle)
-  if not population
-    or customer_population_purchase_count(population, vehicle)
-      >= customer_virtual_population(population) then
-    return false, false
-  end
-  local previous_vehicle
-  if (population.virtual_unowned or 0) > 0 then
-    population.virtual_unowned = population.virtual_unowned - 1
-  else
-    for _, candidate in ipairs(CUSTOMER_VEHICLE_REPLACEMENT_ORDER) do
-      if candidate ~= vehicle and (population.virtual_by_vehicle[candidate] or 0) > 0 then
-        previous_vehicle = candidate
-        population.virtual_by_vehicle[candidate] =
-          population.virtual_by_vehicle[candidate] - 1
-        break
-      end
-    end
-    if not previous_vehicle then return false, false end
-  end
-  population.virtual_by_vehicle[vehicle] =
-    (population.virtual_by_vehicle[vehicle] or 0) + 1
-  record_customer_population_purchase(population, vehicle, 1)
+function replace_virtual_customer_vehicle(population, settlement_key_value, market_force_name, vehicle, ticket)
+  local completed, previous_vehicle = CustomerPopulation.purchase(population, vehicle, ticket)
+  if not completed then return false, false end
   CustomerAggregates.replace_virtual(
     storage,
     market_force_name,
@@ -9942,7 +9892,8 @@ function complete_reserved_vehicle_sale(office, recipe_name)
         population,
         buyer.settlement_key,
         office.force.name,
-        sale.item
+        sale.item,
+        buyer
       )
       if completed then
         assigned = assigned + 1
@@ -9993,6 +9944,7 @@ function complete_reserved_vehicle_sale(office, recipe_name)
   end
   award_customer_replacement_wrecks(office, replacements)
   clear_office_buyer_reservation(office.unit_number)
+  office.disabled_by_script = true
   storage.bitermotors_last_vehicle_sale_assignment = {
     recipe_name = recipe_name,
     assigned = assigned,
@@ -11270,6 +11222,11 @@ function entity_status_presentation(entity)
     elseif buyers.friendly_settlements == 0 then
       return "Customers hostile", BITERMOTORS_STATE_COLORS.bad
     end
+    local recipe = entity.get_recipe()
+    if recipe and (entity.crafting_progress or 0) == 0
+      and not office_has_all_sale_inputs(entity, recipe) then
+      return "Missing inputs", BITERMOTORS_STATE_COLORS.warning
+    end
     return "Waiting for buyer", BITERMOTORS_STATE_COLORS.warning
   end
   local status = entity.status
@@ -11595,6 +11552,10 @@ local function show_manufacturer_info_panel(player, entity)
       summary, summary_color = "Restore power.", BITERMOTORS_STATE_COLORS.bad
     elseif entity.status == defines.entity_status.full_output then
       summary, summary_color = "Clear the Dollar output.", BITERMOTORS_STATE_COLORS.bad
+    elseif recipe and RESERVATION_RECIPES[recipe.name] and buyer_status.available > 0
+      and (entity.crafting_progress or 0) == 0
+      and not office_has_all_sale_inputs(entity, recipe) then
+      summary, summary_color = "Supply vehicles and EV Reservations.", BITERMOTORS_STATE_COLORS.warning
     elseif entity.disabled_by_script then
       if market_state.kind == "saturated" then
         if market_state.surplus_office then
@@ -11759,6 +11720,10 @@ local function show_manufacturer_info_panel(player, entity)
     next_step = entity.name == SALES_OFFICE_NAME
       and "Blocked: Dollar output is full. Remove Dollars; sales and EV Reservation consumption are paused."
       or "Blocked: remove finished products from the output inventory."
+  elseif entity.name == SALES_OFFICE_NAME and missing_name and recipe
+    and RESERVATION_RECIPES[recipe.name] and sales_office_buyer_status(entity).available > 0
+    and (entity.crafting_progress or 0) == 0 then
+    next_step = "Blocked: supply [item=" .. missing_name .. "]."
   elseif entity.name == SALES_OFFICE_NAME and entity.disabled_by_script then
     local buyers = sales_office_buyer_status(entity)
     local market = classify_sales_office_market(buyers)
@@ -12944,11 +12909,8 @@ remote.add_interface("bitermotors", {
     if not script.active_mods["bitermotors_smoke"] then return false end
     local market_force_name = "__bitermotors_replacement_smoke"
     customer_vehicle_aggregates()[market_force_name] = nil
-    local population = {
-      virtual_unowned = 1,
-      virtual_by_vehicle = {},
-      purchases_by_vehicle = {}
-    }
+    local population = {}
+    CustomerPopulation.add_unowned(population, 1)
     local first_sale, first_replacement = replace_virtual_customer_vehicle(
       population,
       "__smoke_settlement",
@@ -13285,6 +13247,26 @@ remote.add_interface("bitermotors", {
   end,
   repair_customer_populations = function()
     return rebuild_customer_settlement_population_cache()
+  end,
+  customer_population_status = function(force_name)
+    local rows = {}
+    for key, population in pairs(customer_settlement_populations()) do
+      if population.market_force_name == (force_name or "player") then
+        rows[#rows + 1] = {
+          key = key, physical = population.physical,
+          virtual_unowned = population.virtual_unowned,
+          virtual_by_vehicle = population.virtual_by_vehicle,
+          physical_purchases = population.physical_purchases_by_vehicle,
+          virtual_purchases = population.virtual_purchases_by_vehicle,
+          virtual_reserved = population.virtual_reserved,
+          cohorts = population.virtual_cohorts,
+          reserved_cohorts = population.virtual_reserved_by_cohort,
+          surface_index = population.surface_index
+        }
+      end
+    end
+    table.sort(rows, function(left, right) return left.key < right.key end)
+    return rows
   end,
   sync_sales_offices = function()
     sync_sales_office_buyers()

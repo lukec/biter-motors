@@ -10,8 +10,9 @@ implementation status is recorded below.
 
 **Do not start the final acceptance playthrough yet.** The terrestrial game has
 enough content for v1. Finish and stabilize it rather than add another branch.
-The initial compatibility defect is fixed in Phase 1; accounting, customer-state,
-recycling, and victory defects remain. The finale also has a physical-item logistics
+The initial compatibility defect is fixed in Phase 1; Phase 2 has corrected
+accounting and mixed-population persistence. Charging/service, recycling, and
+victory defects remain. The finale also has a physical-item logistics
 grind that must be resolved before a campaign can fairly test its balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
@@ -199,6 +200,15 @@ eligibility. Avoid one Lua record per virtual customer.
 once; replacements change the active vehicle without multiplying owners.
 Cover sales cancellation, death, representation churn, and save/reload.
 
+**Implemented 2026-10-06:** `runtime/customer_population.lua` separates physical
+and virtual histories and stores virtual customers as bounded cohorts of purchase
+history plus current model. Reservations carry a cohort ticket through completion
+or cancellation; no per-virtual-customer record is created. Native mixed-population
+Roadster/Premium sales and replacements, death, cancellation, and repeat rebuilds
+pass. Executable policy fixtures cover every model and concurrent reservations.
+See [customer-state validation](customer-state-validation.md) for exact coverage
+and archive evidence; this is not the long population/performance qualification.
+
 ### R07: Configuration Rebuild Can Lose Virtual-Only Settlements [P1]
 
 **Evidence:** source trace. `rebuild_customer_settlement_population_cache` at
@@ -212,6 +222,15 @@ does not excuse corrupting an otherwise valid v1 save during normal mod updates.
 
 **Acceptance:** zero representatives plus virtual owners/prospects/reservations
 survive save/load and a benign configuration change without loss or duplication.
+
+**Implemented 2026-10-06:** rebuilds establish every valid settlement/market-force
+population before attaching physical representatives, preserve same-force cohorts,
+derive ownership/history summaries, and reconcile pending tickets. A real
+server-written checkpoint retains a virtual owner, prospect, and pending purchase
+with zero representatives through separate-process reload and helper-version
+change. Destroyed settlements are pruned without erasing lifetime sales. This
+supports normal updates of the new state, not backfilling unsupported private
+alpha histories. See [customer-state validation](customer-state-validation.md).
 
 ### R08: Rewritten Recipes Keep Old Recycling Outputs [P1]
 
@@ -244,6 +263,12 @@ deterministic fair sharing for contested service, including partial power.
 
 **Acceptance:** equal and unequal shared demand, added/removed chargers, and
 brownouts conserve total capacity without key-order starvation.
+
+**Related follow-on found 2026-10-06:** `eligible_customer_buyers` adds the
+per-model reserved-by-settlement count (which includes virtual tickets) and
+`population.virtual_reserved` to its pool load. Same-model virtual reservations
+therefore count twice for buyer-pool balancing. Count each pending buyer once
+and cover multiple offices/models when qualifying this fairness slice.
 
 ### R10: Service Health And Growth Use Divergent Predicates [P2]
 
@@ -540,18 +565,24 @@ soak, full campaign, or final training qualification is claimed by Phase 1.
 ### Phase 2: Make Progression And Customer State Authoritative
 
 - [x] Correct production/sales/profit accounting and replace inverted assertions.
-- [ ] Fix mixed physical/virtual purchase history and virtual-only rebuilds.
+- [x] Fix mixed physical/virtual purchase history and virtual-only rebuilds.
 - [ ] Restore contested capacity fairness and unify service-health predicates.
 - [ ] Reconcile rewritten reverse recipes and legacy chemistry salvage.
-- [ ] Complete executable customer/recycling fixtures; accounting Lua/native
-      fixtures are already present.
+- [x] Add executable mixed-customer lifecycle and persistence fixtures.
+- [ ] Complete executable charging/service and recycling/salvage fixtures.
 
 **Accounting slice complete 2026-10-05:** [verification and exact ZIP](accounting-validation.md).
 152 Python tests, source/archive broad smoke, and source/archive accounting
 fixtures pass. The latter execute the production/sales policy in Factorio, earn
 50 customer-backed Roadster sales, reject a canceled Premium sale, and reload
-an actual server-written checkpoint in a separate process. Phase 2 remains
-open for R06-R11, with R06/R07 the immediate next slice.
+an actual server-written checkpoint in a separate process.
+
+**Customer-state slice complete 2026-10-06:** [verification and exact ZIP](customer-state-validation.md).
+158 Python tests and native source/archive customer fixtures pass: 63 policy,
+134 native-world, 9 separate reload, and 12 configuration-change assertions.
+Source/archive accounting and broad smoke remain passing. R06/R07 are addressed;
+Phase 2 remains open for R08-R11. Next fix rewritten recycling and chemistry
+salvage (R08/R11), then contested charging and unified service health (R09/R10).
 
 **Deliverables:** R02/R06-R11 fixes, conservation and progression regressions.
 **Exit gate:** no recipe unlock from unsold cars; exact production/sale milestones;
@@ -676,13 +707,15 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Continue **Phase 2** with R06/R07: separate physical and virtual purchase
-histories, conserve ownership across replacements, and retain virtual-only
-settlements through rebuilds. R02's authoritative accounting slice is complete
-and qualified within the bounds recorded above. Decide the compressed-Dataset
-and fixed final controller contracts before Phase 3; everything else can follow
+Continue **Phase 2** with R08/R11: reconcile reverse recipes after vanilla
+rewrites and prevent commodity EV wrecks from fabricating advanced chemistry.
+Test final prototypes, native Recycler output, and low-count/incremental battery
+recovery. Then address R09/R10 contested charging and consistent service health.
+Accounting and mixed-population persistence are qualified within the bounds
+recorded above. Decide the compressed-Dataset and fixed final controller
+contracts before Phase 3; everything else can follow
 the existing mechanics without another broad design round.
 
 The original review changed planning/documentation only. Phase 1 and the Phase 2
-accounting slice now record their implemented fixes above; neither qualifies a
-release or authorizes restarting Luke's game.
+accounting/customer-state slices record their implemented fixes above; none
+qualifies a release or authorizes restarting Luke's game.

@@ -211,7 +211,7 @@ class BiterMotorsModTest(unittest.TestCase):
             control.index("function reconcile_office_buyer_reservations()"):
             control.index("function office_has_all_sale_inputs")
         ]
-        self.assertIn("population.virtual_reserved = 0", reconcile)
+        self.assertIn("CustomerPopulation.clear_reservations(population)", reconcile)
         self.assertIn("storage.bitermotors_buyer_reserved_by_unit = physical_reservations", reconcile)
         self.assertIn("reservations[office_unit_number] = nil", reconcile)
         self.assertIn("rebuild_customer_buyer_queues()", reconcile)
@@ -2717,7 +2717,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("ensure_customer_purchase_histories()", control)
         self.assertIn("does not add another charging burden", control)
         self.assertIn("test_virtual_customer_replacement = function()", control)
-        self.assertIn("prior_population = home and previous[home.settlement_key]", control)
+        self.assertIn("CustomerPopulation.record_physical_purchase(population, vehicle, amount)", control)
+        self.assertIn("CustomerPopulation.virtual_purchase_count(population, sale.item)", control)
+        rebuild = control[control.index("function rebuild_customer_settlement_population_cache()"):
+                          control.index("function ensure_customer_settlement_population_cache()")]
+        self.assertLess(rebuild.index("for key, settlement in pairs(settlements)"),
+                        rebuild.index("for unit_number, entity in pairs(customer_unit_registry())"))
+        self.assertIn("population.virtual_cohorts = old.virtual_cohorts", rebuild)
+        self.assertIn("reconcile_office_buyer_reservations()", rebuild)
 
     def test_battery_chemistry_branch_is_physical_and_productive_where_safe(self):
         data = (MOD / "data.lua").read_text()

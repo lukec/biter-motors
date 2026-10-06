@@ -5,6 +5,10 @@ Phase 2 as a whole and the final playthrough gate remain open.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Space Age**.
 Mod: **Biter Motors 0.1.1**, fresh-world alpha contract.
 
+This is dated accounting-slice evidence, not the hash of the current source.
+The subsequent [customer-state slice](customer-state-validation.md) records its
+new archive and reruns of the accounting regression.
+
 ## Changes
 
 - Production uses native `input` statistics; consumption uses `output`.
@@ -97,8 +101,8 @@ missing/duplicate/early report sentinels, missing save, or failed assertions.
 
 ## Next Slice
 
-Fix **R06/R07**: separate physical and virtual purchase histories, conserve
-owners/reservations across replacements, and retain virtual-only settlements
-through rebuilds. Then address contested charging/service health and recipe
-recycling. Physical orbital delivery and the final training contract remain
-Phase 3; the final acceptance campaign still waits for Phases 1-6.
+R06/R07 were subsequently fixed and qualified in the
+[customer-state slice](customer-state-validation.md). Continue Phase 2 with
+rewritten recycling/chemistry salvage, then contested charging/service health.
+Physical orbital delivery and the final training contract remain Phase 3;
+the final acceptance campaign still waits for Phases 1-6.

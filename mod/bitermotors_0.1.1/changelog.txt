@@ -19,3 +19,7 @@ Version: 0.1.1
     - Source and packaged smoke tests pass on 2.1.20; full campaign and release qualification remain pending.
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
+  Bugfixes:
+    - Physical purchases no longer exhaust untouched virtual prospects; replacement history stays distinct for each customer generation.
+    - Virtual-only settlements and pending purchases survive population rebuilds and normal mod updates.
+    - Sales Offices reserve buyers before starting a vehicle transaction without suppressing required EV paperwork.
