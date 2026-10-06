@@ -1,8 +1,8 @@
 # Endgame Validation Contract
 
 The Biter Motors endgame is a physical orbital-compute campaign ending in one
-uninterrupted 10 GW AGI training run. This document defines the runtime signals
-that must agree before release.
+uninterrupted 20-minute, 10 GW AGI training run. This document defines the
+runtime signals that must agree before release.
 
 ## Current Validation Status
 
@@ -61,5 +61,5 @@ is unavailable unless the validation mod is loaded.
 - Confirm genuine completion wins even if its Model is immediately extracted;
   arbitrary insertion of a Model must not win.
 - Run a one-hour soak with several operating cores and at least two platforms.
-- Complete the one-hour 10 GW AGI run in a non-sandbox campaign.
+- Complete the uninterrupted 20-minute, 10 GW AGI run in a non-sandbox campaign.
 - Save/reload before, during, and after training, then continue after victory.

@@ -47,6 +47,9 @@ development namespace migration.
 - Added isolated two-platform AI accounting, native milestone and inserter
   extraction tests with pending-bonus/in-progress-craft save/reload coverage.
   Final cargo delivery and fixed full-duration victory qualification remain open.
+- Shortened the AGI Training Run's base recipe and progress target from 60 to
+  20 minutes, retaining 10 GW and all final inputs. Quality/beacon-independent
+  timing and genuine completion qualification remain the next finale slice.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

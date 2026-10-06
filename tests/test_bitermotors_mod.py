@@ -3035,7 +3035,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("1,000,000,000 cumulative AI Token equivalents", roadmap)
         self.assertIn("20,000 AGI Training Datasets", roadmap)
         self.assertIn("100 Capital Allocations", roadmap)
-        self.assertIn("Sustain the controller's 10 GW draw for 60 minutes", roadmap)
+        self.assertIn("Sustain the controller's 10 GW draw for 20 minutes", roadmap)
         self.assertIn("physical AGI Model triggers victory", roadmap)
         self.assertNotIn("Kardashev", roadmap)
 
@@ -3262,7 +3262,7 @@ class BiterMotorsModTest(unittest.TestCase):
         controller = data[data.index('"bitermotors-planetary-grid-controller"'):data.index('planetary_grid_controller.energy_source')]
         self.assertIn('"10GW"', controller)
         charge_recipe = data[data.index('recipe("bitermotors-agi-training-run"'):data.index('add_lab_input("lab", "bitermotors-dollar")')]
-        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-battery-array", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '3600']:
+        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-battery-array", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '1200']:
             self.assertIn(expected, charge_recipe)
         self.assertIn('name = "bitermotors-ai-token", amount = 50000', data)
         capital_recipe = data[
@@ -3289,6 +3289,29 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('test_set_ai_token_progress = function', control)
         self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
+
+    def test_agi_training_duration_matches_recipe_status_and_guidance(self):
+        data = (MOD / "data.lua").read_text()
+        control = (MOD / "control.lua").read_text()
+        locale = (MOD / "locale/en/bitermotors.cfg").read_text()
+        readme = (MOD / "README.md").read_text()
+        validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()
+        recipe = data[
+            data.index('recipe("bitermotors-agi-training-run"'):
+            data.index('add_lab_input("lab", "bitermotors-dollar")')
+        ]
+        recipe_seconds = re.search(
+            r'name = "bitermotors-agi-model", amount = 1\}\}, (\d+),', recipe
+        )
+        status_seconds = re.search(r'^AGI_TRAINING_SECONDS = (\d+)$', control, re.M)
+        self.assertIsNotNone(recipe_seconds)
+        self.assertIsNotNone(status_seconds)
+        self.assertEqual(int(recipe_seconds.group(1)), 20 * 60)
+        self.assertEqual(recipe_seconds.group(1), status_seconds.group(1))
+        self.assertIn("sustain 10 GW for 20 minutes", control)
+        self.assertIn("20-minute AGI Training Run", locale)
+        self.assertIn("10 GW for 20 uninterrupted minutes", readme)
+        self.assertIn('agi_recipe.get("energy_required") != 1200', validator)
 
     def test_late_grid_energy_upgrades_and_orbital_milestones(self):
         data = (MOD / "data.lua").read_text()

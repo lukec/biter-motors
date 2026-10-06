@@ -11,9 +11,12 @@ Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 Luke approved the following contracts on 2026-10-06:
 
 - One Training Dataset represents **50,000 computed AI Token equivalents**.
-- The final run requires **60 uninterrupted simulation minutes at 10 GW**,
+- The final run requires **20 uninterrupted simulation minutes at 10 GW**,
   independent of quality/beacons. That fixed finale is the next implementation
   slice; the existing controller does not yet enforce it.
+
+The final duration was revised from 60 to 20 minutes later the same day; this
+does not change the accounting evidence or retroactively validate the finale.
 
 ## Payload And Progress
 
@@ -149,7 +152,7 @@ Package: `/tmp/bitermotors-phase3-ai-release/bitermotors_0.1.1.zip`.
 
 - Real hub, cargo-pod, landing-pad, and controller input delivery at the intended
   scale, rather than inventory setup or a small inserter-only test.
-- Quality/beacon-independent 60-minute, 10 GW final training; genuine completion
+- Quality/beacon-independent 20-minute, 10 GW final training; genuine completion
   latching rather than presence of an output item.
 - Full cooling-allocation, removal, brownout/reset, and recovery qualification.
 - Full-duration normal/quality runs, immediate Model extraction, controller

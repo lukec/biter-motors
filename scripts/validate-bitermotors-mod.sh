@@ -1772,6 +1772,8 @@ if agi_ingredients != {
     "processing-unit": 10000,
 } or agi_results != {"bitermotors-agi-model": 1}:
     raise SystemExit(f"Final AGI Training Run recipe mismatch: {agi_recipe}")
+if agi_recipe.get("energy_required") != 1200:
+    raise SystemExit(f"Final AGI Training Run must take 20 base recipe minutes: {agi_recipe}")
 dataset_recipe = data["recipe"]["bitermotors-package-agi-training-dataset"]
 if {row["name"]: row["amount"] for row in dataset_recipe["ingredients"]} != {"bitermotors-ai-token": 50000}:
     raise SystemExit(f"AGI training dataset must consume physical AI Tokens: {dataset_recipe}")

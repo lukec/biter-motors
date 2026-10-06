@@ -153,7 +153,7 @@ local GRID_CONTROLLER_NAME = "bitermotors-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "bitermotors-agi-training-run"
 AGI_MODEL_ITEM_NAME = "bitermotors-agi-model"
 AGI_TOKEN_GATE = 1000000000
-AGI_TRAINING_SECONDS = 3600
+AGI_TRAINING_SECONDS = 1200
 BITERMOTORS_COMPUTE_RECIPES = {
   ["bitermotors-terrestrial-datacenter"] = true,
   [ORBITAL_DATACENTER_CORE_NAME] = true,
@@ -10303,7 +10303,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Token equivalents.", "Terrestrial compute can begin the climb, but orbital compute provides endgame scale. Each computed Training Dataset counts as 50,000 Tokens. Spent output still counts; repackaging does not count again."
   elseif not snapshot.victory then
-    return "AGI training", "Complete the AGI Training Run.", "Return 20,000 Training Datasets from orbital compute (or package existing Tokens in assemblers), and package 50,000 Dollars into 100 allocations. Add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 60 minutes."
+    return "AGI training", "Complete the AGI Training Run.", "Return 20,000 Training Datasets from orbital compute (or package existing Tokens in assemblers), and package 50,000 Dollars into 100 allocations. Add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 20 minutes."
   end
   return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end

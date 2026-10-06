@@ -182,11 +182,14 @@ one two-Speed-Module-3 beacon also ran at **2.5**: 24 minutes rather than 60.
 Efficiency effects reached **-80%**, undermining the nominal 10 GW requirement.
 
 **Work:** recommended contract is a deliberate final-machine exception:
-**60 uninterrupted simulation minutes at 10 GW**, independent of quality,
+**20 uninterrupted simulation minutes at 10 GW**, independent of quality,
 speed, or efficiency optimization. Ordinary industry and orbital compute can
 still reward those optimizations. Implement both the time and power contract,
 not merely removal of module slots. Quality behavior follows
 [the game's quality rules](https://wiki.factorio.com/Quality).
+
+Luke shortened the intended finale from 60 to 20 minutes on 2026-10-06.
+The historical engine reproduction above describes the original one-hour recipe.
 
 **Acceptance:** normal through legendary, speed/efficiency beacons, full power,
 partial power, total loss, and restored power all satisfy the same final-run
@@ -523,8 +526,8 @@ gate remains open.
 
 ### Final Run And Recovery
 
-Recommended promise: 60 **simulation** minutes, 10 GW while training, exactly
-one victory upon successful completion, and continued play afterward. A brief
+Approved promise: 20 uninterrupted **simulation** minutes, 10 GW while training,
+exactly one victory upon successful completion, and continued play afterward. A brief
 power-buffer tolerance may avoid meaningless flicker resets, but the documented
 low-power threshold must be tested rather than inferred from a status enum.
 Quality/beacons must not quietly bypass this challenge.
@@ -791,14 +794,14 @@ ending. Public patch-save support begins with the first public archive.
 | Grid Battery sales | Purchaser stays at showroom; installation/adoption; repeat neighbor demand; no duplicate currency/installation; growth and office-count scaling. |
 | Vehicles | Five EVs, eSpider and Cybertrain; low battery, charging, reverse sound, collision/wreck, reserve crawl, blocked Self-driving path and cancel, teleport/removal/save-load. |
 | Batteries/recycling | Dirty/clean coproducts, tailings throughput, productivity whitelist, 90% recovery, low-count feed, rewritten vanilla inverses, no chemistry fabrication through wrecks. |
-| AI/endgame | Base/efficient tiers, quality/beacons, blocked outputs, pending bonus, low power, cooling shortfall/removal, two platforms, cargo return, datasets, full hour, immediate Model extraction. |
+| AI/endgame | Base/efficient tiers, quality/beacons, blocked outputs, pending bonus, low power, cooling shortfall/removal, two platforms, cargo return, datasets, full 20-minute run, immediate Model extraction. |
 | Presentation | Native scale/night/remote map; every physical item filterable while locked; overlays and alerts; clipped text; progressive UI; actionability and correct counts. |
 | Persistence/package | Native save/load at each milestone; harmless config change; multiplayer join; clean 1.0.0 archive; deterministic hashes; no secrets/runtime artifacts. |
 
 ## Next Implementation Slice
 
 Continue **Phase 3 physical endgame**. The 50,000-equivalent Dataset and fixed
-60-minute, 10 GW finale contracts are approved; compressed production,
+20-minute, 10 GW finale contracts are approved; compressed production,
 ordinary packaging, and native compute accounting are implemented. Next enforce
 the quality/beacon-independent final contract and latch genuine completion,
 then qualify real multi-platform cargo delivery and cooling/power reset/recovery.

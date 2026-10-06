@@ -73,7 +73,9 @@ item-statistics injection. Recovered capital
 versus operating profit remains an explicit R12 interface/economy follow-on.
 The rest of **Phase 3** and Phases **4-8 remain outstanding**. The final
 playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
-Dataset and quality/beacon-independent **60-minute, 10 GW finale** on 2026-10-06.
+Dataset on 2026-10-06 and revised the quality/beacon-independent finale from
+60 to **20 uninterrupted simulation minutes at 10 GW** the same day. The
+challenge is building and sustaining the grid, not an hour of idle waiting.
 The fixed finale contract and real cargo-pod delivery still need implementation
 and qualification. No new
 company, planet, battery chemistry, or future feature branch belongs in this
@@ -294,7 +296,7 @@ The current recipe sequence is:
    - 100 Capital Allocations
    - 100 Grid Battery Arrays
    - 10,000 Processing Units
-6. Sustain the controller's 10 GW draw for 60 minutes.
+6. Sustain the controller's 10 GW draw for 20 minutes.
 7. Any low-power condition scraps the current run.
 8. Producing one physical AGI Model triggers victory and continued play remains
    available.
@@ -359,7 +361,7 @@ Status: **playtest required**
       costs.
 - [ ] Confirm the terrestrial-to-orbital transition creates a real order-of-
       magnitude scaling requirement.
-- [ ] Confirm the final one-hour run is demanding but recoverable after failure.
+- [ ] Confirm the final 20-minute run is demanding but recoverable after failure.
 
 ### Gate 4: Reliability And Performance
 

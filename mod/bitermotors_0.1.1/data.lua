@@ -2227,7 +2227,7 @@ data:extend({
       {type = "item", name = "bitermotors-grid-battery-array", amount = 100},
       {type = "item", name = "processing-unit", amount = 10000}
     },
-    {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 3600,
+    {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 1200,
     {allow_productivity = false, allow_quality = false}
   )
 })

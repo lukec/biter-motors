@@ -111,7 +111,7 @@ The Planetary Energy Grid Controller consumes:
 - 100 Grid Battery Arrays
 - 10,000 Processing Units
 
-The controller must sustain 10 GW for 60 uninterrupted minutes. Low power resets
+The controller must sustain 10 GW for 20 uninterrupted minutes. Low power resets
 the run. Producing one physical AGI Model wins the campaign.
 
 ## Interface
