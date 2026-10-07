@@ -2,10 +2,19 @@
 
 Date: **2026-10-06**. Mod: **Biter Motors 0.1.1**, fresh worlds only.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
-This closes **R03 and Phase 3's isolated physical-endgame gate**, alongside
+This covers **R03's downward-delivery path**, alongside
 the [AI accounting](ai-accounting-validation.md) and
 [finale](finale-validation.md) fixtures. It is not campaign, economy, long-soak,
 multiplayer, GUI, or public-release qualification.
+
+**Qualification correction, 2026-10-07:** this fixture supplied hardware and
+operating Dollars directly on the platforms. Runtime prototype capture now
+shows a 1,208,326-g core (over the 1,000,000-g rocket limit) and 250,025-g
+Dollars (three per rocket). Direct whole-core uplift is blocked; manufacturing
+it in orbit is an untested alternative. Actual hardware/currency uplift remains
+open, so Phase 3 is reopened. The old downward-delivery and controller results
+below remain valid within their bounds; they do not qualify the replacement
+[orbital ending](../feature_specs/orbital_agi_ending.md).
 
 ## Real Delivery Through Victory
 

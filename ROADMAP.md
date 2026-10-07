@@ -34,14 +34,14 @@ and acceptance tests:
 1. **Current-version baseline:** compatibility and trustworthy validators/soaks.
 2. **Authoritative progression:** production/sales accounting, customer state,
    capacity sharing, service health, and recycling correctness.
-3. **Physical endgame:** practical compressed payload, fixed final training
-   contract, real delivery, cooling/power recovery, and reliable victory.
+3. **Physical endgame:** reachable orbital uplift, banked physical compute,
+   orbital Model construction, ground activation, and reliable victory.
 4. **Design freeze:** prototype-backed economy/guidance and functional art QA.
 5. **Qualification:** terrestrial/orbital soaks, settlement scaling, persistence,
    and multiplayer tests against the exact candidate archive.
 6. **RC rehearsal:** clean install, package/provenance, and outside-player check.
-7. **Final fresh playthrough:** real earnings, orbital output, delivery, and
-   uninterrupted AGI completion with a frozen engine/mod configuration.
+7. **Final fresh playthrough:** real earnings, orbital output, physical Model
+   return and ground activation with a frozen engine/mod configuration.
 8. **V1 publication:** validated 1.0.0 archive, tag, portal download verification.
 
 **Phase 2 is complete:** production, confirmed sales, and profit accounting
@@ -63,8 +63,11 @@ growth agree; pending buyers count once across models. The
 [charging evidence](docs/charging-validation.md) records native removal,
 brownouts, grace/anger/recovery, multi-office transactions, and separate reload.
 All four focused regressions and broad smoke pass on source and the exact ZIP.
-**Phase 3 is complete within its recorded native-fixture bounds:** compressed Dataset output, ordinary packaging, and
-native-event AI accounting are implemented. The
+**Phase 3 is reopened as of 2026-10-07.** The earlier fixtures passed within
+their recorded bounds, but supplied hardware directly on platforms instead of
+qualifying rocket uplift. The new orbital ending is designed and costed, not
+implemented. Compressed Dataset output, ordinary packaging, and native-event
+AI accounting are implemented. The
 [AI payload/accounting evidence](docs/ai-accounting-validation.md) records real
 compute output, quality, native bonus events, blocked output, immediate recipe
 changes/removal, force isolation, physical inserter extraction, and separate
@@ -75,7 +78,7 @@ external effects. Victory latches on native completion, not Model inventory.
 The [finale fixture](docs/finale-validation.md) covers real billion-equivalent
 compute, full-length runs, retained-input outage retries, extraction/removal,
 and save/reload. The [delivery/cooling evidence](docs/endgame-delivery-validation.md)
-closes R03: two platforms deliver genuinely computed Datasets through native
+covers R03's downward-delivery path: two platforms deliver genuinely computed Datasets through native
 hubs/pods/landing-pad logistics into real lab research, controller construction,
 payload loading, full training, and persistent victory. Orbital cooling
 allocation/removal, half-power/total-outage reset, and separate-process recovery
@@ -84,18 +87,41 @@ the [economy/guidance evidence](docs/economy-guidance-validation.md) records
 native research costs/throughput, optional-route guidance, genuine business
 profit versus recovered capital, and three source-hashed finite-market models.
 The artwork index is repaired with current assets and explicit reuse gaps.
-No balance values changed. **Phase 4 remains open; Phases 5-8 are outstanding**. The final
-playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
-Dataset on 2026-10-06 and revised the quality/beacon-independent finale from
-60 to **20 uninterrupted simulation minutes at 10 GW** the same day. The
-challenge is building and sustaining the grid, not an hour of idle waiting.
-The next slice is targeted endgame pacing and functional-art/native UI freeze,
-not a campaign start or a release declaration. The 50k final capital package
-alone needs about 4.2 hours of two-depot income; eight normal cores need about
-6.25 hours in the final compute band. Resolve those specific pacing questions
-and distinguish orbital radiator/solar hardware before qualification. No new
-company, planet, battery chemistry, or future feature branch belongs in this
-release sequence.
+No balance values changed. **Phase 4 remains open; Phases 5-8 are outstanding**.
+The final playthrough begins only after Phases 1-6. Luke approved the
+50,000-equivalent Dataset on 2026-10-06 and shortened the implemented terrestrial
+finale to 20 minutes the same day. The 2026-10-07 design below supersedes that
+finale, not its historical validation results. No new company, planet, battery
+chemistry, or future feature branch belongs in this release sequence.
+
+### Orbital Ending Direction And Cost Study
+
+The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) and
+[cost study](docs/orbital-ending-cost-study.md) define the next implementation
+slices. Modeling is complete; **gameplay changes are pending**.
+
+- Reuse ordinary rockets and the existing terrestrial supply chains. Approximately
+  twelve compact compute clusters are a balancing reference, not a count gate.
+- Assemble one billion physical training equivalents into an orbital AGI Model,
+  return it to Nauvis, and activate it in an existing datacenter. Remove the
+  special terrestrial controller, final capital package and required white science.
+- Orbital power/cooling shortages pause work rather than erase it. Ordinary
+  terrestrial training still scraps a failed run. Victory remains persistent;
+  the spec contains a short offline post-victory terminal scene.
+- The proposed ideal AI/research bill is about 21,200 Dollars. Modest recurring
+  income reaches the model's completion in about 5.7 hours, excluding manufacture,
+  exploration, building and cargo delays. A 4-6 active-hour chapter is unproven.
+- Native transport capture exposed a 1.2-tonne core that cannot launch whole and
+  250-kg Dollars (three per rocket). In-orbit core manufacture is an unqualified
+  workaround. Explicit weights and real hardware/currency uplift are release gates.
+- A staged 1/4/8/12-cluster build needs 49 modeled separate-item launches before
+  extra cash top-ups, about 4,500 blue circuits for hardware/launches and another
+  4,500 for remaining research. It must use spare production, not double-count stock.
+
+Proceed consecutively: qualify first-cluster rocket uplift; implement banked
+compute, Model return and activation; finish native UI/epilogue and functional
+satellite art; requalify source/exact ZIP, soaks and RC installation. The
+current private save and live processes remain unchanged by this cost study.
 
 Every development day should close at least one public-release gap:
 
@@ -144,7 +170,7 @@ The campaign grows through:
 6. Biterfactories, Bitertaxis, autonomous logistics, and Cybertrains.
 7. Terrestrial AI funded by ongoing profit.
 8. Physical orbital AI infrastructure.
-9. A 10-gigawatt terrestrial AGI training run.
+9. Physical orbital AGI Model return and ground activation (implementation pending).
 
 The commercial launch-service, booster-sales, satellite-bus, ground-station,
 and Planetary Grid Segment branches are removed. Space is a compute location,
@@ -239,7 +265,12 @@ Historical fixture smoke tests are not proof of correct fresh-world sale gates.
 - Low power scraps the active run.
 - Cumulative token milestones unlock increasingly efficient research.
 
-## Authoritative Endgame
+## Implemented Endgame (Replacement Pending)
+
+This section records the **current Lua**, not the next release's target design.
+The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) supersedes the
+controller finale and orbital reset policy below. Preserve the dated native
+evidence, but do not describe those fixtures as qualification of the new ending.
 
 The endgame is physical and uses vanilla rockets, cargo pods, and space
 platforms.
@@ -382,7 +413,8 @@ Status: **playtest required**
       costs.
 - [ ] Confirm the terrestrial-to-orbital transition creates a real order-of-
       magnitude scaling requirement.
-- [ ] Confirm the final 20-minute run is demanding but recoverable after failure.
+- [ ] Qualify genuine rocket uplift, banked orbital compute, physical Model return
+      and ground activation under the replacement ending spec.
 
 ### Gate 4: Reliability And Performance
 

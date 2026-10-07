@@ -91,6 +91,11 @@ def extract(raw: dict, runtime: dict) -> dict:
     }
     recipes["rocket-part"] = {key: value for key, value in raw["recipe"]["rocket-part"].items()
                               if key in RECIPE_FIELDS}
+    manufacturing_recipes = {
+        name: {key: value for key, value in recipe.items() if key in RECIPE_FIELDS}
+        for name, recipe in raw["recipe"].items()
+        if not name.startswith("bitermotors-") and not name.endswith("-recycling")
+    }
     technologies = {
         name: {key: value for key, value in technology.items()
                if key in ("unit", "prerequisites", "effects")}
@@ -108,8 +113,9 @@ def extract(raw: dict, runtime: dict) -> dict:
                     "type", "crafting_speed", "energy_usage", "production", "energy_source",
                     "effect_receiver", "inventory_size", "selection_box")}
     items = {name: {key: value for key, value in item.items() if key in ("stack_size", "weight")}
-             for kind in ("item", "item-with-entity-data", "tool")
-             for name, item in raw.get(kind, {}).items() if name.startswith("bitermotors-")}
+             for kind in ("item", "item-with-entity-data", "tool", "space-platform-starter-pack")
+             for name, item in raw.get(kind, {}).items()
+             if name.startswith("bitermotors-") or name in runtime["launch_item_weights"]}
     mined_items = set()
     for resource in raw.get("resource", {}).values():
         minable = resource.get("minable", {})
@@ -120,10 +126,18 @@ def extract(raw: dict, runtime: dict) -> dict:
     catalog = {
         "schema": 1, "source_sha256": source_fingerprint(),
         "factorio_version": runtime["factorio_version"], "mod_version": runtime["mod_version"],
-        "recipes": recipes, "technologies": technologies, "entities": entities,
+        "recipes": recipes, "manufacturing_recipes": manufacturing_recipes,
+        "technologies": technologies, "entities": entities,
         "items": items, "runtime": runtime, "mined_items": sorted(mined_items),
         "baseline_recipe_routes": BASELINE_ROUTES,
         "nauvis_orbit_solar_multiplier": raw["planet"]["nauvis"]["solar_power_in_space"] / 100,
+        "launch": {
+            "capacity_grams": raw["utility-constants"]["default"]["default_rocket_lift_weight"],
+            "parts_per_rocket": raw["rocket-silo"]["rocket-silo"]["rocket_parts_required"],
+            "silo_crafting_speed": raw["rocket-silo"]["rocket-silo"]["crafting_speed"],
+            "inventory_slots": raw["rocket-silo-rocket"]["rocket-silo-rocket"]["inventory_size"],
+            "item_weights_grams": runtime["launch_item_weights"],
+        },
         "assumptions": {"solar_average_fraction": 0.7, "storage_seconds_per_peak_watt": 70,
                         "quality": "normal", "modules": "none", "research_productivity": 0},
     }
@@ -208,7 +222,7 @@ def main() -> int:
     # Compact per-record output keeps the captured engine data reviewable.
     parts = []
     for key, value in catalog.items():
-        if key in ("recipes", "technologies", "entities", "items"):
+        if key in ("recipes", "manufacturing_recipes", "technologies", "entities", "items"):
             entries = [f"    {json.dumps(name)}: {json.dumps(entry, sort_keys=True)}"
                        for name, entry in sorted(value.items())]
             parts.append(f"  {json.dumps(key)}: {{\n" + ",\n".join(entries) + "\n  }")

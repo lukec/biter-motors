@@ -13,6 +13,10 @@ construction cash/material use; the unbonused budget is conservative, not an opt
 Recovered-capital credit is zero in these budgets: do not treat recycling as new business profit
 or fund purchases twice from the same returned capital.
 
+**Transport warning (2026-10-07):** native weights now expose a core too heavy to launch whole
+and only three Dollars per rocket. This model excludes hardware uplift and cannot establish
+a finishable campaign. See [the orbital ending cost study](orbital-ending-cost-study.md).
+
 ## Research And Gates
 
 | Required research | Science cycles | Dollars | AI Tokens |

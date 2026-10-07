@@ -12,10 +12,16 @@ implementation status is recorded below.
 enough content for v1. Finish and stabilize it rather than add another branch.
 The initial compatibility defect is fixed in Phase 1; Phase 2 is complete with
 accounting, mixed-population persistence, recycling/salvage, and charging/service
-fixes. Phase 3 is now complete within its recorded native-fixture bounds:
+fixes. Phase 3's earlier fixtures passed within their recorded bounds:
 earned compute, real payload delivery, lab research, native construction,
 full final training, cooling/power recovery, and persistent victory pass.
-Complete Phases 4-6 before the campaign can fairly test endgame balance.
+**Phase 3 is reopened on 2026-10-07:** those fixtures supplied orbital hardware
+instead of proving rocket uplift. Native computed weights expose a core over
+the rocket limit and Dollars weighing 250 kg. The replacement
+[orbital ending spec](../feature_specs/orbital_agi_ending.md) and
+[cost study](orbital-ending-cost-study.md) are complete, but gameplay remains
+unchanged. Qualify real hardware uplift and implement the new ending, then
+complete Phases 4-6 before the campaign can fairly test endgame balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
 playthrough with only small numerical tuning, then a **1.0.0** public release.
@@ -166,6 +172,13 @@ arrive through actual inserters, belts, hubs, cargo pods, and the landing pad;
 there is no scripted Dataset inventory transfer. Fixture-supplied capital,
 hardware, research prerequisites, and ideal power are not natural-campaign or
 rocket-uplift qualification. This closes R03's compressed delivery gate.
+
+**Uplift gap discovered 2026-10-07:** the core's auto-calculated runtime weight
+exceeds a whole rocket's lift capacity, and a Dollar weighs 250 kg. The supplied
+platform fixture did not test either. Phase 3 is reopened for real hardware and
+currency launches and the replacement orbital ending; see the current verdict
+and [cost study](orbital-ending-cost-study.md). Downward-delivery evidence is
+retained, not retroactively broadened.
 
 ### R04: Removing The Finished Model Can Prevent Victory [P1]
 
@@ -712,6 +725,16 @@ mixed customer populations and zero-representative settlements survive lifecycle
 changes; no removed-planet materials appear through recycling.
 
 ### Phase 3: Finish The Physical Endgame
+
+The completed checklist below records the **2026-10-06 implementation**, not
+qualification of the replacement ending. Phase 3 is reopened on 2026-10-07:
+
+- [ ] Qualify actual first-cluster hardware/currency rocket uplift without
+      supplied platform entities or inventory.
+- [ ] Implement the replacement [orbital ending](../feature_specs/orbital_agi_ending.md),
+      including banked compute, Model cargo return and native ground activation.
+- [ ] Requalify recovery, conservation, victory and persistence against the
+      source and exact archive; remove obsolete final-controller guidance.
 
 - [x] Approve and implement compressed Datasets/cheap packaging from R03.
 - [x] Replace sampled AI cycles with native, token-equivalent completion

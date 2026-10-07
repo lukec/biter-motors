@@ -51,6 +51,10 @@ changes that policy.
   test with no replacement ingredients, including an outage checkpoint/reload.
 - Electric-network statistics use input for consumption and output for generation.
   Do not reuse the item-production direction rule; preserve quality in probes.
+- Prove space hardware/currency uplift through real rockets. Supplied platform
+  entities prove neither launchability nor logistics cost. `data.raw` can omit
+  auto-calculated item weights; capture `LuaItemPrototype.weight` and check mass,
+  inventory slots and practical request minimums for every critical cargo item.
 
 ## Verification
 

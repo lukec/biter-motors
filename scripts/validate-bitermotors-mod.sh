@@ -164,8 +164,18 @@ local function equipment_snapshot(entity)
 end
 
 script.on_init(function()
+  local economy_contract = remote.call("bitermotors", "economy_contract")
+  economy_contract.launch_item_weights = {}
+  for _, name in ipairs({
+    ORBITAL_CORE, ORBITAL_RADIATOR, SPACE_SOLAR, DOLLAR,
+    "bitermotors-agi-training-dataset", AGI_MODEL,
+    "space-platform-starter-pack", "space-platform-foundation",
+    "transport-belt", "inserter"
+  }) do
+    economy_contract.launch_item_weights[name] = prototypes.item[name].weight
+  end
   helpers.write_file("bitermotors-economy-contract.json",
-    helpers.table_to_json(remote.call("bitermotors", "economy_contract")), false)
+    helpers.table_to_json(economy_contract), false)
   game.tick_paused = false
   local surface = game.surfaces.nauvis or game.surfaces[1]
   local force = game.forces.player
