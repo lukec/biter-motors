@@ -394,7 +394,11 @@ local function native_stage()
     for _, task in ipairs(storage.tasks) do
       counts.recovered_capital = counts.recovered_capital + (task.outputs["bitermotors-dollar:normal"] or 0)
     end
-    counts.progress_reported_profit = progress.dollars_produced
+    equal(progress.operating_profit_dollars, 0, "recovered capital is not business profit")
+    equal(progress.other_dollar_inflow, counts.recovered_capital,
+      "recovered capital is separate from business profit")
+    counts.progress_reported_profit = progress.operating_profit_dollars
+    counts.other_dollar_inflow = progress.other_dollar_inflow
     counts.salvage_cases = storage.salvage_cases
     counts.checkpoint_partial_packs = 9
     game.server_save("bitermotors-recycling-reload")
@@ -415,6 +419,8 @@ script.on_nth_tick(30, function()
     equal(storage.partial.products_finished, 0, "reload does not silently self-recycle damaged packs")
     for _, task in ipairs(storage.tasks) do equal(task.stage, "done", "completed recycler case remains complete") end
     equal(storage.salvage_cases, 11, "reload preserves exact salvage case count")
+    equal(remote.call("bitermotors", "progress_status", "player").snapshot.operating_profit_dollars, 0,
+      "reload does not convert recovered capital into profit")
     report("reload_passed", {saved_tick = storage.saved_tick, checkpoint_partial_packs = 9})
     storage.stage = "done"
     return

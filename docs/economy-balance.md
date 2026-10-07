@@ -1,215 +1,139 @@
-# Biter Motors Economy Simulation
+# Biter Motors Economy Freeze Model
 
-This is a strategic lower-bound model of the approved late-game rebalance and
-two sensitivity cases. It models current recipe profits, required Dollars,
-cumulative orbital AI bands, final power, and solar storage. It excludes raw ore throughput,
-customer-acquisition delay, quality, modules, and factory build time, so real
-playtime will be longer.
+Captured engine: **2.1.20**; mod **0.1.1**.
+Final prototypes and runtime policy: `docs/economy-prototypes.json`. Source freshness is
+checked by content hash, not string fragments. Budgets use normal quality, no modules,
+and zero research productivity. No infinite improvement is required.
 
-One in-game Dollar represents `$10,000` USD of profit.
+**Not a total campaign-time forecast.** Ore/chemistry throughput, building, science manufacture/
+research speed, combat, exploration, rocket uplifts, walking, and cargo congestion are not
+simulated. Native spawns/new nests are excluded from closed-market cases. Active building/
+exploration time is **unmeasured**, not zero. Intrinsic Biterfactory productivity can lower
+construction cash/material use; the unbonused budget is conservative, not an optimum.
+Recovered-capital credit is zero in these budgets: do not treat recycling as new business profit
+or fund purchases twice from the same returned capital.
 
-## Sale Economics
+## Research And Gates
 
-| Product | Profit per sale | Nominal sale time | One-office profit rate |
-|---|---:|---:|---:|
-| Prototype Roadster | 2 | 60 sec | 120 Dollars/hour |
-| Premium EV | 1 | 30 sec | 120 Dollars/hour |
-| Mass-market EV | 1 | 5 sec | 720 Dollars/hour |
-| Megatruck | 2 | 10 sec | 720 Dollars/hour |
-| Grid Battery | 20 | 30 sec | 2,400 Dollars/hour |
+| Required research | Science cycles | Dollars | AI Tokens |
+| --- | ---: | ---: | ---: |
+| premium-ev-program | 250 | 250 | 0 |
+| advanced-battery-chemistry | 300 | 300 | 0 |
+| energy-products | 200 | 200 | 0 |
+| ev-charging-network | 150 | 150 | 0 |
+| capital-scaling | 600 | 600 | 0 |
+| terrestrial-ai | 750 | 750 | 0 |
+| autonomous-logistics | 750 | 750 | 750 |
+| orbital-compute | 1,500 | 1,500 | 1,500 |
+| orbital-cluster-training | 1,000 | 5,000 | 1,000 |
+| grid-scale-energy | 1,500 | 15,000 | 1,500 |
+| hyperscale-training | 3,000 | 30,000 | 3,000 |
+| planetary-energy-grid | 2,500 | 0 | 2,500 |
 
-## Terrestrial Progression
+Optional Foundry, Megatruck, Cybertrain, eSpider, and infinite improvements are excluded.
+The 50-Roadster and 250-Premium sales gates still apply. The 2,000 Mass-market and 5,000
+consumer-sale gates unlock optional Megatruck and Bitertaxi production; neither gates orbital
+research. Each living customer may purchase each generation once, not unlimited repeat EVs.
 
-| Milestone | Incremental Dollars | Cumulative | Physical gate | Practical funding lower bound |
-|---|---:|---:|---|---|
-| Premium EV | 250 | 250 | 50 Roadsters sold | 125 Roadsters fund the research, so capital dominates the 50-sale gate. |
-| Advanced Battery Chemistry | 300 | 550 | Premium EV production and the battery branch | 300 Dollars funds the first chemistry upgrade without requiring a Grid Battery economy. |
-| Energy Products | 200 | 750 | Advanced Battery Chemistry | 200 Dollars opens the Grid Battery branch before large-scale EV expansion. |
-| V2 Charging Network | 150 | 900 | Premium EV program and powered V1 charging | The cheaper V2 path lets the player reach distant colonies without hoarding research capital. |
-| Capital Scaling | 600 | 1,500 | 250 Premium EVs sold | 600 Dollars opens the Biterfactory V2 and mass-market production path. |
-| Terrestrial AI | 750 | 2,250 | Capital Scaling and Energy Products | 750 Dollars funds terrestrial compute without making the first datacenter a dead end. |
-| Autonomous Logistics | 750 | 3,000 | Terrestrial AI and logistics science | 750 Dollars unlocks Bitertaxi service and the V4 charging tier. |
-| Orbital Compute | 1,500 | 4,500 | 5,000 cumulative consumer EV sales and rocket prerequisites | 1,500 Dollars funds the orbital transition; the 5,000-sale gate remains unchanged. |
-| Cluster Training | 5,000 | 9,500 | 1,000,000 cumulative orbital tokens | Research unlocks 25,000-token orbital batches. |
-| Grid-scale Energy | 15,000 | 24,500 | 10,000,000 cumulative orbital tokens | Research unlocks 50,000-token batches and the late power assets. |
-| Hyperscale Training | 30,000 | 54,500 | 100,000,000 cumulative orbital tokens | Research unlocks 100,000-token orbital batches. |
-| Planetary Grid | 0 | 54,500 | Hyperscale Training, Autonomous Logistics, and nuclear power | Science and AI Tokens only; Planetary Grid no longer consumes Dollars. |
-| Grid Controller | 11,050 | 65,550 | Planetary Grid researched | 10,000 Dollars, 100 capital-funded Biterfactory Modules, and the 5-Dollar upgrades for 10 Grid Battery Arrays. |
+## Corrected AI Budget
 
-The physical sales gates remain important, but the early capital curve is now
-deliberately forgiving: the first terrestrial research sequence totals 4,500
-Dollars through Orbital Compute, excluding optional branches and construction.
-Once Energy Products unlocks, 20-Dollar Grid Battery sales can fund later research
-much more efficiently than one-Dollar EV sales.
+Before orbit, 2,250 research Tokens need **113 terrestrial batches, 2,260 Dollars, and 56.5 active minutes at 8 MW**.
+Base terrestrial efficiency is used; optional efficiency research reduces later operation.
 
-## Customer Network Assumptions
+| Orbital band | Normal cycle | Batches | Operating Dollars | One-core hours |
+| --- | ---: | ---: | ---: | ---: |
+| orbital-ai-token | 20s | 100 | 100 | 0.56 |
+| orbital-ai-token-cluster | 20s | 360 | 360 | 2.00 |
+| orbital-ai-dataset-grid-scale | 20s | 1,800 | 1,800 | 10.00 |
+| orbital-ai-dataset-hyperscale | 20s | 9,001 | 9,001 | 50.01 |
 
-Each living customer can buy one of each consumer vehicle generation over the
-campaign: Prototype Roadster, Premium EV, Mass-market EV, Megatruck. A replacement purchase changes the customer's active
-vehicle and has about a 5% chance to create a Wrecked EV, so a developed settlement can keep
-producing demand without requiring a new biter for every sale. Bitertaxi fleet
-service is recurring revenue and is not part of this consumer replacement
-count.
+The 30-second recipe runs every **20 seconds** in a normal 1.5-speed core.
+Total: **11,261 operating Dollars, 62.56 core-hours**. Research costs are counted once separately.
+Later labs use 8,000 Tokens. Package 199 Datasets from early stock (one AM3: 2.65 minutes); use direct Dataset recipes after Grid-scale Energy.
+The last batch replaces spent research payload; earned computation is not the same as physical inventory.
+One AM3 packages capital in 80s. The finale remains **20 uninterrupted minutes at 10 GW** (12 TJ).
 
-- Purchase opportunities per represented customer: 4
-- Replacement purchases: one per consumer vehicle generation
-- 5,000 consumer-sale Bitertaxi gate: unchanged
-- Organic represented-population cap: 3x each settlement's starting representation
-- Organic prospect interval: one represented prospect about every 15 minutes while locally served
-- Growth suspension: affected settlement only; other settlements continue growing
-- V1/V2/V3/V4 charger radii: 64 / 128 / 192 / 256 tiles
+## Cash And Power
 
-The model treats represented populations as aggregate settlement state. It does
-not require one Lua unit per simulated customer, and it does not make distant
-colonies mandatory once the player has developed a bounded network of local
-settlements.
+| Cash sink | Dollars |
+| --- | ---: |
+| Required research | 54,500 |
+| Terrestrial research compute | 2,260 |
+| Orbital compute and replacement payload | 11,261 |
+| Transition, controller, normal grid, and 8-core hardware | 16,815 |
+| Final Capital Allocations | 50,000 |
+| **Direct cash requirement** | **134,836** |
 
+Solar-only finale supply: **4,762 Tandem Arrays and 1,001 deployed Grid Battery Arrays**. Controller/final recipes consume 110 more arrays, which cannot double as grid storage.
+HD and Tandem panels consume **no Dollars**; the previous report's panel cash charges were stale.
+Forgone battery sales: up to 22,220 Dollars, **not another cash bill**, and only realizable with eligible buyers.
 
-### Practical Mixed-Sales Path
+Partial material bill, before HD/base-battery recipes, other industry, poles, and transport:
 
-| Milestone | Requirement | Illustrative capital raised | Spend | Cash after |
-|---|---:|---:|---:|---:|
-| Premium EV | 50 Roadsters sold | 250 | 250 | 0 |
-| Advanced Battery Chemistry | Premium EV production | 300 | 300 | 0 |
-| Energy Products | Advanced Battery Chemistry | 200 | 200 | 0 |
-| V2 Charging Network | Powered V1 charging | 150 | 150 | 0 |
-| Capital Scaling | 250 Premium EVs sold | 600 | 600 | 0 |
-| Terrestrial AI | Capital Scaling and Energy Products | 750 | 750 | 0 |
-| Autonomous Logistics | Terrestrial AI and logistics science | 750 | 750 | 0 |
-| Bitertaxi | 5,000 cumulative consumer sales | 0 | 0 | 0 |
-| Orbital Compute | Rocket and orbital prerequisites | 1,500 | 1,500 | 0 |
-| Orbital milestone research | 1M / 10M / 100M tokens | 50,000 | 50,000 | 0 |
-| Planetary Grid | Hyperscale and science | 0 | 0 | 0 |
-| Grid Controller | 10 Grid Battery Arrays and modules | 11,050 | 11,050 | 0 |
-| Final capital package | 100 allocations | 50,000 | 50,000 | 0 |
+- `tandem_arrays`: 4,762
+- `grid_battery_arrays_including_consumed`: 1,111
+- `hd_panels_for_tandem`: 4,762
+- `lfp_packs_for_array_upgrades`: 26,664
+- `processing_units_before_hd_panel_and_grid_battery_base_recipes`: 79,840
+- `low_density_structures_for_tandem`: 47,620
 
-This terrestrial path still uses the required consumer sales to open Bitertaxi
-and orbital play, then uses Grid Battery sales as the scalable capital source. The
-late path adds three explicit orbital research bills of 5,000, 15,000, and
-30,000 Dollars. It excludes raw ore throughput, customer acquisition, quality,
-modules, and factory build time, so real playtime will be longer.
+Solar/Array productivity makes **more items per craft**, not more watts/joules per placed
+entity. It saves materials, not placed counts. Quality and nuclear are optional alternatives.
+This report does not prove raw-material production can sustain a specific campaign cadence.
 
-Recommended construction around the mass-market transition adds about 275
-Dollars: 100 for Biterfactory V1, 150 more for V2, and 25 for the solar-panel
-production gate. A fully stocked Bitertaxi Depot costs about
-4,200 Dollars, serves 1,000
-customers, earns 6,000 Dollars/hour at
-the target rate, and pays back its full center-and-fleet capex in about
-0.7 hours before other operating costs.
+## Finite-Market Scenarios
 
-Optional finite branches add 1,250 Dollars: 250 for Megatruck Engineering, 250
-for Battery Material Recovery, and 750 for Cybertrain Logistics. Infinite
-improvement research is intentionally excluded.
+Assume 200 living customers per developed settlement, all three required EV generations sold
+already, finite battery adoption (5% initially, then 5% of remaining eligibility every five
+minutes), and unique allocated taxi customers. No unlimited repeat battery sales or duplicate
+revenue from overlapping depots. Fleet replacement uses conservative initial wear, not mature safety.
 
-## Capital Construction
+| Metric | Restricted market | Typical expansion | Taxi / energy heavy |
+| --- | ---: | ---: | ---: |
+| Settlements | 5 | 10 | 20 |
+| Living customers | 1,000 | 2,000 | 4,000 |
+| Consumer purchase capacity | 3,000 | 6,000 | 12,000 |
+| Finite EV + Grid Battery profit ceiling | 24,000 | 48,000 | 96,000 |
+| Taxi gate from those sales | needs expansion | ready | ready |
+| Organic-only wait to fill taxi gate; no new nests | 33.4h | 0.0h | 0.0h |
+| Allocated taxi fleet | 0 | 400 | 800 |
+| Fleet/depot capital | 0 | 8,400 | 16,800 |
+| Net recurring Dollars/hour | 0 | 11,867 | 23,733 |
+| Full fleet cash payback | not unlocked | 0.71h | 0.71h |
+| Post-network funding window | >48h; finite ceiling | 8.03h | 2.85h |
+| Ideal EV selling time, before funding window | 5.28h | 5.28h | 5.28h |
+| Normal orbital cores | 4 | 8 | 16 |
+| Core work / selected cores | 15.64h | 7.82h | 3.91h |
+| Failed-batch cash sensitivity | 0 | 0 | 1,512 |
 
-| Construction sink | Dollar burden | What the model counts |
-|---|---:|---|
-| Biterfactory V1 | 100 | 10 Biterfactory Modules |
-| Biterfactory V2 upgrade | 150 | Structural Casting plus the V2 recipe |
-| V3 Rapid Charger upgrade | 0 | Physical electrical infrastructure only |
-| V4 Solar Charging Hub upgrade | 0 direct / 80 effective | 4 HD panels and 4 unsold Grid Batteries |
-| Full Bitertaxi Depot | 4,200 direct / 4,280 effective | 200 fleets, charger chain, center, and four unsold Grid Batteries |
-| Planetary Grid Controller | 11,050 direct / 11,250 effective | 10,000 direct, 100 capital-funded Biterfactory Modules, and 10 Grid Battery Array upgrades |
-| AGI final-run storage | 500 direct / 2,500 effective | 100 Grid Battery Arrays, separate from the 1,001-grid-asset target |
+Funding and compute can overlap; adding these numbers is **not** a campaign-time estimate.
+Funding starts with EV cash already earned and assumes mature service can be financed. It
+counts fleet capex and finite battery adoption, but does not qualify natural bootstrapping.
+Core work excludes research waiting and idle cores at tier boundaries. Heavy sensitivity
+loses 10% of ordinary compute batches; retry time is not guessed. Extra manufacturing,
+charging, depot load, and existing industry require power above the 10 GW final load.
 
-## Endgame Scenarios
+## Remaining Balance Decisions
 
-| Metric | Approved rebalance | Higher-power sensitivity | Higher-power and capital sensitivity |
-|---|---:|---:|---:|
-| Final grid | 10 GW | 12 GW | 12 GW |
-| Orbital AI milestone band | Band 4 of 4 | Band 4 of 4 | Band 4 of 4 |
-| AI operating + milestone research Dollars | 61,260 | 61,260 | 61,260 |
-| One-core AI time | 93.8 hours | 93.8 hours | 93.8 hours |
-| Cores for a 10-hour AI build | 10 | 10 | 10 |
-| Orbital compute power for that build | 2.5 GW | 2.5 GW | 2.5 GW |
-| Orbital solar panels for that build | 17 | 17 | 17 |
-| Orbital radiators for that build | 80 | 80 | 80 |
-| Mandatory path + transition construction | 65,825 | 65,825 | 65,825 |
-| Final capital Dollars | 50,000 | 50,000 | 60,000 |
-| Tandem Solar Arrays | 4,762 | 5,715 | 5,715 |
-| Grid Battery Arrays | 1,001 | 1,201 | 1,201 |
-| Tandem recipe Dollars | 4,762 | 5,715 | 5,715 |
-| Grid Battery Array recipe Dollars | 5,005 | 6,005 | 6,005 |
-| Solar productivity research Dollars | 0 | 6,094 | 6,094 |
-| Orbital solar recipe Dollars | 51 | 49 | 49 |
-| Unsold Grid Battery opportunity cost | 22,220 | 26,220 | 26,220 |
-| Direct Dollars required | 137,403 | 145,447 | 155,447 |
-| Total economic burden | 159,623 | 171,667 | 181,667 |
-| Grid Batteries sold to fund direct Dollars | 6,870 | 7,272 | 7,772 |
-| Total Grid Batteries manufactured | 7,981 | 8,583 | 9,083 |
-| One-Dollar EV equivalent | 159,623 | 171,667 | 181,667 |
+- A closed five-settlement market cannot fund the ending from one-time purchases alone. Expand, allow natural customer/nest growth, or unlock recurring service. Organic virtual growth is not instant new demand.
+- With two full depots, the 50,000-Dollar finale bill alone needs about 4.2 service hours. Evaluate a targeted capital adjustment against the 2-3-hour major-step target, not blanket cheaper research.
+- Measure actual panel/battery materials and transport throughput. Native delivery proves physical completion, not comfortable pacing.
+- Eight normal cores need about 6.25 active hours in the final compute band; sixteen need about 3.13. Compare practical core expansion and power/logistics throughput before changing Token yields.
+- Ordinary AI brownouts lose committed Dollars. Final AGI failure retains inputs: retry time/power, not another full capital package. Recycled capital and other inflows are not business profit.
 
-The approved 10 GW grid is approximately
-46,862 occupied tiles
-before substations, access, and factory logistics: 4,762
-Tandem Solar Arrays and 1,001 Grid Battery Arrays. The
-Grid Battery Arrays also represent 20,020
-Dollars of normal Grid Batteries that were upgraded rather than sold.
+No balance values are changed by this simulator. Phase 4 remains open for targeted decisions,
+functional art, and native UI qualification.
 
-The approved design keeps the 1-billion-token objective while changing four
-pressure points:
+## Reproduce
 
-- orbital compute costs 1 Dollar per 30-second batch at every band;
-- output rises from 10,000 to 25,000, 50,000, and 100,000 tokens at 1M, 10M,
-  100M, and 1B cumulative tokens;
-- final packaged capital is 100 allocations at 500 Dollars each, or 50,000 Dollars;
-- the final sustained grid is 10 GW, with 3 MW Tandem Arrays and 1 GJ Grid Battery Arrays;
-- Bitertaxi service earns 1 Dollar per 2 allocated vehicle-minutes. At the
-  current 20-Dollar fleet recipe, a full center's 4,200-Dollar direct cost has
-  an ideal 0.7-hour payback at saturation.
+```bash
+scripts/validate-bitermotors-mod.sh  # prints an isolated artifact directory
+python3 scripts/bitermotors_economy_catalog.py --dump <artifacts>/script-output/data-raw-dump.json --runtime-contract <artifacts>/script-output/bitermotors-economy-contract.json
+python3 scripts/simulate_bitermotors_economy.py --check-source --output docs/economy-balance.md
+```
 
-At 10 GW the ending asks for about 4,762 Tandem
-Arrays and 1,001 Grid Battery Arrays. That is still a
-major factory-scale objective, but it is thousands of late assets rather than
-millions of HD panels.
+Solar/storage equations: [Official Factorio Wiki](https://wiki.factorio.com/Power_production).
+The exporter verifies the validator's capture manifest, raw-dump/runtime hashes, and unchanged
+source before recording a catalog. It cannot legitimize a stale dump by hashing today's source.
 
-## Nominal Funding Time
-
-| Funding system | Approved rebalance | Higher-power sensitivity | Higher-power and capital sensitivity |
-|---|---:|---:|---:|
-| 10 saturated Grid Battery Sales Offices | 5.7 h | 6.1 h | 6.5 h |
-| 25 saturated Grid Battery Sales Offices | 2.3 h | 2.4 h | 2.6 h |
-| 100 saturated Grid Battery Sales Offices | 0.6 h | 0.6 h | 0.6 h |
-| 10 full Bitertaxi Depots, net of fleet capex | 3.0 h | 3.1 h | 6.6 h |
-| 50 full Bitertaxi Depots, net of fleet capex | 1.2 h | 1.2 h | 2.4 h |
-| 100 full Bitertaxi Depots, net of fleet capex | 0.9 h | 0.9 h | 1.9 h |
-
-These times assume every office or service center is continuously saturated.
-Customer growth, reservations, production, transport, and power shortages all
-increase elapsed playtime. The simulator and live mod share the approved
-Bitertaxi target rate.
-
-## Recommendation
-
-The terrestrial sequence is in the right order of magnitude: hundreds of early
-sales, thousands of mass-market sales, then a 5,000-customer Bitertaxi gate. The
-approved late game turns the 1-billion-token objective into a staged capital
-and power campaign without requiring millions of placed power entities.
-
-The approved case and sensitivities bound the effective ending at roughly
-171,667-181,667
-Dollars. The approved case is about 159,623
-Dollars, or roughly 6,870 Grid Battery
-sales before Bitertaxi income. Ten well-utilized Bitertaxi Depots can
-meaningfully offset this capital burden, making
-customer-network scale useful without making it mandatory.
-
-## Physical Token Caveat
-
-The one-billion milestone is cumulative production, while the final recipe
-physically consumes 20,000 datasets of 50,000 Tokens each. Tokens spent on
-research must therefore be replaced before the final run can be loaded. The
-additional requirement is small relative to one billion, but the logistics are
-deliberately physical.
-
-## Model Sources
-
-- Biter Motors recipes and technologies:
-  `mod/bitermotors_0.1.1/data.lua`
-- Runtime sales gates and Bitertaxi constants:
-  `mod/bitermotors_0.1.1/control.lua`
-- Nauvis orbit solar multiplier:
-  <https://wiki.factorio.com/Nauvis>
-- Base solar average and accumulator ratio:
-  <https://wiki.factorio.com/Power_production>
+Standard orbital rocket payload arithmetic does not predict the number of downward cargo pods.

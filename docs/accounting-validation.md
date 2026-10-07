@@ -7,7 +7,10 @@ Mod: **Biter Motors 0.1.1**, fresh-world alpha contract.
 
 This is dated accounting-slice evidence, not the hash of the current source.
 The subsequent [customer-state slice](customer-state-validation.md) records its
-new archive and reruns of the accounting regression.
+new archive and reruns of the accounting regression. The later
+[economy/guidance slice](economy-guidance-validation.md) corrects the historical
+profit label: the 113-Dollars statistic below includes 13 non-business Dollars;
+its new persisted business-profit ledger correctly stays at 100.
 
 ## Changes
 

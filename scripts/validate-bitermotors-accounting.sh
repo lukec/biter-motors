@@ -107,7 +107,8 @@ assert [row["status"] for row in rows] == [
 ], rows
 assert rows[0]["assertions"] >= 39, rows
 assert rows[1]["assertions"] >= 26, rows
-assert rows[1]["manufactured"] == 259 and rows[1]["sold"] == 50 and rows[1]["profit"] == 113, rows
+assert rows[1]["manufactured"] == 259 and rows[1]["sold"] == 50 and rows[1]["profit"] == 100, rows
+assert rows[1]["dollar_production"] == 113 and rows[1]["other_dollar_inflow"] == 13, rows
 assert rows[-1]["assertions"] >= 3, rows
 assert rows[-1]["tick"] > rows[-1]["saved_tick"], rows
 print("Accounting fixture passed:", json.dumps(rows, sort_keys=True))

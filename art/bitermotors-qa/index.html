@@ -16,895 +16,1165 @@ main{padding:18px clamp(16px,4vw,48px) 60px} .grid{display:grid;grid-template-co
 .entity-stage{height:390px;position:relative;overflow:hidden;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}
 .entity-stage.terrain-concrete{background-color:#77756c} .entity-stage.terrain-dark{background-color:#25292b} .footprint-grid{position:absolute;width:var(--footprint);height:var(--footprint);border:2px solid var(--cyan);background-image:linear-gradient(#45d5ec55 1px,transparent 1px),linear-gradient(90deg,#45d5ec55 1px,transparent 1px);background-size:32px 32px;opacity:.55}
 .entity-sprite{position:absolute;width:var(--sprite);height:var(--sprite);object-fit:contain;image-rendering:auto} body.show-bounds .entity-sprite{outline:1px dashed var(--orange);background:#f69a2b10}
-.vehicle-stage{height:260px;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px} .vehicle-stage img{width:224px;height:224px;object-fit:contain}
+.vehicle-stage{height:260px;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px} .vehicle-stage img{max-width:224px;max-height:224px;object-fit:contain} .no-bitmap{padding:18px;color:#ffd078;text-align:center;max-width:240px} .review-note{padding:8px;color:var(--muted)}
 .belt{height:64px;background:#111416;display:flex;align-items:center;justify-content:space-evenly;border-top:1px solid #3b3f41;border-bottom:1px solid #3b3f41;overflow:hidden} .belt img{width:42px;height:42px;object-fit:contain}
 .review{padding:9px 10px;display:flex;gap:7px;justify-content:flex-end} .review button{font-size:12px;padding:5px 8px}
 .icon-scales{height:150px;display:flex;gap:26px;align-items:center;justify-content:center;background:#1b1d1e} .icon-scales img{object-fit:contain} .i64{width:64px;height:64px} .i32{width:32px;height:32px} .i20{width:20px;height:20px}
-.animation-stage{height:190px;display:grid;place-items:center;background:#111416} .sprite-animation{width:var(--fw);height:var(--fh);background-image:var(--sheet);background-size:calc(var(--fw) * 8) var(--fh);animation:play .9s steps(8) infinite;transform:scale(1.7);transform-origin:center} @keyframes play{to{background-position-x:calc(var(--fw) * -8)}}
+.animation-stage{height:190px;display:grid;place-items:center;background:#111416} .sprite-animation{width:var(--fw);height:var(--fh);background-image:var(--sheet);background-size:calc(var(--fw) * 8) var(--fh);animation:play .9s steps(8) infinite;transform:scale(var(--preview-scale));transform-origin:center} @keyframes play{to{background-position-x:calc(var(--fw) * -8)}}
 .technology-preview{height:230px;display:grid;place-items:center;background:#191b1c} .technology-preview img{width:190px;height:190px;object-fit:contain}
 .section-title{margin:28px 0 10px;font-size:18px} .math{margin-top:28px;border-top:1px solid var(--line);padding-top:20px;max-width:900px} .math table{width:100%;border-collapse:collapse} th,td{padding:8px;text-align:left;border-bottom:1px solid #3c4042} th{color:var(--cyan)} code{color:#ffd078}
 .hidden{display:none} @media(max-width:600px){.entity-stage{height:330px}h1{font-size:22px}}
 </style>
 </head>
 <body>
-<header class="page"><div><h1>Biter Motors Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
+<header class="page"><div><h1>Biter Motors Artwork QA</h1><p class="lede">Static asset previews only. Browser decisions are not native in-game review or release approval. Inherited vanilla art and known placeholder reuse are labeled pending.</p><p class="lede">Radiator and Space Solar currently resolve to identical vanilla placed solar-panel art; R15 remains open.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
 <nav class="toolbar" aria-label="Artwork filters">
   <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="vehicles">Vehicles</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
   <button id="terrain" title="Cycle entity preview terrain">Terrain</button><button id="bounds" title="Show transparent image bounds">Bounds</button><button id="copy" title="Copy review decisions">Copy review</button>
 </nav>
 <main>
 <section class="grid" id="assets">
-    <article class="asset entity-card" data-kind="entities" data-id="entity-0">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><div><h2>Sales Office</h2><p>3x3 tiles | generated-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-sales-office">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><div><h2>Sales Office</h2><p>3x3 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/sales-office/sales-office.png" alt="Sales Office entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-0">
-        <button type="button" data-review="approve" data-id="entity-0">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-0">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-sales-office">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-sales-office">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-sales-office">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-1">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><div><h2>EV Charging Station</h2><p>2x2 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-ev-charging-station">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><div><h2>EV Charging Station</h2><p>2x2 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station/ev-charging-station.png" alt="EV Charging Station entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-1">
-        <button type="button" data-review="approve" data-id="entity-1">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-1">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-ev-charging-station">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-ev-charging-station">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-ev-charging-station">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-2">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><div><h2>EV Charging Station V2</h2><p>4x4 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-ev-charging-station-v2">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><div><h2>EV Charging Station V2</h2><p>4x4 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:128px;--sprite:133px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v2/ev-charging-station-v2.png" alt="EV Charging Station V2 entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-2">
-        <button type="button" data-review="approve" data-id="entity-2">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-2">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-ev-charging-station-v2">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-ev-charging-station-v2">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-ev-charging-station-v2">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-3">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><div><h2>V3 Rapid Charger</h2><p>5x5 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-ev-charging-station-v3">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><div><h2>V3 Rapid Charger</h2><p>5x5 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:160px;--sprite:179px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v3/ev-charging-station-v3.png" alt="V3 Rapid Charger entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-3">
-        <button type="button" data-review="approve" data-id="entity-3">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-3">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-ev-charging-station-v3">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-ev-charging-station-v3">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-ev-charging-station-v3">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-4">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><div><h2>V4 Solar Charging Hub</h2><p>6x6 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-ev-charging-station-v4">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><div><h2>V4 Solar Charging Hub</h2><p>6x6 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:195px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v4/ev-charging-station-v4.png" alt="V4 Solar Charging Hub entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-4">
-        <button type="button" data-review="approve" data-id="entity-4">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-4">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-ev-charging-station-v4">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-ev-charging-station-v4">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-ev-charging-station-v4">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-5">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><div><h2>Biterfactory</h2><p>9x9 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-biterfactory-building">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><div><h2>Biterfactory V1</h2><p>9x9 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:288px;--sprite:333px">
         <div class="footprint-grid" aria-hidden="true"></div>
-        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/biterfactory/biterfactory.png" alt="Biterfactory entity sprite">
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/biterfactory/biterfactory.png" alt="Biterfactory V1 entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-5">
-        <button type="button" data-review="approve" data-id="entity-5">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-5">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-biterfactory-building">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-biterfactory-building">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-biterfactory-building">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-6">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><div><h2>Biterfactory V2</h2><p>9x9 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-biterfactory-v2">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><div><h2>Biterfactory V2</h2><p>9x9 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:288px;--sprite:333px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/biterfactory/biterfactory-v2.png" alt="Biterfactory V2 entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-6">
-        <button type="button" data-review="approve" data-id="entity-6">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-6">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-biterfactory-v2">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-biterfactory-v2">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-biterfactory-v2">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-7">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><div><h2>High-density Solar Panel</h2><p>3x3 tiles | generated-final</p></div></header>
-      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
-        <div class="footprint-grid" aria-hidden="true"></div>
-        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/high-density-solar-array/high-density-solar-array.png" alt="High-density Solar Panel entity sprite">
-      </div>
-      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""></div>
-
-      <div class="review" role="group" aria-label="Review entity-7">
-        <button type="button" data-review="approve" data-id="entity-7">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-7">Revise</button>
-      </div>
-    </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-8">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><div><h2>Grid Battery</h2><p>2x2 tiles | aligned-final</p></div></header>
-      <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
-        <div class="footprint-grid" aria-hidden="true"></div>
-        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/grid-battery/grid-battery.png" alt="Grid Battery entity sprite">
-      </div>
-      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""></div>
-
-      <div class="review" role="group" aria-label="Review entity-8">
-        <button type="button" data-review="approve" data-id="entity-8">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-8">Revise</button>
-      </div>
-    </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-9">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><div><h2>Terrestrial Datacenter</h2><p>6x6 tiles | generated-final</p></div></header>
-      <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:184px">
-        <div class="footprint-grid" aria-hidden="true"></div>
-        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/terrestrial-datacenter/terrestrial-datacenter.png" alt="Terrestrial Datacenter entity sprite">
-      </div>
-      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""></div>
-
-      <div class="review" role="group" aria-label="Review entity-9">
-        <button type="button" data-review="approve" data-id="entity-9">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-9">Revise</button>
-      </div>
-    </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-10">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><div><h2>Bitertaxi Depot</h2><p>8x8 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-bitertaxi-depot">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><div><h2>Bitertaxi Depot</h2><p>8x8 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:256px;--sprite:246px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/bitertaxi-depot/bitertaxi-depot.png" alt="Bitertaxi Depot entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-10">
-        <button type="button" data-review="approve" data-id="entity-10">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-10">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-bitertaxi-depot">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-bitertaxi-depot">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-bitertaxi-depot">Revise</button>
       </div>
     </article>
-    <article class="asset entity-card" data-kind="entities" data-id="entity-11">
-      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><div><h2>Planetary Grid Controller</h2><p>3x3 tiles | aligned-final</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-high-density-solar-array">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><div><h2>High-density Solar Panel</h2><p>3x3 tiles | bitmap</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/high-density-solar-array/high-density-solar-array.png" alt="High-density Solar Panel entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-high-density-solar-array">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-high-density-solar-array">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-high-density-solar-array">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-tandem-solar-array">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><div><h2>Tandem Solar Array</h2><p>3x3 tiles | inherited-placeholder</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/high-density-solar-array/high-density-solar-array.png" alt="Tandem Solar Array entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-tandem-solar-array">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-tandem-solar-array">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-tandem-solar-array">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-grid-battery">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><div><h2>Grid Battery</h2><p>2x2 tiles | bitmap</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/grid-battery/grid-battery.png" alt="Grid Battery entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-grid-battery">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-grid-battery">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-grid-battery">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-grid-battery-array">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><div><h2>Grid Battery Array</h2><p>2x2 tiles | inherited-placeholder</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:64px;--sprite:72px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/grid-battery/grid-battery.png" alt="Grid Battery Array entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-grid-battery-array">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-grid-battery-array">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-grid-battery-array">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-terrestrial-datacenter">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><div><h2>Terrestrial Datacenter</h2><p>6x6 tiles | bitmap</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:184px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/terrestrial-datacenter/terrestrial-datacenter.png" alt="Terrestrial Datacenter entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-terrestrial-datacenter">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-terrestrial-datacenter">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-terrestrial-datacenter">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-orbital-datacenter-core">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><div><h2>Orbital Datacenter Core</h2><p>6x6 tiles | bitmap</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:192px;--sprite:184px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/orbital-datacenter-core/orbital-datacenter-core.png" alt="Orbital Datacenter Core entity sprite">
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-orbital-datacenter-core">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-orbital-datacenter-core">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-orbital-datacenter-core">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-orbital-radiator-panel">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><div><h2>Orbital Radiator Panel</h2><p>1x1 tiles | inherited-placeholder</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:32px;--sprite:0px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <div class="no-bitmap">No dedicated placed bitmap; inherited vanilla art</div>
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-orbital-radiator-panel">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-orbital-radiator-panel">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-orbital-radiator-panel">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-high-density-space-solar-panel">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><div><h2>High-density Space Solar Panel</h2><p>1x1 tiles | inherited-placeholder</p></div></header>
+      <div class="entity-stage terrain-grass" style="--footprint:32px;--sprite:0px">
+        <div class="footprint-grid" aria-hidden="true"></div>
+        <div class="no-bitmap">No dedicated placed bitmap; inherited vanilla art</div>
+      </div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review entity:bitermotors-high-density-space-solar-panel">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-high-density-space-solar-panel">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-high-density-space-solar-panel">Revise</button>
+      </div>
+    </article>
+    <article class="asset entity-card" data-kind="entities" data-id="entity:bitermotors-planetary-grid-controller">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><div><h2>Planetary Grid Controller</h2><p>3x3 tiles | bitmap</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:96px;--sprite:97px">
         <div class="footprint-grid" aria-hidden="true"></div>
         <img class="entity-sprite" src="../../mod/bitermotors_0.1.1/graphics/entity/planetary-grid-controller/planetary-grid-controller.png" alt="Planetary Grid Controller entity sprite">
       </div>
       <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review entity-11">
-        <button type="button" data-review="approve" data-id="entity-11">Approve</button>
-        <button type="button" data-review="revise" data-id="entity-11">Revise</button>
+      <div class="review" role="group" aria-label="Review entity:bitermotors-planetary-grid-controller">
+        <button type="button" data-review="approve" data-id="entity:bitermotors-planetary-grid-controller">Approve</button>
+        <button type="button" data-review="revise" data-id="entity:bitermotors-planetary-grid-controller">Revise</button>
       </div>
     </article>
-    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle-0">
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle:bitermotors-prototype-roadster">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><div><h2>Prototype Roadster</h2><p>Dedicated directional bitmap</p></div></header>
+      <div class="vehicle-stage"><img src="../../art/blender/prototype-roadster/renders/prototype-roadster-master.png" alt="Prototype Roadster north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review vehicle:bitermotors-prototype-roadster">
+        <button type="button" data-review="approve" data-id="vehicle:bitermotors-prototype-roadster">Approve</button>
+        <button type="button" data-review="revise" data-id="vehicle:bitermotors-prototype-roadster">Revise</button>
+      </div>
+    </article>
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle:bitermotors-premium-ev">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><div><h2>Premium EV</h2><p>Dedicated directional bitmap</p></div></header>
+      <div class="vehicle-stage"><img src="../../art/blender/premium-ev/renders/premium-ev-master.png" alt="Premium EV north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review vehicle:bitermotors-premium-ev">
+        <button type="button" data-review="approve" data-id="vehicle:bitermotors-premium-ev">Approve</button>
+        <button type="button" data-review="revise" data-id="vehicle:bitermotors-premium-ev">Revise</button>
+      </div>
+    </article>
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle:bitermotors-mass-market-ev">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><div><h2>Mass-market EV</h2><p>Dedicated directional bitmap</p></div></header>
+      <div class="vehicle-stage"><img src="../../art/blender/mass-market-ev/renders/mass-market-ev-master.png" alt="Mass-market EV north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review vehicle:bitermotors-mass-market-ev">
+        <button type="button" data-review="approve" data-id="vehicle:bitermotors-mass-market-ev">Approve</button>
+        <button type="button" data-review="revise" data-id="vehicle:bitermotors-mass-market-ev">Revise</button>
+      </div>
+    </article>
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle:bitermotors-megatruck">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><div><h2>Megatruck</h2><p>Dedicated directional bitmap</p></div></header>
+      <div class="vehicle-stage"><img src="../../art/blender/megatruck/renders/megatruck-master.png" alt="Megatruck north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review vehicle:bitermotors-megatruck">
+        <button type="button" data-review="approve" data-id="vehicle:bitermotors-megatruck">Approve</button>
+        <button type="button" data-review="revise" data-id="vehicle:bitermotors-megatruck">Revise</button>
+      </div>
+    </article>
+    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle:bitermotors-bitertaxi-fleet">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><div><h2>Bitertaxi</h2><p>Dedicated directional bitmap</p></div></header>
+      <div class="vehicle-stage"><img src="../../art/blender/bitertaxi/renders/bitertaxi-master.png" alt="Bitertaxi north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review vehicle:bitermotors-bitertaxi-fleet">
+        <button type="button" data-review="approve" data-id="vehicle:bitermotors-bitertaxi-fleet">Approve</button>
+        <button type="button" data-review="revise" data-id="vehicle:bitermotors-bitertaxi-fleet">Revise</button>
+      </div>
+    </article><article class="asset vehicle-card" data-kind="entities" data-id="prototype:bitermotors-cybertrain">
       <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><div><h2>Cybertrain</h2><p>Dedicated 64-direction rail sprite</p></div></header>
-      <div class="vehicle-stage"><img src="../../art/blender/battery-cybertrain/renders/cybertrain-master.png" alt="Cybertrain north-facing sprite"></div>
-      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""></div>
+      <div class="vehicle-stage"><img src="../../mod/bitermotors_0.1.1/graphics/entity/cybertrain/cybertrain.png" alt="Cybertrain art preview"></div><div class="review-note">Prototype ID: <code>bitermotors-cybertrain</code></div>
 
-      <div class="review" role="group" aria-label="Review vehicle-0">
-        <button type="button" data-review="approve" data-id="vehicle-0">Approve</button>
-        <button type="button" data-review="revise" data-id="vehicle-0">Revise</button>
-      </div>
-    </article>
-    <article class="asset vehicle-card" data-kind="vehicles" data-id="vehicle-1">
+      <div class="review" role="group" aria-label="Review prototype:bitermotors-cybertrain">
+        <button type="button" data-review="approve" data-id="prototype:bitermotors-cybertrain">Approve</button>
+        <button type="button" data-review="revise" data-id="prototype:bitermotors-cybertrain">Revise</button>
+      </div></article><article class="asset vehicle-card" data-kind="entities" data-id="prototype:bitermotors-cybertrain-charging-stop">
       <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><div><h2>Cybertrain Charging Stop</h2><p>Dedicated four-direction rail-aligned structure</p></div></header>
-      <div class="vehicle-stage"><img src="../../art/blender/battery-cybertrain/renders/charging-stop-master.png" alt="Cybertrain Charging Stop north-facing sprite"></div>
-      <div class="belt" aria-label="Inventory and belt scale"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""></div>
+      <div class="vehicle-stage"><img src="../../mod/bitermotors_0.1.1/graphics/entity/cybertrain-charging-stop/charging-stop.png" alt="Cybertrain Charging Stop art preview"></div><div class="review-note">Prototype ID: <code>bitermotors-cybertrain-charging-stop</code></div>
 
-      <div class="review" role="group" aria-label="Review vehicle-1">
-        <button type="button" data-review="approve" data-id="vehicle-1">Approve</button>
-        <button type="button" data-review="revise" data-id="vehicle-1">Revise</button>
-      </div>
-    </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-0">
+      <div class="review" role="group" aria-label="Review prototype:bitermotors-cybertrain-charging-stop">
+        <button type="button" data-review="approve" data-id="prototype:bitermotors-cybertrain-charging-stop">Approve</button>
+        <button type="button" data-review="revise" data-id="prototype:bitermotors-cybertrain-charging-stop">Revise</button>
+      </div></article><article class="asset vehicle-card" data-kind="entities" data-id="prototype:bitermotors-espider">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><div><h2>eSpider</h2><p>Tinted vanilla Spidertron art; inventory icon shown as preview fallback</p></div></header>
+      <div class="vehicle-stage"><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt="eSpider inventory icon used as fallback base-art preview"><div class="no-bitmap">Inherited, tinted vanilla Spidertron sprite; no dedicated local bitmap</div></div><div class="review-note">Prototype ID: <code>bitermotors-espider</code></div>
+
+      <div class="review" role="group" aria-label="Review prototype:bitermotors-espider">
+        <button type="button" data-review="approve" data-id="prototype:bitermotors-espider">Approve</button>
+        <button type="button" data-review="revise" data-id="prototype:bitermotors-espider">Revise</button>
+      </div></article><article class="asset vehicle-card" data-kind="entities" data-id="prototype:bitermotors-agi-training-dataset">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><div><h2>AGI Training Dataset</h2><p>Inventory item; no placed entity bitmap</p></div></header>
+      <div class="vehicle-stage"><div class="no-bitmap">Inventory item only; no placed entity bitmap</div></div><div class="review-note">Prototype ID: <code>bitermotors-agi-training-dataset</code></div>
+
+      <div class="review" role="group" aria-label="Review prototype:bitermotors-agi-training-dataset">
+        <button type="button" data-review="approve" data-id="prototype:bitermotors-agi-training-dataset">Approve</button>
+        <button type="button" data-review="revise" data-id="prototype:bitermotors-agi-training-dataset">Revise</button>
+      </div></article><article class="asset vehicle-card" data-kind="entities" data-id="prototype:bitermotors-agi-model">
+      <header><img class="mini-icon" src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><div><h2>AGI Model</h2><p>Inventory item; no placed entity bitmap</p></div></header>
+      <div class="vehicle-stage"><div class="no-bitmap">Inventory item only; no placed entity bitmap</div></div><div class="review-note">Prototype ID: <code>bitermotors-agi-model</code></div>
+
+      <div class="review" role="group" aria-label="Review prototype:bitermotors-agi-model">
+        <button type="button" data-review="approve" data-id="prototype:bitermotors-agi-model">Approve</button>
+        <button type="button" data-review="revise" data-id="prototype:bitermotors-agi-model">Revise</button>
+      </div></article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:acidic-tailings">
       <header><h2>Acidic Tailings</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt="Acidic Tailings at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/acidic-tailings.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-0">
-        <button type="button" data-review="approve" data-id="icon-0">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-0">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:acidic-tailings">
+        <button type="button" data-review="approve" data-id="icon:acidic-tailings">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:acidic-tailings">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-1">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:agi-model">
       <header><h2>Agi Model</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt="Agi Model at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-1">
-        <button type="button" data-review="approve" data-id="icon-1">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-1">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:agi-model">
+        <button type="button" data-review="approve" data-id="icon:agi-model">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:agi-model">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-2">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ai-token">
       <header><h2>Ai Token</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt="Ai Token at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-2">
-        <button type="button" data-review="approve" data-id="icon-2">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-2">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ai-token">
+        <button type="button" data-review="approve" data-id="icon:ai-token">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ai-token">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-3">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:autonomy-computer">
+      <header><h2>Autonomy Computer</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt="Autonomy Computer at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/autonomy-computer.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:autonomy-computer">
+        <button type="button" data-review="approve" data-id="icon:autonomy-computer">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:autonomy-computer">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:battery-graphite">
       <header><h2>Battery Graphite</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt="Battery Graphite at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/battery-graphite.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-3">
-        <button type="button" data-review="approve" data-id="icon-3">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-3">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:battery-graphite">
+        <button type="button" data-review="approve" data-id="icon:battery-graphite">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:battery-graphite">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-4">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:biterfactory-module">
       <header><h2>Biterfactory Module</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt="Biterfactory Module at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-module.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-4">
-        <button type="button" data-review="approve" data-id="icon-4">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-4">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:biterfactory-module">
+        <button type="button" data-review="approve" data-id="icon:biterfactory-module">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:biterfactory-module">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-5">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:biterfactory-v2">
+      <header><h2>Biterfactory V2</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt="Biterfactory V2 at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory-v2.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:biterfactory-v2">
+        <button type="button" data-review="approve" data-id="icon:biterfactory-v2">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:biterfactory-v2">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:biterfactory">
       <header><h2>Biterfactory</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt="Biterfactory at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-5">
-        <button type="button" data-review="approve" data-id="icon-5">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-5">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:biterfactory">
+        <button type="button" data-review="approve" data-id="icon:biterfactory">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:biterfactory">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-6">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:bitermotors-group">
       <header><h2>Bitermotors Group</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt="Bitermotors Group at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitermotors-group.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-6">
-        <button type="button" data-review="approve" data-id="icon-6">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-6">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:bitermotors-group">
+        <button type="button" data-review="approve" data-id="icon:bitermotors-group">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:bitermotors-group">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-7">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:bitertaxi-depot">
       <header><h2>Bitertaxi Depot</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt="Bitertaxi Depot at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-7">
-        <button type="button" data-review="approve" data-id="icon-7">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-7">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:bitertaxi-depot">
+        <button type="button" data-review="approve" data-id="icon:bitertaxi-depot">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:bitertaxi-depot">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-8">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:bitertaxi-fleet">
       <header><h2>Bitertaxi Fleet</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt="Bitertaxi Fleet at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-8">
-        <button type="button" data-review="approve" data-id="icon-8">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-8">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:bitertaxi-fleet">
+        <button type="button" data-review="approve" data-id="icon:bitertaxi-fleet">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:bitertaxi-fleet">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-9">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:clean-lithium-extraction">
+      <header><h2>Clean Lithium Extraction</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt="Clean Lithium Extraction at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-lithium-extraction.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:clean-lithium-extraction">
+        <button type="button" data-review="approve" data-id="icon:clean-lithium-extraction">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:clean-lithium-extraction">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:clean-nickel-refining">
+      <header><h2>Clean Nickel Refining</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt="Clean Nickel Refining at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-nickel-refining.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:clean-nickel-refining">
+        <button type="button" data-review="approve" data-id="icon:clean-nickel-refining">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:clean-nickel-refining">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:clean-phosphate-extraction">
+      <header><h2>Clean Phosphate Extraction</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt="Clean Phosphate Extraction at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/clean-phosphate-extraction.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:clean-phosphate-extraction">
+        <button type="button" data-review="approve" data-id="icon:clean-phosphate-extraction">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:clean-phosphate-extraction">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:cobalt-concentrate">
       <header><h2>Cobalt Concentrate</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt="Cobalt Concentrate at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cobalt-concentrate.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-9">
-        <button type="button" data-review="approve" data-id="icon-9">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-9">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:cobalt-concentrate">
+        <button type="button" data-review="approve" data-id="icon:cobalt-concentrate">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:cobalt-concentrate">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-10">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:cybertrain-charging-stop">
       <header><h2>Cybertrain Charging Stop</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt="Cybertrain Charging Stop at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-10">
-        <button type="button" data-review="approve" data-id="icon-10">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-10">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:cybertrain-charging-stop">
+        <button type="button" data-review="approve" data-id="icon:cybertrain-charging-stop">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:cybertrain-charging-stop">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-11">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:cybertrain-drive-charge">
       <header><h2>Cybertrain Drive Charge</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt="Cybertrain Drive Charge at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-drive-charge.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-11">
-        <button type="button" data-review="approve" data-id="icon-11">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-11">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:cybertrain-drive-charge">
+        <button type="button" data-review="approve" data-id="icon:cybertrain-drive-charge">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:cybertrain-drive-charge">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-12">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:cybertrain">
       <header><h2>Cybertrain</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt="Cybertrain at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-12">
-        <button type="button" data-review="approve" data-id="icon-12">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-12">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:cybertrain">
+        <button type="button" data-review="approve" data-id="icon:cybertrain">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:cybertrain">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-13">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:damaged-high-energy-battery-pack">
       <header><h2>Damaged High Energy Battery Pack</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt="Damaged High Energy Battery Pack at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-high-energy-battery-pack.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-13">
-        <button type="button" data-review="approve" data-id="icon-13">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-13">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:damaged-high-energy-battery-pack">
+        <button type="button" data-review="approve" data-id="icon:damaged-high-energy-battery-pack">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:damaged-high-energy-battery-pack">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-14">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:damaged-lfp-battery-pack">
       <header><h2>Damaged Lfp Battery Pack</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt="Damaged Lfp Battery Pack at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/damaged-lfp-battery-pack.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-14">
-        <button type="button" data-review="approve" data-id="icon-14">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-14">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:damaged-lfp-battery-pack">
+        <button type="button" data-review="approve" data-id="icon:damaged-lfp-battery-pack">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:damaged-lfp-battery-pack">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-15">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:datacenter-rack">
       <header><h2>Datacenter Rack</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt="Datacenter Rack at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/datacenter-rack.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-15">
-        <button type="button" data-review="approve" data-id="icon-15">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-15">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:datacenter-rack">
+        <button type="button" data-review="approve" data-id="icon:datacenter-rack">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:datacenter-rack">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-16">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:dry-high-nickel-cell">
+      <header><h2>Dry High Nickel Cell</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt="Dry High Nickel Cell at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-high-nickel-cell.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:dry-high-nickel-cell">
+        <button type="button" data-review="approve" data-id="icon:dry-high-nickel-cell">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:dry-high-nickel-cell">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:dry-lfp-cell">
+      <header><h2>Dry Lfp Cell</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt="Dry Lfp Cell at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/dry-lfp-cell.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:dry-lfp-cell">
+        <button type="button" data-review="approve" data-id="icon:dry-lfp-cell">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:dry-lfp-cell">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:electric-drivetrain">
+      <header><h2>Electric Drivetrain</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt="Electric Drivetrain at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/electric-drivetrain.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:electric-drivetrain">
+        <button type="button" data-review="approve" data-id="icon:electric-drivetrain">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:electric-drivetrain">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:espider">
+      <header><h2>Espider</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt="Espider at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/espider.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:espider">
+        <button type="button" data-review="approve" data-id="icon:espider">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:espider">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ev-charging-station-v2">
       <header><h2>Ev Charging Station V2</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt="Ev Charging Station V2 at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-16">
-        <button type="button" data-review="approve" data-id="icon-16">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-16">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ev-charging-station-v2">
+        <button type="button" data-review="approve" data-id="icon:ev-charging-station-v2">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ev-charging-station-v2">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-17">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ev-charging-station-v3">
       <header><h2>Ev Charging Station V3</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt="Ev Charging Station V3 at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-17">
-        <button type="button" data-review="approve" data-id="icon-17">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-17">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ev-charging-station-v3">
+        <button type="button" data-review="approve" data-id="icon:ev-charging-station-v3">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ev-charging-station-v3">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-18">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ev-charging-station-v4">
       <header><h2>Ev Charging Station V4</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt="Ev Charging Station V4 at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-18">
-        <button type="button" data-review="approve" data-id="icon-18">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-18">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ev-charging-station-v4">
+        <button type="button" data-review="approve" data-id="icon:ev-charging-station-v4">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ev-charging-station-v4">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-19">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ev-charging-station">
       <header><h2>Ev Charging Station</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt="Ev Charging Station at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-19">
-        <button type="button" data-review="approve" data-id="icon-19">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-19">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ev-charging-station">
+        <button type="button" data-review="approve" data-id="icon:ev-charging-station">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ev-charging-station">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-20">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ev-reservation">
       <header><h2>Ev Reservation</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt="Ev Reservation at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ev-reservation.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-20">
-        <button type="button" data-review="approve" data-id="icon-20">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-20">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ev-reservation">
+        <button type="button" data-review="approve" data-id="icon:ev-reservation">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ev-reservation">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-21">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:grid-battery-array">
+      <header><h2>Grid Battery Array</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt="Grid Battery Array at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:grid-battery-array">
+        <button type="button" data-review="approve" data-id="icon:grid-battery-array">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:grid-battery-array">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:grid-battery">
       <header><h2>Grid Battery</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt="Grid Battery at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-21">
-        <button type="button" data-review="approve" data-id="icon-21">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-21">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:grid-battery">
+        <button type="button" data-review="approve" data-id="icon:grid-battery">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:grid-battery">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-22">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:ground-station-network">
       <header><h2>Ground Station Network</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt="Ground Station Network at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/ground-station-network.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-22">
-        <button type="button" data-review="approve" data-id="icon-22">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-22">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:ground-station-network">
+        <button type="button" data-review="approve" data-id="icon:ground-station-network">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:ground-station-network">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-23">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:high-density-solar-array">
       <header><h2>High Density Solar Array</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt="High Density Solar Array at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-23">
-        <button type="button" data-review="approve" data-id="icon-23">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-23">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:high-density-solar-array">
+        <button type="button" data-review="approve" data-id="icon:high-density-solar-array">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:high-density-solar-array">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-24">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:high-density-space-solar-panel">
+      <header><h2>High Density Space Solar Panel</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt="High Density Space Solar Panel at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:high-density-space-solar-panel">
+        <button type="button" data-review="approve" data-id="icon:high-density-space-solar-panel">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:high-density-space-solar-panel">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:high-energy-battery-pack">
       <header><h2>High Energy Battery Pack</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt="High Energy Battery Pack at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-energy-battery-pack.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-24">
-        <button type="button" data-review="approve" data-id="icon-24">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-24">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:high-energy-battery-pack">
+        <button type="button" data-review="approve" data-id="icon:high-energy-battery-pack">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:high-energy-battery-pack">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-25">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:high-nickel-cell">
       <header><h2>High Nickel Cell</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt="High Nickel Cell at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/high-nickel-cell.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-25">
-        <button type="button" data-review="approve" data-id="icon-25">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-25">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:high-nickel-cell">
+        <button type="button" data-review="approve" data-id="icon:high-nickel-cell">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:high-nickel-cell">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-26">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:lfp-battery-pack">
       <header><h2>Lfp Battery Pack</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt="Lfp Battery Pack at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-battery-pack.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-26">
-        <button type="button" data-review="approve" data-id="icon-26">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-26">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:lfp-battery-pack">
+        <button type="button" data-review="approve" data-id="icon:lfp-battery-pack">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:lfp-battery-pack">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-27">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:lfp-cell">
       <header><h2>Lfp Cell</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt="Lfp Cell at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lfp-cell.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-27">
-        <button type="button" data-review="approve" data-id="icon-27">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-27">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:lfp-cell">
+        <button type="button" data-review="approve" data-id="icon:lfp-cell">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:lfp-cell">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-28">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:lithium-brine">
       <header><h2>Lithium Brine</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt="Lithium Brine at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-brine.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-28">
-        <button type="button" data-review="approve" data-id="icon-28">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-28">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:lithium-brine">
+        <button type="button" data-review="approve" data-id="icon:lithium-brine">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:lithium-brine">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-29">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:lithium-carbonate">
       <header><h2>Lithium Carbonate</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt="Lithium Carbonate at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/lithium-carbonate.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-29">
-        <button type="button" data-review="approve" data-id="icon-29">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-29">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:lithium-carbonate">
+        <button type="button" data-review="approve" data-id="icon:lithium-carbonate">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:lithium-carbonate">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-30">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:mass-market-ev">
       <header><h2>Mass Market Ev</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt="Mass Market Ev at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-30">
-        <button type="button" data-review="approve" data-id="icon-30">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-30">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:mass-market-ev">
+        <button type="button" data-review="approve" data-id="icon:mass-market-ev">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:mass-market-ev">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-31">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:megatruck">
       <header><h2>Megatruck</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt="Megatruck at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-31">
-        <button type="button" data-review="approve" data-id="icon-31">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-31">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:megatruck">
+        <button type="button" data-review="approve" data-id="icon:megatruck">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:megatruck">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-32">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:nickel-ore">
       <header><h2>Nickel Ore</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt="Nickel Ore at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-ore.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-32">
-        <button type="button" data-review="approve" data-id="icon-32">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-32">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:nickel-ore">
+        <button type="button" data-review="approve" data-id="icon:nickel-ore">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:nickel-ore">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-33">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:nickel-sulfate">
       <header><h2>Nickel Sulfate</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt="Nickel Sulfate at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/nickel-sulfate.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-33">
-        <button type="button" data-review="approve" data-id="icon-33">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-33">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:nickel-sulfate">
+        <button type="button" data-review="approve" data-id="icon:nickel-sulfate">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:nickel-sulfate">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-34">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:orbital-datacenter-core">
       <header><h2>Orbital Datacenter Core</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt="Orbital Datacenter Core at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-34">
-        <button type="button" data-review="approve" data-id="icon-34">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-34">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:orbital-datacenter-core">
+        <button type="button" data-review="approve" data-id="icon:orbital-datacenter-core">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:orbital-datacenter-core">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-35">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:orbital-radiator-panel">
+      <header><h2>Orbital Radiator Panel</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt="Orbital Radiator Panel at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:orbital-radiator-panel">
+        <button type="button" data-review="approve" data-id="icon:orbital-radiator-panel">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:orbital-radiator-panel">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:phosphate">
       <header><h2>Phosphate</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt="Phosphate at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/phosphate.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-35">
-        <button type="button" data-review="approve" data-id="icon-35">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-35">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:phosphate">
+        <button type="button" data-review="approve" data-id="icon:phosphate">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:phosphate">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-36">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:planetary-grid-charge">
       <header><h2>Planetary Grid Charge</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt="Planetary Grid Charge at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-charge.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-36">
-        <button type="button" data-review="approve" data-id="icon-36">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-36">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:planetary-grid-charge">
+        <button type="button" data-review="approve" data-id="icon:planetary-grid-charge">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:planetary-grid-charge">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-37">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:planetary-grid-controller">
       <header><h2>Planetary Grid Controller</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt="Planetary Grid Controller at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-37">
-        <button type="button" data-review="approve" data-id="icon-37">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-37">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:planetary-grid-controller">
+        <button type="button" data-review="approve" data-id="icon:planetary-grid-controller">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:planetary-grid-controller">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-38">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:planetary-grid-segment">
       <header><h2>Planetary Grid Segment</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt="Planetary Grid Segment at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-segment.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-38">
-        <button type="button" data-review="approve" data-id="icon-38">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-38">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:planetary-grid-segment">
+        <button type="button" data-review="approve" data-id="icon:planetary-grid-segment">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:planetary-grid-segment">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-39">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:premium-ev">
       <header><h2>Premium Ev</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt="Premium Ev at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-39">
-        <button type="button" data-review="approve" data-id="icon-39">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-39">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:premium-ev">
+        <button type="button" data-review="approve" data-id="icon:premium-ev">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:premium-ev">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-40">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:prototype-roadster">
       <header><h2>Prototype Roadster</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt="Prototype Roadster at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-40">
-        <button type="button" data-review="approve" data-id="icon-40">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-40">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:prototype-roadster">
+        <button type="button" data-review="approve" data-id="icon:prototype-roadster">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:prototype-roadster">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-41">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:reusable-booster">
       <header><h2>Reusable Booster</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt="Reusable Booster at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-booster.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-41">
-        <button type="button" data-review="approve" data-id="icon-41">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-41">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:reusable-booster">
+        <button type="button" data-review="approve" data-id="icon:reusable-booster">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:reusable-booster">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-42">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:reusable-launch-service">
       <header><h2>Reusable Launch Service</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt="Reusable Launch Service at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/reusable-launch-service.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-42">
-        <button type="button" data-review="approve" data-id="icon-42">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-42">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:reusable-launch-service">
+        <button type="button" data-review="approve" data-id="icon:reusable-launch-service">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:reusable-launch-service">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-43">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:sales-office-coverage">
       <header><h2>Sales Office Coverage</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt="Sales Office Coverage at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office-coverage.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-43">
-        <button type="button" data-review="approve" data-id="icon-43">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-43">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:sales-office-coverage">
+        <button type="button" data-review="approve" data-id="icon:sales-office-coverage">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:sales-office-coverage">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-44">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:sales-office">
       <header><h2>Sales Office</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt="Sales Office at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-44">
-        <button type="button" data-review="approve" data-id="icon-44">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-44">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:sales-office">
+        <button type="button" data-review="approve" data-id="icon:sales-office">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:sales-office">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-45">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:satellite-bus">
       <header><h2>Satellite Bus</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt="Satellite Bus at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/satellite-bus.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-45">
-        <button type="button" data-review="approve" data-id="icon-45">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-45">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:satellite-bus">
+        <button type="button" data-review="approve" data-id="icon:satellite-bus">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:satellite-bus">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-46">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:small-launch-service">
       <header><h2>Small Launch Service</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt="Small Launch Service at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/small-launch-service.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-46">
-        <button type="button" data-review="approve" data-id="icon-46">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-46">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:small-launch-service">
+        <button type="button" data-review="approve" data-id="icon:small-launch-service">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:small-launch-service">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-47">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:structural-casting">
       <header><h2>Structural Casting</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt="Structural Casting at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/structural-casting.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-47">
-        <button type="button" data-review="approve" data-id="icon-47">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-47">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:structural-casting">
+        <button type="button" data-review="approve" data-id="icon:structural-casting">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:structural-casting">Revise</button>
       </div>
     </article>
-    <article class="asset icon-card" data-kind="icons" data-id="icon-48">
+    <article class="asset icon-card" data-kind="icons" data-id="icon:tandem-solar-array">
+      <header><h2>Tandem Solar Array</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt="Tandem Solar Array at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/tandem-solar-array.png" alt=""></div>
+
+      <div class="review" role="group" aria-label="Review icon:tandem-solar-array">
+        <button type="button" data-review="approve" data-id="icon:tandem-solar-array">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:tandem-solar-array">Revise</button>
+      </div>
+    </article>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:terrestrial-datacenter">
       <header><h2>Terrestrial Datacenter</h2><p>256px normalized master</p></header>
       <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt="Terrestrial Datacenter at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""></div>
       <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review icon-48">
-        <button type="button" data-review="approve" data-id="icon-48">Approve</button>
-        <button type="button" data-review="revise" data-id="icon-48">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:terrestrial-datacenter">
+        <button type="button" data-review="approve" data-id="icon:terrestrial-datacenter">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:terrestrial-datacenter">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-0">
-      <header><h2>Sales Office working beacon</h2><p>Working | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-green.png');--fw:64px;--fh:64px"></div></div>
+    <article class="asset icon-card" data-kind="icons" data-id="icon:wrecked-ev">
+      <header><h2>Wrecked Ev</h2><p>256px normalized master</p></header>
+      <div class="icon-scales"><img class="i64" src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt="Wrecked Ev at 64 pixels"><img class="i32" src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""><img class="i20" src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""></div>
+      <div class="belt"><img src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""><img src="../../mod/bitermotors_0.1.1/graphics/icons/wrecked-ev.png" alt=""></div>
 
-      <div class="review" role="group" aria-label="Review animation-0">
-        <button type="button" data-review="approve" data-id="animation-0">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-0">Revise</button>
+      <div class="review" role="group" aria-label="Review icon:wrecked-ev">
+        <button type="button" data-review="approve" data-id="icon:wrecked-ev">Approve</button>
+        <button type="button" data-review="revise" data-id="icon:wrecked-ev">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-1">
-      <header><h2>Sales Office stopped beacon</h2><p>Stopped or blocked | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-red.png');--fw:64px;--fh:64px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:sales-office-status-green">
+      <header><h2>Sales Office working beacon</h2><p>Working | source 512x64px | frame 64x64px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-green.png');--fw:64px;--fh:64px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-1">
-        <button type="button" data-review="approve" data-id="animation-1">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-1">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:sales-office-status-green">
+        <button type="button" data-review="approve" data-id="animation:sales-office-status-green">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:sales-office-status-green">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-2">
-      <header><h2>Charger stall idle</h2><p>Unused | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-idle.png');--fw:32px;--fh:32px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:sales-office-status-red">
+      <header><h2>Sales Office stopped beacon</h2><p>Stopped or blocked | source 512x64px | frame 64x64px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-red.png');--fw:64px;--fh:64px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-2">
-        <button type="button" data-review="approve" data-id="animation-2">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-2">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:sales-office-status-red">
+        <button type="button" data-review="approve" data-id="animation:sales-office-status-red">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:sales-office-status-red">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-3">
-      <header><h2>Charger stall partial</h2><p>Moderate utilization | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-medium.png');--fw:32px;--fh:32px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:charger-stall-idle">
+      <header><h2>Charger stall idle</h2><p>Unused | source 256x32px | frame 32x32px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-idle.png');--fw:32px;--fh:32px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-3">
-        <button type="button" data-review="approve" data-id="animation-3">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-3">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:charger-stall-idle">
+        <button type="button" data-review="approve" data-id="animation:charger-stall-idle">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:charger-stall-idle">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-4">
-      <header><h2>Charger stall full</h2><p>Near capacity | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-full.png');--fw:32px;--fh:32px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:charger-stall-medium">
+      <header><h2>Charger stall partial</h2><p>Moderate utilization | source 256x32px | frame 32x32px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-medium.png');--fw:32px;--fh:32px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-4">
-        <button type="button" data-review="approve" data-id="animation-4">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-4">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:charger-stall-medium">
+        <button type="button" data-review="approve" data-id="animation:charger-stall-medium">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:charger-stall-medium">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-5">
-      <header><h2>Charger stall overload</h2><p>Underserved customers | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-overload.png');--fw:32px;--fh:32px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:charger-stall-full">
+      <header><h2>Charger stall full</h2><p>Near capacity | source 256x32px | frame 32x32px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-full.png');--fw:32px;--fh:32px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-5">
-        <button type="button" data-review="approve" data-id="animation-5">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-5">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:charger-stall-full">
+        <button type="button" data-review="approve" data-id="animation:charger-stall-full">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:charger-stall-full">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-6">
-      <header><h2>Charger stall charging</h2><p>Physical charging visit | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-charging.png');--fw:32px;--fh:32px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:charger-stall-overload">
+      <header><h2>Charger stall overload</h2><p>Underserved customers | source 256x32px | frame 32x32px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-overload.png');--fw:32px;--fh:32px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-6">
-        <button type="button" data-review="approve" data-id="animation-6">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-6">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:charger-stall-overload">
+        <button type="button" data-review="approve" data-id="animation:charger-stall-overload">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:charger-stall-overload">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-7">
-      <header><h2>Biterfactory V1 production line</h2><p>Crafting only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v1-activity.png');--fw:512px;--fh:512px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:charger-stall-charging">
+      <header><h2>Charger stall charging</h2><p>Physical charging visit | source 256x32px | frame 32x32px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-charging.png');--fw:32px;--fh:32px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-7">
-        <button type="button" data-review="approve" data-id="animation-7">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-7">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:charger-stall-charging">
+        <button type="button" data-review="approve" data-id="animation:charger-stall-charging">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:charger-stall-charging">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-8">
-      <header><h2>Biterfactory V2 structural_casting line</h2><p>Crafting only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v2-activity.png');--fw:512px;--fh:512px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:biterfactory-v1-activity">
+      <header><h2>Biterfactory V1 production line</h2><p>Crafting only | source 4096x512px | frame 512x512px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v1-activity.png');--fw:512px;--fh:512px;--preview-scale:0.3125"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-8">
-        <button type="button" data-review="approve" data-id="animation-8">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-8">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:biterfactory-v1-activity">
+        <button type="button" data-review="approve" data-id="animation:biterfactory-v1-activity">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:biterfactory-v1-activity">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-9">
-      <header><h2>Biterfactory loading bays</h2><p>Crafting only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-loading-lights.png');--fw:512px;--fh:128px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:biterfactory-v2-activity">
+      <header><h2>Biterfactory V2 structural_casting line</h2><p>Crafting only | source 4096x512px | frame 512x512px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v2-activity.png');--fw:512px;--fh:512px;--preview-scale:0.3125"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-9">
-        <button type="button" data-review="approve" data-id="animation-9">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-9">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:biterfactory-v2-activity">
+        <button type="button" data-review="approve" data-id="animation:biterfactory-v2-activity">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:biterfactory-v2-activity">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-10">
-      <header><h2>Datacenter cooling fans</h2><p>Compute active | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/datacenter-cooling-fans.png');--fw:128px;--fh:64px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:biterfactory-loading-lights">
+      <header><h2>Biterfactory loading bays</h2><p>Crafting only | source 4096x128px | frame 512x128px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-loading-lights.png');--fw:512px;--fh:128px;--preview-scale:0.449219"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-10">
-        <button type="button" data-review="approve" data-id="animation-10">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-10">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:biterfactory-loading-lights">
+        <button type="button" data-review="approve" data-id="animation:biterfactory-loading-lights">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:biterfactory-loading-lights">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-11">
-      <header><h2>Bitertaxi dispatch lights</h2><p>Fleet allocated | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/bitertaxi-dispatch-lights.png');--fw:128px;--fh:64px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:datacenter-cooling-fans">
+      <header><h2>Datacenter cooling fans</h2><p>Compute active | source 1024x64px | frame 128x64px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/datacenter-cooling-fans.png');--fw:128px;--fh:64px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-11">
-        <button type="button" data-review="approve" data-id="animation-11">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-11">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:datacenter-cooling-fans">
+        <button type="button" data-review="approve" data-id="animation:datacenter-cooling-fans">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:datacenter-cooling-fans">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-12">
-      <header><h2>Grid charge stages</h2><p>Charging only | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-charge-stages.png');--fw:128px;--fh:128px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:bitertaxi-dispatch-lights">
+      <header><h2>Bitertaxi dispatch lights</h2><p>Fleet allocated | source 1024x64px | frame 128x64px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/bitertaxi-dispatch-lights.png');--fw:128px;--fh:64px;--preview-scale:1.7"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-12">
-        <button type="button" data-review="approve" data-id="animation-12">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-12">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:bitertaxi-dispatch-lights">
+        <button type="button" data-review="approve" data-id="animation:bitertaxi-dispatch-lights">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:bitertaxi-dispatch-lights">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-13">
-      <header><h2>Grid Battery charging</h2><p>Cyan charge sequence | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-charge.png');--fw:512px;--fh:512px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:grid-charge-stages">
+      <header><h2>Grid charge stages</h2><p>Charging only | source 1024x128px | frame 128x128px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-charge-stages.png');--fw:128px;--fh:128px;--preview-scale:1.25"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-13">
-        <button type="button" data-review="approve" data-id="animation-13">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-13">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:grid-charge-stages">
+        <button type="button" data-review="approve" data-id="animation:grid-charge-stages">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:grid-charge-stages">Revise</button>
       </div>
     </article>
-    <article class="asset animation-card" data-kind="animations" data-id="animation-14">
-      <header><h2>Grid Battery discharging</h2><p>Amber discharge sequence | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-discharge.png');--fw:512px;--fh:512px"></div></div>
+    <article class="asset animation-card" data-kind="animations" data-id="animation:grid-battery-charge">
+      <header><h2>Grid Battery charging</h2><p>Cyan charge sequence | source 4096x512px | frame 512x512px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-charge.png');--fw:512px;--fh:512px;--preview-scale:0.3125"></div></div>
 
-      <div class="review" role="group" aria-label="Review animation-14">
-        <button type="button" data-review="approve" data-id="animation-14">Approve</button>
-        <button type="button" data-review="revise" data-id="animation-14">Revise</button>
+      <div class="review" role="group" aria-label="Review animation:grid-battery-charge">
+        <button type="button" data-review="approve" data-id="animation:grid-battery-charge">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:grid-battery-charge">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-0">
+    <article class="asset animation-card" data-kind="animations" data-id="animation:grid-battery-discharge">
+      <header><h2>Grid Battery discharging</h2><p>Amber discharge sequence | source 4096x512px | frame 512x512px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-discharge.png');--fw:512px;--fh:512px;--preview-scale:0.3125"></div></div>
+
+      <div class="review" role="group" aria-label="Review animation:grid-battery-discharge">
+        <button type="button" data-review="approve" data-id="animation:grid-battery-discharge">Approve</button>
+        <button type="button" data-review="revise" data-id="animation:grid-battery-discharge">Revise</button>
+      </div>
+    </article>
+    <article class="asset technology-card" data-kind="technology" data-id="technology:achieving-agi">
       <header><h2>Achieving Agi</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/achieving-agi.png" alt="Achieving Agi technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-0">
-        <button type="button" data-review="approve" data-id="technology-0">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-0">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:achieving-agi">
+        <button type="button" data-review="approve" data-id="technology:achieving-agi">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:achieving-agi">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-1">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:autonomous-logistics">
       <header><h2>Autonomous Logistics</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/autonomous-logistics.png" alt="Autonomous Logistics technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-1">
-        <button type="button" data-review="approve" data-id="technology-1">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-1">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:autonomous-logistics">
+        <button type="button" data-review="approve" data-id="technology:autonomous-logistics">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:autonomous-logistics">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-2">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:biterfactory">
       <header><h2>Biterfactory</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/biterfactory.png" alt="Biterfactory technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-2">
-        <button type="button" data-review="approve" data-id="technology-2">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-2">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:biterfactory">
+        <button type="button" data-review="approve" data-id="technology:biterfactory">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:biterfactory">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-3">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:bitermotors-tech-badge">
       <header><h2>Bitermotors Tech Badge</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/bitermotors-tech-badge.png" alt="Bitermotors Tech Badge technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-3">
-        <button type="button" data-review="approve" data-id="technology-3">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-3">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:bitermotors-tech-badge">
+        <button type="button" data-review="approve" data-id="technology:bitermotors-tech-badge">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:bitermotors-tech-badge">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-4">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:ev-charging-network">
       <header><h2>Ev Charging Network</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/ev-charging-network.png" alt="Ev Charging Network technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-4">
-        <button type="button" data-review="approve" data-id="technology-4">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-4">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:ev-charging-network">
+        <button type="button" data-review="approve" data-id="technology:ev-charging-network">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:ev-charging-network">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-5">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:planetary-energy-grid">
       <header><h2>Planetary Energy Grid</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/planetary-energy-grid.png" alt="Planetary Energy Grid technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-5">
-        <button type="button" data-review="approve" data-id="technology-5">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-5">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:planetary-energy-grid">
+        <button type="button" data-review="approve" data-id="technology:planetary-energy-grid">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:planetary-energy-grid">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-6">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:sales-office">
       <header><h2>Sales Office</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/sales-office.png" alt="Sales Office technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-6">
-        <button type="button" data-review="approve" data-id="technology-6">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-6">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:sales-office">
+        <button type="button" data-review="approve" data-id="technology:sales-office">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:sales-office">Revise</button>
       </div>
     </article>
-    <article class="asset technology-card" data-kind="technology" data-id="technology-7">
+    <article class="asset technology-card" data-kind="technology" data-id="technology:terrestrial-ai">
       <header><h2>Terrestrial Ai</h2><p>Locally composed technology art</p></header>
       <div class="technology-preview"><img src="../../mod/bitermotors_0.1.1/graphics/technology/terrestrial-ai.png" alt="Terrestrial Ai technology icon"></div>
 
-      <div class="review" role="group" aria-label="Review technology-7">
-        <button type="button" data-review="approve" data-id="technology-7">Approve</button>
-        <button type="button" data-review="revise" data-id="technology-7">Revise</button>
+      <div class="review" role="group" aria-label="Review technology:terrestrial-ai">
+        <button type="button" data-review="approve" data-id="technology:terrestrial-ai">Approve</button>
+        <button type="button" data-review="revise" data-id="technology:terrestrial-ai">Revise</button>
       </div>
     </article></section>
 <section class="math"><h2 class="section-title">Directional vehicle production math</h2><p>Biter Motors vehicle and battery art now uses a deterministic Blender pipeline. Directional sprites, shadows, chemistry variants, damaged packs, and inventory icons can be reproduced locally without additional image-generation calls.</p><p>Generated masters: <a href="../bitermotors-masters/final/sales-office.png">Sales Office</a>, <a href="../bitermotors-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../bitermotors-masters/final/agi-model.png">AGI Model</a>.</p></section>

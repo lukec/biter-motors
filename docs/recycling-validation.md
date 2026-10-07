@@ -5,6 +5,11 @@ R08/R11 addressed; Phase 2 and the final playthrough gate remain open.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 Mod: **Biter Motors 0.1.1**, fresh-world alpha contract.
 
+This is historical slice evidence, not the current package hash. The later
+[economy/guidance evidence](economy-guidance-validation.md) separates the
+recovered 39 Dollars from business profit (zero) and corrects the accounting
+regression's historical 113-Dollars profit label to 100 genuine profit Dollars.
+
 ## Changes
 
 - Track all 18 rewritten vanilla recipes in `prototypes/recipe_recycling.lua`.

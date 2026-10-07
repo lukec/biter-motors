@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 source "$repo_root/scripts/lib/bitermotors-validation.sh"
 bitermotors_resolve_source "$repo_root"
+economy_source_sha="$(python3 "$repo_root/scripts/bitermotors_economy_catalog.py" --source-sha)"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
 tmp="$(mktemp -d /tmp/bitermotors-validate.XXXXXX)"
@@ -163,6 +164,8 @@ local function equipment_snapshot(entity)
 end
 
 script.on_init(function()
+  helpers.write_file("bitermotors-economy-contract.json",
+    helpers.table_to_json(remote.call("bitermotors", "economy_contract")), false)
   game.tick_paused = false
   local surface = game.surfaces.nauvis or game.surfaces[1]
   local force = game.forces.player
@@ -1063,6 +1066,7 @@ script.on_nth_tick(5160, function()
     tick = game.tick,
     status = "customer_brownout",
     market = market,
+    service = remote.call("bitermotors", "customer_service_status", "player"),
     underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface),
     power_flow = network and network.flow_last_tick,
     source_production = power_source and power_source.power_production,
@@ -1455,6 +1459,7 @@ script.on_nth_tick(18500, function()
     tick = game.tick,
     status = "customer_recovery",
     market = market,
+    service = remote.call("bitermotors", "customer_service_status", "player"),
     underserved_chart_tags = count_underserved_chart_tags(game.forces.player, surface)
   }
 end)
@@ -2992,7 +2997,8 @@ expected_dollars = (
     + checked["bitertaxi_dollars_produced"]
     + sum(depot["lifetime_dollars"] for depot in bitertaxi_status)
 )
-if sales_snapshot.get("dollars_produced") != expected_dollars:
+if (sales_snapshot.get("dollars_produced") != expected_dollars
+        or sales_snapshot.get("operating_profit_dollars") != expected_dollars):
     raise SystemExit(f"Progress profit disagrees with native sales plus scripted depot income ({expected_dollars} Dollars): {checked}")
 if progress.get("snapshot", {}).get("next_charging_step", {}).get("ev_owners_until") != next_charging_step.get("ev_owners_until"):
     raise SystemExit(f"Biter Motors progress forecast diverged from the shared customer market snapshot: {checked}")
@@ -3013,7 +3019,11 @@ if brownout.get("market", {}).get("stranded_evs", 0) != 0:
     raise SystemExit(f"brownout stranded EVs despite sufficient remaining powered pooled capacity: {brownout}")
 if brownout.get("underserved_chart_tags", 0) != 0:
     raise SystemExit(f"brownout marked settlements underserved despite sufficient powered pooled capacity: {brownout}")
-if brownout.get("market", {}).get("angry_settlements") != 0:
+def owned_settlements(record):
+    # Far-away unowned nests may have unrelated service history on this map.
+    return [s for s in record.get("service", {}).get("settlements", []) if s.get("owned", 0) > 0]
+
+if not owned_settlements(brownout) or any(s.get("angry") for s in owned_settlements(brownout)):
     raise SystemExit(f"customers should remain friendly during the three-minute service grace period: {brownout}")
 growth_prepared = (growth or {}).get("customer_growth_prepared") or {}
 if growth_prepared.get("global_cooldown_ticks") != 18000:
@@ -3033,7 +3043,7 @@ if overload is None or overload.get("market", {}).get("stranded_evs", 0) < 1:
     raise SystemExit(f"charging overload did not report stranded EVs: {overload}")
 if overload.get("underserved_chart_tags", 0) < 1:
     raise SystemExit(f"charging overload did not remain visible on the global map: {overload}")
-if overload.get("market", {}).get("angry_settlements") != 0:
+if not owned_settlements(overload) or any(s.get("angry") for s in owned_settlements(overload)):
     raise SystemExit(f"full outage should not immediately turn a customer settlement hostile: {overload}")
 overload_offices = overload.get("sales_offices", [])
 overload_settlements = [
@@ -3049,7 +3059,7 @@ if recovery is None or recovery.get("market", {}).get("stranded_evs") != 0:
     raise SystemExit(f"restored charging capacity did not clear stranded EVs: {recovery}")
 if recovery.get("underserved_chart_tags") != 0:
     raise SystemExit(f"restored charging capacity did not clear global-map tags: {recovery}")
-if recovery.get("market", {}).get("angry_settlements") != 0:
+if not owned_settlements(recovery) or any(s.get("angry") for s in owned_settlements(recovery)):
     raise SystemExit(f"restored charging capacity did not recover angry settlements: {recovery}")
 if growth.get("charger_reservations", 0) < 1:
     raise SystemExit(
@@ -3068,4 +3078,8 @@ if not (game_finished.get("ok") and game_finished.get("value") is False):
 print("Smoke report OK:", json.dumps(checked, sort_keys=True))
 PY
 
+python3 "$repo_root/scripts/bitermotors_economy_catalog.py" --record-capture \
+  --expected-source-sha "$economy_source_sha" \
+  --dump "$tmp/script-output/data-raw-dump.json" \
+  --runtime-contract "$tmp/script-output/bitermotors-economy-contract.json"
 echo "Biter Motors validation passed."

@@ -1,32 +1,891 @@
 {
+  "critical_assets": [
+    {
+      "review_id": "entity:bitermotors-sales-office",
+      "prototype_id": "bitermotors-sales-office",
+      "name": "Sales Office",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/sales-office/sales-office.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/sales-office.png",
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "scale": 0.19,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        97,
+        97
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-ev-charging-station",
+      "prototype_id": "bitermotors-ev-charging-station",
+      "name": "EV Charging Station",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station/ev-charging-station.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station.png",
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "scale": 0.14,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        72,
+        72
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-ev-charging-station-v2",
+      "prototype_id": "bitermotors-ev-charging-station-v2",
+      "name": "EV Charging Station V2",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v2/ev-charging-station-v2.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v2.png",
+      "footprint_tiles": [
+        4,
+        4
+      ],
+      "scale": 0.26,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        133,
+        133
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-ev-charging-station-v3",
+      "prototype_id": "bitermotors-ev-charging-station-v3",
+      "name": "V3 Rapid Charger",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v3/ev-charging-station-v3.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v3.png",
+      "footprint_tiles": [
+        5,
+        5
+      ],
+      "scale": 0.35,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        179,
+        179
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-ev-charging-station-v4",
+      "prototype_id": "bitermotors-ev-charging-station-v4",
+      "name": "V4 Solar Charging Hub",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/ev-charging-station-v4/ev-charging-station-v4.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/ev-charging-station-v4.png",
+      "footprint_tiles": [
+        6,
+        6
+      ],
+      "scale": 0.38,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        195,
+        195
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-biterfactory-building",
+      "prototype_id": "bitermotors-biterfactory-building",
+      "name": "Biterfactory V1",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/biterfactory/biterfactory.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png",
+      "footprint_tiles": [
+        9,
+        9
+      ],
+      "scale": 0.325,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        1024,
+        1024
+      ],
+      "preview_dimensions": [
+        333,
+        333
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-biterfactory-v2",
+      "prototype_id": "bitermotors-biterfactory-v2",
+      "name": "Biterfactory V2",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/biterfactory/biterfactory-v2.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/biterfactory.png",
+      "footprint_tiles": [
+        9,
+        9
+      ],
+      "scale": 0.325,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        1024,
+        1024
+      ],
+      "preview_dimensions": [
+        333,
+        333
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-bitertaxi-depot",
+      "prototype_id": "bitermotors-bitertaxi-depot",
+      "name": "Bitertaxi Depot",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/bitertaxi-depot/bitertaxi-depot.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-depot.png",
+      "footprint_tiles": [
+        8,
+        8
+      ],
+      "scale": 0.48,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        246,
+        246
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-high-density-solar-array",
+      "prototype_id": "bitermotors-high-density-solar-array",
+      "name": "High-density Solar Panel",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/high-density-solar-array/high-density-solar-array.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png",
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "scale": 0.19,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        97,
+        97
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-tandem-solar-array",
+      "prototype_id": "bitermotors-tandem-solar-array",
+      "name": "Tandem Solar Array",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/high-density-solar-array/high-density-solar-array.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/high-density-solar-array.png",
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "scale": 0.19,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        97,
+        97
+      ],
+      "status": "inherited-placeholder"
+    },
+    {
+      "review_id": "entity:bitermotors-grid-battery",
+      "prototype_id": "bitermotors-grid-battery",
+      "name": "Grid Battery",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/grid-battery/grid-battery.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png",
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "scale": 0.14,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        72,
+        72
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-grid-battery-array",
+      "prototype_id": "bitermotors-grid-battery-array",
+      "name": "Grid Battery Array",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/grid-battery/grid-battery.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/grid-battery.png",
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "scale": 0.14,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        72,
+        72
+      ],
+      "status": "inherited-placeholder"
+    },
+    {
+      "review_id": "entity:bitermotors-terrestrial-datacenter",
+      "prototype_id": "bitermotors-terrestrial-datacenter",
+      "name": "Terrestrial Datacenter",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/terrestrial-datacenter/terrestrial-datacenter.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/terrestrial-datacenter.png",
+      "footprint_tiles": [
+        6,
+        6
+      ],
+      "scale": 0.36,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        184,
+        184
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-orbital-datacenter-core",
+      "prototype_id": "bitermotors-orbital-datacenter-core",
+      "name": "Orbital Datacenter Core",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/orbital-datacenter-core/orbital-datacenter-core.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png",
+      "footprint_tiles": [
+        6,
+        6
+      ],
+      "scale": 0.36,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        184,
+        184
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "entity:bitermotors-orbital-radiator-panel",
+      "prototype_id": "bitermotors-orbital-radiator-panel",
+      "name": "Orbital Radiator Panel",
+      "kind": "entity",
+      "source_path": "base-art",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "scale": 1.0,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": null,
+      "preview_dimensions": null,
+      "status": "inherited-placeholder"
+    },
+    {
+      "review_id": "entity:bitermotors-high-density-space-solar-panel",
+      "prototype_id": "bitermotors-high-density-space-solar-panel",
+      "name": "High-density Space Solar Panel",
+      "kind": "entity",
+      "source_path": "base-art",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "scale": 1.0,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": null,
+      "preview_dimensions": null,
+      "status": "inherited-placeholder"
+    },
+    {
+      "review_id": "entity:bitermotors-planetary-grid-controller",
+      "prototype_id": "bitermotors-planetary-grid-controller",
+      "name": "Planetary Grid Controller",
+      "kind": "entity",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/planetary-grid-controller/planetary-grid-controller.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png",
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "scale": 0.19,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        97,
+        97
+      ],
+      "status": "bitmap"
+    },
+    {
+      "review_id": "vehicle:bitermotors-prototype-roadster",
+      "prototype_id": "bitermotors-prototype-roadster",
+      "name": "Prototype Roadster",
+      "kind": "vehicle",
+      "source_path": "../../art/blender/prototype-roadster/renders/prototype-roadster-master.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/prototype-roadster.png",
+      "source_dimensions": [
+        768,
+        768
+      ],
+      "preview_dimensions": [
+        768,
+        768
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated directional bitmap"
+    },
+    {
+      "review_id": "vehicle:bitermotors-premium-ev",
+      "prototype_id": "bitermotors-premium-ev",
+      "name": "Premium EV",
+      "kind": "vehicle",
+      "source_path": "../../art/blender/premium-ev/renders/premium-ev-master.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/premium-ev.png",
+      "source_dimensions": [
+        768,
+        768
+      ],
+      "preview_dimensions": [
+        768,
+        768
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated directional bitmap"
+    },
+    {
+      "review_id": "vehicle:bitermotors-mass-market-ev",
+      "prototype_id": "bitermotors-mass-market-ev",
+      "name": "Mass-market EV",
+      "kind": "vehicle",
+      "source_path": "../../art/blender/mass-market-ev/renders/mass-market-ev-master.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/mass-market-ev.png",
+      "source_dimensions": [
+        768,
+        768
+      ],
+      "preview_dimensions": [
+        768,
+        768
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated directional bitmap"
+    },
+    {
+      "review_id": "vehicle:bitermotors-megatruck",
+      "prototype_id": "bitermotors-megatruck",
+      "name": "Megatruck",
+      "kind": "vehicle",
+      "source_path": "../../art/blender/megatruck/renders/megatruck-master.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/megatruck.png",
+      "source_dimensions": [
+        768,
+        768
+      ],
+      "preview_dimensions": [
+        768,
+        768
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated directional bitmap"
+    },
+    {
+      "review_id": "vehicle:bitermotors-bitertaxi-fleet",
+      "prototype_id": "bitermotors-bitertaxi-fleet",
+      "name": "Bitertaxi",
+      "kind": "vehicle",
+      "source_path": "../../art/blender/bitertaxi/renders/bitertaxi-master.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/bitertaxi-fleet.png",
+      "source_dimensions": [
+        768,
+        768
+      ],
+      "preview_dimensions": [
+        768,
+        768
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated directional bitmap"
+    },
+    {
+      "review_id": "prototype:bitermotors-cybertrain",
+      "prototype_id": "bitermotors-cybertrain",
+      "name": "Cybertrain",
+      "kind": "prototype",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/cybertrain/cybertrain.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/cybertrain.png",
+      "source_dimensions": [
+        2048,
+        2048
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "preview_dimensions": [
+        2048,
+        2048
+      ],
+      "scale": 1.0,
+      "status": "Dedicated 64-direction rail sprite"
+    },
+    {
+      "review_id": "prototype:bitermotors-cybertrain-charging-stop",
+      "prototype_id": "bitermotors-cybertrain-charging-stop",
+      "name": "Cybertrain Charging Stop",
+      "kind": "prototype",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/cybertrain-charging-stop/charging-stop.png",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/cybertrain-charging-stop.png",
+      "source_dimensions": [
+        1024,
+        256
+      ],
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "preview_dimensions": [
+        1024,
+        256
+      ],
+      "scale": 1.0,
+      "status": "Dedicated four-direction rail-aligned structure"
+    },
+    {
+      "review_id": "prototype:bitermotors-espider",
+      "prototype_id": "bitermotors-espider",
+      "name": "eSpider",
+      "kind": "prototype",
+      "source_path": "base-art",
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/espider.png",
+      "source_dimensions": null,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "preview_dimensions": null,
+      "scale": 1.0,
+      "status": "Tinted vanilla Spidertron art; inventory icon shown as preview fallback"
+    },
+    {
+      "review_id": "prototype:bitermotors-agi-training-dataset",
+      "prototype_id": "bitermotors-agi-training-dataset",
+      "name": "AGI Training Dataset",
+      "kind": "prototype",
+      "source_path": null,
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/ai-token.png",
+      "source_dimensions": null,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "preview_dimensions": null,
+      "scale": 1.0,
+      "status": "Inventory item; no placed entity bitmap"
+    },
+    {
+      "review_id": "prototype:bitermotors-agi-model",
+      "prototype_id": "bitermotors-agi-model",
+      "name": "AGI Model",
+      "kind": "prototype",
+      "source_path": null,
+      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/agi-model.png",
+      "source_dimensions": null,
+      "icon_dimensions": [
+        256,
+        256
+      ],
+      "preview_dimensions": null,
+      "scale": 1.0,
+      "status": "Inventory item; no placed entity bitmap"
+    }
+  ],
+  "animation_assets": [
+    {
+      "name": "Sales Office working beacon",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-green.png",
+      "source_dimensions": [
+        512,
+        64
+      ],
+      "frame_dimensions": [
+        64,
+        64
+      ],
+      "frame_count": 8,
+      "trigger": "Working"
+    },
+    {
+      "name": "Sales Office stopped beacon",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/sales-office-status-red.png",
+      "source_dimensions": [
+        512,
+        64
+      ],
+      "frame_dimensions": [
+        64,
+        64
+      ],
+      "frame_count": 8,
+      "trigger": "Stopped or blocked"
+    },
+    {
+      "name": "Charger stall idle",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-idle.png",
+      "source_dimensions": [
+        256,
+        32
+      ],
+      "frame_dimensions": [
+        32,
+        32
+      ],
+      "frame_count": 8,
+      "trigger": "Unused"
+    },
+    {
+      "name": "Charger stall partial",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-medium.png",
+      "source_dimensions": [
+        256,
+        32
+      ],
+      "frame_dimensions": [
+        32,
+        32
+      ],
+      "frame_count": 8,
+      "trigger": "Moderate utilization"
+    },
+    {
+      "name": "Charger stall full",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-full.png",
+      "source_dimensions": [
+        256,
+        32
+      ],
+      "frame_dimensions": [
+        32,
+        32
+      ],
+      "frame_count": 8,
+      "trigger": "Near capacity"
+    },
+    {
+      "name": "Charger stall overload",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-overload.png",
+      "source_dimensions": [
+        256,
+        32
+      ],
+      "frame_dimensions": [
+        32,
+        32
+      ],
+      "frame_count": 8,
+      "trigger": "Underserved customers"
+    },
+    {
+      "name": "Charger stall charging",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/charger-stall-charging.png",
+      "source_dimensions": [
+        256,
+        32
+      ],
+      "frame_dimensions": [
+        32,
+        32
+      ],
+      "frame_count": 8,
+      "trigger": "Physical charging visit"
+    },
+    {
+      "name": "Biterfactory V1 production line",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v1-activity.png",
+      "source_dimensions": [
+        4096,
+        512
+      ],
+      "frame_dimensions": [
+        512,
+        512
+      ],
+      "frame_count": 8,
+      "trigger": "Crafting only"
+    },
+    {
+      "name": "Biterfactory V2 structural_casting line",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-v2-activity.png",
+      "source_dimensions": [
+        4096,
+        512
+      ],
+      "frame_dimensions": [
+        512,
+        512
+      ],
+      "frame_count": 8,
+      "trigger": "Crafting only"
+    },
+    {
+      "name": "Biterfactory loading bays",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/biterfactory-loading-lights.png",
+      "source_dimensions": [
+        4096,
+        128
+      ],
+      "frame_dimensions": [
+        512,
+        128
+      ],
+      "frame_count": 8,
+      "trigger": "Crafting only"
+    },
+    {
+      "name": "Datacenter cooling fans",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/datacenter-cooling-fans.png",
+      "source_dimensions": [
+        1024,
+        64
+      ],
+      "frame_dimensions": [
+        128,
+        64
+      ],
+      "frame_count": 8,
+      "trigger": "Compute active"
+    },
+    {
+      "name": "Bitertaxi dispatch lights",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/bitertaxi-dispatch-lights.png",
+      "source_dimensions": [
+        1024,
+        64
+      ],
+      "frame_dimensions": [
+        128,
+        64
+      ],
+      "frame_count": 8,
+      "trigger": "Fleet allocated"
+    },
+    {
+      "name": "Grid charge stages",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/grid-charge-stages.png",
+      "source_dimensions": [
+        1024,
+        128
+      ],
+      "frame_dimensions": [
+        128,
+        128
+      ],
+      "frame_count": 8,
+      "trigger": "Charging only"
+    },
+    {
+      "name": "Grid Battery charging",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-charge.png",
+      "source_dimensions": [
+        4096,
+        512
+      ],
+      "frame_dimensions": [
+        512,
+        512
+      ],
+      "frame_count": 8,
+      "trigger": "Cyan charge sequence"
+    },
+    {
+      "name": "Grid Battery discharging",
+      "path": "../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-discharge.png",
+      "source_dimensions": [
+        4096,
+        512
+      ],
+      "frame_dimensions": [
+        512,
+        512
+      ],
+      "frame_count": 8,
+      "trigger": "Amber discharge sequence"
+    }
+  ],
   "entities": [
-    "Sales Office",
-    "EV Charging Station",
-    "EV Charging Station V2",
-    "V3 Rapid Charger",
-    "V4 Solar Charging Hub",
-    "Biterfactory",
-    "Biterfactory V2",
-    "High-density Solar Panel",
-    "Grid Battery",
-    "Terrestrial Datacenter",
-    "Bitertaxi Depot",
-    "Planetary Grid Controller"
+    "bitermotors-sales-office",
+    "bitermotors-ev-charging-station",
+    "bitermotors-ev-charging-station-v2",
+    "bitermotors-ev-charging-station-v3",
+    "bitermotors-ev-charging-station-v4",
+    "bitermotors-biterfactory-building",
+    "bitermotors-biterfactory-v2",
+    "bitermotors-bitertaxi-depot",
+    "bitermotors-high-density-solar-array",
+    "bitermotors-tandem-solar-array",
+    "bitermotors-grid-battery",
+    "bitermotors-grid-battery-array",
+    "bitermotors-terrestrial-datacenter",
+    "bitermotors-orbital-datacenter-core",
+    "bitermotors-orbital-radiator-panel",
+    "bitermotors-high-density-space-solar-panel",
+    "bitermotors-planetary-grid-controller"
   ],
   "vehicles": [
-    "Cybertrain",
-    "Cybertrain Charging Stop"
+    "bitermotors-prototype-roadster",
+    "bitermotors-premium-ev",
+    "bitermotors-mass-market-ev",
+    "bitermotors-megatruck",
+    "bitermotors-bitertaxi-fleet"
   ],
   "icons": [
     "acidic-tailings.png",
     "agi-model.png",
     "ai-token.png",
+    "autonomy-computer.png",
     "battery-graphite.png",
     "biterfactory-module.png",
+    "biterfactory-v2.png",
     "biterfactory.png",
     "bitermotors-group.png",
     "bitertaxi-depot.png",
     "bitertaxi-fleet.png",
+    "clean-lithium-extraction.png",
+    "clean-nickel-refining.png",
+    "clean-phosphate-extraction.png",
     "cobalt-concentrate.png",
     "cybertrain-charging-stop.png",
     "cybertrain-drive-charge.png",
@@ -34,14 +893,20 @@
     "damaged-high-energy-battery-pack.png",
     "damaged-lfp-battery-pack.png",
     "datacenter-rack.png",
+    "dry-high-nickel-cell.png",
+    "dry-lfp-cell.png",
+    "electric-drivetrain.png",
+    "espider.png",
     "ev-charging-station-v2.png",
     "ev-charging-station-v3.png",
     "ev-charging-station-v4.png",
     "ev-charging-station.png",
     "ev-reservation.png",
+    "grid-battery-array.png",
     "grid-battery.png",
     "ground-station-network.png",
     "high-density-solar-array.png",
+    "high-density-space-solar-panel.png",
     "high-energy-battery-pack.png",
     "high-nickel-cell.png",
     "lfp-battery-pack.png",
@@ -53,6 +918,7 @@
     "nickel-ore.png",
     "nickel-sulfate.png",
     "orbital-datacenter-core.png",
+    "orbital-radiator-panel.png",
     "phosphate.png",
     "planetary-grid-charge.png",
     "planetary-grid-controller.png",
@@ -66,7 +932,9 @@
     "satellite-bus.png",
     "small-launch-service.png",
     "structural-casting.png",
-    "terrestrial-datacenter.png"
+    "tandem-solar-array.png",
+    "terrestrial-datacenter.png",
+    "wrecked-ev.png"
   ],
   "animations": [
     "Sales Office working beacon",
@@ -95,9 +963,8 @@
     "sales-office.png",
     "terrestrial-ai.png"
   ],
-  "paid_generation_count": 3,
   "blender": {
-    "installed": true,
+    "pipeline": "Scripted local rendering; installation is machine-specific, not asserted by this index.",
     "break_even": "Worthwhile for directional drivable sprites; not worthwhile for icons alone.",
     "image_generation_estimate": "10-15 attempts for five coherent directional sheets after retries.",
     "local_pipeline_estimate": "One scripted camera/material rig plus five low-poly models; all rotations and recolors then render locally."

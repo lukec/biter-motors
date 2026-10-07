@@ -20,6 +20,10 @@ Version: 0.1.1
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
   Bugfixes:
+    - Progress reads actual research costs and normal orbital machine throughput instead of stale investment estimates.
+    - Optional Foundry, Megatruck, charger placement, and Bitertaxi branches no longer block guidance toward orbital AI.
+    - The Foundry unlock is described as a deployment milestone, not proof of available grid power.
+    - Profit generated excludes recycled capital and arbitrary Dollar production; native sales and delivered depot income persist separately.
     - Contested chargers share capacity in stall-sized rounds instead of starving equal neighboring settlements.
     - Settlement mood, growth, alerts, and inspectors use the same private-charging or Bitertaxi service-health rule.
     - Healthy taxi-only settlements grow; deficient neighbors do not inflate healthy charger expansion utilization.

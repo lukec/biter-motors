@@ -1,8 +1,8 @@
 # Phase 1 Engine Validation Baseline
 
 This is the historical Phase 1 archive and evidence. Subsequent Phase 2 slices
-change runtime behavior; the latest [charging/service report](charging-validation.md)
-records the current tested archive and regressions. The SHA below is not the
+change runtime behavior; the latest [economy/guidance report](economy-guidance-validation.md)
+records the current tested archive and focused regressions. The SHA below is not the
 current checkout.
 
 Date: **2026-10-05**. Release-plan **Phase 1 complete**; the mod remains alpha.

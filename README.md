@@ -181,6 +181,10 @@ controller construction, full payload loading, training, and failure recovery.
 Reproduce with `scripts/validate-bitermotors-delivery.sh` and
 `scripts/validate-bitermotors-cooling.sh`. These supplied worlds are not natural
 campaign or long-soak qualification.
+The [economy/guidance evidence](docs/economy-guidance-validation.md) records
+prototype-derived Progress costs, business profit versus recovered capital,
+and three finite-market sensitivities. Prices are unchanged; design freeze,
+native presentation review, and natural campaign qualification remain open.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.

@@ -366,13 +366,16 @@ class BiterMotorsModTest(unittest.TestCase):
                 context = {
                     "checked": checked,
                     "bitertaxi_status": [{"lifetime_dollars": 2, "output_dollars": 0}],
-                    "sales_snapshot": {"dollars_produced": dollars},
+                    "sales_snapshot": {"dollars_produced": dollars, "operating_profit_dollars": dollars},
                 }
                 if valid:
                     exec(gate, context)
                 else:
                     with self.assertRaisesRegex(SystemExit, "Progress profit disagrees"):
                         exec(gate, context)
+        context["sales_snapshot"] = {"dollars_produced": 23, "operating_profit_dollars": 0}
+        with self.assertRaisesRegex(SystemExit, "Progress profit disagrees"):
+            exec(gate, context)
 
     def test_bitermotors_manifest(self):
         info = json.loads((MOD / "info.json").read_text())
@@ -674,7 +677,7 @@ class BiterMotorsModTest(unittest.TestCase):
         capital_tech = data[data.index('tech("bitermotors-capital-scaling"'):data.index('tech("bitermotors-megatruck-engineering"')]
         self.assertNotIn('unlock("bitermotors-megatruck")', capital_tech)
         self.assertIn('technology = "bitermotors-megatruck-engineering"', control)
-        self.assertIn('Research Megatruck Engineering.', control)
+        self.assertIn('Foundry, Megatruck, Cybertrain, and extra charger tiers are optional branches.', control)
         self.assertIn('["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 8}', control)
         self.assertNotIn('["bitermotors-megatruck"] = {[DAMAGED_HIGH_ENERGY_PACK_NAME] = 4, [DAMAGED_LFP_PACK_NAME] = 8}', control)
         self.assertNotIn("function insert_battery_retirement_scrap", control)
@@ -1113,7 +1116,8 @@ class BiterMotorsModTest(unittest.TestCase):
         manifest = json.loads((qa.parent / "art-manifest.json").read_text())
         page = qa.read_text()
         self.assertTrue(qa.exists())
-        self.assertEqual(manifest["paid_generation_count"], 3)
+        self.assertEqual(len(manifest["critical_assets"]), 27)
+        self.assertIn("Scripted local rendering", manifest["blender"]["pipeline"])
         self.assertIn("Biter Motors Artwork QA", page)
         self.assertIn("Directional vehicle production math", page)
         self.assertIn("data-filter=\"animations\"", page)
@@ -1260,16 +1264,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('"%d EV sale%s: +%.0f kW"', control)
         self.assertIn('"No spare stalls; add charger"', control)
         self.assertIn('"Research Energy Products for industrial expansion."', control)
-        self.assertIn('"Prove a 5 MW solar industrial block."', control)
-        self.assertIn('"Research Metallurgical Scaling."', control)
+        self.assertIn('label = "Optional Foundry unlock"', control)
+        self.assertIn('These counts do not verify grid connection or available power.', control)
         objective = control[
             control.index("local function current_progress_objective"):
             control.index("function progress_objective_icon")
         ]
-        self.assertLess(
-            objective.index('elseif not snapshot.energy_products_researched then'),
-            objective.index('elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then'),
-        )
+        self.assertNotIn('elseif snapshot.foundry_power_gate', objective)
+        self.assertNotIn('elseif not snapshot.foundry_researched', objective)
         self.assertLess(
             objective.index('elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then'),
             objective.index('elseif snapshot.biterfactories == 0 and snapshot.biterfactories_v2 == 0 then'),
@@ -1414,14 +1416,19 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("Bitertaxi service is producing recurring profit", control)
         self.assertIn("cargo pods must return them to Nauvis", locale)
         self.assertIn("bitertaxi_sale_complete", control)
-        self.assertIn("Operate the Bitertaxi service", control)
+        self.assertIn("Bitertaxis are an optional recurring-profit route after 5,000 consumer EV sales", control)
         self.assertIn("Cumulative AI Tokens", control)
-        self.assertIn("snapshot.ai_tokens_produced < 1000", control)
-        self.assertIn("Generate 1,000 AI Tokens", control)
+        self.assertIn('snapshot.research_costs["bitermotors-autonomous-logistics"].ingredients["bitermotors-ai-token"]', control)
+        self.assertIn("Make AI Tokens for Autonomous Logistics", control)
         self.assertIn('power = "8 MW"', control)
         self.assertIn("20 Dollars", locale)
         self.assertIn("Each cycle consumes 20 Dollars, draws 8 MW", locale)
-        self.assertIn("stockpile 1,000 Tokens for Autonomous Logistics", locale)
+        self.assertIn("Make the AI Tokens required by Autonomous Logistics and Orbital AI Infrastructure on land", locale)
+        self.assertNotIn("stockpile 1,000 for Autonomous Logistics", control)
+        self.assertIn("check their research ingredients", control)
+        readme = (MOD / "README.md").read_text()
+        self.assertIn("Tokens every 20 seconds before further effects", readme)
+        self.assertNotIn("Tokens every 30 seconds", readme)
 
     def test_bitermotors_orbital_compute_is_space_bound(self):
         data = (MOD / "data.lua").read_text()
@@ -1976,7 +1983,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("entity.quality.name == BITERMOTORS_ENERGY_JUMPSTART_QUALITY", control)
         self.assertIn("total - math.min(starter_count, starter_quality_count)", control)
         self.assertIn("technology.enabled = technology.researched or gate.qualified", control)
-        self.assertIn('label = "Industrial power qualification"', control)
+        self.assertIn('label = "Optional Foundry unlock"', control)
 
     def test_bitermotors_technology_icons_share_one_badge(self):
         data = (MOD / "data.lua").read_text()
@@ -2046,8 +2053,7 @@ class BiterMotorsModTest(unittest.TestCase):
         ]:
             self.assertIn(expected, station_v4_recipe)
         self.assertNotIn('"bitermotors-dollar"', station_v4_recipe)
-        self.assertIn("Upgrade 1 V2 charger with 4 Substations and 40 Processing Units", control)
-        self.assertIn("Upgrade 1 V3 Rapid Charger with 4 High-density Solar Panels and 4 Grid Batteries", control)
+        self.assertIn("extra charger tiers are optional branches", control)
         charging_tech = data[data.index('tech("bitermotors-ev-charging-network"'):data.index('tech("bitermotors-energy-products"')]
         self.assertIn('unlock("bitermotors-ev-charging-station-v2")', charging_tech)
         self.assertNotIn('unlock("bitermotors-ev-charging-station")', charging_tech)
@@ -2068,7 +2074,8 @@ class BiterMotorsModTest(unittest.TestCase):
         bitertaxi_recipe = data[data.index('recipe("bitermotors-bitertaxi-fleet"'):data.index('recipe("bitermotors-bitertaxi-depot"')]
         self.assertIn('name = "bitermotors-dollar", amount = 20', bitertaxi_recipe)
         self.assertNotIn('name = "bitermotors-dollar", amount = 100', bitertaxi_recipe)
-        self.assertIn("4 Mass-market EVs, 4 Autonomy Computers, and 20 Dollars", control)
+        self.assertIn('name = "bitermotors-mass-market-ev", amount = 4', bitertaxi_recipe)
+        self.assertIn('name = "bitermotors-autonomy-computer", amount = 4', bitertaxi_recipe)
 
     def test_sales_office_coverage_has_remote_view_toggle(self):
         data = (MOD / "data.lua").read_text()
@@ -2199,9 +2206,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("current_progress_objective", control)
         self.assertIn("progress_stages", control)
         journey = control[control.index("local function progress_stages"):control.index("local function format_represented_usd")]
-        self.assertIn("snapshot.bitertaxi_fleets_produced > 0", journey)
-        self.assertIn("snapshot.chargers_v4 > 0", journey)
-        self.assertIn("snapshot.bitertaxi_depots > 0", journey)
+        self.assertIn("and snapshot.autonomous_logistics_researched", journey)
+        for optional in ("bitertaxi_fleets_produced", "chargers_v4", "bitertaxi_depots", "bitertaxi_sale_complete"):
+            self.assertNotIn(optional, journey)
         self.assertIn("complete = autonomy_complete", journey)
         self.assertIn("premium_complete = customer_complete and snapshot.mass_market_sale_complete", journey)
         self.assertIn("mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched", journey)
@@ -2253,10 +2260,12 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('add_progress_section(content, "Compute", compute_rows)', control)
         self.assertIn("cumulative_ai_tokens_generated", control)
         self.assertIn("endgame_status = function", control)
-        self.assertIn(
-            "snapshot.chargers_v3 == 0 and not snapshot.terrestrial_ai_researched",
-            control,
-        )
+        objective = control[control.index("local function current_progress_objective"):control.index("function progress_objective_icon")]
+        for optional in ("snapshot.chargers_v2 == 0", "snapshot.chargers_v3 == 0", "snapshot.chargers_v4 == 0", "snapshot.megatruck_gate", "snapshot.bitertaxi_gate", "snapshot.solar_arrays == 0", "snapshot.high_density_space_solar_panels == 0", "snapshot.tandem_solar_arrays == 0", "snapshot.grid_battery_arrays == 0"):
+            self.assertNotIn(optional, objective)
+        self.assertIn('research("bitermotors-orbital-compute")', objective)
+        self.assertIn('research("bitermotors-energy-products")', objective)
+        self.assertIn("Space Solar is one option, not a required placement milestone", objective)
         self.assertIn("if snapshot.terrestrial_ai_researched then", control)
         self.assertIn("if snapshot.autonomous_logistics_researched then", control)
         self.assertIn("if snapshot.mass_market_researched then", control)
@@ -2415,8 +2424,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('power_sink_name = "bitermotors-ev-charging-v4-power-sink"', control)
         self.assertIn('chargers_v3 = count_entities(force, "bitermotors-ev-charging-station-v3")', control)
         self.assertIn('chargers_v4 = count_entities(force, "bitermotors-ev-charging-station-v4")', control)
-        self.assertIn("Craft and place a V3 Rapid Charger", control)
-        self.assertIn("Craft and place a solar-canopy V4 Solar Charging Hub", control)
+        self.assertIn("Placing a V2 is optional", control)
+        self.assertIn("extra charger tiers are optional branches", control)
         self.assertIn("research Autonomous Logistics to unlock Bitertaxis, V4 fleet charging", control)
         self.assertIn("ensure_station_power_sinks", control)
         self.assertIn("remove_station_power_sink", control)

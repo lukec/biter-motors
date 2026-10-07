@@ -2817,6 +2817,10 @@ for recipe_name in pairs(require("runtime.ai_accounting").recipes) do
   data.raw.recipe[recipe_name].auto_recycle = false
 end
 
+for recipe_name in pairs(require("runtime.business_income").sale_recipes) do
+  data.raw.recipe[recipe_name].raise_on_crafted = true
+end
+
 local customer_vehicle_classes = {
   prospect = {
     label = "EV prospect (friendly)",

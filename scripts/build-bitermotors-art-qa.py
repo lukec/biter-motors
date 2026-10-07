@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import html
 import json
+import struct
 from pathlib import Path
 
 
@@ -12,19 +13,24 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "art/bitermotors-qa"
 GRAPHICS = ROOT / "mod/bitermotors_0.1.1/graphics"
 
-ENTITIES = [
-    ("Sales Office", "sales-office/sales-office.png", "sales-office.png", 3, 512, 0.19, "generated-final"),
-    ("EV Charging Station", "ev-charging-station/ev-charging-station.png", "ev-charging-station.png", 2, 512, 0.14, "aligned-final"),
-    ("EV Charging Station V2", "ev-charging-station-v2/ev-charging-station-v2.png", "ev-charging-station-v2.png", 4, 512, 0.26, "aligned-final"),
-    ("V3 Rapid Charger", "ev-charging-station-v3/ev-charging-station-v3.png", "ev-charging-station-v3.png", 5, 512, 0.35, "aligned-final"),
-    ("V4 Solar Charging Hub", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 512, 0.38, "aligned-final"),
-    ("Biterfactory", "biterfactory/biterfactory.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
-    ("Biterfactory V2", "biterfactory/biterfactory-v2.png", "biterfactory.png", 9, 1024, 0.325, "aligned-final"),
-    ("High-density Solar Panel", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 512, 0.19, "generated-final"),
-    ("Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 512, 0.14, "aligned-final"),
-    ("Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 512, 0.36, "generated-final"),
-    ("Bitertaxi Depot", "bitertaxi-depot/bitertaxi-depot.png", "bitertaxi-depot.png", 8, 512, 0.48, "aligned-final"),
-    ("Planetary Grid Controller", "planetary-grid-controller/planetary-grid-controller.png", "planetary-grid-controller.png", 3, 512, 0.19, "aligned-final"),
+ENTITY_ASSETS = [
+    ("bitermotors-sales-office", "Sales Office", "sales-office/sales-office.png", "sales-office.png", 3, 0.19, "bitmap"),
+    ("bitermotors-ev-charging-station", "EV Charging Station", "ev-charging-station/ev-charging-station.png", "ev-charging-station.png", 2, 0.14, "bitmap"),
+    ("bitermotors-ev-charging-station-v2", "EV Charging Station V2", "ev-charging-station-v2/ev-charging-station-v2.png", "ev-charging-station-v2.png", 4, 0.26, "bitmap"),
+    ("bitermotors-ev-charging-station-v3", "V3 Rapid Charger", "ev-charging-station-v3/ev-charging-station-v3.png", "ev-charging-station-v3.png", 5, 0.35, "bitmap"),
+    ("bitermotors-ev-charging-station-v4", "V4 Solar Charging Hub", "ev-charging-station-v4/ev-charging-station-v4.png", "ev-charging-station-v4.png", 6, 0.38, "bitmap"),
+    ("bitermotors-biterfactory-building", "Biterfactory V1", "biterfactory/biterfactory.png", "biterfactory.png", 9, 0.325, "bitmap"),
+    ("bitermotors-biterfactory-v2", "Biterfactory V2", "biterfactory/biterfactory-v2.png", "biterfactory.png", 9, 0.325, "bitmap"),
+    ("bitermotors-bitertaxi-depot", "Bitertaxi Depot", "bitertaxi-depot/bitertaxi-depot.png", "bitertaxi-depot.png", 8, 0.48, "bitmap"),
+    ("bitermotors-high-density-solar-array", "High-density Solar Panel", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 0.19, "bitmap"),
+    ("bitermotors-tandem-solar-array", "Tandem Solar Array", "high-density-solar-array/high-density-solar-array.png", "high-density-solar-array.png", 3, 0.19, "inherited-placeholder"),
+    ("bitermotors-grid-battery", "Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 0.14, "bitmap"),
+    ("bitermotors-grid-battery-array", "Grid Battery Array", "grid-battery/grid-battery.png", "grid-battery.png", 2, 0.14, "inherited-placeholder"),
+    ("bitermotors-terrestrial-datacenter", "Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 0.36, "bitmap"),
+    ("bitermotors-orbital-datacenter-core", "Orbital Datacenter Core", "orbital-datacenter-core/orbital-datacenter-core.png", "orbital-datacenter-core.png", 6, 0.36, "bitmap"),
+    ("bitermotors-orbital-radiator-panel", "Orbital Radiator Panel", None, "orbital-radiator-panel.png", 1, 1.0, "inherited-placeholder"),
+    ("bitermotors-high-density-space-solar-panel", "High-density Space Solar Panel", None, "high-density-space-solar-panel.png", 1, 1.0, "inherited-placeholder"),
+    ("bitermotors-planetary-grid-controller", "Planetary Grid Controller", "planetary-grid-controller/planetary-grid-controller.png", "planetary-grid-controller.png", 3, 0.19, "bitmap"),
 ]
 
 ANIMATIONS = [
@@ -46,13 +52,71 @@ ANIMATIONS = [
 ]
 
 VEHICLES = [
-    ("Cybertrain", "battery-cybertrain/renders/cybertrain-master.png", "cybertrain.png", "Dedicated 64-direction rail sprite"),
-    ("Cybertrain Charging Stop", "battery-cybertrain/renders/charging-stop-master.png", "cybertrain-charging-stop.png", "Dedicated four-direction rail-aligned structure"),
+    ("bitermotors-prototype-roadster", "Prototype Roadster", "prototype-roadster", "prototype-roadster", "Dedicated directional bitmap"),
+    ("bitermotors-premium-ev", "Premium EV", "premium-ev", "premium-ev", "Dedicated directional bitmap"),
+    ("bitermotors-mass-market-ev", "Mass-market EV", "mass-market-ev", "mass-market-ev", "Dedicated directional bitmap"),
+    ("bitermotors-megatruck", "Megatruck", "megatruck", "megatruck", "Dedicated directional bitmap"),
+    ("bitermotors-bitertaxi-fleet", "Bitertaxi", "bitertaxi", "bitertaxi-fleet", "Dedicated directional bitmap"),
+]
+
+OTHER_ASSETS = [
+    ("bitermotors-cybertrain", "Cybertrain", "mod/bitermotors_0.1.1/graphics/entity/cybertrain/cybertrain.png", "cybertrain.png", "Dedicated 64-direction rail sprite"),
+    ("bitermotors-cybertrain-charging-stop", "Cybertrain Charging Stop", "mod/bitermotors_0.1.1/graphics/entity/cybertrain-charging-stop/charging-stop.png", "cybertrain-charging-stop.png", "Dedicated four-direction rail-aligned structure"),
+    ("bitermotors-espider", "eSpider", "base-art", "espider.png", "Tinted vanilla Spidertron art; inventory icon shown as preview fallback"),
+    ("bitermotors-agi-training-dataset", "AGI Training Dataset", None, "ai-token.png", "Inventory item; no placed entity bitmap"),
+    ("bitermotors-agi-model", "AGI Model", None, "agi-model.png", "Inventory item; no placed entity bitmap"),
 ]
 
 
 def rel(path: Path) -> str:
     return "../../" + path.relative_to(ROOT).as_posix()
+
+
+def png_size(path: Path) -> tuple[int, int]:
+    with path.open("rb") as image:
+        header = image.read(24)
+    if len(header) != 24 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
+        raise ValueError(f"Missing or invalid PNG required by art QA: {path}")
+    return struct.unpack(">II", header[16:24])
+
+
+def critical_asset_records() -> list[dict]:
+    records = []
+    for prototype, name, filename, icon, tiles, scale, status in ENTITY_ASSETS:
+        source = GRAPHICS / "entity" / filename if filename else None
+        icon_path = GRAPHICS / "icons" / icon
+        iw, ih = png_size(icon_path)
+        record = {"review_id": f"entity:{prototype}", "prototype_id": prototype, "name": name,
+                  "kind": "entity", "source_path": rel(source) if source else "base-art",
+                  "icon_path": rel(icon_path), "footprint_tiles": [tiles, tiles], "scale": scale,
+                  "icon_dimensions": [iw, ih], "source_dimensions": None,
+                  "preview_dimensions": None, "status": status}
+        if source:
+            width, height = png_size(source)
+            record["source_dimensions"] = [width, height]
+            record["preview_dimensions"] = [round(width * scale), round(height * scale)]
+        records.append(record)
+    for prototype, name, directory, artwork, status in VEHICLES:
+        source = ROOT / "art/blender" / directory / "renders" / f"{directory}-master.png"
+        icon_path = GRAPHICS / "icons" / f"{artwork}.png"
+        width, height = png_size(source)
+        iw, ih = png_size(icon_path)
+        records.append({"review_id": f"vehicle:{prototype}", "prototype_id": prototype, "name": name,
+                        "kind": "vehicle", "source_path": rel(source), "icon_path": rel(icon_path),
+                        "source_dimensions": [width, height], "preview_dimensions": [width, height],
+                        "icon_dimensions": [iw, ih], "scale": 1.0, "status": status})
+    for prototype, name, path, icon, status in OTHER_ASSETS:
+        icon_path = GRAPHICS / "icons" / icon
+        iw, ih = png_size(icon_path)
+        source = ROOT / path if path and path != "base-art" else None
+        dimensions = list(png_size(source)) if source else None
+        records.append({"review_id": f"prototype:{prototype}", "prototype_id": prototype, "name": name,
+                        "kind": "prototype", "source_path": rel(source) if source else ("base-art" if path == "base-art" else None),
+                        "icon_path": rel(icon_path), "source_dimensions": dimensions,
+                        "icon_dimensions": [iw, ih],
+                        "preview_dimensions": dimensions, "scale": 1.0,
+                        "status": status})
+    return records
 
 
 def review_controls(asset_id: str) -> str:
@@ -65,18 +129,24 @@ def review_controls(asset_id: str) -> str:
 
 def entity_cards() -> str:
     cards = []
-    for index, (name, entity_path, icon_path, tiles, source_width, sprite_scale, status) in enumerate(ENTITIES):
+    for entry in critical_asset_records():
+        if entry["kind"] != "entity":
+            continue
+        name, asset_id = entry["name"], entry["review_id"]
+        tiles = entry["footprint_tiles"][0]
+        icon_path = entry["icon_path"]
         footprint = tiles * 32
-        sprite_width = round(source_width * sprite_scale)
-        asset_id = f"entity-{index}"
+        sprite_width = (entry.get("preview_dimensions") or [0])[0]
+        art_markup = (f'<img class="entity-sprite" src="{html.escape(entry["source_path"])}" alt="{html.escape(name)} entity sprite">'
+                      if entry["source_path"] != "base-art" else '<div class="no-bitmap">No dedicated placed bitmap; inherited vanilla art</div>')
         cards.append(f"""
-    <article class="asset entity-card" data-kind="entities" data-id="{asset_id}">
-      <header><img class="mini-icon" src="{rel(GRAPHICS / 'icons' / icon_path)}" alt=""><div><h2>{html.escape(name)}</h2><p>{tiles}x{tiles} tiles | {html.escape(status)}</p></div></header>
+    <article class="asset entity-card" data-kind="entities" data-id="{html.escape(asset_id)}">
+      <header><img class="mini-icon" src="{html.escape(icon_path)}" alt=""><div><h2>{html.escape(name)}</h2><p>{tiles}x{tiles} tiles | {html.escape(entry['status'])}</p></div></header>
       <div class="entity-stage terrain-grass" style="--footprint:{footprint}px;--sprite:{sprite_width}px">
         <div class="footprint-grid" aria-hidden="true"></div>
-        <img class="entity-sprite" src="{rel(GRAPHICS / 'entity' / entity_path)}" alt="{html.escape(name)} entity sprite">
+        {art_markup}
       </div>
-      <div class="belt" aria-label="Inventory and belt scale">{''.join(f'<img src="{rel(GRAPHICS / "icons" / icon_path)}" alt="">' for _ in range(5))}</div>
+      <div class="belt" aria-label="Inventory and belt scale">{''.join(f'<img src="{html.escape(icon_path)}" alt="">' for _ in range(5))}</div>
       {review_controls(asset_id)}
     </article>""")
     return "".join(cards)
@@ -86,7 +156,7 @@ def icon_cards() -> str:
     cards = []
     for index, path in enumerate(sorted((GRAPHICS / "icons").glob("*.png"))):
         name = path.stem.replace("-", " ").title()
-        asset_id = f"icon-{index}"
+        asset_id = f"icon:{path.stem}"
         cards.append(f"""
     <article class="asset icon-card" data-kind="icons" data-id="{asset_id}">
       <header><h2>{html.escape(name)}</h2><p>256px normalized master</p></header>
@@ -99,15 +169,36 @@ def icon_cards() -> str:
 
 def vehicle_cards() -> str:
     cards = []
-    for index, (name, preview_path, icon_path, status) in enumerate(VEHICLES):
-        asset_id = f"vehicle-{index}"
+    for prototype, name, directory, artwork, status in VEHICLES:
+        asset_id = f"vehicle:{prototype}"
+        preview_path = ROOT / "art/blender" / directory / "renders" / f"{directory}-master.png"
+        icon_path = GRAPHICS / "icons" / f"{artwork}.png"
         cards.append(f"""
     <article class="asset vehicle-card" data-kind="vehicles" data-id="{asset_id}">
-      <header><img class="mini-icon" src="{rel(GRAPHICS / 'icons' / icon_path)}" alt=""><div><h2>{html.escape(name)}</h2><p>{html.escape(status)}</p></div></header>
-      <div class="vehicle-stage"><img src="{rel(ROOT / 'art/blender' / preview_path)}" alt="{html.escape(name)} north-facing sprite"></div>
-      <div class="belt" aria-label="Inventory and belt scale">{''.join(f'<img src="{rel(GRAPHICS / "icons" / icon_path)}" alt="">' for _ in range(5))}</div>
+      <header><img class="mini-icon" src="{rel(icon_path)}" alt=""><div><h2>{html.escape(name)}</h2><p>{html.escape(status)}</p></div></header>
+      <div class="vehicle-stage"><img src="{rel(preview_path)}" alt="{html.escape(name)} north-facing sprite"></div>
+      <div class="belt" aria-label="Inventory and belt scale">{''.join(f'<img src="{rel(icon_path)}" alt="">' for _ in range(5))}</div>
       {review_controls(asset_id)}
     </article>""")
+    return "".join(cards)
+
+
+def other_asset_cards() -> str:
+    cards = []
+    for entry in critical_asset_records():
+        if entry["kind"] != "prototype":
+            continue
+        if entry["source_dimensions"]:
+            preview = f'<img src="{html.escape(entry["source_path"])}" alt="{html.escape(entry["name"])} art preview">'
+        elif entry["prototype_id"] == "bitermotors-espider":
+            preview = (f'<img src="{html.escape(entry["icon_path"])}" alt="eSpider inventory icon used as fallback base-art preview">'
+                       '<div class="no-bitmap">Inherited, tinted vanilla Spidertron sprite; no dedicated local bitmap</div>')
+        else:
+            preview = '<div class="no-bitmap">Inventory item only; no placed entity bitmap</div>'
+        cards.append(f'''<article class="asset vehicle-card" data-kind="entities" data-id="{html.escape(entry["review_id"])}">
+      <header><img class="mini-icon" src="{html.escape(entry["icon_path"])}" alt=""><div><h2>{html.escape(entry["name"])}</h2><p>{html.escape(entry["status"])}</p></div></header>
+      <div class="vehicle-stage">{preview}</div><div class="review-note">Prototype ID: <code>{html.escape(entry["prototype_id"])}</code></div>
+      {review_controls(entry["review_id"])}</article>''')
     return "".join(cards)
 
 
@@ -115,11 +206,16 @@ def animation_cards() -> str:
     cards = []
     for index, (name, filename, width, height, trigger) in enumerate(ANIMATIONS):
         path = GRAPHICS / "animation" / filename
-        asset_id = f"animation-{index}"
+        sheet_width, sheet_height = png_size(path)
+        if sheet_width != width * 8 or sheet_height != height:
+            raise ValueError(f"Animation metadata mismatch for {path}: actual {sheet_width}x{sheet_height}, "
+                             f"expected {width * 8}x{height}")
+        asset_id = f"animation:{path.stem}"
+        preview_scale = min(1.7, 230 / width, 160 / height)
         cards.append(f"""
     <article class="asset animation-card" data-kind="animations" data-id="{asset_id}">
-      <header><h2>{html.escape(name)}</h2><p>{html.escape(trigger)} | 8 frames</p></header>
-      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('{rel(path)}');--fw:{width}px;--fh:{height}px"></div></div>
+      <header><h2>{html.escape(name)}</h2><p>{html.escape(trigger)} | source {sheet_width}x{sheet_height}px | frame {width}x{height}px</p></header>
+      <div class="animation-stage"><div class="sprite-animation" style="--sheet:url('{rel(path)}');--fw:{width}px;--fh:{height}px;--preview-scale:{preview_scale:g}"></div></div>
       {review_controls(asset_id)}
     </article>""")
     return "".join(cards)
@@ -129,7 +225,7 @@ def technology_cards() -> str:
     cards = []
     for index, path in enumerate(sorted((GRAPHICS / "technology").glob("*.png"))):
         name = path.stem.replace("-", " ").title()
-        asset_id = f"technology-{index}"
+        asset_id = f"technology:{path.stem}"
         cards.append(f"""
     <article class="asset technology-card" data-kind="technology" data-id="{asset_id}">
       <header><h2>{html.escape(name)}</h2><p>Locally composed technology art</p></header>
@@ -141,15 +237,28 @@ def technology_cards() -> str:
 
 def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    critical = critical_asset_records()
+    animation_assets = []
+    for name, filename, frame_width, frame_height, trigger in ANIMATIONS:
+        path = GRAPHICS / "animation" / filename
+        sheet_width, sheet_height = png_size(path)
+        if sheet_width != frame_width * 8 or sheet_height != frame_height:
+            raise ValueError(f"Animation metadata mismatch for {path}: actual {sheet_width}x{sheet_height}, "
+                             f"expected {frame_width * 8}x{frame_height}")
+        animation_assets.append({"name": name, "path": rel(path),
+                                 "source_dimensions": [sheet_width, sheet_height],
+                                 "frame_dimensions": [frame_width, frame_height],
+                                 "frame_count": 8, "trigger": trigger})
     manifest = {
-        "entities": [entry[0] for entry in ENTITIES],
-        "vehicles": [entry[0] for entry in VEHICLES],
+        "critical_assets": critical,
+        "animation_assets": animation_assets,
+        "entities": [entry["prototype_id"] for entry in critical if entry["kind"] == "entity"],
+        "vehicles": [entry["prototype_id"] for entry in critical if entry["kind"] == "vehicle"],
         "icons": [path.name for path in sorted((GRAPHICS / "icons").glob("*.png"))],
         "animations": [entry[0] for entry in ANIMATIONS],
         "technology": [path.name for path in sorted((GRAPHICS / "technology").glob("*.png"))],
-        "paid_generation_count": 3,
         "blender": {
-            "installed": True,
+            "pipeline": "Scripted local rendering; installation is machine-specific, not asserted by this index.",
             "break_even": "Worthwhile for directional drivable sprites; not worthwhile for icons alone.",
             "image_generation_estimate": "10-15 attempts for five coherent directional sheets after retries.",
             "local_pipeline_estimate": "One scripted camera/material rig plus five low-poly models; all rotations and recolors then render locally.",
@@ -174,24 +283,24 @@ main{{padding:18px clamp(16px,4vw,48px) 60px}} .grid{{display:grid;grid-template
 .entity-stage{{height:390px;position:relative;overflow:hidden;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}}
 .entity-stage.terrain-concrete{{background-color:#77756c}} .entity-stage.terrain-dark{{background-color:#25292b}} .footprint-grid{{position:absolute;width:var(--footprint);height:var(--footprint);border:2px solid var(--cyan);background-image:linear-gradient(#45d5ec55 1px,transparent 1px),linear-gradient(90deg,#45d5ec55 1px,transparent 1px);background-size:32px 32px;opacity:.55}}
 .entity-sprite{{position:absolute;width:var(--sprite);height:var(--sprite);object-fit:contain;image-rendering:auto}} body.show-bounds .entity-sprite{{outline:1px dashed var(--orange);background:#f69a2b10}}
-.vehicle-stage{{height:260px;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}} .vehicle-stage img{{width:224px;height:224px;object-fit:contain}}
+.vehicle-stage{{height:260px;display:grid;place-items:center;background-color:#526b43;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px}} .vehicle-stage img{{max-width:224px;max-height:224px;object-fit:contain}} .no-bitmap{{padding:18px;color:#ffd078;text-align:center;max-width:240px}} .review-note{{padding:8px;color:var(--muted)}}
 .belt{{height:64px;background:#111416;display:flex;align-items:center;justify-content:space-evenly;border-top:1px solid #3b3f41;border-bottom:1px solid #3b3f41;overflow:hidden}} .belt img{{width:42px;height:42px;object-fit:contain}}
 .review{{padding:9px 10px;display:flex;gap:7px;justify-content:flex-end}} .review button{{font-size:12px;padding:5px 8px}}
 .icon-scales{{height:150px;display:flex;gap:26px;align-items:center;justify-content:center;background:#1b1d1e}} .icon-scales img{{object-fit:contain}} .i64{{width:64px;height:64px}} .i32{{width:32px;height:32px}} .i20{{width:20px;height:20px}}
-.animation-stage{{height:190px;display:grid;place-items:center;background:#111416}} .sprite-animation{{width:var(--fw);height:var(--fh);background-image:var(--sheet);background-size:calc(var(--fw) * 8) var(--fh);animation:play .9s steps(8) infinite;transform:scale(1.7);transform-origin:center}} @keyframes play{{to{{background-position-x:calc(var(--fw) * -8)}}}}
+.animation-stage{{height:190px;display:grid;place-items:center;background:#111416}} .sprite-animation{{width:var(--fw);height:var(--fh);background-image:var(--sheet);background-size:calc(var(--fw) * 8) var(--fh);animation:play .9s steps(8) infinite;transform:scale(var(--preview-scale));transform-origin:center}} @keyframes play{{to{{background-position-x:calc(var(--fw) * -8)}}}}
 .technology-preview{{height:230px;display:grid;place-items:center;background:#191b1c}} .technology-preview img{{width:190px;height:190px;object-fit:contain}}
 .section-title{{margin:28px 0 10px;font-size:18px}} .math{{margin-top:28px;border-top:1px solid var(--line);padding-top:20px;max-width:900px}} .math table{{width:100%;border-collapse:collapse}} th,td{{padding:8px;text-align:left;border-bottom:1px solid #3c4042}} th{{color:var(--cyan)}} code{{color:#ffd078}}
 .hidden{{display:none}} @media(max-width:600px){{.entity-stage{{height:330px}}h1{{font-size:22px}}}}
 </style>
 </head>
 <body>
-<header class="page"><div><h1>Biter Motors Artwork QA</h1><p class="lede">Production index at entity footprint, inventory, belt, animation, and technology scales. Review decisions persist in this browser.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
+<header class="page"><div><h1>Biter Motors Artwork QA</h1><p class="lede">Static asset previews only. Browser decisions are not native in-game review or release approval. Inherited vanilla art and known placeholder reuse are labeled pending.</p><p class="lede">Radiator and Space Solar currently resolve to identical vanilla placed solar-panel art; R15 remains open.</p></div><div class="summary" id="summary">0 approved / 0 revise</div></header>
 <nav class="toolbar" aria-label="Artwork filters">
   <button class="active" data-filter="all">All</button><button data-filter="entities">Entities</button><button data-filter="vehicles">Vehicles</button><button data-filter="icons">Icons</button><button data-filter="animations">Animations</button><button data-filter="technology">Technology</button>
   <button id="terrain" title="Cycle entity preview terrain">Terrain</button><button id="bounds" title="Show transparent image bounds">Bounds</button><button id="copy" title="Copy review decisions">Copy review</button>
 </nav>
 <main>
-<section class="grid" id="assets">{entity_cards()}{vehicle_cards()}{icon_cards()}{animation_cards()}{technology_cards()}</section>
+<section class="grid" id="assets">{entity_cards()}{vehicle_cards()}{other_asset_cards()}{icon_cards()}{animation_cards()}{technology_cards()}</section>
 <section class="math"><h2 class="section-title">Directional vehicle production math</h2><p>Biter Motors vehicle and battery art now uses a deterministic Blender pipeline. Directional sprites, shadows, chemistry variants, damaged packs, and inventory icons can be reproduced locally without additional image-generation calls.</p><p>Generated masters: <a href="../bitermotors-masters/final/sales-office.png">Sales Office</a>, <a href="../bitermotors-masters/final/terrestrial-datacenter.png">Terrestrial Datacenter</a>, and <a href="../bitermotors-masters/final/agi-model.png">AGI Model</a>.</p></section>
 </main>
 <script>

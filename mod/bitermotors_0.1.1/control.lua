@@ -15,6 +15,8 @@ SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
 ReservationPlanner = require("runtime.reservation_planner")
 AiAccounting = require("runtime.ai_accounting")
+BusinessIncome = require("runtime.business_income")
+ProgressGuidance = require("runtime.progress_guidance")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -123,6 +125,7 @@ BITERTAXI_DEPOT_POWER_NAME = "bitermotors-bitertaxi-depot-power"
 BITERTAXI_ITEM_NAME = "bitermotors-bitertaxi-fleet"
 BITERTAXI_DEPOT_RADIUS = 256
 BITERTAXI_CUSTOMERS_PER_VEHICLE = 5
+BITERTAXI_MAX_FLEET = 200
 BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR = 2
 BITERTAXI_ATTRITION_VEHICLE_HOURS = 60
 BITERTAXI_SAFETY_RIDES_SCALE = 1000
@@ -7964,7 +7967,7 @@ function bitertaxi_depot_snapshot(center, allocated_customers)
   local power_factor = grid_connected and bitertaxi_depot_power_factor(center) or 0
   local audio_level = continuous_improvement_level(center.force, PREMIUM_AUDIO_TECH_NAME)
   local metrics = BitertaxiDepot.metrics{
-    max_fleet = 200,
+    max_fleet = BITERTAXI_MAX_FLEET,
     stored = stored,
     customers = customers,
     customers_per_vehicle = BITERTAXI_CUSTOMERS_PER_VEHICLE,
@@ -8042,6 +8045,7 @@ function process_bitertaxi_depots()
             if inserted > 0 then
               local statistics = center.force.get_item_production_statistics(center.surface)
               statistics.on_flow(DOLLAR_NAME, inserted)
+              BusinessIncome.record(storage, center.force.name, "bitertaxi-service", inserted)
               announce_first_bitertaxi_depot(center.force)
             end
           end
@@ -8291,7 +8295,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-sales-office"] = "[Biter Motors] Sales Office researched. Place one within 128 tiles of enemy spawners, then place a grid-connected EV Charging Station within 64 tiles of the converted customer settlement.",
   ["bitermotors-advanced-battery-chemistry"] = "[Biter Motors] Advanced Battery Chemistry researched. Refine Nickel Ore and Lithium Brine. Make four-cell batches in Chemical Plants or five-cell batches in a Biterfactory; both consume the cobalt from dirty nickel refining. Four cells, four Steel Plates, and two Advanced Circuits make one High-energy Battery Pack.",
   ["bitermotors-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Grid Batteries for mass-market power demand.",
-  ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Supply 20 Dollars per cycle to produce 20 AI Tokens every 30 seconds; stockpile 1,000 for Autonomous Logistics.",
+  ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Its base cycle consumes 20 Dollars to produce 20 AI Tokens in 30 seconds. Make the Tokens for Autonomous Logistics and Orbital AI Infrastructure on land; check their research ingredients.",
   ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Route and Summon controls for Premium, Mass-market, Megatruck, and Bitertaxi EVs. Bitertaxi production still requires 5,000 total consumer EV sales.",
   ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Launch Datacenter Cores, eight Radiator Panels per core, and enough Space Solar to sustain 250 MW each. Return the physical AI Tokens to Nauvis.",
   ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 25,000 AI Tokens per Dollar.",
@@ -9821,6 +9825,7 @@ function award_bitertaxi_audio_revenue(office, completed_crafts)
   if inserted > 0 then
     local statistics = office.force.get_item_production_statistics(office.surface)
     statistics.on_flow(DOLLAR_NAME, inserted)
+    BusinessIncome.record(storage, office.force.name, "bitertaxi-audio", inserted)
   end
   return inserted
 end
@@ -10041,7 +10046,19 @@ local function progress_snapshot(force)
   local advanced_battery_chemistry_available = sync_advanced_battery_chemistry_gate(force, false)
   local foundry_gate = sync_foundry_power_gate(force, false)
   local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
+  local research_costs = {}
+  for _, name in ipairs(ProgressGuidance.technologies) do
+    research_costs[name] = ProgressGuidance.research_cost(force.technologies[name])
+  end
+  local dollar_inflow = count_item_produced(force, DOLLAR_NAME)
+  local business_income = BusinessIncome.ensure(storage, force.name)
   return {
+    research_costs = research_costs,
+    operating_profit_dollars = business_income.profit,
+    other_dollar_inflow = math.max(0, dollar_inflow - business_income.profit),
+    orbital_cycle_seconds = ProgressGuidance.recipe_seconds(
+      force.recipes["bitermotors-orbital-ai-token"],
+      prototypes.entity[ORBITAL_DATACENTER_CORE_NAME].get_crafting_speed("normal")),
     industrial_supply_chain_researched = researched(force, "bitermotors-industrial-supply-chain"),
     big_mining_drill_researched = researched(force, "big-mining-drill"),
     foundry_researched = researched(force, "foundry"),
@@ -10153,7 +10170,7 @@ local function progress_snapshot(force)
     orbital_ai_tokens_generated = orbital_ai.generated,
     orbital_ai_efficiency_level = orbital_ai.researched_level,
     orbital_ai_next_threshold = orbital_ai.next_threshold,
-    dollars_produced = count_item_produced(force, DOLLAR_NAME),
+    dollars_produced = dollar_inflow,
     prototype_evs_produced = count_item_produced(force, PROTOTYPE_ROADSTER_NAME),
     premium_evs_produced = premium_evs_produced,
     premium_pilot_production_gate = PREMIUM_PILOT_PRODUCTION_GATE,
@@ -10172,6 +10189,9 @@ local function progress_snapshot(force)
 end
 
 local function current_progress_objective(snapshot)
+  local function research(name)
+    return ProgressGuidance.research_summary(snapshot.research_costs[name])
+  end
   if not snapshot.sales_office_researched then
     return "Customer discovery", "Research Sales Office.", "This unlocks the Sales Office, V1 charger, and Sell hopes and dreams."
   elseif snapshot.sales_offices == 0 then
@@ -10188,7 +10208,7 @@ local function current_progress_objective(snapshot)
     end
     return "Prototype revenue", "Run Sell hopes and dreams.", "Supply one Prototype Roadster and one EV Reservation, then remove the Dollars after the 60-second sale."
   elseif not snapshot.ev_production_researched then
-    return "Premium production", "Research EV Production Line.", "Invest 250 cycles of red, green, blue science, and Dollars to unlock Premium EV pilot production."
+    return "Premium production", "Research EV Production Line.", research("bitermotors-premium-ev-program") .. " Unlock Premium EV pilot production."
   elseif not snapshot.premium_ev_gate.market_ready then
     return "Prototype market validation", "Sell 50 Prototype Roadsters.", string.format("Completed sales: %d / 50. Expand to multiple Sales Offices and customer settlements to increase throughput.", snapshot.roadsters_sold)
   elseif snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
@@ -10214,7 +10234,7 @@ local function current_progress_objective(snapshot)
     )
   elseif not snapshot.advanced_battery_chemistry_researched then
     return "Battery breakthrough", "Research Advanced Battery Chemistry.",
-      "Producing 250 Premium EVs exposed the commodity-cell bottleneck. Invest 300 cycles of red, green, blue science, and Dollars to develop nickel-rich cells, lithium processing, and scalable packs."
+      research("bitermotors-advanced-battery-chemistry") .. " Develop nickel-rich cells, lithium processing, and scalable packs."
   elseif snapshot.nickel_ore_mined == 0 or snapshot.lithium_brine_pumped == 0 then
     local missing = {}
     if snapshot.nickel_ore_mined == 0 then missing[#missing + 1] = "Nickel Ore" end
@@ -10232,63 +10252,29 @@ local function current_progress_objective(snapshot)
       "Combine four High-nickel Cells, four Steel Plates, and two Advanced Circuits. One Chemical Plant cell batch fills one pack; the Biterfactory route yields one spare cell per cycle."
   elseif not snapshot.energy_products_researched then
     return "Energy products", "Research Energy Products for industrial expansion.",
-      "Charging demand grows with every customer EV. Unlock High-density Solar Panels, LFP chemistry, and Grid Batteries before Foundry and mass-market expansion."
-  elseif snapshot.foundry_power_gate and not snapshot.foundry_power_gate.qualified then
-    local gate = snapshot.foundry_power_gate
-    return "Industrial electrification", "Prove a 5 MW solar industrial block.", string.format(
-      "Produce %d / %d High-density Solar Panels and %d / %d Grid Batteries. Landing-kit equipment does not count; this milestone proves new Energy Products manufacturing before Foundries arrive.",
-      gate.solar_panels,
-      gate.solar_target,
-      gate.grid_batteries,
-      gate.grid_battery_target
-    )
-  elseif not snapshot.foundry_researched then
-    return "Metallurgical scaling", "Research Metallurgical Scaling.",
-      "Invest 250 cycles of red, green, blue science, and Dollars. Each Foundry draws 2.5 MW; an ore-melting and casting pair draws 5 MW before modules."
+      research("bitermotors-energy-products") .. " Unlock High-density Solar Panels, LFP chemistry, and Grid Batteries before mass-market expansion. Choose generation and storage that can sustain the growing customer load."
   elseif not snapshot.mass_market_ev_gate.market_ready then
     return "Premium market scale", "Sell 250 Premium EVs.", string.format("Completed sales: %d / 250. This market proof unlocks Mass-market EV production after its research is complete.", snapshot.premium_evs_sold)
   elseif not snapshot.charging_network_researched then
-    return "Charging network", "Research EV Charging Network.", "Invest 300 cycles of red, green, blue science, and Dollars to unlock the eight-stall V2 charger."
-  elseif snapshot.chargers_v2 == 0 then
-    return "Charging network", "Craft and place a V2 charger.", "In an Assembling Machine 2 or 3, craft it from 1 V1 charger, 2 Substations, and 20 Processing Units."
+    return "Charging network", "Research EV Charging Network.", research("bitermotors-ev-charging-network") .. " Unlock the eight-stall V2 charger. Placing a V2 is optional; the research is required for Mass-market production."
   elseif not snapshot.mass_market_researched then
-    return "Mass-market scale", "Research Mass-market EV Production.", "Invest 1,000 cycles through purple and yellow science plus Dollars to unlock Structural Casting, Biterfactory V2, mass-market EVs, and V3 charging."
+    return "Mass-market scale", "Research Mass-market EV Production.", research("bitermotors-capital-scaling") .. " Unlock Structural Casting, Biterfactory V2, Mass-market EVs, and V3 charging."
   elseif snapshot.biterfactories_v2 == 0 then
     return "Mass-market scale", "Upgrade a Biterfactory to V2.", "Craft V2 in an Assembling Machine or Biterfactory from 1 Biterfactory item, 1 Structural Casting, and 100 Dollars, then place it directly over a V1."
   elseif not snapshot.mass_market_sale_complete then
     return "Mass-market scale", "Produce and sell the first Mass-market EV.", "Biterfactory V2 is faster and more productive; each 5-second sale consumes one EV Reservation and returns 1 Dollar of profit."
-  elseif not snapshot.megatruck_gate.market_ready then
-    return "Mass-market scale", "Sell 2,000 Mass-market EVs.", string.format("Completed sales: %d / 2,000. Expand the customer network and Sales Office throughput to unlock Megatruck production.", snapshot.mass_market_evs_sold)
-  elseif not snapshot.megatruck_gate.technology_ready then
-    return "Megatruck engineering", "Research Megatruck Engineering.", "Develop Tank technology, then invest science and Dollars to adapt armored-vehicle engineering for the Megatruck."
-  elseif snapshot.chargers_v3 == 0 and not snapshot.terrestrial_ai_researched then
-    return "Rapid Charging", "Craft and place a V3 Rapid Charger.", "Upgrade 1 V2 charger with 4 Substations and 40 Processing Units. Its 12 occupied stalls can draw 3 MW."
-  elseif snapshot.solar_arrays == 0 or snapshot.grid_batteries == 0 then
-    return "Energy products", "Build a High-density Solar Panel and a Grid Battery.", "Upgrade a conventional panel in an assembler; Biterfactories can mass-produce panels more cheaply. Build Grid Batteries in either Biterfactory tier."
   elseif not snapshot.terrestrial_ai_researched then
-    return "Terrestrial AI", "Research Terrestrial AI.", "Unlock Datacenter Racks, Autonomy Computers, and an 8 MW Terrestrial Datacenter that converts electricity into AI Tokens."
+    return "Terrestrial AI", "Research Terrestrial AI.", research("bitermotors-terrestrial-ai") .. " Unlock an 8 MW datacenter. Foundry, Megatruck, Cybertrain, and extra charger tiers are optional branches."
   elseif snapshot.datacenters == 0 then
     return "Terrestrial AI", "Build a Terrestrial Datacenter.", "Combine 4 Datacenter Racks, a Biterfactory Module, 4 Substations, and 100 Refined Concrete."
-  elseif snapshot.ai_tokens_produced < 1000 then
-    return "Terrestrial AI", "Generate 1,000 AI Tokens.", "Supply 20 Dollars per cycle; one 8 MW datacenter produces 20 tokens every 30 seconds."
+  elseif snapshot.ai_tokens_produced < snapshot.research_costs["bitermotors-autonomous-logistics"].ingredients["bitermotors-ai-token"] then
+    return "Terrestrial AI", "Make AI Tokens for Autonomous Logistics.", research("bitermotors-autonomous-logistics") .. " Keep 8 MW stable: low power cancels the committed batch and its operating Dollars."
   elseif not snapshot.autonomous_logistics_researched then
-    return "Autonomy", "Research Autonomous Logistics.", "Invest 1,000 cycles through utility science plus 1,000 AI Tokens and 1,000 Dollars to unlock Bitertaxi Fleets."
-  elseif not snapshot.bitertaxi_gate.market_ready then
-    return "Autonomy market scale", "Reach 5,000 total consumer EV sales.", string.format("Completed Roadster, Premium, Mass-market, and Megatruck sales: %d / 5,000.", snapshot.consumer_evs_sold)
-  elseif snapshot.bitertaxi_fleets_produced == 0 then
-    return "Autonomy", "Build the first Bitertaxi Fleet in Biterfactory V2.", "Commit 4 Mass-market EVs, 4 Autonomy Computers, and 20 Dollars."
-  elseif snapshot.chargers_v4 == 0 then
-    return "Rapid Charging", "Craft and place a solar-canopy V4 Solar Charging Hub.", "Upgrade 1 V3 Rapid Charger with 4 High-density Solar Panels and 4 Grid Batteries. Twenty occupied stalls can draw 10 MW."
-  elseif snapshot.bitertaxi_depots == 0 then
-    return "Autonomy", "Build a Bitertaxi Depot.", "Combine a V4 Solar Charging Hub, 4 Roboports, 50 Processing Units, and 200 Dollars. The center stores 200 Bitertaxis and draws 10 MW."
-  elseif not snapshot.bitertaxi_sale_complete then
-    return "Autonomy", "Operate the Bitertaxi service.", "Load Bitertaxis into the 40-slot fleet inventory. Each vehicle serves five nearby mobile customers; recurring profit completes the terrestrial business loop."
+    return "Autonomy", "Research Autonomous Logistics.", research("bitermotors-autonomous-logistics") .. " Bitertaxis are an optional recurring-profit route after 5,000 consumer EV sales, not a prerequisite for orbital research."
   elseif not snapshot.orbital_compute_researched then
-    return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", "Use the vanilla Rocket Silo and a stationary platform over Nauvis, then invest 2,000 cycles through space science plus AI Tokens and Dollars."
+    return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", research("bitermotors-orbital-compute") .. " Use the vanilla Rocket Silo and a stationary Nauvis platform. Make the research Tokens on land; orbital output cannot fund its own unlock."
   elseif snapshot.orbital_datacenter_cores == 0 then
     return "Orbital AI", "Launch and place an Orbital Datacenter Core.", "Each 6x6 core draws 250 MW and produces physical AI Tokens. Cargo pods must return those tokens to Nauvis."
-  elseif snapshot.high_density_space_solar_panels == 0 then
-    return "Orbital power", "Launch High-density Space Solar Panels.", "Each panel produces 150 MW over Nauvis after the orbital solar bonus. Two cover one 250 MW core before platform overhead."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Orbital cooling", "Install eight Orbital Radiator Panels per Datacenter Core.", string.format(
       "Cooling online: %d / %d cores. Radiators installed: %d / %d. Any undercooled core scraps its active token batch.",
@@ -10298,34 +10284,30 @@ local function current_progress_objective(snapshot)
       snapshot.required_orbital_radiator_panels
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Run the first orbital AI batch.", "Supply 1 Dollar to a powered, cooled core. It produces 10,000 physical AI Tokens every 30 seconds; return them to Nauvis by cargo pod."
+    return "Orbital AI", "Run the first orbital AI batch.", string.format("Supply 1 Dollar and stable 250 MW power to a cooled core. Space Solar is one option, not a required placement milestone. A normal core produces 10,000 Tokens every %g seconds before further effects. Low power or missing cooling scraps the batch and operating Dollar; return output by cargo pod.", snapshot.orbital_cycle_seconds)
   elseif snapshot.orbital_ai_tokens_generated < 1000000 then
     return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 1,000,000. The base recipe produces 10,000 Tokens per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.orbital_cluster_researched then
-    return "Orbital scale", "Research Cluster Training.", "Invest 5,000 Dollars plus science to raise each orbital batch from 10,000 to 25,000 AI Tokens."
+    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Raise each orbital batch from 10,000 to 25,000 AI Tokens."
   elseif snapshot.orbital_ai_tokens_generated < 10000000 then
     return "Orbital scale", "Generate ten million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 10,000,000. Cluster Training produces 25,000 Tokens per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.grid_scale_energy_researched then
-    return "Grid-scale energy", "Research Grid-scale Energy.", "Invest 15,000 Dollars plus science to unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 50,000-token orbital batches."
-  elseif snapshot.tandem_solar_arrays == 0 then
-    return "Grid-scale energy", "Upgrade an HD panel into a Tandem Solar Array.", "Each 3 MW array replaces ten HD panels of generation in the same footprint and is required to make a 10 GW grid practical."
-  elseif snapshot.grid_battery_arrays == 0 then
-    return "Grid-scale energy", "Upgrade a Grid Battery into a Grid Battery Array.", "Each Grid Battery Array stores 1 GJ and can charge or discharge at 50 MW."
+    return "Grid-scale energy", "Research Grid-scale Energy.", research("bitermotors-grid-scale-energy") .. " Unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 50,000-token orbital batches."
   elseif snapshot.orbital_ai_tokens_generated < 100000000 then
     return "Hyperscale AI", "Generate 100 million cumulative orbital AI Token equivalents.", string.format(
       "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens or one Training Dataset per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.hyperscale_training_researched then
-    return "Hyperscale AI", "Research Hyperscale Training.", "Invest 30,000 Dollars plus science to unlock 100,000 Tokens or two Training Datasets per orbital batch, and Planetary Energy Grid research."
+    return "Hyperscale AI", "Research Hyperscale Training.", research("bitermotors-hyperscale-training") .. " Unlock 100,000 Tokens or two Datasets per batch and Planetary Energy Grid research."
   elseif not snapshot.planetary_grid_researched then
-    return "Planetary grid", "Research Planetary Energy Grid.", "Invest 2,500 cycles through space science plus AI Tokens; prepare a reliable 10 GW terrestrial supply."
+    return "Planetary grid", "Research Planetary Energy Grid.", research("bitermotors-planetary-energy-grid") .. " Prepare a reliable 10 GW terrestrial supply."
   elseif snapshot.grid_controllers == 0 then
     return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 10 GW training facility. Any low-power condition scraps the entire active training run."
   elseif not snapshot.agi_training_unlocked then
@@ -10341,13 +10323,7 @@ local function progress_stages(snapshot)
   local premium_complete = customer_complete and snapshot.mass_market_sale_complete
   local mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched
   local autonomy_complete = mass_market_complete
-    and snapshot.ai_tokens_produced >= 1000
     and snapshot.autonomous_logistics_researched
-    and snapshot.bitertaxi_gate.market_ready
-    and snapshot.bitertaxi_fleets_produced > 0
-    and snapshot.chargers_v4 > 0
-    and snapshot.bitertaxi_depots > 0
-    and snapshot.bitertaxi_sale_complete
   local orbital_complete = autonomy_complete and snapshot.planetary_grid_researched
   return {
     {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = customer_complete},
@@ -10455,14 +10431,10 @@ function current_progress_measure(snapshot)
   if snapshot.agi_training_unlocked and not snapshot.victory then
     return "AGI training", snapshot.agi_training_progress, 1, true
   end
-  if snapshot.autonomous_logistics_researched and not snapshot.bitertaxi_gate.market_ready then
-    return "Consumer EV sales", snapshot.consumer_evs_sold, 5000
-  end
-  if snapshot.terrestrial_ai_researched and snapshot.ai_tokens_produced < 1000 then
-    return "AI Tokens", snapshot.ai_tokens_produced, 1000
-  end
-  if snapshot.mass_market_researched and not snapshot.megatruck_gate.market_ready then
-    return "Mass-market EV sales", snapshot.mass_market_evs_sold, 2000
+  local autonomy_tokens = snapshot.research_costs["bitermotors-autonomous-logistics"].ingredients["bitermotors-ai-token"]
+  if snapshot.terrestrial_ai_researched and not snapshot.autonomous_logistics_researched
+    and snapshot.ai_tokens_produced < autonomy_tokens then
+    return "AI Tokens", snapshot.ai_tokens_produced, autonomy_tokens
   end
   if snapshot.ev_production_researched and snapshot.premium_ev_gate.market_ready
     and snapshot.premium_evs_produced < snapshot.premium_pilot_production_gate then
@@ -10691,7 +10663,7 @@ local function refresh_progress_panel(player)
   elseif snapshot.energy_products_researched and snapshot.foundry_power_gate then
     local gate = snapshot.foundry_power_gate
     industry_rows[#industry_rows + 1] = {
-      sprite = "item/bitermotors-high-density-solar-array", label = "Industrial power qualification",
+      sprite = "item/bitermotors-high-density-solar-array", label = "Optional Foundry unlock",
       value = gate.qualified and "Research available" or string.format(
         "%d/%d panels; %d/%d packs",
         gate.solar_panels,
@@ -10701,8 +10673,8 @@ local function refresh_progress_panel(player)
       ),
       color = BITERMOTORS_STATE_COLORS.warning,
       tooltip = gate.qualified
-        and "New Energy Products manufacturing has demonstrated a 5 MW solar industrial block. Research Metallurgical Scaling to unlock Foundries."
-        or "Deploy 25 player-built High-density Solar Panels and 5 player-built Grid Batteries. Legendary starter equipment does not count. This approximates 5.25 MW average Nauvis solar output plus 500 MJ storage."
+        and "The Energy Products deployment milestone is complete. You may research Metallurgical Scaling for Foundries; this optional branch is not required for orbital AI. Each Foundry draws 2.5 MW before modules."
+        or "Deploy 25 non-starter High-density Solar Panels and 5 non-starter Grid Batteries to reveal optional Metallurgical Scaling. These counts do not verify grid connection or available power. Each Foundry draws 2.5 MW before modules."
     }
   end
   if snapshot.logistic_system_available or snapshot.logistic_system_researched then
@@ -10818,12 +10790,12 @@ local function refresh_progress_panel(player)
       sprite = "item/bitermotors-dollar", label = "Profit generated",
       value = string.format(
         "%s (%d $)",
-        format_represented_usd(snapshot.dollars_produced),
-        snapshot.dollars_produced
+        format_represented_usd(snapshot.operating_profit_dollars),
+        snapshot.operating_profit_dollars
       ),
       name = "bitermotors_dollars_produced_value",
-      color = snapshot.dollars_produced > 0 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.neutral,
-      tooltip = "Lifetime profit generated by Biter Motors businesses. One in-game Dollar represents approximately $10,000 USD of profit, not revenue."
+      color = snapshot.operating_profit_dollars > 0 and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.neutral,
+      tooltip = string.format("Lifetime profit from completed sales and delivered Bitertaxi service. Excludes %d Dollars of other production, including capital recovery. One in-game Dollar represents approximately $10,000 USD of profit, not revenue.", snapshot.other_dollar_inflow)
     }
     market_rows[#market_rows + 1] = {
       sprite = "entity/biter-spawner", label = "Customer settlements",
@@ -12163,6 +12135,15 @@ end
 
 for recipe_name in pairs(AiAccounting.recipes) do
   script.on_event(prototypes.recipe[recipe_name].on_crafted_event, record_ai_compute_completion)
+end
+for recipe_name in pairs(BusinessIncome.sale_recipes) do
+  script.on_event(prototypes.recipe[recipe_name].on_crafted_event, function(event)
+    local machine = event.entity
+    if machine and machine.valid and machine.name == SALES_OFFICE_NAME then
+      BusinessIncome.record(storage, machine.force.name, event.recipe,
+        BusinessIncome.dollar_output(prototypes.recipe[event.recipe].products))
+    end
+  end)
 end
 script.on_event(prototypes.recipe[AGI_TRAINING_RECIPE_NAME].on_crafted_event,
   record_agi_training_completion)
@@ -13517,6 +13498,28 @@ remote.add_interface("bitermotors", {
       detail = detail,
       journey = progress_stages(snapshot),
       snapshot = snapshot
+    }
+  end,
+  economy_contract = function()
+    return {
+      factorio_version = script.active_mods.base,
+      mod_version = script.active_mods.bitermotors,
+      agi_token_gate = AGI_TOKEN_GATE,
+      dataset_tokens = AiAccounting.dataset_tokens,
+      orbital_milestones = ORBITAL_AI_MILESTONES,
+      consumer_sales_gates = EV_SALES_GATES,
+      charger_tiers = STATION_CONFIGS,
+      radiators_per_core = ORBITAL_RADIATORS_PER_CORE,
+      bitertaxi_customers_per_vehicle = BITERTAXI_CUSTOMERS_PER_VEHICLE,
+      bitertaxi_max_fleet = BITERTAXI_MAX_FLEET,
+      bitertaxi_vehicle_minutes_per_dollar = BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,
+      bitertaxi_attrition_vehicle_hours = BITERTAXI_ATTRITION_VEHICLE_HOURS,
+      bitertaxi_wear_floor = BITERTAXI_ROUTINE_WEAR_FLOOR,
+      grid_battery_initial_adoption = GRID_BATTERY_INITIAL_ADOPTION_FRACTION,
+      grid_battery_referral_fraction = GRID_BATTERY_REFERRAL_FRACTION,
+      grid_battery_referral_minutes = GRID_BATTERY_REFERRAL_WAVE_TICKS / 3600,
+      organic_prospect_interval_minutes = CUSTOMER_ORGANIC_GROWTH_INTERVAL_TICKS / 3600,
+      organic_prospect_cap_multiplier = CUSTOMER_ORGANIC_GROWTH_CAP_MULTIPLIER
     }
   end,
   progression_integrity = function(force_name)

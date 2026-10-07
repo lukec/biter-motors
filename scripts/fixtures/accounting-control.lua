@@ -1,5 +1,7 @@
 local ProductionHistory = require("__bitermotors__/runtime/production_history")
 local CustomerSales = require("__bitermotors__/runtime/customer_sales")
+local BusinessIncome = require("__bitermotors__/runtime/business_income")
+local ProgressGuidance = require("__bitermotors__/runtime/progress_guidance")
 local REPORT = "bitermotors-accounting.jsonl"
 local ROADSTER = "bitermotors-prototype-roadster"
 local PREMIUM = "bitermotors-premium-ev"
@@ -72,6 +74,32 @@ local function pure_fixtures()
     "partial assignment records assigned vehicles, not recipe batch size")
   equal(CustomerSales.consumer_total(CustomerSales.ensure(fixture, "player")), 0,
     "legacy taxi transactions are not consumer car sales")
+  local income = {}
+  equal(BusinessIncome.record(income, "player", "delivered-taxi", 3), 3,
+    "only delivered scripted profit is recorded")
+  equal(BusinessIncome.record(income, "player", "blocked-output", 0), 0,
+    "blocked output earns nothing")
+  equal(BusinessIncome.record(income, "player", "blocked-output", -1), 0,
+    "negative adjustment is not profit")
+  equal(BusinessIncome.ensure(serialized_copy(income), "player").profit, 3,
+    "business profit serializes")
+  equal(BusinessIncome.ensure(income, "other-force").profit, 0, "business profit is force-local")
+  equal(BusinessIncome.dollar_output{{name = DOLLAR, amount = 2, probability = 1}}, 2,
+    "native deterministic product probability is accepted")
+  equal(BusinessIncome.dollar_output{{name = PREMIUM, amount = 1}}, 0,
+    "non-cash products are not profit")
+  equal(pcall(BusinessIncome.dollar_output, {{name = DOLLAR, amount = 2, probability = 0.5}}),
+    false, "stochastic cash is not silently modeled as guaranteed profit")
+  local cost = ProgressGuidance.research_cost{research_unit_count = 500,
+    research_unit_ingredients = {{name = DOLLAR, amount = 3},
+      {name = "bitermotors-ai-token", amount = 2}, {name = "automation-science-pack", amount = 1}}}
+  equal(cost.ingredients[DOLLAR], 1500, "guidance multiplies ingredient amounts by science cycles")
+  equal(cost.ingredients["bitermotors-ai-token"], 1000, "guidance includes Token research cost")
+  equal(ProgressGuidance.research_summary(cost),
+    "Invest 500 science cycles, 1500 Dollars, 1000 AI Tokens. Use the science types shown in the technology tree.",
+    "guidance uses the supplied research cost")
+  equal(ProgressGuidance.recipe_seconds({energy = 30}, 1.5), 20,
+    "guidance includes the machine's native crafting speed")
   report("lua_fixtures_passed", {assertions = assertions})
 end
 
@@ -165,6 +193,11 @@ local function native_stage()
   local manufactured = progress.premium_evs_produced
   storage.last_native_tick = game.tick
   if storage.stage == "produce99" and manufactured == 99 then
+    equal(progress.research_costs["bitermotors-autonomous-logistics"].ingredients[DOLLAR], 750,
+      "guidance reads the actual native autonomy research cost")
+    equal(progress.research_costs["bitermotors-orbital-compute"].ingredients["bitermotors-ai-token"], 1500,
+      "guidance reads the actual native pre-orbital Token cost")
+    equal(progress.orbital_cycle_seconds, 20, "normal orbital core runs at native speed 1.5")
     equal(progress.roadsters_sold, 0, "unsold production does not imply Roadster sales")
     equal(progress.premium_evs_sold, 0, "stored/parked Premiums are not sales")
     equal(force.recipes["bitermotors-premium-ev"].enabled, false,
@@ -194,11 +227,13 @@ local function native_stage()
   elseif storage.stage == "sell49" and progress.roadsters_sold == 49 then
     equal(progress.premium_ev_gate.enabled, false, "49 real Roadster sales do not unlock Premium")
     equal(progress.dollars_produced, 98, "native sales profit matches Progress")
+    equal(progress.operating_profit_dollars, 98, "native completed sales record business profit")
     storage.pending_sales = 1
     storage.stage = "sell50"
   elseif storage.stage == "sell50" and progress.roadsters_sold == 50 then
     equal(progress.premium_ev_gate.enabled, true, "50 actual Roadster sales unlock Premium")
     equal(progress.dollars_produced, 100, "50 sales produce 100 Dollars")
+    equal(progress.operating_profit_dollars, 100, "50 native sales earn 100 Dollars of profit")
     office.set_recipe("bitermotors-sell-premium-ev")
     input(office).insert{name = PREMIUM, count = 1}
     input(office).insert{name = "bitermotors-ev-reservation", count = 1}
@@ -211,6 +246,7 @@ local function native_stage()
     equal(progress.premium_evs_sold, 0, "canceled in-progress Premium sale is not counted")
     equal(progress.customer_ev_sales_lifetime, 50, "recipe change does not invent a completed sale")
     equal(progress.dollars_produced, 100, "canceled sale generates no profit")
+    equal(progress.operating_profit_dollars, 100, "canceled recipe does not earn business profit")
     local stats = force.get_item_production_statistics(surface)
     stats.clear()
     stats.on_flow(PREMIUM, 2)
@@ -234,7 +270,9 @@ local function native_stage()
     equal(history.raw, 9, "raw production includes every quality")
     equal(history.consumed, 10, "consumption is a separate statistic")
     equal(history.reset_count, 1, "only the cleared surface starts a new epoch")
-    equal(progress.dollars_produced, 113, "scripted positive flow adds income after statistics clear")
+    equal(progress.dollars_produced, 113, "scripted positive flow adds production after statistics clear")
+    equal(progress.operating_profit_dollars, 100, "arbitrary cash production is not business profit")
+    equal(progress.other_dollar_inflow, 13, "non-business cash is reported separately")
     equal(progress.nickel_ore_mined, 7, "stored Nickel production, not consumption")
     equal(progress.lithium_brine_pumped, 7, "stored Lithium production, not consumption")
     equal(progress.roadsters_sold, 50, "statistics clear does not clear real sales")
@@ -242,11 +280,15 @@ local function native_stage()
       "other force has its own production history")
     equal(snapshot(game.forces["accounting-other-force"]).customer_ev_sales_lifetime, 0,
       "another force's manufacturing is not sales")
+    equal(snapshot(game.forces["accounting-other-force"]).operating_profit_dollars, 0,
+      "another force does not inherit business profit")
     storage.stage = "reload"
     storage.saved_tick = game.tick
     game.server_save("bitermotors-accounting-reload")
     report("accounting_passed", {history = history, assertions = assertions,
-      manufactured = manufactured, sold = progress.roadsters_sold, profit = progress.dollars_produced})
+      manufactured = manufactured, sold = progress.roadsters_sold,
+      profit = progress.operating_profit_dollars, dollar_production = progress.dollars_produced,
+      other_dollar_inflow = progress.other_dollar_inflow})
   end
 end
 
@@ -257,7 +299,9 @@ script.on_nth_tick(30, function()
     local progress = snapshot()
     equal(progress.premium_evs_produced, 259, "production survives native save/reload")
     equal(progress.roadsters_sold, 50, "sales survive native save/reload")
-    equal(progress.dollars_produced, 113, "profit survives native save/reload")
+    equal(progress.dollars_produced, 113, "cash production survives native save/reload")
+    equal(progress.operating_profit_dollars, 100, "business profit survives native save/reload")
+    equal(progress.other_dollar_inflow, 13, "non-business cash remains separate after reload")
     report("reload_passed", {saved_tick = storage.saved_tick, assertions = assertions})
     storage.stage = "done"
     return

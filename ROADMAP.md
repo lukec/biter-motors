@@ -79,15 +79,21 @@ closes R03: two platforms deliver genuinely computed Datasets through native
 hubs/pods/landing-pad logistics into real lab research, controller construction,
 payload loading, full training, and persistent victory. Orbital cooling
 allocation/removal, half-power/total-outage reset, and separate-process recovery
-also pass. Recovered capital
-versus operating profit remains an explicit R12 interface/economy follow-on.
-**Phases 4-8 remain outstanding**. The final
+also pass. **Phase 4's first slice is implemented:**
+the [economy/guidance evidence](docs/economy-guidance-validation.md) records
+native research costs/throughput, optional-route guidance, genuine business
+profit versus recovered capital, and three source-hashed finite-market models.
+The artwork index is repaired with current assets and explicit reuse gaps.
+No balance values changed. **Phase 4 remains open; Phases 5-8 are outstanding**. The final
 playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
 Dataset on 2026-10-06 and revised the quality/beacon-independent finale from
 60 to **20 uninterrupted simulation minutes at 10 GW** the same day. The
 challenge is building and sustaining the grid, not an hour of idle waiting.
-The next slice is the prototype-backed economy/guidance and functional-art
-freeze, not a campaign start or a release declaration. No new
+The next slice is targeted endgame pacing and functional-art/native UI freeze,
+not a campaign start or a release declaration. The 50k final capital package
+alone needs about 4.2 hours of two-depot income; eight normal cores need about
+6.25 hours in the final compute band. Resolve those specific pacing questions
+and distinguish orbital radiator/solar hardware before qualification. No new
 company, planet, battery chemistry, or future feature branch belongs in this
 release sequence.
 

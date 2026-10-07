@@ -94,11 +94,15 @@ Orbital AI Infrastructure unlocks:
 - Orbital Radiator Panels, with eight required per core.
 - 50 MW High-density Space Solar Panels.
 
-A cooled core consumes 1 Dollar and initially produces 10,000 physical AI
-Tokens every 30 seconds. Cumulative orbital output unlocks capital-and-science
+A normal cooled core consumes 1 Dollar and initially produces 10,000 physical AI
+Tokens every 20 seconds before further effects. Cumulative orbital output unlocks capital-and-science
 projects at 1M, 10M, and 100M Tokens, raising batches to 25,000, 50,000, and
-100,000 Tokens. Low power or insufficient cooling resets the active batch.
-Tokens must return to Nauvis by cargo pod.
+100,000 Tokens. Low power or insufficient cooling scraps the active batch and
+its operating Dollar.
+Tokens must return to Nauvis by cargo pod. Make the Tokens needed to research
+Autonomous Logistics and Orbital AI Infrastructure on land before unlocking
+orbital production. Bitertaxi service is an optional recurring-profit route,
+not an orbital research prerequisite.
 
 The 10M milestone also unlocks direct upgrades from 300 kW HD panels to 3 MW
 Tandem Solar Arrays, and from 100 MJ Grid Batteries to 1 GJ Grid Battery Arrays.

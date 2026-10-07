@@ -416,6 +416,15 @@ it; update misleading copy and simulation instead of silently nerfing it.
 and power. Compare three economy scenarios using actual budgets and finite
 markets, not just an unlimited-sale spreadsheet.
 
+**Implemented 2026-10-06 within recorded bounds:** the
+[economy/guidance slice](economy-guidance-validation.md) uses native technology
+costs and normal machine speed, removes optional orbital guidance blockers,
+separates genuine sales/service profit from recovered capital, and replaces
+constant-based simulation with a source-hashed final-prototype/runtime catalog
+and three finite-market sensitivities. Actual sale/recycling and separate reload
+fixtures cover the income boundary. Native UI presentation and the intended
+campaign cadence still require the rest of Phase 4; no balance values changed.
+
 ### R13: Soak Evidence Can Overstate Completed Work [P1]
 
 **Evidence:** `scripts/analyze-bitermotors-soak.py:155-180` accepts benchmark
@@ -694,7 +703,8 @@ world, and 14 separate-reload assertions: contested capacity, actual power,
 taxi-only service, local growth, pending-ticket balancing, and native grace/mood
 recovery. Prior accounting, customer-state, recycling, and broad smoke pass on
 both source and the current archive. **Phase 2 is complete.** R12's capital
-recovery/profit label remains a Phase 4 economy/interface follow-on.
+recovery/profit label was left for Phase 4 and is now implemented in the
+[economy/guidance slice](economy-guidance-validation.md).
 
 **Deliverables:** R02/R06-R11 fixes, conservation and progression regressions.
 **Exit gate:** no recipe unlock from unsold cars; exact production/sale milestones;
@@ -744,12 +754,13 @@ a long-soak, campaign, multiplayer, or GUI sign-off.
 
 ### Phase 4: Freeze Economy, Guidance, And Functional Art
 
-- [ ] Reconcile simulator with final prototypes and three finite-market scenarios.
+- [x] Reconcile simulator with final prototypes and three finite-market scenarios.
 - [ ] Set the intended research/construction/AI operating budgets and cadence.
-- [ ] Derive Progress costs/blockers and distinguish optional branches.
-- [ ] Model capital recovery separately from profit, and ordinary AI retry
+- [x] Derive Progress costs/blockers and distinguish optional branches.
+- [x] Model capital recovery separately from profit, and ordinary AI retry
       losses separately from the final controller's retained-input guarantee.
-- [ ] Complete R15 and the minimum asset matrix; repair the QA index.
+- [x] Repair the QA index with current critical assets and truthful preview metadata.
+- [ ] Complete R15 and the minimum native asset matrix.
 - [ ] Verify all physical/script-produced items are filterable before unlock,
       technology costs/descriptions match, and UI fits at supported scales.
 - [ ] Publish a short campaign contract and known limitations; stop adding features.
@@ -757,6 +768,14 @@ a long-soak, campaign, multiplayer, or GUI sign-off.
 **Deliverables:** final balance report, current QA page/screens, spoiler-light guide.
 **Exit gate:** no known forced transport/passive-money grind, misleading unlock,
 ambiguous critical asset, or unexplained non-actionable blocker.
+
+**First slice implemented 2026-10-06:** see the
+[native economy/guidance evidence](economy-guidance-validation.md) and
+[generated three-market report](economy-balance.md). Final capital is 50k Dollars:
+approximately 4.2 service hours at two full depots. The final compute band is
+about 6.25 hours on eight normal cores. Those are targeted pacing decisions,
+not total campaign estimates. The QA index is repaired; static browser reviews
+do not close R15 or native UI/art acceptance. **Phase 4 remains open.**
 
 ### Phase 5: Reliability And Scaling Qualification
 
@@ -846,13 +865,13 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Begin **Phase 4 economy, guidance, and functional-art freeze**. Derive effective
-rates and research/construction/AI operating costs from final prototypes. Run
-three finite-market scenarios, distinguish capital recovery from profit, and
-make critical next steps versus optional upgrades explicit in Progress.
-Include ordinary AI brownout retry costs; only the finale retains committed
-inputs. Audit the critical assets and filterable items against the current
-minimum asset matrix. Do not add another feature branch.
+Continue **Phase 4 design freeze** from the prototype-backed economy/guidance
+baseline. Evaluate targeted final capital and practical core expansion against
+the 2-3-hour major-step target; measure material/build throughput before tuning
+panel output. Fix R15's identical orbital cooling/solar placed art, then review
+the critical asset matrix, all locked-item filters, and Progress at native UI
+scales in an isolated showcase. Publish the frozen spoiler-light campaign
+contract. Do not add another feature branch or start the final campaign yet.
 Phases 1-3 are qualified within their recorded fixture bounds, not as a natural
 campaign or scale/GUI/multiplayer sign-off. Phases 5-6 still precede Luke's final
 fresh acceptance playthrough.

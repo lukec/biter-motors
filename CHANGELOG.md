@@ -70,6 +70,20 @@ development namespace migration.
   belts/inserters and cargo pods, landing-pad requests, logistic bots, real lab
   research, native controller construction and capital packaging, a full
   20-minute run, and persistent once-only victory after save/reload.
+- Derived Progress research costs from native technology ingredients and normal
+  orbital cycle time from the machine's actual crafting speed. Optional Foundry,
+  Megatruck, charger placement, and Bitertaxi work no longer block orbital guidance.
+- Described the Foundry unlock honestly as a deployment milestone, not proof of
+  a connected, functioning industrial grid.
+- Counted business profit from native Sales Office completions and actually
+  delivered depot income. Recycled capital and other Dollar production stay
+  separate, including through statistics clears and save/reload.
+- Replaced stale economy constants with a hashed final-prototype/runtime capture,
+  research Token costs, physical payload conservation, and three finite-market
+  sensitivities. This does not change prices or claim a measured campaign duration.
+- Repaired the development artwork index with stable review IDs, real PNG/frame
+  dimensions, all five EVs, both compute/power tiers, and explicit inherited-art
+  gaps. Static review is not native visual approval.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.
