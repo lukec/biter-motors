@@ -23,6 +23,13 @@ changes that policy.
 - `on_nth_tick` can fire at tick zero. Completion probes must reject premature
   callbacks; benchmark update counts alone do not prove advancing game time.
   A paused or won world can still report all requested benchmark updates.
+- Register one handler per event/cadence per mod; a second `on_nth_tick` handler
+  for the same interval replaces the first rather than adding work.
+- Fixture request sections must be ungrouped unless sharing is intentional;
+  named logistic groups share filters across entities. Reserve future machine
+  footprints and hold input inserters until placement, or inputs spill to ground.
+- Recovery assertions must compare new products, output, and ledger deltas to
+  the checkpoint, not accept an old output item as a recovered completion.
 - Player-facing currencies and script-produced inventory items must use the
   `always-show` item flag and have prototype-dump coverage so they remain
   selectable in logistic requests and filter pickers while recipes are locked.

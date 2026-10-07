@@ -63,7 +63,7 @@ growth agree; pending buyers count once across models. The
 [charging evidence](docs/charging-validation.md) records native removal,
 brownouts, grace/anger/recovery, multi-office transactions, and separate reload.
 All four focused regressions and broad smoke pass on source and the exact ZIP.
-**Phase 3 is in progress:** compressed Dataset output, ordinary packaging, and
+**Phase 3 is complete within its recorded native-fixture bounds:** compressed Dataset output, ordinary packaging, and
 native-event AI accounting are implemented. The
 [AI payload/accounting evidence](docs/ai-accounting-validation.md) records real
 compute output, quality, native bonus events, blocked output, immediate recipe
@@ -74,15 +74,20 @@ item-statistics injection. **R04/R05 are implemented:** the finale is fixed at
 external effects. Victory latches on native completion, not Model inventory.
 The [finale fixture](docs/finale-validation.md) covers real billion-equivalent
 compute, full-length runs, retained-input outage retries, extraction/removal,
-and save/reload. Recovered capital
+and save/reload. The [delivery/cooling evidence](docs/endgame-delivery-validation.md)
+closes R03: two platforms deliver genuinely computed Datasets through native
+hubs/pods/landing-pad logistics into real lab research, controller construction,
+payload loading, full training, and persistent victory. Orbital cooling
+allocation/removal, half-power/total-outage reset, and separate-process recovery
+also pass. Recovered capital
 versus operating profit remains an explicit R12 interface/economy follow-on.
-The rest of **Phase 3** and Phases **4-8 remain outstanding**. The final
+**Phases 4-8 remain outstanding**. The final
 playthrough begins only after Phases 1-6. Luke approved the 50,000-equivalent
 Dataset on 2026-10-06 and revised the quality/beacon-independent finale from
 60 to **20 uninterrupted simulation minutes at 10 GW** the same day. The
 challenge is building and sustaining the grid, not an hour of idle waiting.
-Real hub/cargo-pod delivery and complete orbital cooling/reset/recovery still
-need qualification. No new
+The next slice is the prototype-backed economy/guidance and functional-art
+freeze, not a campaign start or a release declaration. No new
 company, planet, battery chemistry, or future feature branch belongs in this
 release sequence.
 
@@ -278,7 +283,9 @@ Both payload forms use the same Dollars, recipe time, power, and cooling as
 their tier. Each Dataset represents 50,000 Token equivalents; 20,000 Datasets
 embody the billion-equivalent final payload. Datasets stack to 1,000 and weigh
 1 kg each (1,000 per standard cargo payload, 20 payloads for the final inputs).
-This is prototype cargo arithmetic, not yet a real cargo-pod delivery test.
+This is prototype weight arithmetic, not an exact downward-pod count. The
+native delivery fixture uses 84 automatic pods, including research Tokens and
+partial shipments, to supply its final run.
 Separate native completion ledgers track terrestrial and orbital computation.
 Packaging existing Tokens, recycling, and transfers cannot earn progress again.
 
@@ -286,8 +293,10 @@ Packaging existing Tokens, recycling, and transfers cannot earn progress again.
 
 The implemented final progression contract is below. Native computation,
 compressed payload, fixed final time/power, and completion latching have
-focused engine coverage. The real hub/cargo-pod delivery path and complete
-cooling qualification remain Phase 3 gates before accepting this ending.
+focused engine coverage. Real multi-platform delivery, lab research, controller
+construction, final payload loading, and cooling/power recovery now pass.
+Economy/design freeze, candidate scaling/soaks/multiplayer, clean-install
+rehearsal, and the natural final campaign remain required before release.
 
 The current recipe sequence is:
 

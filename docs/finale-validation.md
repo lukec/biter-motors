@@ -2,8 +2,9 @@
 
 Date: **2026-10-06**. This Phase 3 slice implements R04/R05 and qualifies the
 final controller's native timing, power, retry, and completion contract.
-**Phase 3 remains open:** real hub/cargo-pod delivery and complete orbital
-cooling qualification are next. Mod: **Biter Motors 0.1.1**, fresh worlds only.
+The subsequent [delivery/cooling slice](endgame-delivery-validation.md) closes
+Phase 3's isolated native gate; this document preserves the earlier finale
+artifact evidence. Mod: **Biter Motors 0.1.1**, fresh worlds only.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 
 ## Implemented Contract
@@ -131,10 +132,6 @@ not a long soak, native GUI acceptance, multiplayer test, or natural campaign.
 
 ## Remaining Gates
 
-- Real computed Dataset delivery through platform hubs, cargo pods, landing pad,
-  and controller inputs; current withdrawal/supply is not a transport test.
-- Complete orbital cooling allocation, power interruption, radiator/core
-  removal, and recovery qualification. This fixture supplies adequate cooling.
 - Final controller outage/configuration-change and multiplayer-join qualification
   against the candidate, plus endgame scaling and sustained orbital soaks.
 - A natural economy and uninterrupted final run in Luke's complete fresh campaign.

@@ -3362,7 +3362,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('["bitermotors-planetary-grid-controller"] = AGI_TRAINING_RECIPE_NAME', control)
         self.assertIn('status == defines.entity_status.low_power', control)
         self.assertIn('status == defines.entity_status.no_power', control)
-        self.assertIn('entity.energy < entity.electric_buffer_size * 0.1', control)
+        monitor = control[control.index('local function reset_compute_queue_progress(queue)'):
+                          control.index('function reset_underpowered_compute_progress()')]
+        self.assertIn('local power_failed = status == defines.entity_status.no_power\n'
+                      '        or status == defines.entity_status.low_power', monitor)
+        self.assertNotIn('entity.electric_buffer_size * 0.1', monitor)
         self.assertIn('entity.crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0', control)
         self.assertIn('entity.disabled_by_script = true', control)
         self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)

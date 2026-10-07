@@ -1258,9 +1258,7 @@ local function reset_compute_queue_progress(queue)
       local recipe_matches = required_recipe == true or (recipe and recipe.name == required_recipe)
       local status = entity.status
       local power_failed = status == defines.entity_status.no_power
-        or (status == defines.entity_status.low_power
-          and entity.electric_buffer_size > 0
-          and entity.energy < entity.electric_buffer_size * 0.1)
+        or status == defines.entity_status.low_power
       if entity.name == GRID_CONTROLLER_NAME then
         power_failed = agi_training_power_failed(entity)
       end

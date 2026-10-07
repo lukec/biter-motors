@@ -1,10 +1,10 @@
 # AI Payload And Accounting Validation
 
 Date: **2026-10-06**. Phase 3's payload/accounting slice addresses R16 and
-implements the compressed production/packaging portion of R03. **Phase 3 is not
-complete:** cargo-pod delivery and complete orbital cooling qualification
-remain open. The subsequent [finale slice](finale-validation.md) implements
-fixed full-duration training and native victory. Mod: **Biter Motors 0.1.1**, fresh worlds only.
+implements the compressed production/packaging portion of R03. The subsequent
+[finale slice](finale-validation.md) implements fixed full-duration training and
+native victory; [delivery/cooling](endgame-delivery-validation.md) closes Phase 3's
+isolated native gate. Mod: **Biter Motors 0.1.1**, fresh worlds only.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 
 ## Approved Contract
@@ -155,7 +155,7 @@ Package: `/tmp/bitermotors-phase3-ai-release/bitermotors_0.1.1.zip`.
 
 ## Remaining Gates
 
-- Real hub, cargo-pod, landing-pad, and controller input delivery at the intended
-  scale, rather than inventory setup or a small inserter-only test.
-- Full cooling-allocation, removal, brownout/reset, and recovery qualification.
 - Phase 4 economy/guidance/functional art freeze and Phases 5-6 qualification.
+
+Real final cargo delivery and complete cooling/reset/recovery now pass in the
+subsequent [native delivery/cooling fixture](endgame-delivery-validation.md).

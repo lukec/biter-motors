@@ -10,9 +10,11 @@ The [2026-10-05 v1 review](v1-readiness-review.md) found current-version load,
 statistics-direction, physical-payload, victory-completion, and final-controller
 effect defects. Native compute accounting and fixed final training/completion
 are now implemented; see [accounting evidence](ai-accounting-validation.md) and
-[finale evidence](finale-validation.md). Cargo delivery, complete cooling
-qualification, and the final campaign remain open. This contract is not a full
-release certificate; finish Phase 3 before Luke's final fresh campaign.
+[finale evidence](finale-validation.md). The
+[delivery/cooling evidence](endgame-delivery-validation.md) closes Phase 3's
+isolated native gate. This contract is not a full release certificate: finish
+economy/guidance/art freeze, candidate soaks/multiplayer, and clean-install
+rehearsal before Luke's final fresh campaign.
 
 ## Authoritative AI Token Accounting
 
@@ -77,10 +79,6 @@ full runs, not merely an injected win or an accelerated final recipe.
 ## Release Evidence Still Required
 
 - Complete the first real orbital batch on a player-built Nauvis platform.
-- Confirm an undercooled core resets and resumes after eight radiators exist.
-- Finish orbital brownout and cooling-allocation/removal/recovery qualification.
-- Prove real cargo/inserter delivery of the complete intended final payload
-  without injected inventory or an impractical billion-item transfer.
 - Run a one-hour soak with several operating cores and at least two platforms.
 - Complete the uninterrupted 20-minute, 10 GW AGI run in a non-sandbox campaign.
 - Qualify multiplayer joins and harmless configuration changes during outages

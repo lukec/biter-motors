@@ -46,7 +46,6 @@ development namespace migration.
   and machine removal cancels undelivered liabilities without losing earned work.
 - Added isolated two-platform AI accounting, native milestone and inserter
   extraction tests with pending-bonus/in-progress-craft save/reload coverage.
-  Final cargo delivery and complete orbital cooling qualification remain open.
 - Shortened the AGI Training Run's base recipe and progress target from 60 to
   20 minutes, retaining 10 GW and all final inputs.
 - Fixed final-controller speed at every quality and disabled module, beacon,
@@ -60,7 +59,17 @@ development namespace migration.
 - Added an isolated full-duration finale fixture with real billion-equivalent
   computation, quality/beacon checks, integrated energy measurements, partial
   and total outages, native Model extraction, and midrun/failed-state/won reloads.
-  Real cargo delivery and campaign qualification remain release gates.
+  Campaign qualification remains a release gate.
+- Fixed sustained brownouts allowing ordinary AI batches to finish slowly.
+  Any native low-power status now scraps active terrestrial/orbital training.
+- Added native orbital cooling and power regressions: platform/force isolation,
+  deterministic capacity allocation, core/radiator removal, blocked output,
+  half-power reset, total outage, checkpoint/reload, and exact recovered output
+  and earned-compute conservation.
+- Qualified the final physical supply chain with two genuine platforms, native
+  belts/inserters and cargo pods, landing-pad requests, logistic bots, real lab
+  research, native controller construction and capital packaging, a full
+  20-minute run, and persistent once-only victory after save/reload.
 - Rebranded the player-facing campaign as Biter Motors.
 - Added the terrestrial customer economy: Sales Offices, physical
   reservations, charging coverage, customer ownership, and Dollar profit.

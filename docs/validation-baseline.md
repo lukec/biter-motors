@@ -96,8 +96,8 @@ scripts/soak-bitermotors-save.sh \
 
 Phase 2 is complete within its [recorded fixture bounds](charging-validation.md).
 The [subsequent finale slice](finale-validation.md) qualifies full-duration native
-victory. Phase 3 still must prove real orbital delivery and complete cooling
-recovery. Player-bearing GUI/landing checks,
+victory; the [delivery/cooling slice](endgame-delivery-validation.md) closes
+Phase 3's isolated native gate. Economy/guidance/art freeze, player-bearing GUI/landing checks,
 large-world stress, four-hour terrestrial and one-hour orbital soaks, and
 multiplayer/persistence qualification remain outstanding. Do not start the
 final acceptance playthrough until Phases 1-6 of the

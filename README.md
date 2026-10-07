@@ -168,13 +168,19 @@ fairness, brownout, taxi-only, growth, and save/reload fixture; reproduce it wit
 The [AI payload/accounting evidence](docs/ai-accounting-validation.md) describes
 two-platform computation, compressed Datasets, native recipe events, packaging,
 and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
-`scripts/validate-bitermotors-ai.sh`; it does not yet qualify final cargo delivery
-or the complete AGI victory run.
+`scripts/validate-bitermotors-ai.sh`; that fixture tests accounting rather than
+final cargo delivery or a complete AGI victory run.
 The separate [finale evidence](docs/finale-validation.md) covers complete native
 20-minute runs, actual 10 GW consumption, quality/effect isolation, outages,
 Model extraction, and native checkpoint/reload. Reproduce it with
 `scripts/validate-bitermotors-finale.sh`. Its supplied infrastructure is not a
 fresh campaign or a cargo-delivery test.
+The [delivery/cooling evidence](docs/endgame-delivery-validation.md) completes
+the isolated physical-endgame checks: native orbital cargo, lab research,
+controller construction, full payload loading, training, and failure recovery.
+Reproduce with `scripts/validate-bitermotors-delivery.sh` and
+`scripts/validate-bitermotors-cooling.sh`. These supplied worlds are not natural
+campaign or long-soak qualification.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.
