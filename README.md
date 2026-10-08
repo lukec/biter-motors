@@ -170,6 +170,11 @@ two-platform computation, compressed Datasets, native recipe events, packaging,
 and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
 `scripts/validate-bitermotors-ai.sh`; that fixture tests accounting rather than
 final cargo delivery or a complete AGI victory run.
+The [orbital-entry evidence](docs/orbital-entry-validation.md) covers compact
+hardware, research without white science, native ground manufacturing, genuine
+rocket uplift, platform ghost construction and physical Token return. Reproduce
+it with `scripts/validate-bitermotors-uplift.sh`. The replacement orbital Model
+ending remains a subsequent slice; entry qualification is not campaign victory.
 The separate [finale evidence](docs/finale-validation.md) covers complete native
 20-minute runs, actual 10 GW consumption, quality/effect isolation, outages,
 Model extraction, and native checkpoint/reload. Reproduce it with

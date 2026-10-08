@@ -83,6 +83,12 @@ class ArtQaTests(unittest.TestCase):
         self.assertEqual(radiator["status"], "inherited-placeholder")
         self.assertEqual(solar["status"], "inherited-placeholder")
 
+    def test_orbital_entry_preview_matches_current_compact_footprints(self):
+        records = {r["prototype_id"]: r for r in self.records()}
+        for name in ("orbital-datacenter-core", "orbital-radiator-panel", "high-density-space-solar-panel"):
+            self.assertEqual([3, 3], records[f"bitermotors-{name}"]["footprint_tiles"])
+        self.assertEqual(0.18, records["bitermotors-orbital-datacenter-core"]["scale"])
+
     def test_animation_sheet_dimensions_are_real_and_guarded(self):
         for name, filename, frame_width, frame_height, _ in ART_QA.ANIMATIONS:
             path = ART_QA.GRAPHICS / "animation" / filename

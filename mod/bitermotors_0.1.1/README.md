@@ -90,9 +90,17 @@ Vanilla rockets, cargo pods, and platforms remain the logistics layer.
 
 Orbital AI Infrastructure unlocks:
 
-- A 6x6 Orbital Datacenter Core drawing 250 MW.
-- Orbital Radiator Panels, with eight required per core.
-- 50 MW High-density Space Solar Panels.
+- A 3x3 Orbital Compute Cluster drawing 250 MW.
+- Orbital Radiators, with one required per cluster on the same platform.
+- 20 MW Space Solar Wings, producing 60 MW continuously in Nauvis orbit.
+
+Start with one cluster, one radiator and five wings (300 MW generation).
+In the platform hub's requests, set custom minimum payloads to one cluster,
+one radiator, five wings and 100 Dollars; small shipments otherwise wait for
+full rockets. Also lower the minima for small foundation/belt/inserter shipments.
+Cluster, radiator, wing, Dollar and AGI Model weights are explicit and portable.
+The required orbital compute research chain uses terrestrial science, Dollars
+and AI Tokens, not white science.
 
 A normal cooled core consumes 1 Dollar and initially produces 10,000 physical AI
 Tokens every 20 seconds before further effects. Cumulative orbital output unlocks capital-and-science

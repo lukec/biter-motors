@@ -86,13 +86,18 @@ local function build_platform(name, extra_token_core)
       i == 17 and 1 or 313, "provided compute capital")
     row.cores[#row.cores + 1] = machine
     storage.by_core[machine.unit_number] = row
-    local loader = i == 17 and inserter(surface, {x + 3, 0}, defines.direction.west)
-      or inserter(surface, {x, -13}, defines.direction.north)
+    local right_edge = math.floor(machine.position.x + machine.prototype.selection_box.right_bottom.x)
+    local bottom_edge = math.floor(machine.position.y + machine.prototype.selection_box.right_bottom.y)
+    local loader = i == 17 and inserter(surface, {right_edge, 0}, defines.direction.west)
+      or inserter(surface, {x, bottom_edge}, defines.direction.north)
+    check(i == 17 and loader.pickup_position.x < right_edge
+      or i ~= 17 and loader.pickup_position.y < bottom_edge,
+      "native loader targets current core footprint")
     loader.disabled_by_script = true
     row.unloading[#row.unloading + 1] = loader
     if i == 17 then
       -- Keep research Tokens off the Dataset bus so a fulfilled request cannot block final cargo.
-      for belt_x = -68, -6 do
+      for belt_x = right_edge + 1, -6 do
         local belt = make(surface, "express-transport-belt", {belt_x, 0})
         belt.direction = belt_x == -6 and defines.direction.south or defines.direction.east
       end
@@ -100,7 +105,7 @@ local function build_platform(name, extra_token_core)
       belt.direction = defines.direction.south
       inserter(surface, {-5, 1}, defines.direction.west, TOKEN)
     else
-      for y = -12, -7 do
+      for y = bottom_edge + 1, -7 do
         local belt = make(surface, "express-transport-belt", {x, y})
         belt.direction = defines.direction.south
       end

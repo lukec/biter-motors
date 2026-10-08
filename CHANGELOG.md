@@ -5,6 +5,12 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Made orbital entry compact and launchable: 3x3 Compute Clusters, one Radiator
+  per cluster, and five 20 MW Solar Wings yielding 300 MW in Nauvis orbit.
+  Simplified cluster/wing recipes, set explicit hardware/currency/Model cargo
+  weights, removed white science from compute research, and added practical
+  partial-payload hub instructions. The replacement orbital Model finale is
+  still pending; the old controller ending remains until the next slice.
 - Restored Factorio 2.1.20 compatibility for EV, Cybertrain, and eSpider
   drive-charge fuel items; both engine dependencies now require 2.1.20.
 - Hardened isolated validators and soak evidence against zero-exit Lua errors,

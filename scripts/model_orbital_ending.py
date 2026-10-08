@@ -38,7 +38,7 @@ CLEAN_ROUTES = {
 
 @dataclass(frozen=True)
 class Proposal:
-    """Explicit, hypothetical overrides. None are applied to mod Lua."""
+    """Model-only overrides: entry hardware is implemented; finale values are proposed."""
     name: str = "Recommended orbital ending"
     phase_cores: tuple[int, ...] = (1, 4, 8, 12)
     token_yields: tuple[int, ...] = (10000, 50000, 100000, 200000)
@@ -485,19 +485,21 @@ def analysis(catalog: EconomyCatalog, proposal=Proposal()) -> dict:
 def report(result: dict) -> str:
     budget, first, layout = result["budget"], result["first_cluster"], result["layouts"][0]
     fmt = lambda value: f"{value:,.0f}"
-    lines = ["# Orbital Ending Cost Study", "", "Date: **2026-10-07**. **Proposed balance, not implemented gameplay.**", "",
+    lines = ["# Orbital Ending Cost Study", "", "Date: **2026-10-08**. **Orbital-entry prototypes implemented; finale gameplay pending.**", "",
         "Native input: `economy-prototypes.json`, Factorio 2.1.20, normal quality, no modules or research productivity.",
         "Overrides are isolated in `scripts/model_orbital_ending.py`; the native capture is not relabeled as proposed data.",
         "This is **not a campaign-time prediction**. All existing terrestrial industry and one datacenter are assumed built.",
         "The minute model assumes hardware, colored science inputs, power and transport are available when needed.",
         "Construction/exploration, damaged grids, ore throughput, waste disposal and cargo delays are unmeasured.", "",
-        "## Native Transport Blockers", "",
-        f"The captured core weighs **{fmt(result['native_ending']['weights_grams'][CORE])} g** versus a **{fmt(result['native_ending']['rocket_limit_grams'])} g** rocket limit: it cannot be launched whole.",
+        "## Native Transport Readiness", "",
+        f"The captured core weighs **{fmt(result['native_ending']['weights_grams'][CORE])} g** versus a **{fmt(result['native_ending']['rocket_limit_grams'])} g** rocket limit.",
         f"A native Dollar weighs **{fmt(result['native_ending']['weights_grams'][DOLLAR])} g**: only {result['native_lift']['capacity_per_rocket'][DOLLAR]} fit per rocket. The AGI Model weighs **{fmt(result['native_ending']['weights_grams'][MODEL])} g**.",
-        "The old ground-produced Model need not fly, but the proposed orbital Model must have an explicit portable weight.",
-        "Earlier native delivery fixtures place their cores directly on platforms. They qualify output return, not hardware uplift.",
-        "Manufacturing a core in orbit is a possible workaround, not tested here; it does not cure the currency uplift cost.",
-        "Actual silo-to-platform hardware and currency launches are a new mandatory release gate.", "",
+        "The former 1,208,326-g core, 250,025-g Dollar and 2,147,483,647-g Model defaults were corrected on 2026-10-08.",
+        "The rocket has 20 inventory slots but its native cargo pod has 10; uplift budgets respect both, using the tighter 10-slot limit.",
+        "Mass arithmetic alone is not qualification: actual silo-to-platform launches are required, including partial-load minimums.",
+        "Earlier delivery fixtures placed cores directly on platforms. They qualify output return, not hardware uplift.",
+        "See [orbital-entry qualification](orbital-entry-validation.md) for native launch evidence and supplied-input limits.",
+        f"Blocked modeled native cargo: {', '.join(result['native_lift']['blocked_items']) or 'none'}.", "",
         "## Candidate Research And Compute", "", "| Upgrade | Science sets | Dollars |", "| --- | ---: | ---: |"]
     for row in result["research"]:
         lines.append(f"| {row['technology'].removeprefix(P)} | {fmt(row['cycles'])} | {fmt(row['cycles'] * row['dollars_per_cycle'])} |")
@@ -570,7 +572,7 @@ def report(result: dict) -> str:
         "## Reproduce", "", "```bash", "python3 scripts/model_orbital_ending.py --output docs/orbital-ending-cost-study.md",
         "python3 scripts/model_orbital_ending.py --json", "python3 -m unittest tests.test_orbital_ending_model", "```", "",
         f"Native source SHA-256: `{result['native_source_sha256']}`.",
-        "The model rejects stale native input and records a separate hash of all three model scripts in JSON. No gameplay values are changed.",
+        "The model rejects stale native input and records a separate hash of all three model scripts in JSON. Running the model does not change gameplay.",
         "Launch rules: [Factorio Wiki](https://wiki.factorio.com/Rocket_silo).",
         "Platform construction/transport: [Factorio Wiki](https://wiki.factorio.com/Space_platform).", ""]
     return "\n".join(lines)

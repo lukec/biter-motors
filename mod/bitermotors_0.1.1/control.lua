@@ -106,10 +106,10 @@ local BITERFACTORY_CONFIGS = {
     recipe_prompt = "Next: supply 20 Dollars per cycle and select terrestrial AI Token production. Each 30-second cycle also draws 8 MW."
   },
   ["bitermotors-orbital-datacenter-core"] = {
-    display_name = "Orbital Datacenter Core",
+    display_name = "Orbital Compute Cluster",
     power = "250 MW",
     default_product = "Orbital AI Tokens",
-    recipe_prompt = "Next: place eight Orbital Radiator Panels per core, supply 1 Dollar per cycle, and select the best unlocked orbital AI recipe."
+    recipe_prompt = "Next: place one Orbital Radiator per cluster, supply 1 Dollar per cycle, and select the best unlocked orbital AI recipe."
   }
 }
 local HIGH_DENSITY_SOLAR_ARRAY_NAME = "bitermotors-high-density-solar-array"
@@ -151,7 +151,7 @@ ROAD_RAGE_FORCE_NAME = "bitermotors-road-rage"
 ORBITAL_DATACENTER_CORE_NAME = "bitermotors-orbital-datacenter-core"
 ORBITAL_RADIATOR_PANEL_NAME = "bitermotors-orbital-radiator-panel"
 HIGH_DENSITY_SPACE_SOLAR_PANEL_NAME = "bitermotors-high-density-space-solar-panel"
-ORBITAL_RADIATORS_PER_CORE = 8
+ORBITAL_RADIATORS_PER_CORE = 1
 local GRID_CONTROLLER_NAME = "bitermotors-planetary-grid-controller"
 AGI_TRAINING_RECIPE_NAME = "bitermotors-agi-training-run"
 AGI_MODEL_ITEM_NAME = "bitermotors-agi-model"
@@ -8297,7 +8297,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Grid Batteries for mass-market power demand.",
   ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Its base cycle consumes 20 Dollars to produce 20 AI Tokens in 30 seconds. Make the Tokens for Autonomous Logistics and Orbital AI Infrastructure on land; check their research ingredients.",
   ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Route and Summon controls for Premium, Mass-market, Megatruck, and Bitertaxi EVs. Bitertaxi production still requires 5,000 total consumer EV sales.",
-  ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Launch Datacenter Cores, eight Radiator Panels per core, and enough Space Solar to sustain 250 MW each. Return the physical AI Tokens to Nauvis.",
+  ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Start with one Compute Cluster, one Radiator and five Solar Wings on a stationary Nauvis platform. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars; otherwise automatic rockets wait for full loads. Return the physical AI Tokens to Nauvis.",
   ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 25,000 AI Tokens per Dollar.",
   ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 50,000 Tokens per Dollar.",
   ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 100,000 AI Tokens per Dollar. Planetary Energy Grid research is available.",
@@ -10274,9 +10274,9 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.orbital_compute_researched then
     return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", research("bitermotors-orbital-compute") .. " Use the vanilla Rocket Silo and a stationary Nauvis platform. Make the research Tokens on land; orbital output cannot fund its own unlock."
   elseif snapshot.orbital_datacenter_cores == 0 then
-    return "Orbital AI", "Launch and place an Orbital Datacenter Core.", "Each 6x6 core draws 250 MW and produces physical AI Tokens. Cargo pods must return those tokens to Nauvis."
+    return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Each 3x3 cluster draws 250 MW and produces physical AI Tokens. Start with one cluster, one radiator and five Solar Wings. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars in the hub requests; return Tokens by cargo pod."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
-    return "Orbital cooling", "Install eight Orbital Radiator Panels per Datacenter Core.", string.format(
+    return "Orbital cooling", "Install one Orbital Radiator per Compute Cluster.", string.format(
       "Cooling online: %d / %d cores. Radiators installed: %d / %d. Any undercooled core scraps its active token batch.",
       snapshot.cooled_orbital_datacenter_cores,
       snapshot.orbital_datacenter_cores,
@@ -10962,7 +10962,7 @@ local function refresh_progress_panel(player)
       ),
       color = snapshot.orbital_radiator_panels >= snapshot.required_orbital_radiator_panels
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
-      tooltip = "Eight Orbital Radiator Panels provide cooling capacity for one Datacenter Core on the same platform."
+      tooltip = "One Orbital Radiator provides cooling capacity for one Compute Cluster on the same platform."
     }
     compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-ai-token",
@@ -11687,7 +11687,7 @@ local function show_manufacturer_info_panel(player, entity)
   if entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power then
     next_step = "Blocked: restore electric power to this machine."
   elseif entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
-    next_step = "Blocked: install eight Orbital Radiator Panels per Datacenter Core. The active batch was scrapped."
+    next_step = "Blocked: install one Orbital Radiator per Compute Cluster. The active batch was scrapped."
   elseif entity.status == defines.entity_status.full_output then
     next_step = entity.name == SALES_OFFICE_NAME
       and "Blocked: Dollar output is full. Remove Dollars; sales and EV Reservation consumption are paused."

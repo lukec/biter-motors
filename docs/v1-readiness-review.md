@@ -16,11 +16,14 @@ fixes. Phase 3's earlier fixtures passed within their recorded bounds:
 earned compute, real payload delivery, lab research, native construction,
 full final training, cooling/power recovery, and persistent victory pass.
 **Phase 3 is reopened on 2026-10-07:** those fixtures supplied orbital hardware
-instead of proving rocket uplift. Native computed weights expose a core over
-the rocket limit and Dollars weighing 250 kg. The replacement
+instead of proving rocket uplift. The 2026-10-07 native capture exposed a core
+over the rocket limit and Dollars weighing 250 kg. The replacement
 [orbital ending spec](../feature_specs/orbital_agi_ending.md) and
-[cost study](orbital-ending-cost-study.md) are complete, but gameplay remains
-unchanged. Qualify real hardware uplift and implement the new ending, then
+[cost study](orbital-ending-cost-study.md) are complete. The 2026-10-08 entry
+slice implements compact hardware, explicit portable weights, one-radiator
+cooling and research without white science; the
+[entry evidence](orbital-entry-validation.md) records its native scope.
+Implement and qualify the replacement Model ending, then
 complete Phases 4-6 before the campaign can fairly test endgame balance.
 
 The target is a frozen, finishable Nauvis-and-orbit campaign, one complete fresh
@@ -179,6 +182,13 @@ platform fixture did not test either. Phase 3 is reopened for real hardware and
 currency launches and the replacement orbital ending; see the current verdict
 and [cost study](orbital-ending-cost-study.md). Downward-delivery evidence is
 retained, not retroactively broadened.
+
+**Entry qualified 2026-10-08:** the [native uplift fixture](orbital-entry-validation.md)
+manufactures and launches the starter/hardware from Nauvis, researches entry
+without white science, builds the platform from delivered parts, computes and
+returns 10,000 Tokens and preserves physical stock/earned progress on reload.
+Source and exact ZIP pass. This closes the normal-quality first-cluster uplift
+gap, not the replacement finale, all-quality campaign or transport pacing gates.
 
 ### R04: Removing The Finished Model Can Prevent Victory [P1]
 
@@ -729,7 +739,7 @@ changes; no removed-planet materials appear through recycling.
 The completed checklist below records the **2026-10-06 implementation**, not
 qualification of the replacement ending. Phase 3 is reopened on 2026-10-07:
 
-- [ ] Qualify actual first-cluster hardware/currency rocket uplift without
+- [x] Qualify actual normal-quality first-cluster hardware/currency rocket uplift without
       supplied platform entities or inventory.
 - [ ] Implement the replacement [orbital ending](../feature_specs/orbital_agi_ending.md),
       including banked compute, Model cargo return and native ground activation.

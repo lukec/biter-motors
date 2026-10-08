@@ -90,10 +90,20 @@ class AiValidationRunnerTests(unittest.TestCase):
             'row.machine.set_recipe("bitermotors-orbital-ai-token")',
             'row.machine.destroy{raise_destroy', '"fast-inserter"',
             'game.server_save("bitermotors-ai-reload")',
+            'payload_machine.prototype.selection_box.right_bottom.y',
+            'payload extraction targets current core footprint',
         ):
             self.assertIn(marker, fixture)
         self.assertNotIn('test_set_ai_token_progress', fixture)
         self.assertNotIn('crafting_progress =', fixture)
+
+    def test_delivery_fixture_tracks_compact_core_output_boundaries(self):
+        fixture = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
+        self.assertIn("machine.prototype.selection_box.right_bottom.x", fixture)
+        self.assertIn("machine.prototype.selection_box.right_bottom.y", fixture)
+        self.assertIn("native loader targets current core footprint", fixture)
+        self.assertIn("for belt_x = right_edge + 1", fixture)
+        self.assertIn("for y = bottom_edge + 1", fixture)
 
     def test_dump_validator_covers_payload_and_filterability(self):
         validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()

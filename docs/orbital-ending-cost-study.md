@@ -1,6 +1,6 @@
 # Orbital Ending Cost Study
 
-Date: **2026-10-07**. **Proposed balance, not implemented gameplay.**
+Date: **2026-10-08**. **Orbital-entry prototypes implemented; finale gameplay pending.**
 
 Native input: `economy-prototypes.json`, Factorio 2.1.20, normal quality, no modules or research productivity.
 Overrides are isolated in `scripts/model_orbital_ending.py`; the native capture is not relabeled as proposed data.
@@ -8,14 +8,16 @@ This is **not a campaign-time prediction**. All existing terrestrial industry an
 The minute model assumes hardware, colored science inputs, power and transport are available when needed.
 Construction/exploration, damaged grids, ore throughput, waste disposal and cargo delays are unmeasured.
 
-## Native Transport Blockers
+## Native Transport Readiness
 
-The captured core weighs **1,208,326 g** versus a **1,000,000 g** rocket limit: it cannot be launched whole.
-A native Dollar weighs **250,025 g**: only 3 fit per rocket. The AGI Model weighs **2,147,483,647 g**.
-The old ground-produced Model need not fly, but the proposed orbital Model must have an explicit portable weight.
-Earlier native delivery fixtures place their cores directly on platforms. They qualify output return, not hardware uplift.
-Manufacturing a core in orbit is a possible workaround, not tested here; it does not cure the currency uplift cost.
-Actual silo-to-platform hardware and currency launches are a new mandatory release gate.
+The captured core weighs **100,000 g** versus a **1,000,000 g** rocket limit.
+A native Dollar weighs **10 g**: only 100000 fit per rocket. The AGI Model weighs **1,000 g**.
+The former 1,208,326-g core, 250,025-g Dollar and 2,147,483,647-g Model defaults were corrected on 2026-10-08.
+The rocket has 20 inventory slots but its native cargo pod has 10; uplift budgets respect both, using the tighter 10-slot limit.
+Mass arithmetic alone is not qualification: actual silo-to-platform launches are required, including partial-load minimums.
+Earlier delivery fixtures placed cores directly on platforms. They qualify output return, not hardware uplift.
+See [orbital-entry qualification](orbital-entry-validation.md) for native launch evidence and supplied-input limits.
+Blocked modeled native cargo: none.
 
 ## Candidate Research And Compute
 
@@ -143,7 +145,7 @@ python3 scripts/model_orbital_ending.py --json
 python3 -m unittest tests.test_orbital_ending_model
 ```
 
-Native source SHA-256: `96a77a8b5317bf01f9558ad62c188130251bf288f59ec361192d982698719c6d`.
-The model rejects stale native input and records a separate hash of all three model scripts in JSON. No gameplay values are changed.
+Native source SHA-256: `880f6aad5e508f969fcffc5775e71c321e52b8f9ef5fdaa030d4bd2c1e90c574`.
+The model rejects stale native input and records a separate hash of all three model scripts in JSON. Running the model does not change gameplay.
 Launch rules: [Factorio Wiki](https://wiki.factorio.com/Rocket_silo).
 Platform construction/transport: [Factorio Wiki](https://wiki.factorio.com/Space_platform).

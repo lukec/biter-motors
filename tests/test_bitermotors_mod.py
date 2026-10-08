@@ -999,7 +999,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("tint = {r = 0.18, g = 0.48, b = 0.24, a = 0.16}", data)
         self.assertNotIn("tint = {r = 0.25, g = 0.85, b = 1.0, a = 0.35}", data)
         self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', data)
-        self.assertIn('generated_entity_animation("orbital-datacenter-core", 0.36)', data)
+        self.assertIn('generated_entity_animation("orbital-datacenter-core", 0.18)', data)
         self.assertIn('orbital_radiator_panel_icon = generated_icon("orbital-radiator-panel")', data)
         self.assertIn('high_density_space_solar_panel_icon = generated_icon("high-density-space-solar-panel")', data)
         for slug in [
@@ -1414,7 +1414,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("launch_technology.enabled = true", control)
         self.assertIn("v4_recipe.enabled = true", control)
         self.assertIn("Bitertaxi service is producing recurring profit", control)
-        self.assertIn("cargo pods must return them to Nauvis", locale)
+        self.assertIn("Return Tokens by cargo pod", locale)
         self.assertIn("bitertaxi_sale_complete", control)
         self.assertIn("Bitertaxis are an optional recurring-profit route after 5,000 consumer EV sales", control)
         self.assertIn("Cumulative AI Tokens", control)
@@ -3014,9 +3014,9 @@ class BiterMotorsModTest(unittest.TestCase):
         ]
         normalized = " ".join(section.replace("`", "").split())
         self.assertIn("uses vanilla rockets, cargo pods, and space platforms", " ".join(roadmap.split()))
-        self.assertIn("Orbital Datacenter Core", normalized)
-        self.assertIn("Radiator Panel", normalized)
-        self.assertIn("High-density Space Solar Panel", normalized)
+        self.assertIn("Orbital Compute Cluster", normalized)
+        self.assertIn("Orbital Radiator", normalized)
+        self.assertIn("Space Solar Wing", normalized)
         self.assertIn("250 MW", normalized)
         self.assertIn("10,000 physical AI Tokens", normalized)
         self.assertIn("Space does not beam energy to the planet", normalized)
@@ -3875,7 +3875,7 @@ class BiterMotorsModTest(unittest.TestCase):
         orbital = data[data.index('tech("bitermotors-orbital-compute"'):
                        data.index('tech("bitermotors-autonomous-logistics"')]
         self.assertIn('"space-platform"', orbital)
-        self.assertIn('"space-science-pack"', orbital)
+        self.assertNotIn('"space-science-pack"', orbital)
         self.assertNotIn('"electromagnetic-science-pack"', orbital)
         self.assertNotIn('"bitermotors-satellite-constellation"', orbital)
 

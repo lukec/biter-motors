@@ -885,7 +885,7 @@ espider_item.stack_size = 1
 
 data:extend({
   item("bitermotors-dollar", dollar_icon, "bitermotors-capital", "a[dollar]", 100000, {
-    flags = {"always-show"}
+    flags = {"always-show"}, weight = 10
   }),
   item("bitermotors-ev-reservation", ev_reservation_icon, "raw-material", "z[bitermotors-ev-reservation]", 1000, {
     flags = {"always-show"}
@@ -906,7 +906,7 @@ data:extend({
     flags = {"always-show"}, auto_recycle = false
   }),
   item("bitermotors-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1, {
-    flags = {"always-show"}, auto_recycle = false
+    flags = {"always-show"}, weight = 1000, auto_recycle = false
   }),
 
   item("bitermotors-nickel-ore", generated_icon("nickel-ore"), "raw-resource", "z-a[nickel-ore]", 50),
@@ -982,9 +982,15 @@ data:extend({
   item("bitermotors-bitertaxi-depot", bitertaxi_depot_icon, "bitermotors-infrastructure", "g[bitertaxi-depot]", 1, {place_result = "bitermotors-bitertaxi-depot"}),
   item("bitermotors-cybertrain", generated_icon("cybertrain"), "transport", "bitermotors-f[cybertrain]", 5, {place_result = "bitermotors-cybertrain"}),
   item("bitermotors-cybertrain-charging-stop", generated_icon("cybertrain-charging-stop"), "transport", "bitermotors-g[cybertrain-charging-stop]", 10, {place_result = "bitermotors-cybertrain-charging-stop"}),
-  item("bitermotors-orbital-datacenter-core", orbital_datacenter_core_icon, "bitermotors-infrastructure", "h[orbital-datacenter-core]", 1, {place_result = "bitermotors-orbital-datacenter-core"}),
-  item("bitermotors-orbital-radiator-panel", orbital_radiator_panel_icon, "energy", "c[orbital-radiator-panel]", 10, {place_result = "bitermotors-orbital-radiator-panel"}),
-  item("bitermotors-high-density-space-solar-panel", high_density_space_solar_panel_icon, "energy", "d[high-density-space-solar-panel]", 10, {place_result = "bitermotors-high-density-space-solar-panel"}),
+  item("bitermotors-orbital-datacenter-core", orbital_datacenter_core_icon, "bitermotors-infrastructure", "h[orbital-datacenter-core]", 1, {
+    place_result = "bitermotors-orbital-datacenter-core", weight = 100000
+  }),
+  item("bitermotors-orbital-radiator-panel", orbital_radiator_panel_icon, "energy", "c[orbital-radiator-panel]", 10, {
+    place_result = "bitermotors-orbital-radiator-panel", weight = 100000
+  }),
+  item("bitermotors-high-density-space-solar-panel", high_density_space_solar_panel_icon, "energy", "d[high-density-space-solar-panel]", 10, {
+    place_result = "bitermotors-high-density-space-solar-panel", weight = 25000
+  }),
   item("bitermotors-planetary-grid-controller", planetary_grid_controller_icon, "bitermotors-infrastructure", "h[planetary-grid-controller]", 1, {place_result = "bitermotors-planetary-grid-controller"})
 })
 
@@ -1439,9 +1445,9 @@ local orbital_datacenter_core = copied_assembler(
 orbital_datacenter_core.energy_source.emissions_per_minute = nil
 orbital_datacenter_core.module_slots = 0
 orbital_datacenter_core.allowed_effects = {"consumption", "speed", "pollution", "quality"}
-orbital_datacenter_core.collision_box = {{-2.9, -2.9}, {2.9, 2.9}}
-orbital_datacenter_core.selection_box = {{-3, -3}, {3, 3}}
-orbital_datacenter_core.graphics_set = generated_entity_animation("orbital-datacenter-core", 0.36)
+orbital_datacenter_core.collision_box = {{-1.4, -1.4}, {1.4, 1.4}}
+orbital_datacenter_core.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
+orbital_datacenter_core.graphics_set = generated_entity_animation("orbital-datacenter-core", 0.18)
 orbital_datacenter_core.surface_conditions = {
   {
     property = "gravity",
@@ -1474,7 +1480,7 @@ local high_density_space_solar_panel = copied_energy_entity(
   "bitermotors-high-density-space-solar-panel"
 )
 high_density_space_solar_panel.max_health = 500
-high_density_space_solar_panel.production = "50MW"
+high_density_space_solar_panel.production = "20MW"
 high_density_space_solar_panel.surface_conditions = {
   {
     property = "gravity",
@@ -2075,10 +2081,9 @@ data:extend({
   ),
   recipe("bitermotors-orbital-datacenter-core", {"advanced-crafting"}, "bitermotors-infrastructure", "h[orbital-datacenter-core]",
     {
-      {type = "item", name = "bitermotors-datacenter-rack", amount = 20},
-      {type = "item", name = "processing-unit", amount = 100},
-      {type = "item", name = "low-density-structure", amount = 100},
-      {type = "item", name = "bitermotors-lfp-battery-pack", amount = 50}
+      {type = "item", name = "bitermotors-datacenter-rack", amount = 8},
+      {type = "item", name = "low-density-structure", amount = 40},
+      {type = "item", name = "bitermotors-lfp-battery-pack", amount = 12}
     },
     {{type = "item", name = "bitermotors-orbital-datacenter-core", amount = 1}}, 60
   ),
@@ -2093,10 +2098,10 @@ data:extend({
   ),
   recipe("bitermotors-high-density-space-solar-panel", {"advanced-crafting"}, "energy", "d[high-density-space-solar-panel]",
     {
-      {type = "item", name = "bitermotors-high-density-solar-array", amount = 4},
-      {type = "item", name = "processing-unit", amount = 20},
-      {type = "item", name = "low-density-structure", amount = 10},
-      {type = "item", name = "bitermotors-high-energy-battery-pack", amount = 4}
+      {type = "item", name = "bitermotors-high-density-solar-array", amount = 2},
+      {type = "item", name = "processing-unit", amount = 10},
+      {type = "item", name = "low-density-structure", amount = 5},
+      {type = "item", name = "bitermotors-high-energy-battery-pack", amount = 2}
     },
     {{type = "item", name = "bitermotors-high-density-space-solar-panel", amount = 1}}, 30
   ),
@@ -2421,7 +2426,7 @@ data:extend({
   ),
   tech("bitermotors-orbital-compute",
     "__bitermotors__/graphics/icons/orbital-datacenter-core.png",
-    {"rocket-silo", "bitermotors-terrestrial-ai", "bitermotors-autonomous-logistics", "space-platform", "space-science-pack", "bitermotors-energy-products"},
+    {"rocket-silo", "bitermotors-terrestrial-ai", "bitermotors-autonomous-logistics", "space-platform", "bitermotors-energy-products"},
     {
       unlock("bitermotors-orbital-datacenter-core"),
       unlock("bitermotors-orbital-radiator-panel"),
@@ -2435,7 +2440,6 @@ data:extend({
       {"chemical-science-pack", 1},
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
-      {"space-science-pack", 1},
       {"bitermotors-ai-token", 1},
       {"bitermotors-dollar", 1}
     },
@@ -2454,7 +2458,6 @@ data:extend({
       {"chemical-science-pack", 1},
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
-      {"space-science-pack", 1},
       {"bitermotors-ai-token", 1},
       {"bitermotors-dollar", 5}
     },
@@ -2478,7 +2481,6 @@ data:extend({
       {"chemical-science-pack", 1},
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
-      {"space-science-pack", 1},
       {"bitermotors-ai-token", 1},
       {"bitermotors-dollar", 10}
     },
@@ -2499,7 +2501,6 @@ data:extend({
       {"chemical-science-pack", 1},
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
-      {"space-science-pack", 1},
       {"bitermotors-ai-token", 1},
       {"bitermotors-dollar", 10}
     },

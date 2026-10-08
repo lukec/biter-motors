@@ -55,6 +55,12 @@ changes that policy.
   entities prove neither launchability nor logistics cost. `data.raw` can omit
   auto-calculated item weights; capture `LuaItemPrototype.weight` and check mass,
   inventory slots and practical request minimums for every critical cargo item.
+- Derive fixture inserter/loader placement from native machine bounds when
+  footprints change; a completion ledger does not prove physical extraction.
+- Native starter ascension and delivery can share a simulation tick. Validate
+  cargo origin, destination, event order and conservation, not a fabricated delay.
+- Model both rocket and cargo-pod inventory limits. The validated 2.1.20 rocket
+  has 20 slots but its ascent pod has 10; weights alone do not define capacity.
 
 ## Verification
 

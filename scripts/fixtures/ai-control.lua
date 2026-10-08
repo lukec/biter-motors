@@ -163,9 +163,12 @@ script.on_init(function()
   second.technologies["bitermotors-orbital-compute"].researched = true
   local orbit_b = platform(second, "AI accounting B", 1)
   storage.other = task(orbit_b, CORE, "bitermotors-orbital-ai-dataset-hyperscale", {0, 12}, second)
-  storage.payload_chest = make(orbit, "steel-chest", {22, 16}, force)
-  local inserter = make(orbit, "fast-inserter", {22, 15}, force)
+  local payload_machine = storage.tasks[13].machine
+  local edge = payload_machine.position.y + payload_machine.prototype.selection_box.right_bottom.y
+  storage.payload_chest = make(orbit, "steel-chest", {payload_machine.position.x, edge + 1.5}, force)
+  local inserter = make(orbit, "fast-inserter", {payload_machine.position.x, edge + 0.5}, force)
   inserter.direction = defines.direction.north
+  check(inserter.pickup_position.y < edge, "payload extraction targets current core footprint")
   storage.payload_inserter = inserter
   storage.blocked = storage.tasks[9]
   -- A real output-full machine must not advance the ledger until it can craft.

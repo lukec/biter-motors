@@ -341,15 +341,15 @@
     {
       "review_id": "entity:bitermotors-orbital-datacenter-core",
       "prototype_id": "bitermotors-orbital-datacenter-core",
-      "name": "Orbital Datacenter Core",
+      "name": "Orbital Compute Cluster",
       "kind": "entity",
       "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/orbital-datacenter-core/orbital-datacenter-core.png",
       "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/orbital-datacenter-core.png",
       "footprint_tiles": [
-        6,
-        6
+        3,
+        3
       ],
-      "scale": 0.36,
+      "scale": 0.18,
       "icon_dimensions": [
         256,
         256
@@ -359,21 +359,21 @@
         512
       ],
       "preview_dimensions": [
-        184,
-        184
+        92,
+        92
       ],
       "status": "bitmap"
     },
     {
       "review_id": "entity:bitermotors-orbital-radiator-panel",
       "prototype_id": "bitermotors-orbital-radiator-panel",
-      "name": "Orbital Radiator Panel",
+      "name": "Orbital Radiator",
       "kind": "entity",
       "source_path": "base-art",
       "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png",
       "footprint_tiles": [
-        1,
-        1
+        3,
+        3
       ],
       "scale": 1.0,
       "icon_dimensions": [
@@ -387,13 +387,13 @@
     {
       "review_id": "entity:bitermotors-high-density-space-solar-panel",
       "prototype_id": "bitermotors-high-density-space-solar-panel",
-      "name": "High-density Space Solar Panel",
+      "name": "Space Solar Wing",
       "kind": "entity",
       "source_path": "base-art",
       "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png",
       "footprint_tiles": [
-        1,
-        1
+        3,
+        3
       ],
       "scale": 1.0,
       "icon_dimensions": [

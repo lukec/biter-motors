@@ -109,17 +109,17 @@ script.on_init(function()
   storage.first = core(storage.surface, storage.player_force, {-30, 12})
   storage.second = core(storage.surface, storage.player_force, {20, 12})
   storage.source = power(storage.surface, storage.player_force, {0, 12}, 10000000000)
-  storage.panels = radiators(storage.surface, storage.player_force, 16, {-56, 32})
+  storage.panels = radiators(storage.surface, storage.player_force, 2, {-56, 32})
 
   storage.other_force = game.create_force("cooling-validation-other")
   storage.other_force.technologies["bitermotors-orbital-compute"].researched = true
   storage.other_surface = platform(storage.player_force, "Cooling validation B")
   storage.other_core = core(storage.other_surface, storage.player_force, {0, 12})
   storage.other_source = power(storage.other_surface, storage.player_force, {0, 22}, 10000000000)
-  storage.other_panels = radiators(storage.other_surface, storage.player_force, 7, {-28, 32})
+  storage.other_panels = radiators(storage.other_surface, storage.player_force, 0, {-28, 32})
 
   storage.cross_force_core = core(storage.surface, storage.other_force, {0, -24})
-  storage.cross_force_panels = radiators(storage.surface, storage.other_force, 7, {-28, -44})
+  storage.cross_force_panels = radiators(storage.surface, storage.other_force, 0, {-28, -44})
 end)
 
 local function advance()
@@ -145,11 +145,11 @@ local function advance()
 
   if storage.stage == "native" then
     equal(cooling(force).cores, 3, "player-force cores span two platforms")
-    equal(cooling(force).radiators, 23, "player-force radiator count")
-    equal(cooling(force).cooled_cores, 2, "sixteen radiators cool two cores")
+    equal(cooling(force).radiators, 2, "player-force radiator count")
+    equal(cooling(force).cooled_cores, 2, "two radiators cool two cores")
     equal(cooling(storage.other_force).cores, 1, "second-force core is independently counted")
     check(not core_status(force, storage.other_core).cooled,
-      "seven radiators do not borrow cooling from the other platform")
+      "uncooled core does not borrow cooling from the other platform")
     check(not core_status(storage.other_force, storage.cross_force_core).cooled,
       "radiators on another force do not cross-qualify same-surface core")
     equal(cooling(storage.other_force).cooled_cores, 0,
@@ -166,19 +166,19 @@ local function advance()
     storage.second = core(storage.surface, force, {20, 12})
     equal(cooling(force).cooled_cores, 2, "removed core releases its deterministic slot")
     report("cooling_policy_passed", {platforms = 2, cores = 4, same_surface_force_isolation = true,
-      seven_vs_eight = true, capacity_scope = "surface+force"})
-    storage.panels[16].destroy{raise_destroy = true}
+      zero_vs_one = true, radiators_per_core = 1, capacity_scope = "surface+force"})
+    storage.panels[2].destroy{raise_destroy = true}
     storage.stage = "allocation"
     return
   end
 
   if storage.stage == "allocation" then
-    equal(cooling(force).cooled_cores, 1, "fifteen radiators cool exactly one core")
+    equal(cooling(force).cooled_cores, 1, "one radiator cools exactly one core")
     check(core_status(force, storage.first).cooled, "oldest unit-number core wins deterministic capacity")
     check(not core_status(force, storage.second).cooled, "newer core loses deterministic capacity")
-    storage.panels[16] = make(storage.surface, RADIATOR, {58, 32}, force)
-    storage.other_panels[8] = make(storage.other_surface, RADIATOR, {36, 32}, force)
-    storage.cross_force_panels[8] = make(storage.surface, RADIATOR, {36, -44}, storage.other_force)
+    storage.panels[2] = make(storage.surface, RADIATOR, {58, 32}, force)
+    storage.other_panels[1] = make(storage.other_surface, RADIATOR, {36, 32}, force)
+    storage.cross_force_panels[1] = make(storage.surface, RADIATOR, {36, -44}, storage.other_force)
     storage.stage = "restore_capacity"
     return
   end
@@ -186,9 +186,9 @@ local function advance()
   if storage.stage == "restore_capacity" then
     equal(cooling(force).cooled_cores, 3, "restored radiators restore both platforms' capacity")
     check(core_status(force, storage.other_core).cooled,
-      "eighth platform radiator cools same-force platform core")
+      "first platform radiator cools same-force platform core")
     check(core_status(storage.other_force, storage.cross_force_core).cooled,
-      "eighth same-surface radiator cools same-force-group core")
+      "first same-surface radiator cools same-force-group core")
     reserve(storage.second, 4)
     storage.stage = "cooling_start"
     return
@@ -348,7 +348,7 @@ local function advance()
   if storage.stage == "platform_removal" then
     if storage.other_surface.valid then return end
     equal(cooling(force).cores, 2, "deleted platform removes its cooling demand")
-    equal(cooling(force).radiators, 16, "deleted platform removes its radiators")
+    equal(cooling(force).radiators, 2, "deleted platform removes its radiators")
     equal(cooling(force).cooled_cores, 2, "remaining platform preserves independent cooling")
     equal(ledger(force).orbital.generated, storage.recovered.generated, "platform removal cannot erase earned compute")
     storage.recovered.platform_removal = true

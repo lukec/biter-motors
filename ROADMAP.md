@@ -66,7 +66,10 @@ All four focused regressions and broad smoke pass on source and the exact ZIP.
 **Phase 3 is reopened as of 2026-10-07.** The earlier fixtures passed within
 their recorded bounds, but supplied hardware directly on platforms instead of
 qualifying rocket uplift. The new orbital ending is designed and costed, not
-implemented. Compressed Dataset output, ordinary packaging, and native-event
+fully implemented. Its first entry slice now has compact hardware, portable
+weights, one-radiator cooling and research without white science; see the
+[orbital-entry evidence](docs/orbital-entry-validation.md). Compressed Dataset
+output, ordinary packaging, and native-event
 AI accounting are implemented. The
 [AI payload/accounting evidence](docs/ai-accounting-validation.md) records real
 compute output, quality, native bonus events, blocked output, immediate recipe
@@ -98,7 +101,8 @@ chemistry, or future feature branch belongs in this release sequence.
 
 The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) and
 [cost study](docs/orbital-ending-cost-study.md) define the next implementation
-slices. Modeling is complete; **gameplay changes are pending**.
+slices. Modeling is complete; **orbital entry is implemented, and the
+replacement finale remains pending**.
 
 - Reuse ordinary rockets and the existing terrestrial supply chains. Approximately
   twelve compact compute clusters are a balancing reference, not a count gate.
@@ -111,14 +115,18 @@ slices. Modeling is complete; **gameplay changes are pending**.
 - The proposed ideal AI/research bill is about 21,200 Dollars. Modest recurring
   income reaches the model's completion in about 5.7 hours, excluding manufacture,
   exploration, building and cargo delays. A 4-6 active-hour chapter is unproven.
-- Native transport capture exposed a 1.2-tonne core that cannot launch whole and
-  250-kg Dollars (three per rocket). In-orbit core manufacture is an unqualified
-  workaround. Explicit weights and real hardware/currency uplift are release gates.
+- The 2026-10-07 capture exposed an unlaunchable 1.2-tonne core and 250-kg
+  Dollars. The 2026-10-08 entry slice replaces these with explicit 100-kg
+  clusters and 10-g Dollars, plus 25-kg wings, 100-kg radiators and a 1-kg Model.
+  The native entry fixture now manufactures, launches, builds, computes,
+  returns 10,000 Tokens and survives reload on source and the exact ZIP.
+  It also captures the tighter ten-slot cargo-pod inventory. Basic Token
+  extraction is slow; upgraded I/O belongs in final blueprint/pacing qualification.
 - A staged 1/4/8/12-cluster build needs 49 modeled separate-item launches before
   extra cash top-ups, about 4,500 blue circuits for hardware/launches and another
   4,500 for remaining research. It must use spare production, not double-count stock.
 
-Proceed consecutively: qualify first-cluster rocket uplift; implement banked
+First-cluster rocket uplift is qualified at normal quality. Proceed: implement banked
 compute, Model return and activation; finish native UI/epilogue and functional
 satellite art; requalify source/exact ZIP, soaks and RC installation. The
 current private save and live processes remain unchanged by this cost study.
@@ -279,17 +287,18 @@ platforms.
 
 `Orbital AI Infrastructure` unlocks:
 
-- **Orbital Datacenter Core**
-  - Space-only 6x6 compute machine.
+- **Orbital Compute Cluster**
+  - Space-only 3x3 compute machine.
   - Draws 250 MW while operating.
   - Consumes 1 Dollar per recipe batch: 30 recipe-seconds, or 20 seconds in a
     normal-quality core at its current 1.5 crafting speed before other effects.
   - Produces 10,000 physical AI Tokens per batch.
-- **Orbital Radiator Panel**
+- **Orbital Radiator**
   - Space-only cooling infrastructure.
-  - Eight panels provide cooling capacity for one core on the same platform.
-- **High-density Space Solar Panel**
-  - Space-only 50 MW solar panel.
+  - One radiator cools one cluster on the same platform and force.
+- **Space Solar Wing**
+  - Space-only 20 MW nominal solar panel; 60 MW continuously in Nauvis orbit.
+  - Five wings generate 300 MW for one 250 MW cluster.
   - Competes with compute, cooling, cargo, and defenses for platform area.
 - **Advanced Asteroid Processing**
   - Follows Orbital AI Infrastructure.
@@ -297,7 +306,11 @@ platforms.
   - Infinite Asteroid Productivity uses AI Tokens instead of removed
     agricultural science.
 
-Every orbital training batch resets to zero on low power or inadequate cooling.
+Entry research and the three compute scale tiers no longer require white
+science. Player hub requests must use custom minimum payloads for small
+hardware/cash shipments rather than waiting for full rockets.
+
+Every orbital training batch currently resets to zero on low power or inadequate cooling.
 Tokens for science and compact Training Datasets for the finale must physically
 return to Nauvis by cargo pod. Space does not beam energy to the planet.
 

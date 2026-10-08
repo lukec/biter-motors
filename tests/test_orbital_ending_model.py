@@ -23,12 +23,37 @@ class OrbitalEndingTests(unittest.TestCase):
         self.catalog = model.EconomyCatalog.load()
         self.proposal = model.Proposal()
 
-    def test_real_engine_weights_expose_hardware_uplift_gap(self):
+    def test_real_engine_weights_keep_critical_cargo_launchable(self):
         result = model.shipments(self.catalog, {model.CORE: 1, model.DOLLAR: 100})
+        self.assertEqual([], result["blocked_items"])
+        self.assertEqual(2, result["rockets"])
+        self.assertEqual(100000, result["capacity_per_rocket"][model.DOLLAR])
+        self.assertEqual(100000, self.catalog.data["launch"]["item_weights_grams"][model.CORE])
+        for item in (model.CORE, model.RADIATOR, model.SOLAR, model.MODEL):
+            self.assertLessEqual(self.catalog.data["launch"]["item_weights_grams"][item],
+                                 self.catalog.data["launch"]["capacity_grams"])
+
+    def test_oversized_cargo_still_fails_closed(self):
+        altered = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
+        altered.data["launch"]["item_weights_grams"][model.CORE] = 1208326
+        result = model.shipments(altered, {model.CORE: 1})
         self.assertEqual([model.CORE], result["blocked_items"])
         self.assertIsNone(result["rockets"])
-        self.assertEqual(3, result["capacity_per_rocket"][model.DOLLAR])
-        self.assertEqual(1208326, self.catalog.data["launch"]["item_weights_grams"][model.CORE])
+
+    def test_entry_prototypes_match_modeled_hardware_without_white_science(self):
+        candidate = model.proposed_catalog(self.catalog, self.proposal)
+        for item in (model.CORE, model.SOLAR, model.RADIATOR):
+            self.assertEqual([[-1.5, -1.5], [1.5, 1.5]],
+                             self.catalog.data["entities"][item]["selection_box"])
+        self.assertEqual("250MW", self.catalog.data["entities"][model.CORE]["energy_usage"])
+        self.assertEqual("20MW", self.catalog.data["entities"][model.SOLAR]["production"])
+        for item in (model.CORE, model.SOLAR):
+            self.assertEqual(candidate.data["recipes"][item]["ingredients"],
+                             self.catalog.data["recipes"][item]["ingredients"])
+        for technology in model.RESEARCH[1:]:
+            native = self.catalog.data["technologies"][technology]
+            self.assertNotIn("space-science-pack", native.get("prerequisites", []))
+            self.assertNotIn("space-science-pack", dict(native["unit"]["ingredients"]))
 
     def test_proposed_mass_is_explicit_and_does_not_change_native_catalog(self):
         before = copy.deepcopy(self.catalog.data)
@@ -42,7 +67,9 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_native_capture_includes_vanilla_manufacturing_and_inventory_limits(self):
         self.assertIn("rocket-silo", self.catalog.data["manufacturing_recipes"])
         self.assertIn("utility-science-pack", self.catalog.data["manufacturing_recipes"])
-        self.assertEqual(20, self.catalog.data["launch"]["inventory_slots"])
+        self.assertEqual(10, self.catalog.data["launch"]["inventory_slots"])
+        self.assertEqual(20, self.catalog.data["launch"]["rocket_inventory_slots"])
+        self.assertEqual(10, self.catalog.data["launch"]["cargo_inventory_slots"])
         self.assertEqual(50, self.catalog.data["launch"]["parts_per_rocket"])
         self.assertIn("space-platform-starter-pack", self.catalog.data["items"])
 
@@ -53,8 +80,8 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertEqual(2, one["rockets"])
         candidate.data["launch"]["item_weights_grams"][model.CORE] = 1
         limited = model.shipments(candidate, {model.CORE: 21})
-        self.assertEqual(20, limited["capacity_per_rocket"][model.CORE])
-        self.assertEqual(2, limited["rockets"])
+        self.assertEqual(10, limited["capacity_per_rocket"][model.CORE])
+        self.assertEqual(3, limited["rockets"])
 
     def test_first_and_full_layout_preserve_starter_foundation_distinction(self):
         first = model.hardware_plan(self.catalog, self.proposal, cores=1, operating_dollars=100)
@@ -217,7 +244,7 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_report_matches_versioned_study_and_discloses_bounds(self):
         result = model.analysis(self.catalog)
         self.assertEqual(model.report(result), (ROOT / "docs/orbital-ending-cost-study.md").read_text())
-        for message in ("Proposed balance, not implemented", "not a campaign-time prediction",
+        for message in ("finale gameplay pending", "not a campaign-time prediction",
                         "hyperscale", "unmeasured", "not a tested platform blueprint", "silo-to-platform"):
             self.assertIn(message.lower(), model.report(result).lower())
 

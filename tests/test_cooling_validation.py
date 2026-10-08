@@ -38,7 +38,7 @@ class CoolingValidationTests(unittest.TestCase):
             'new core is registered for cooling demand',
             'removed core leaves cooling demand',
             'cooled core removal promotes the next core',
-            'seven radiators do not borrow cooling from the other platform',
+            'uncooled core does not borrow cooling from the other platform',
             'deleted platform removes its cooling demand',
             'equal(cooling(force).cooled_cores, 1',
             'oldest unit-number core wins deterministic capacity',

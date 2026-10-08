@@ -230,18 +230,7 @@ script.on_init(function()
       if input then input.insert{name = DOLLAR, count = 20} end
       storage.orbital_core_unit_number = orbital_core.unit_number
     end
-    local radiator_positions = {
-      {-18, 10}, {-12, 10}, {-6, 10}, {6, 10},
-      {12, 10}, {18, 10}, {-18, 18}, {-12, 18}
-    }
-    for index = 1, 7 do
-      orbital_surface.create_entity{
-        name = ORBITAL_RADIATOR,
-        position = radiator_positions[index],
-        force = force,
-        raise_built = true
-      }
-    end
+    local radiator_positions = {{-12, 18}}
     storage.orbital_radiator_positions = radiator_positions
     storage.orbital_surface_index = orbital_surface.index
     storage.orbital_platform_created = platform_hub ~= nil and orbital_core ~= nil
@@ -862,14 +851,14 @@ script.on_nth_tick(179, function()
   storage.orbital_cooling_completed = true
   local surface = game.get_surface(storage.orbital_surface_index)
   local position = storage.orbital_radiator_positions
-    and storage.orbital_radiator_positions[8] or {-12, 18}
+    and storage.orbital_radiator_positions[1] or {-12, 18}
   local radiator = surface and surface.create_entity{
     name = ORBITAL_RADIATOR,
     position = position,
     force = game.forces.player,
     raise_built = true
   }
-  storage.eighth_orbital_radiator_created = radiator ~= nil
+  storage.first_orbital_radiator_created = radiator ~= nil
 end)
 
 script.on_nth_tick(2111, function()
@@ -881,7 +870,7 @@ script.on_nth_tick(2111, function()
   write_report{
     tick = game.tick,
     status = "orbital_operating",
-    eighth_radiator_created = storage.eighth_orbital_radiator_created,
+    first_radiator_created = storage.first_orbital_radiator_created,
     physical_tokens = output and output.get_item_count("bitermotors-ai-token") or -1,
     endgame = remote.call("bitermotors", "endgame_status", "player")
   }
@@ -1543,7 +1532,7 @@ from pathlib import Path
 
 control = Path(sys.argv[1]).read_text()
 required_markers = {
-    "ORBITAL_RADIATORS_PER_CORE = 8": "eight-radiator orbital cooling rule",
+    "ORBITAL_RADIATORS_PER_CORE = 1": "one-radiator orbital cooling rule",
     "orbital_core_has_cooling": "orbital cooling assignment",
     "crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0": "compute run reset on service loss",
     "defines.entity_status.low_power": "low-power handling",
@@ -1705,10 +1694,10 @@ expected_research = {
     "bitermotors-capital-scaling": (600, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-terrestrial-ai": (750, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-autonomous-logistics": (750, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-compute": (1500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-cluster-training": (1000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-grid-scale-energy": (1500, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-hyperscale-training": (3000, 60, rgbpys | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-compute": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-cluster-training": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-grid-scale-energy": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-hyperscale-training": (3000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-planetary-energy-grid": (2500, 60, rgbpys | {"bitermotors-ai-token"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
@@ -2029,7 +2018,7 @@ if "logistic-robotics" not in autonomy_prerequisites or "logistic-system" in aut
 orbital_prerequisites = set(data["technology"]["bitermotors-orbital-compute"]["prerequisites"])
 if orbital_prerequisites != {
     "bitermotors-terrestrial-ai", "bitermotors-autonomous-logistics", "space-platform",
-    "space-science-pack", "rocket-silo", "bitermotors-energy-products",
+    "rocket-silo", "bitermotors-energy-products",
 }:
     raise SystemExit(f"Orbital Compute Nauvis-orbit prerequisites mismatch: {sorted(orbital_prerequisites)}")
 orbital_tech = data["technology"]["bitermotors-orbital-compute"]
@@ -2040,7 +2029,7 @@ orbital_unlocks = {
 if "bitermotors-orbital-datacenter-core" not in orbital_unlocks:
     raise SystemExit("Orbital AI Infrastructure must unlock the physical Orbital Datacenter Core")
 orbital_core = data["assembling-machine"]["bitermotors-orbital-datacenter-core"]
-if orbital_core["energy_usage"] != "250MW" or orbital_core["selection_box"] != [[-3, -3], [3, 3]]:
+if orbital_core["energy_usage"] != "250MW" or orbital_core["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
     raise SystemExit(f"Orbital Datacenter Core power or footprint mismatch: {orbital_core}")
 if orbital_core.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit(f"Orbital Datacenter Core must be space-only: {orbital_core.get('surface_conditions')}")
@@ -2048,8 +2037,33 @@ radiator = data["solar-panel"]["bitermotors-orbital-radiator-panel"]
 if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital Radiator Panel must be space-only")
 space_solar = data["solar-panel"]["bitermotors-high-density-space-solar-panel"]
-if space_solar["production"] != "50MW" or space_solar.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
+if space_solar["production"] != "20MW" or space_solar.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit(f"Space Solar Panel power or surface restriction mismatch: {space_solar}")
+for name, weight in {
+    "bitermotors-orbital-datacenter-core": 100000,
+    "bitermotors-orbital-radiator-panel": 100000,
+    "bitermotors-high-density-space-solar-panel": 25000,
+    "bitermotors-dollar": 10,
+    "bitermotors-agi-model": 1000,
+}.items():
+    if data["item"][name].get("weight") != weight:
+        raise SystemExit(f"Orbital entry cargo weight mismatch: {name}")
+for name in ("bitermotors-orbital-radiator-panel", "bitermotors-high-density-space-solar-panel"):
+    if data["solar-panel"][name]["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
+        raise SystemExit(f"Orbital entry hardware must have a 3x3 footprint: {name}")
+for name, ingredients in {
+    "bitermotors-orbital-datacenter-core": {
+        "bitermotors-datacenter-rack": 8, "low-density-structure": 40,
+        "bitermotors-lfp-battery-pack": 12,
+    },
+    "bitermotors-high-density-space-solar-panel": {
+        "bitermotors-high-density-solar-array": 2, "processing-unit": 10,
+        "low-density-structure": 5, "bitermotors-high-energy-battery-pack": 2,
+    },
+}.items():
+    actual = {entry["name"]: entry["amount"] for entry in data["recipe"][name]["ingredients"]}
+    if actual != ingredients:
+        raise SystemExit(f"Orbital entry manufacturing recipe mismatch: {name}: {actual}")
 hd_solar = data["solar-panel"]["bitermotors-high-density-solar-array"]
 tandem_solar = data["solar-panel"]["bitermotors-tandem-solar-array"]
 if hd_solar.get("next_upgrade") != "bitermotors-tandem-solar-array" or tandem_solar["production"] != "3MW":
@@ -2878,15 +2892,15 @@ if orbital_undercooled is None or not orbital_undercooled.get("platform_created"
     raise SystemExit(f"orbital endgame smoke platform was not created: {orbital_undercooled}")
 undercooled_endgame = orbital_undercooled.get("endgame") or {}
 undercooled_cores = undercooled_endgame.get("cores") or []
-if (undercooled_endgame.get("cooling") or {}).get("radiators") != 7:
-    raise SystemExit(f"orbital cooling smoke did not begin with seven radiators: {orbital_undercooled}")
+if (undercooled_endgame.get("cooling") or {}).get("radiators") != 0:
+    raise SystemExit(f"orbital cooling smoke did not begin without radiators: {orbital_undercooled}")
 if len(undercooled_cores) != 1 or not undercooled_cores[0].get("reset_for_cooling"):
     raise SystemExit(f"undercooled orbital batch did not reset: {orbital_undercooled}")
-if orbital_operating is None or not orbital_operating.get("eighth_radiator_created"):
-    raise SystemExit(f"eighth orbital radiator was not installed: {orbital_operating}")
+if orbital_operating is None or not orbital_operating.get("first_radiator_created"):
+    raise SystemExit(f"first orbital radiator was not installed: {orbital_operating}")
 operating_endgame = orbital_operating.get("endgame") or {}
 if (operating_endgame.get("cooling") or {}).get("cooled_cores") != 1:
-    raise SystemExit(f"eight radiators did not cool one orbital core: {orbital_operating}")
+    raise SystemExit(f"one radiator did not cool one orbital cluster: {orbital_operating}")
 if orbital_operating.get("physical_tokens", 0) < 10_000:
     raise SystemExit(f"powered cooled orbital core did not finish a physical batch: {orbital_operating}")
 if (operating_endgame.get("orbital") or {}).get("generated", 0) < 10_000:

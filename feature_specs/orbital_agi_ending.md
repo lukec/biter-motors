@@ -1,8 +1,11 @@
 # Orbital AGI Ending
 
-Date: 2026-10-07. Status: **design and cost study complete; gameplay implementation pending**.
-This replaces the planned 10 GW terrestrial finale. The currently installed
-Lua still implements that old finale; no player save or live process was changed.
+Design date: 2026-10-07. Updated: 2026-10-08.
+Status: **orbital-entry slice implemented; replacement finale pending**.
+Source now has compact hardware, explicit cargo weights, one-radiator cooling
+and research without white science. The old 10 GW terrestrial finale and
+orbital run-scrapping policy remain until slice 2. No player save, installed mod
+or live process was changed. See [entry validation](../docs/orbital-entry-validation.md).
 
 ## Campaign Contract
 
@@ -36,7 +39,8 @@ represents a cluster of rack-scale satellites, not a literal 250 MW single rack.
 
 ## Proposed Working Values
 
-These are **modeled recommendations**, not final prototype values. The full
+The hardware table is implemented in source. Later research yields, Model
+completion and pause/resume below remain **modeled recommendations**. The full
 [cost study](../docs/orbital-ending-cost-study.md) distinguishes native captures,
 proposal overrides, material frontiers and unmeasured play time.
 
@@ -62,14 +66,14 @@ currencies, engines, travel, other planets or combat fleets to this v1 path.
 ### Transport Weights
 
 Capture **LuaItemPrototype.weight**, not only optional `data.raw` weight fields.
-The native core is 1,208,326 g, over the normal 1,000,000 g rocket limit. Native
-Dollars are 250,025 g each: only three fit. The current ground-built Model is
-2,147,483,647 g. Direct core uplift is blocked; manufacturing it in orbit is an
-unqualified workaround and does not fix operating-currency logistics.
+The 2026-10-07 capture found a 1,208,326-g core, over the normal 1,000,000-g
+rocket limit, 250,025-g Dollars and a 2,147,483,647-g ground-built Model.
+The 2026-10-08 entry slice replaces these defaults with explicit portable
+weights. Manufacturing a core in orbit is no longer an uplift workaround.
 
-Set explicit weights, then test genuine native launches:
+Implemented weights, checked against the refreshed native catalog:
 
-| Item | Proposed weight | Normal upward rocket capacity by mass |
+| Item | Explicit weight | Normal upward rocket capacity by mass |
 | --- | ---: | ---: |
 | Compute Cluster | 100 kg | 10 |
 | Space Solar Wing | 25 kg | 40 |
@@ -193,6 +197,9 @@ before freezing yields or promising the final campaign duration.
    recipes, cooling ratio, white-science removal, practical starter instructions
    and a native silo-to-platform first-cluster fixture. No direct construction
    or inventory seeding on the platform may stand in for successful uplift.
+   **Completed 2026-10-08 on source and the exact ZIP.** Implementation and focused validation are recorded in
+   [orbital-entry validation](../docs/orbital-entry-validation.md); this does
+   not qualify the pending finale or an entire player campaign.
 2. **Banked compute and final Model:** tier values, native earned accounting,
    power/cooling pause-and-resume, physical archive consumption, orbital Model
    output, real cargo-pod return and ground activation. Remove the obsolete
