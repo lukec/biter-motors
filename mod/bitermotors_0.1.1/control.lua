@@ -366,9 +366,9 @@ ORBITAL_AI_MILESTONES = {
 }
 ORBITAL_AI_RECIPE_TOKENS = {
   ["bitermotors-orbital-ai-token"] = 10000,
-  ["bitermotors-orbital-ai-token-cluster"] = 25000,
-  ["bitermotors-orbital-ai-token-grid-scale"] = 50000,
-  ["bitermotors-orbital-ai-token-hyperscale"] = 100000
+  ["bitermotors-orbital-ai-token-cluster"] = 50000,
+  ["bitermotors-orbital-ai-token-grid-scale"] = 100000,
+  ["bitermotors-orbital-ai-token-hyperscale"] = 200000
 }
 AI_EFFICIENCY_TRACKS = {
   terrestrial = {
@@ -1244,6 +1244,24 @@ local function reset_compute_queue_progress(queue)
       PowerQueue.remove_current(queue, unit_number)
     else
       local failure = bitermotors_compute_power_failures()[unit_number]
+      if entity.name == ORBITAL_DATACENTER_CORE_NAME then
+        -- Orbital inputs/progress stay native; only missing cooling needs a script hold.
+        if not orbital_core_has_cooling(entity) then
+          if not failure then
+            entity.custom_status = {
+              diode = defines.entity_status_diode.yellow,
+              label = {"bitermotors-status.orbital-cooling-paused"}
+            }
+            bitermotors_compute_power_failures()[unit_number] = {cooling = true}
+          end
+          if not entity.disabled_by_script then entity.disabled_by_script = true end
+        elseif failure then
+          entity.disabled_by_script = false
+          entity.custom_status = nil
+          bitermotors_compute_power_failures()[unit_number] = nil
+        end
+        goto continue
+      end
       if failure then
         local power_recovered = entity.electric_buffer_size <= 0
           or entity.energy >= entity.electric_buffer_size * 0.9
@@ -8298,9 +8316,9 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Its base cycle consumes 20 Dollars to produce 20 AI Tokens in 30 seconds. Make the Tokens for Autonomous Logistics and Orbital AI Infrastructure on land; check their research ingredients.",
   ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Route and Summon controls for Premium, Mass-market, Megatruck, and Bitertaxi EVs. Bitertaxi production still requires 5,000 total consumer EV sales.",
   ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Start with one Compute Cluster, one Radiator and five Solar Wings on a stationary Nauvis platform. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars; otherwise automatic rockets wait for full loads. Return the physical AI Tokens to Nauvis.",
-  ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 25,000 AI Tokens per Dollar.",
-  ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 50,000 Tokens per Dollar.",
-  ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 100,000 AI Tokens per Dollar. Planetary Energy Grid research is available.",
+  ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 50,000 AI Tokens per Dollar.",
+  ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 100,000 Tokens or two Datasets per Dollar.",
+  ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 200,000 AI Tokens or four Datasets per Dollar. Planetary Energy Grid research is available.",
   ["bitermotors-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 10 GW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
 }
 
@@ -8515,8 +8533,10 @@ function endgame_status(force)
         power_fraction = power_fraction,
         cooled = orbital_core_has_cooling(entity),
         disabled_by_script = entity.disabled_by_script == true,
-        reset_for_power = failure and failure.power == true or false,
-        reset_for_cooling = failure and failure.cooling == true or false
+        power_limited = entity.status == defines.entity_status.no_power
+          or entity.status == defines.entity_status.low_power,
+        paused_for_cooling = failure and failure.cooling == true or false,
+        work_policy = "banked"
       }
     end
   end
@@ -10277,35 +10297,35 @@ local function current_progress_objective(snapshot)
     return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Each 3x3 cluster draws 250 MW and produces physical AI Tokens. Start with one cluster, one radiator and five Solar Wings. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars in the hub requests; return Tokens by cargo pod."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Orbital cooling", "Install one Orbital Radiator per Compute Cluster.", string.format(
-      "Cooling online: %d / %d cores. Radiators installed: %d / %d. Any undercooled core scraps its active token batch.",
+      "Cooling online: %d / %d cores. Radiators installed: %d / %d. Undercooled cores pause with their progress and operating Dollar retained.",
       snapshot.cooled_orbital_datacenter_cores,
       snapshot.orbital_datacenter_cores,
       snapshot.orbital_radiator_panels,
       snapshot.required_orbital_radiator_panels
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Run the first orbital AI batch.", string.format("Supply 1 Dollar and stable 250 MW power to a cooled core. Space Solar is one option, not a required placement milestone. A normal core produces 10,000 Tokens every %g seconds before further effects. Low power or missing cooling scraps the batch and operating Dollar; return output by cargo pod.", snapshot.orbital_cycle_seconds)
+    return "Orbital AI", "Run the first orbital AI batch.", string.format("Supply 1 Dollar and 250 MW power to a cooled core. Space Solar is one option, not a required placement milestone. A normal core produces 10,000 Tokens every %g seconds before further effects. Low power slows/stops work; missing cooling pauses it. Progress and committed inputs are retained; return output by cargo pod.", snapshot.orbital_cycle_seconds)
   elseif snapshot.orbital_ai_tokens_generated < 1000000 then
     return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 1,000,000. The base recipe produces 10,000 Tokens per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.orbital_cluster_researched then
-    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Raise each orbital batch from 10,000 to 25,000 AI Tokens."
+    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Raise each orbital batch from 10,000 to 50,000 AI Tokens."
   elseif snapshot.orbital_ai_tokens_generated < 10000000 then
     return "Orbital scale", "Generate ten million cumulative orbital AI Tokens.", string.format(
-      "Orbital output: %d / 10,000,000. Cluster Training produces 25,000 Tokens per Dollar.",
+      "Orbital output: %d / 10,000,000. Cluster Training produces 50,000 Tokens per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.grid_scale_energy_researched then
-    return "Grid-scale energy", "Research Grid-scale Energy.", research("bitermotors-grid-scale-energy") .. " Unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 50,000-token orbital batches."
+    return "Grid-scale energy", "Research Grid-scale Energy.", research("bitermotors-grid-scale-energy") .. " Unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 100,000-token orbital batches."
   elseif snapshot.orbital_ai_tokens_generated < 100000000 then
     return "Hyperscale AI", "Generate 100 million cumulative orbital AI Token equivalents.", string.format(
-      "Orbital output: %d / 100,000,000. Grid-scale batches produce 50,000 Tokens or one Training Dataset per Dollar.",
+      "Orbital output: %d / 100,000,000. Grid-scale batches produce 100,000 Tokens or two Training Datasets per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.hyperscale_training_researched then
-    return "Hyperscale AI", "Research Hyperscale Training.", research("bitermotors-hyperscale-training") .. " Unlock 100,000 Tokens or two Datasets per batch and Planetary Energy Grid research."
+    return "Hyperscale AI", "Research Hyperscale Training.", research("bitermotors-hyperscale-training") .. " Unlock 200,000 Tokens or four Datasets per batch and Planetary Energy Grid research."
   elseif not snapshot.planetary_grid_researched then
     return "Planetary grid", "Research Planetary Energy Grid.", research("bitermotors-planetary-energy-grid") .. " Prepare a reliable 10 GW terrestrial supply."
   elseif snapshot.grid_controllers == 0 then
@@ -11684,10 +11704,13 @@ local function show_manufacturer_info_panel(player, entity)
 
   local missing_name, current, required = recipe_missing_item(entity, recipe)
   local next_step
-  if entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power then
+  if entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
+    next_step = "Paused: install one Orbital Radiator per Compute Cluster. Progress and committed inputs are retained."
+  elseif entity.name == ORBITAL_DATACENTER_CORE_NAME
+    and (entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power) then
+    next_step = "Power limited: restore the 250 MW supply. Native work slows/stops without losing progress or committed inputs."
+  elseif entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power then
     next_step = "Blocked: restore electric power to this machine."
-  elseif entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
-    next_step = "Blocked: install one Orbital Radiator per Compute Cluster. The active batch was scrapped."
   elseif entity.status == defines.entity_status.full_output then
     next_step = entity.name == SALES_OFFICE_NAME
       and "Blocked: Dollar output is full. Remove Dollars; sales and EV Reservation consumption are paused."
@@ -13510,6 +13533,7 @@ remote.add_interface("bitermotors", {
       consumer_sales_gates = EV_SALES_GATES,
       charger_tiers = STATION_CONFIGS,
       radiators_per_core = ORBITAL_RADIATORS_PER_CORE,
+      compute_progress_policy = {terrestrial = "scrap", orbital = "banked"},
       bitertaxi_customers_per_vehicle = BITERTAXI_CUSTOMERS_PER_VEHICLE,
       bitertaxi_max_fleet = BITERTAXI_MAX_FLEET,
       bitertaxi_vehicle_minutes_per_dollar = BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,

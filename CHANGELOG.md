@@ -5,6 +5,17 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Banked orbital work across power/cooling interruptions: native power shortage
+  slows/stops crafting, while missing cooling pauses with a yellow status.
+  Progress and committed inputs survive recovery and reload; ordinary terrestrial
+  AI still scraps failed batches. Core status and soak probes distinguish these
+  policies instead of reporting orbital resets.
+- Rebalanced orbital scale research to 2,000/3,000/6,000 normal Dollars and
+  50,000/100,000/200,000 Token equivalents per Dollar. Grid-scale/hyperscale
+  direct output is two/four Datasets, with matching native earned accounting.
+- Refreshed the prototype-backed budgets and excluded banked orbital work from
+  lost-Dollar retry costs. Model return/activation and the replacement victory
+  ending remain pending; old controller fixtures are legacy regressions only.
 - Made orbital entry compact and launchable: 3x3 Compute Clusters, one Radiator
   per cluster, and five 20 MW Solar Wings yielding 300 MW in Nauvis orbit.
   Simplified cluster/wing recipes, set explicit hardware/currency/Model cargo

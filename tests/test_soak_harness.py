@@ -126,7 +126,8 @@ class SoakHarnessTest(unittest.TestCase):
         for suffix in ("", "-cluster", "-grid-scale", "-hyperscale"):
             self.assertIn(f'["bitermotors-orbital-ai-token{suffix}"] = true', text)
         self.assertIn('if CORE_RECIPES[core.recipe or ""]', text)
-        for flag in ("disabled_by_script", "reset_for_power", "reset_for_cooling"):
+        self.assertIn('and core.work_policy == "banked"', text)
+        for flag in ("disabled_by_script", "power_limited", "paused_for_cooling"):
             self.assertIn(f'and not core.{flag}', text)
 
     def test_incomplete_and_malformed_evidence_always_writes_failure_summary(self):

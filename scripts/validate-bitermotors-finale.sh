@@ -170,9 +170,12 @@ rows = [json.loads(line) for line in report.read_text().splitlines() if line.str
 statuses = ["finale_policy_passed", "finale_checkpoint", "finale_training_passed", "finale_reload_passed"]
 assert [row.get("status") for row in rows] == statuses, rows
 assert all(type(row.get("assertions")) is int and row["assertions"] > 0 for row in rows), rows
+assert all(row.get("validation_scope") == "legacy-controller-regression" for row in rows), rows
 policy, checkpoint, training, reload = rows
 assert all(type(row.get("tick")) is int and row["tick"] > 0 for row in rows), rows
 assert type(checkpoint.get("progress")) in (int, float) and 0 < checkpoint["progress"] < 1, checkpoint
+assert checkpoint["computed_datasets"] >= 20_000, checkpoint
+assert checkpoint["earned_equivalents"] == checkpoint["computed_datasets"] * 50_000, checkpoint
 assert training.get("training_seconds") == 1200, training
 assert training.get("required_power_watts") == 10_000_000_000, training
 cases = training.get("completion_cases")

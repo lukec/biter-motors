@@ -38,7 +38,7 @@ CLEAN_ROUTES = {
 
 @dataclass(frozen=True)
 class Proposal:
-    """Model-only overrides: entry hardware is implemented; finale values are proposed."""
+    """Model-only overrides: hardware/tiers are implemented; Model completion remains proposed."""
     name: str = "Recommended orbital ending"
     phase_cores: tuple[int, ...] = (1, 4, 8, 12)
     token_yields: tuple[int, ...] = (10000, 50000, 100000, 200000)
@@ -485,7 +485,7 @@ def analysis(catalog: EconomyCatalog, proposal=Proposal()) -> dict:
 def report(result: dict) -> str:
     budget, first, layout = result["budget"], result["first_cluster"], result["layouts"][0]
     fmt = lambda value: f"{value:,.0f}"
-    lines = ["# Orbital Ending Cost Study", "", "Date: **2026-10-08**. **Orbital-entry prototypes implemented; finale gameplay pending.**", "",
+    lines = ["# Orbital Ending Cost Study", "", "Date: **2026-11-08**. **Orbital hardware, banked work and scale tiers implemented; finale gameplay pending.**", "",
         "Native input: `economy-prototypes.json`, Factorio 2.1.20, normal quality, no modules or research productivity.",
         "Overrides are isolated in `scripts/model_orbital_ending.py`; the native capture is not relabeled as proposed data.",
         "This is **not a campaign-time prediction**. All existing terrestrial industry and one datacenter are assumed built.",

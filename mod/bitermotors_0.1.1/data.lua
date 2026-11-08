@@ -2178,19 +2178,6 @@ data:extend({
   ),
   recipe("bitermotors-orbital-ai-token-cluster", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d2[orbital-ai-token-cluster]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-ai-token", amount = 25000}}, 30,
-    {
-      surface_conditions = {
-        {
-          property = "gravity",
-          min = 0,
-          max = 0
-        }
-      }
-    }
-  ),
-  recipe("bitermotors-orbital-ai-token-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d3[orbital-ai-token-grid-scale]",
-    {{type = "item", name = "bitermotors-dollar", amount = 1}},
     {{type = "item", name = "bitermotors-ai-token", amount = 50000}}, 30,
     {
       surface_conditions = {
@@ -2202,7 +2189,7 @@ data:extend({
       }
     }
   ),
-  recipe("bitermotors-orbital-ai-token-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d4[orbital-ai-token-hyperscale]",
+  recipe("bitermotors-orbital-ai-token-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d3[orbital-ai-token-grid-scale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
     {
       {type = "item", name = "bitermotors-ai-token", amount = 50000},
@@ -2219,14 +2206,33 @@ data:extend({
       }
     }
   ),
+  recipe("bitermotors-orbital-ai-token-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d4[orbital-ai-token-hyperscale]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {
+      {type = "item", name = "bitermotors-ai-token", amount = 50000},
+      {type = "item", name = "bitermotors-ai-token", amount = 50000},
+      {type = "item", name = "bitermotors-ai-token", amount = 50000},
+      {type = "item", name = "bitermotors-ai-token", amount = 50000}
+    }, 30,
+    {
+      main_product = "bitermotors-ai-token",
+      surface_conditions = {
+        {
+          property = "gravity",
+          min = 0,
+          max = 0
+        }
+      }
+    }
+  ),
   recipe("bitermotors-orbital-ai-dataset-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e3[orbital-ai-dataset-grid-scale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 30,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 30,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-orbital-ai-dataset-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e4[orbital-ai-dataset-hyperscale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 30,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 4}}, 30,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-package-agi-training-dataset", {"advanced-crafting"}, "science-pack", "h[agi-training-dataset]",
@@ -2459,7 +2465,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 5}
+      {"bitermotors-dollar", 2}
     },
     60,
     {enabled = false}
@@ -2482,7 +2488,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 10}
+      {"bitermotors-dollar", 2}
     },
     60,
     {enabled = false}
@@ -2494,7 +2500,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-token-hyperscale"),
       unlock("bitermotors-orbital-ai-dataset-hyperscale")
     },
-    3000,
+    2000,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2502,7 +2508,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 10}
+      {"bitermotors-dollar", 3}
     },
     60,
     {enabled = false}

@@ -51,6 +51,27 @@ class DeliveryValidationTests(unittest.TestCase):
         self.assertIn('base >= 2.1.20', info['dependencies'])
         self.assertIn('space-age >= 2.1.20', info['dependencies'])
 
+    def test_scale_yields_conserve_actual_compute_through_legacy_delivery(self):
+        fixture = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
+        runner = (ROOT / "scripts/validate-bitermotors-delivery.sh").read_text()
+        for marker in (
+            'i == 17 and 1 or 157', 'recipe == COMPUTE and 4 or 10000',
+            'storage.datasets == 20096', 'row.datasets, 10048',
+            '"research and transport cannot earn compute again"',
+            '"delivered compute ledger survives reload"',
+            'row.validation_scope = "legacy-controller-regression"',
+        ):
+            self.assertIn(marker, fixture)
+        self.assertEqual(32 * 157 * 4, 20096)
+        self.assertEqual(20096 * 50000 + 10000, 1004810000)
+        for marker in (
+            'compute["datasets"] == 20_096', '== 1_004_810_000',
+            'compute["datasets"] * 50_000 + compute["tokens"]',
+            'training["datasets"] == compute["datasets"]',
+            'row.get("validation_scope") == "legacy-controller-regression"',
+        ):
+            self.assertIn(marker, runner)
+
 
 if __name__ == "__main__":
     unittest.main()

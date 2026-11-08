@@ -4,11 +4,11 @@ AiAccounting.dataset_tokens = 50000
 AiAccounting.recipes = {
   ["bitermotors-terrestrial-ai-token"] = {track = "terrestrial", tokens = 20},
   ["bitermotors-orbital-ai-token"] = {track = "orbital", tokens = 10000},
-  ["bitermotors-orbital-ai-token-cluster"] = {track = "orbital", tokens = 25000},
-  ["bitermotors-orbital-ai-token-grid-scale"] = {track = "orbital", tokens = 50000},
-  ["bitermotors-orbital-ai-token-hyperscale"] = {track = "orbital", tokens = 100000},
-  ["bitermotors-orbital-ai-dataset-grid-scale"] = {track = "orbital", tokens = 50000},
-  ["bitermotors-orbital-ai-dataset-hyperscale"] = {track = "orbital", tokens = 100000}
+  ["bitermotors-orbital-ai-token-cluster"] = {track = "orbital", tokens = 50000},
+  ["bitermotors-orbital-ai-token-grid-scale"] = {track = "orbital", tokens = 100000},
+  ["bitermotors-orbital-ai-token-hyperscale"] = {track = "orbital", tokens = 200000},
+  ["bitermotors-orbital-ai-dataset-grid-scale"] = {track = "orbital", tokens = 100000},
+  ["bitermotors-orbital-ai-dataset-hyperscale"] = {track = "orbital", tokens = 200000}
 }
 
 function AiAccounting.ensure(track)

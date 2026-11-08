@@ -1,31 +1,44 @@
 local REPORT = "bitermotors-cooling.jsonl"
-local DOLLAR = "bitermotors-dollar"
-local CORE = "bitermotors-orbital-datacenter-core"
-local RADIATOR = "bitermotors-orbital-radiator-panel"
+local DOLLAR, TOKEN = "bitermotors-dollar", "bitermotors-ai-token"
+local CORE, RADIATOR = "bitermotors-orbital-datacenter-core", "bitermotors-orbital-radiator-panel"
 local RECIPE = "bitermotors-orbital-ai-token"
-local assertions = 0
 
 local function check(value, label)
   assert(value, label)
-  assertions = assertions + 1
+  storage.assertions = (storage.assertions or 0) + 1
 end
 
 local function equal(actual, expected, label)
   check(actual == expected, label .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual))
 end
 
-local function report(status, extra)
-  local row = extra or {}
-  row.status, row.tick, row.assertions = status, game.tick, assertions
+local function report(status, row)
+  row = row or {}
+  row.status, row.tick, row.assertions = status, game.tick, storage.assertions
   helpers.write_file(REPORT, helpers.table_to_json(row) .. "\n", true)
 end
 
-local function ledger(force)
-  return remote.call("bitermotors", "endgame_status", force.name)
+local function ledger(force) return remote.call("bitermotors", "endgame_status", force.name) end
+local function input(machine) return machine.get_inventory(defines.inventory.crafter_input) end
+local function output(machine) return machine.get_inventory(defines.inventory.crafter_output) end
+local function count(inventory, name, quality)
+  return inventory.get_item_count{name = name, quality = quality or "normal"}
 end
 
-local function cooling(force)
-  return ledger(force).cooling
+local function core_status(machine)
+  for _, row in ipairs(ledger(machine.force).cores) do
+    if row.unit_number == machine.unit_number then
+      equal(row.work_policy, "banked", "orbital policy is banked")
+      equal(type(row.power_limited), "boolean", "native power status is explicit")
+      equal(type(row.paused_for_cooling), "boolean", "cooling pause status is explicit")
+      equal(row.reset_for_power, nil, "obsolete power reset key absent")
+      equal(row.reset_for_cooling, nil, "obsolete cooling reset key absent")
+      equal(row.power_limited, machine.status == defines.entity_status.no_power
+        or machine.status == defines.entity_status.low_power, "power_limited reflects native status")
+      return row
+    end
+  end
+  error("core missing from live status")
 end
 
 local function make(surface, name, position, force)
@@ -39,346 +52,319 @@ local function power(surface, force, position, watts)
   return source
 end
 
+local function replace_power(watts)
+  if storage.source and storage.source.valid then storage.source.destroy{raise_destroy = true} end
+  storage.source = watts and power(storage.surface, storage.force, {0, 12}, watts) or nil
+end
+
 local function platform(force, name)
   local value = force.create_space_platform{name = name, planet = "nauvis",
     starter_pack = "space-platform-starter-pack"}
   check(value.apply_starter_pack(true) ~= nil, "native starter hub applied")
-  local surface = value.surface
+  -- Isolate supplied EEI power: radiator solar trickle must not mask a full outage.
+  value.surface.solar_power_multiplier = 0
   local tiles = {}
   for x = -64, 64 do
     for y = -48, 48 do tiles[#tiles + 1] = {name = "space-platform-foundation", position = {x, y}} end
   end
-  surface.set_tiles(tiles, false, false, false, true)
-  return surface
+  value.surface.set_tiles(tiles, false, false, false, true)
+  return value.surface
 end
 
-local function core(surface, force, position)
+local function core(surface, force, position, quality)
   force.recipes[RECIPE].enabled = true
   local machine = make(surface, CORE, position, force)
-  machine.set_recipe(RECIPE)
+  machine.set_recipe(RECIPE, quality or "normal")
   return machine
 end
 
-local function radiators(surface, force, count, origin)
-  local result = {}
-  for index = 1, count do
-    result[index] = make(surface, RADIATOR,
-      {origin[1] + ((index - 1) % 8) * 8, origin[2] + math.floor((index - 1) / 8) * 8}, force)
-  end
-  return result
+local function change_stage(name)
+  storage.stage, storage.since = name, game.tick
 end
 
-local function input(machine)
-  return machine.get_inventory(defines.inventory.crafter_input)
+local function no_earnings(machine, generated)
+  equal(machine.products_finished, 0, "interruption cannot finish native batch")
+  equal(ledger(storage.force).orbital.generated, generated or 0, "interruption earns no orbital compute")
 end
 
-local function output(machine)
-  return machine.get_inventory(defines.inventory.crafter_output)
-end
-
-local function reserve(machine, amount)
-  equal(input(machine).insert{name = DOLLAR, count = amount}, amount, "reserve replacement operating Dollars")
-end
-
-local function core_status(force, machine)
-  for _, row in ipairs(ledger(force).cores) do
-    if row.unit_number == machine.unit_number then return row end
-  end
-  error("core missing from live status: " .. tostring(machine.unit_number))
-end
-
-local function status_name(value)
-  for name, code in pairs(defines.entity_status) do
-    if code == value then return name end
-  end
-  return tostring(value)
-end
-
-local function replace_power(watts)
-  if storage.source and storage.source.valid then storage.source.destroy{raise_destroy = true} end
-  storage.source = watts and power(storage.surface, storage.player_force, {0, 12}, watts) or nil
+local function original_committed(machine, quality)
+  equal(count(input(machine), DOLLAR, quality), 0, "only original Dollar is already committed")
 end
 
 script.on_init(function()
   game.tick_paused, game.speed = false, 100
-  storage.stage, storage.started = "native", game.tick
-  storage.player_force = game.forces.player
-  storage.player_force.technologies["bitermotors-orbital-compute"].researched = true
-
-  storage.surface = platform(storage.player_force, "Cooling validation A")
-  storage.first = core(storage.surface, storage.player_force, {-30, 12})
-  storage.second = core(storage.surface, storage.player_force, {20, 12})
-  storage.source = power(storage.surface, storage.player_force, {0, 12}, 10000000000)
-  storage.panels = radiators(storage.surface, storage.player_force, 2, {-56, 32})
-
+  storage.started = game.tick
+  storage.events = {}
+  storage.force = game.forces.player
+  storage.force.technologies["bitermotors-orbital-compute"].researched = true
+  storage.surface = platform(storage.force, "Cooling validation A")
+  storage.first = core(storage.surface, storage.force, {-30, 12})
+  storage.second = core(storage.surface, storage.force, {20, 12}, "rare")
+  replace_power(10000000000)
   storage.other_force = game.create_force("cooling-validation-other")
   storage.other_force.technologies["bitermotors-orbital-compute"].researched = true
-  storage.other_surface = platform(storage.player_force, "Cooling validation B")
-  storage.other_core = core(storage.other_surface, storage.player_force, {0, 12})
-  storage.other_source = power(storage.other_surface, storage.player_force, {0, 22}, 10000000000)
-  storage.other_panels = radiators(storage.other_surface, storage.player_force, 0, {-28, 32})
-
+  storage.other_surface = platform(storage.force, "Cooling validation B")
+  storage.other_core = core(storage.other_surface, storage.force, {0, 12})
+  storage.other_source = power(storage.other_surface, storage.force, {0, 22}, 10000000000)
   storage.cross_force_core = core(storage.surface, storage.other_force, {0, -24})
-  storage.cross_force_panels = radiators(storage.surface, storage.other_force, 0, {-28, -44})
+  change_stage("zero_cooling")
 end)
 
 local function advance()
-  local tick = game.tick
+  local tick, force, first = game.tick, storage.force, storage.first
   if tick <= storage.started then return end
-  if tick - storage.started >= 30000 then
-    local machine = storage.first and storage.first.valid and storage.first
+  if tick - storage.started > 45000 then
     error("cooling fixture timeout: " .. helpers.table_to_json{
-      stage = storage.stage, tick = tick, machine_status = machine and status_name(machine.status),
-      energy = machine and machine.energy, buffer = machine and machine.electric_buffer_size,
-      progress = machine and machine.crafting_progress,
-      disabled = machine and machine.disabled_by_script,
-      failed_for_power = machine and core_status(storage.player_force, machine).reset_for_power,
-      machine_network = machine and machine.electric_network_id,
-      source_production = storage.source and storage.source.power_production,
-      source_limit = storage.source and storage.source.output_flow_limit,
-      source_network = storage.source and storage.source.electric_network_id,
-      source_count = #storage.surface.find_entities_filtered{name = "electric-energy-interface"}
-    })
+      stage = storage.stage, progress = first.crafting_progress, energy = first.energy,
+      native_status = first.status, core = core_status(first)})
   end
-  local force = storage.player_force
-  local own, other = ledger(force), ledger(storage.other_force)
-
-  if storage.stage == "native" then
-    equal(cooling(force).cores, 3, "player-force cores span two platforms")
-    equal(cooling(force).radiators, 2, "player-force radiator count")
-    equal(cooling(force).cooled_cores, 2, "two radiators cool two cores")
-    equal(cooling(storage.other_force).cores, 1, "second-force core is independently counted")
-    check(not core_status(force, storage.other_core).cooled,
-      "uncooled core does not borrow cooling from the other platform")
-    check(not core_status(storage.other_force, storage.cross_force_core).cooled,
-      "radiators on another force do not cross-qualify same-surface core")
-    equal(cooling(storage.other_force).cooled_cores, 0,
-      "cooling allocation is grouped by surface and force")
-    storage.transient_core = core(storage.surface, force, {0, -12})
-    equal(cooling(force).cores, 4, "new core is registered for cooling demand")
-    equal(cooling(force).cooled_cores, 2, "new core does not exceed available radiator capacity")
-    check(not core_status(force, storage.transient_core).cooled, "newest core waits for a cooling slot")
+  local elapsed = tick - storage.since
+  if storage.stage == "zero_cooling" then
+    if elapsed < 120 then return end
+    local own, other = ledger(force).cooling, ledger(storage.other_force).cooling
+    equal(own.cores, 3, "player cores span two platforms")
+    equal(own.cooled_cores, 0, "zero radiators cool zero cores")
+    equal(other.cores, 1, "second force counted independently")
+    for _, machine in ipairs({first, storage.second, storage.other_core, storage.cross_force_core}) do
+      local row = core_status(machine)
+      check(row.paused_for_cooling and machine.disabled_by_script, "missing cooling pauses before first craft")
+      equal(machine.crafting_progress, 0, "unstarted core has no progress")
+    end
+    equal(input(first).insert{name = DOLLAR, count = 1}, 1, "supply exactly one original orbital Dollar")
+    change_stage("unstarted_hold")
+  elseif storage.stage == "unstarted_hold" then
+    if elapsed < 120 then return end
+    equal(count(input(first), DOLLAR), 1, "uncooled unstarted batch leaves Dollar uncommitted")
+    no_earnings(first)
+    storage.panel = make(storage.surface, RADIATOR, {-56, 32}, force)
+    change_stage("allocation")
+  elseif storage.stage == "allocation" then
+    if elapsed < 120 then return end
+    equal(ledger(force).cooling.cooled_cores, 1, "one radiator cools exactly one core")
+    check(core_status(first).cooled, "oldest unit-number core wins deterministic capacity")
+    check(not core_status(storage.second).cooled, "newer core waits for capacity")
+    check(not core_status(storage.other_core).cooled, "platform isolation")
+    check(not core_status(storage.cross_force_core).cooled, "same-surface force isolation")
+    equal(ledger(storage.other_force).cooling.cooled_cores, 0, "force cooling isolation")
+    local transient = core(storage.surface, force, {0, -12})
+    equal(ledger(force).cooling.cores, 4, "new core is registered for cooling demand")
+    transient.destroy{raise_destroy = true}
+    equal(ledger(force).cooling.cores, 3, "removed core leaves cooling demand")
+    check(first.crafting_progress > 0, "real native batch starts with one radiator")
+    original_committed(first)
+    storage.before_cooling = first.crafting_progress
+    storage.panel.destroy{raise_destroy = true}
+    report("cooling_policy_passed", {platforms = 2, zero_vs_one = true,
+      capacity_scope = "surface+force", before_first_craft_paused = true, work_policy = "banked",
+      supplied_power_fixture = true, solar_power_multiplier = 0})
+    change_stage("cooling_pause")
+  elseif storage.stage == "cooling_pause" then
+    local row = core_status(first)
+    if not row.paused_for_cooling then return end
+    check(first.disabled_by_script, "cooling uses a script pause")
+    check(first.crafting_progress >= storage.before_cooling, "cooling never cancels active progress")
+    storage.paused_progress = first.crafting_progress
+    change_stage("cooling_hold")
+  elseif storage.stage == "cooling_hold" then
+    if elapsed < 120 then return end
+    equal(first.crafting_progress, storage.paused_progress, "cooling pause preserves positive progress")
+    original_committed(first)
+    no_earnings(first)
+    storage.panel = make(storage.surface, RADIATOR, {-56, 32}, force)
+    change_stage("cooling_resume")
+  elseif storage.stage == "cooling_resume" then
+    if core_status(first).paused_for_cooling or first.crafting_progress <= storage.paused_progress then return end
+    original_committed(first)
+    local inventory = output(first)
+    equal(inventory.insert{name = TOKEN, count = #inventory * prototypes.item[TOKEN].stack_size},
+      #inventory * prototypes.item[TOKEN].stack_size, "fill every output slot to block native completion")
+    change_stage("blocked_output")
+  elseif storage.stage == "blocked_output" then
+    if elapsed < 2400 then return end
+    no_earnings(first)
+    equal(first.status, defines.entity_status.full_output, "native output is genuinely blocked")
+    output(first).clear()
+    change_stage("base_completion")
+  elseif storage.stage == "base_completion" then
+    if first.products_finished == 0 then return end
+    equal(first.products_finished, 1, "cooling-resumed original batch completes once")
+    equal(storage.events[first.unit_number], 1, "base earned batch has one native completion event")
+    equal(count(output(first), TOKEN), 10000, "base completion produces physical Tokens")
+    equal(ledger(force).orbital.generated, 10000, "base native completion earns exactly its physical batch")
+    original_committed(first)
+    -- The rare batch is the sole active load during measured power trials.
     storage.second.destroy{raise_destroy = true}
-    equal(cooling(force).cores, 3, "cooled core removal updates demand")
-    check(core_status(force, storage.transient_core).cooled, "cooled core removal promotes the next core")
-    storage.transient_core.destroy{raise_destroy = true}
-    equal(cooling(force).cores, 2, "removed core leaves cooling demand")
-    storage.second = core(storage.surface, force, {20, 12})
-    equal(cooling(force).cooled_cores, 2, "removed core releases its deterministic slot")
-    report("cooling_policy_passed", {platforms = 2, cores = 4, same_surface_force_isolation = true,
-      zero_vs_one = true, radiators_per_core = 1, capacity_scope = "surface+force"})
-    storage.panels[2].destroy{raise_destroy = true}
-    storage.stage = "allocation"
-    return
-  end
-
-  if storage.stage == "allocation" then
-    equal(cooling(force).cooled_cores, 1, "one radiator cools exactly one core")
-    check(core_status(force, storage.first).cooled, "oldest unit-number core wins deterministic capacity")
-    check(not core_status(force, storage.second).cooled, "newer core loses deterministic capacity")
-    storage.panels[2] = make(storage.surface, RADIATOR, {58, 32}, force)
-    storage.other_panels[1] = make(storage.other_surface, RADIATOR, {36, 32}, force)
-    storage.cross_force_panels[1] = make(storage.surface, RADIATOR, {36, -44}, storage.other_force)
-    storage.stage = "restore_capacity"
-    return
-  end
-
-  if storage.stage == "restore_capacity" then
-    equal(cooling(force).cooled_cores, 3, "restored radiators restore both platforms' capacity")
-    check(core_status(force, storage.other_core).cooled,
-      "first platform radiator cools same-force platform core")
-    check(core_status(storage.other_force, storage.cross_force_core).cooled,
-      "first same-surface radiator cools same-force-group core")
-    reserve(storage.second, 4)
-    storage.stage = "cooling_start"
-    return
-  end
-
-  if storage.stage == "cooling_start" then
-    if storage.second.crafting_progress <= 0 then return end
-    storage.cooling_interrupted_progress = storage.second.crafting_progress
-    storage.panels[1].destroy{raise_destroy = true}
-    storage.stage = "cooling_failure"
-    return
-  end
-
-  if storage.stage == "cooling_failure" then
-    local failed = core_status(force, storage.second)
-    if not failed.reset_for_cooling then return end
-    check(storage.cooling_interrupted_progress > 0, "undercooling interrupted genuine active progress")
-    equal(failed.crafting_progress, 0, "undercooling scraps active progress to exact zero")
-    check(failed.disabled_by_script, "undercooling blocks output until recovery")
-    reserve(storage.second, 2)
-    storage.panels[1] = make(storage.surface, RADIATOR, {-56, 32}, force)
-    storage.stage = "cooling_recovery"
-    return
-  end
-
-  if storage.stage == "cooling_recovery" then
-    if core_status(force, storage.second).reset_for_cooling then return end
-    if storage.second.crafting_progress <= 0 then return end
-    check(storage.second.crafting_progress > 0, "restored cooling resumes native craft with reserved Dollars")
-    local blocked = output(storage.second)
-    blocked.insert{name = "bitermotors-ai-token", count = #blocked
-      * prototypes.item["bitermotors-ai-token"].stack_size}
-    storage.blocked_started, storage.stage = tick, "blocked_output"
-    return
-  end
-
-  if storage.stage == "blocked_output" then
-    if tick - storage.blocked_started < 1800 then return end
-    equal(storage.second.products_finished, 0, "blocked output does not complete a native craft")
-    equal(own.orbital.generated, 0, "blocked output earns no compute ledger progress")
-    output(storage.second).clear()
-    storage.stage = "cooling_completion"
-    return
-  end
-
-  if storage.stage == "cooling_completion" then
-    if storage.second.products_finished < 1 then return end
-    equal(storage.second.products_finished, 1, "cooled native craft completes once")
-    equal(ledger(force).orbital.generated, 10000, "real cooled completion earns exact orbital equivalents")
-    storage.second.set_recipe(nil)
-    input(storage.second).clear()
-    reserve(storage.first, 4)
-    storage.stage = "power_start"
-    return
-  end
-
-  if storage.stage == "power_start" then
-    if storage.first.crafting_progress <= 0 then return end
-    storage.power_interrupted_progress = storage.first.crafting_progress
-    storage.power_completed_before_interrupt = storage.first.products_finished
+    storage.second = core(storage.surface, force, {20, 12}, "rare")
+    storage.rare_panel = make(storage.surface, RADIATOR, {40, 32}, force)
+    equal(input(storage.second).insert{name = DOLLAR, quality = "rare", count = 1}, 1,
+      "supply exactly one original rare Dollar, never replacement inputs")
+    change_stage("full_rate_start")
+  elseif storage.stage == "full_rate_start" then
+    local machine = storage.second
+    if machine.crafting_progress < 0.05 then return end
+    original_committed(machine, "rare")
+    storage.full_start = machine.crafting_progress
+    change_stage("full_rate")
+  elseif storage.stage == "full_rate" then
+    if elapsed < 120 then return end
+    storage.full_rate = (storage.second.crafting_progress - storage.full_start) / elapsed
+    check(storage.full_rate > 0, "full power gives positive native progress")
+    storage.before_half = storage.second.crafting_progress
     replace_power(125000000)
-    storage.half_previous_progress = storage.first.crafting_progress
-    storage.stage = "half_power"
-    return
-  end
-
-  if storage.stage == "half_power" then
-    local failed = core_status(force, storage.first)
-    equal(failed.products_finished, storage.power_completed_before_interrupt,
-      "half-power cannot finish native training")
-    if storage.first.crafting_progress > 0 then
-      storage.half_previous_progress = storage.first.crafting_progress
-      return
-    end
-    if storage.half_previous_progress <= 0 then return end
-    if not failed.reset_for_power then return end
-    check(storage.power_interrupted_progress > 0, "half-power test interrupted genuine active progress")
-    equal(failed.crafting_progress, 0, "125 MW supply scraps active progress")
-    equal(failed.products_finished, storage.power_completed_before_interrupt,
-      "half-power interruption does not earn a completion")
-    reserve(storage.first, 2)
-    replace_power(10000000000)
-    storage.stage = "half_power_recovery"
-    return
-  end
-
-  if storage.stage == "half_power_recovery" then
-    if core_status(force, storage.first).reset_for_power then return end
-    if storage.first.crafting_progress <= 0 then return end
-    check(storage.first.crafting_progress > 0, "restored supply resumes compute after half-power reset")
-    storage.power_interrupted_progress = storage.first.crafting_progress
-    storage.power_completed_before_interrupt = storage.first.products_finished
+    change_stage("half_settle")
+  elseif storage.stage == "half_settle" then
+    if elapsed < 180 then return end
+    local row = core_status(storage.second)
+    check(row.power_limited, "half-power is reported as native power limited")
+    check(not row.paused_for_cooling and not storage.second.disabled_by_script, "power is not a script hold")
+    check(storage.second.crafting_progress >= storage.before_half, "half-power never cancels progress")
+    storage.half_start = storage.second.crafting_progress
+    change_stage("half_measure")
+  elseif storage.stage == "half_measure" then
+    if elapsed < 120 then return end
+    local machine = storage.second
+    storage.half_rate = (machine.crafting_progress - storage.half_start) / elapsed
+    check(storage.half_rate > 0 and storage.half_rate < storage.full_rate * 0.8,
+      "half-power gives slower positive native progress without cancellation")
+    no_earnings(machine, 10000)
+    original_committed(machine, "rare")
+    storage.before_outage = machine.crafting_progress
     replace_power(nil)
-    storage.outage_previous_progress = storage.first.crafting_progress
-    storage.stage = "total_outage"
-    return
-  end
-
-  if storage.stage == "total_outage" then
-    local failed = core_status(force, storage.first)
-    if storage.first.crafting_progress > 0 then
-      storage.outage_previous_progress = storage.first.crafting_progress
-      return
-    end
-    if storage.outage_previous_progress <= 0 or not failed.reset_for_power then return end
-    check(storage.power_interrupted_progress > 0, "total outage interrupted genuine active progress")
-    equal(failed.crafting_progress, 0, "total power loss scraps active progress")
-    equal(failed.products_finished, storage.power_completed_before_interrupt,
-      "total outage interruption does not earn a completion")
-    check(failed.disabled_by_script, "total outage is held by script")
-    storage.saved_generated = ledger(force).orbital.generated
-    storage.saved_first_products = storage.first.products_finished
-    storage.saved_first_output = output(storage.first).get_item_count("bitermotors-ai-token")
-    storage.saved_tick, storage.stage = tick, "power_checkpoint"
+    change_stage("outage_settle")
+  elseif storage.stage == "outage_settle" then
+    if elapsed < 180 then return end
+    local machine, row = storage.second, core_status(storage.second)
+    check(row.power_limited and not machine.disabled_by_script, "full outage is native, not script held")
+    check(machine.crafting_progress >= storage.before_outage, "outage does not cancel active progress")
+    storage.outage_progress = machine.crafting_progress
+    check(storage.outage_progress > 0, "outage banks positive native progress")
+    change_stage("outage_hold")
+  elseif storage.stage == "outage_hold" then
+    if elapsed < 180 then return end
+    equal(storage.second.crafting_progress, storage.outage_progress, "full outage holds identical positive progress")
+    no_earnings(storage.second, 10000)
+    original_committed(storage.second, "rare")
+    storage.saved_tick = tick
+    change_stage("power_checkpoint")
     game.server_save("bitermotors-cooling-failure")
     report("cooling_checkpoint", {saved_tick = tick, saved_file = "bitermotors-cooling-failure.zip",
-      failure = "total_power", generated = storage.saved_generated,
-      first_products = storage.saved_first_products, first_output = storage.saved_first_output,
-      dollars_reserved = 2})
-    return
-  end
-
-  if storage.stage == "reload_recovery" then
-    local failed = core_status(force, storage.first)
-    if failed.reset_for_power then return end
-    if storage.first.crafting_progress <= 0 then return end
-    check(tick > storage.saved_tick, "recovery occurs on advancing post-reload tick")
-    check(storage.first.crafting_progress > 0, "restored power and reserved Dollars restart native compute")
-    storage.stage = "reload_completion"
-    return
-  end
-
-  if storage.stage == "reload_completion" then
-    if storage.first.products_finished <= storage.saved_first_products then return end
-    equal(storage.first.products_finished, storage.saved_first_products + 1,
-      "recovered native batch completes exactly once after reload")
-    equal(output(storage.first).get_item_count("bitermotors-ai-token"), storage.saved_first_output + 10000,
-      "recovered native completion adds physical orbital Tokens")
-    equal(ledger(force).orbital.generated, storage.saved_generated + 10000,
-      "recovery earns exactly one new native batch")
-    equal(ledger(storage.other_force).orbital.generated, 0, "other-force ledger stays isolated")
-    storage.recovered = {saved_tick = storage.saved_tick,
-      generated = ledger(force).orbital.generated,
-      recovered_products = storage.first.products_finished - storage.saved_first_products,
-      recovered_output = output(storage.first).get_item_count("bitermotors-ai-token"),
-      recovery_ledger_delta = ledger(force).orbital.generated - storage.saved_generated,
-      recovery_output_delta = output(storage.first).get_item_count("bitermotors-ai-token") - storage.saved_first_output,
-      platforms = 2, cooling_failure_reset = true, half_power_reset_and_recovery = true,
-      total_power_failure_reset = true}
-    storage.first.set_recipe(nil)
-    input(storage.first).clear()
+      failure = "native_total_power", work_policy = "banked", power_limited = true,
+      paused_for_cooling = false, progress = storage.outage_progress, generated = 10000,
+      products = 0, output = 0, quality = "rare", dollars_supplied = 1, dollars_remaining = 0,
+      replacement_dollars = 0, full_rate = storage.full_rate, half_rate = storage.half_rate,
+      cooling_progress_preserved = true, blocked_output_generated = 0,
+      base_products = first.products_finished, base_output = count(output(first), TOKEN),
+      base_events = storage.events[first.unit_number]})
+  elseif storage.stage == "reload_completion" then
+    local machine = storage.second
+    check(machine.crafting_progress >= storage.outage_progress or machine.products_finished == 1,
+      "resume retains the banked native progress until completion")
+    if machine.products_finished == 0 then return end
+    equal(machine.products_finished, 1, "recovered native batch completes exactly once after reload")
+    equal(storage.events[machine.unit_number], 1, "rare batch has one native completion event")
+    equal(count(output(machine), TOKEN, "rare"), 10000, "new rare physical batch after reload")
+    equal(ledger(force).orbital.generated, 20000, "exactly one new earned batch after reload")
+    original_committed(machine, "rare")
+    change_stage("reload_no_duplicate")
+  elseif storage.stage == "reload_no_duplicate" then
+    if elapsed < 2400 then return end
+    equal(storage.second.products_finished, 1, "no duplicate completion without replacement Dollar")
+    equal(count(output(storage.second), TOKEN, "rare"), 10000, "rare output remains exactly one batch")
+    equal(ledger(force).orbital.generated, 20000, "no duplicate earned compute")
+    equal(ledger(storage.other_force).orbital.generated, 0, "other-force earned ledger isolated")
+    report("orbital_banked_reload_passed", {saved_tick = storage.saved_tick, work_policy = "banked",
+      progress_after_reload = storage.reload_progress, replacement_dollars = 0,
+      dollars_supplied = 1, dollars_remaining = 0, quality = "rare", recovered_products = 1,
+      recovery_output_delta = 10000, recovery_ledger_delta = 10000, generated = 20000,
+      native_events = storage.events[storage.second.unit_number]})
     storage.other_surface.platform.destroy(1)
-    storage.stage = "platform_removal"
-    return
-  end
-
-  if storage.stage == "platform_removal" then
+    change_stage("platform_removal")
+  elseif storage.stage == "platform_removal" then
     if storage.other_surface.valid then return end
-    equal(cooling(force).cores, 2, "deleted platform removes its cooling demand")
-    equal(cooling(force).radiators, 2, "deleted platform removes its radiators")
-    equal(cooling(force).cooled_cores, 2, "remaining platform preserves independent cooling")
-    equal(ledger(force).orbital.generated, storage.recovered.generated, "platform removal cannot erase earned compute")
-    storage.recovered.platform_removal = true
-    report("cooling_reload_passed", storage.recovered)
-    storage.stage = "done"
+    equal(ledger(force).cooling.cores, 2, "deleted platform removes its cooling demand")
+    equal(ledger(force).cooling.radiators, 2, "deleted platform removes its radiators")
+    equal(ledger(force).orbital.generated, 20000, "platform removal preserves earned compute")
+    local surface = game.surfaces.nauvis
+    surface.request_to_generate_chunks({0, 0}, 2)
+    surface.force_generate_chunk_requests()
+    local tiles = {}
+    for x = -10, 20 do
+      for y = -10, 20 do tiles[#tiles + 1] = {name = "concrete", position = {x, y}} end
+    end
+    surface.set_tiles(tiles)
+    for _, entity in pairs(surface.find_entities_filtered{
+      area = {{-10, -10}, {20, 20}}, type = {"tree", "simple-entity"}}) do entity.destroy() end
+    storage.ground = make(surface, "bitermotors-terrestrial-datacenter", {0, 0}, force)
+    force.recipes["bitermotors-terrestrial-ai-token"].enabled = true
+    storage.ground.set_recipe("bitermotors-terrestrial-ai-token")
+    make(surface, "substation", {4, 4}, force)
+    storage.ground_source = power(surface, force, {8, 0}, 100000000)
+    equal(input(storage.ground).insert{name = DOLLAR, count = 20}, 20, "original terrestrial operating20")
+    change_stage("ground_start")
+  elseif storage.stage == "ground_start" then
+    if storage.ground.crafting_progress < 0.05 then return end
+    equal(count(input(storage.ground), DOLLAR), 0, "terrestrial original20 committed")
+    storage.ground_source.destroy{raise_destroy = true}
+    storage.ground_source = power(game.surfaces.nauvis, force, {8, 0}, 4000000)
+    change_stage("ground_failure")
+  elseif storage.stage == "ground_failure" then
+    if elapsed < 240 then return end
+    equal(storage.ground.crafting_progress, 0, "terrestrial low-power still cancels batch")
+    equal(count(input(storage.ground), DOLLAR), 0, "canceled terrestrial operating20 are scrapped")
+    equal(storage.ground.products_finished, 0, "failure has no terrestrial completion")
+    equal(count(output(storage.ground), TOKEN), 0, "failure has no physical terrestrial output")
+    equal(ledger(force).terrestrial.generated, 0, "terrestrial failure ledger0")
+    storage.ground_source.destroy{raise_destroy = true}
+    storage.ground_source = power(game.surfaces.nauvis, force, {8, 0}, 100000000)
+    change_stage("ground_without_replacement")
+  elseif storage.stage == "ground_without_replacement" then
+    if elapsed < 2400 then return end
+    equal(storage.ground.products_finished, 0, "restored terrestrial power cannot finish scrapped batch")
+    equal(storage.ground.crafting_progress, 0, "no retained terrestrial committed batch")
+    equal(ledger(force).terrestrial.generated, 0, "restored power alone still earns nothing")
+    equal(input(storage.ground).insert{name = DOLLAR, count = 20}, 20, "newly supplied terrestrial retry20")
+    change_stage("ground_retry")
+  elseif storage.stage == "ground_retry" then
+    if storage.ground.products_finished == 0 then return end
+    equal(storage.ground.products_finished, 1, "new terrestrial retry succeeds once")
+    equal(storage.events[storage.ground.unit_number], 1, "only retry emits native terrestrial completion")
+    equal(count(output(storage.ground), TOKEN), 20, "retry produces physical terrestrial20")
+    equal(count(input(storage.ground), DOLLAR), 0, "retry spends newly supplied20")
+    equal(ledger(force).terrestrial.generated, 20, "only retry earns terrestrial20")
+    report("terrestrial_scrap_passed", {original_dollars = 20, scrapped_dollars = 20,
+      failure_generated = 0, restored_without_inputs_products = 0, retry_dollars = 20,
+      retry_products = 1, retry_output = 20, retry_generated = 20,
+      native_events = storage.events[storage.ground.unit_number]})
+    report("cooling_reload_passed", {saved_tick = storage.saved_tick, work_policy = "banked",
+      orbital_generated = 20000, terrestrial_generated = 20, platform_removal = true,
+      separate_process_reload = true})
+    change_stage("done")
   end
 end
 
 local loaded = false
 script.on_load(function() loaded = storage.stage == "power_checkpoint" end)
 script.on_event(defines.events.on_tick, function()
-  if storage.stage == "cooling_failure" or storage.stage == "half_power"
-    or storage.stage == "total_outage" then
-    advance()
+  if storage.stage == "done" then return end
+  if storage.stage == "power_checkpoint" then
+    if not loaded or game.tick <= storage.saved_tick then return end
+    local machine, row = storage.second, core_status(storage.second)
+    check(row.power_limited and not row.paused_for_cooling, "native outage state survives reload")
+    check(not machine.disabled_by_script, "power remains native after reload")
+    equal(machine.crafting_progress, storage.outage_progress, "same positive progress survives separate-process reload")
+    no_earnings(machine, 10000)
+    original_committed(machine, "rare")
+    storage.reload_progress = machine.crafting_progress
+    replace_power(10000000000)
+    change_stage("reload_completion")
     return
   end
-  if not loaded or storage.stage ~= "power_checkpoint" or game.tick <= storage.saved_tick then return end
-  local force = storage.player_force
-  local failed = core_status(force, storage.first)
-  equal(failed.reset_for_power, true, "held total-power failure survives save and reload")
-  equal(failed.crafting_progress, 0, "failed batch remains canceled after reload")
-  check(failed.disabled_by_script, "script hold survives reload")
-  equal(ledger(force).orbital.generated, storage.saved_generated, "failure checkpoint conserves earned ledger")
-  replace_power(10000000000)
-  reserve(storage.first, 2)
-  storage.stage = "reload_recovery"
+  if game.tick % 30 == 0 then advance() end
 end)
 
-script.on_nth_tick(30, function()
-  if storage.stage == "done" then return end
-  if storage.stage ~= "power_checkpoint" then advance() end
-  if storage.stage == "power_checkpoint" and loaded and game.tick > storage.saved_tick then advance() end
-end)
+for _, recipe in ipairs({RECIPE, "bitermotors-terrestrial-ai-token"}) do
+  script.on_event(prototypes.recipe[recipe].on_crafted_event, function(event)
+    check(not event.bonus, "fixture has no productivity bonus completions")
+    storage.events[event.entity.unit_number] = (storage.events[event.entity.unit_number] or 0) + 1
+  end)
+end

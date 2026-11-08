@@ -170,6 +170,10 @@ two-platform computation, compressed Datasets, native recipe events, packaging,
 and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
 `scripts/validate-bitermotors-ai.sh`; that fixture tests accounting rather than
 final cargo delivery or a complete AGI victory run.
+The [banked-compute evidence](docs/orbital-banked-compute-validation.md) covers
+orbital interruption/reload with the original committed Dollar, terrestrial
+scrapping and the new 50k/100k/200k scale tiers. Model return/activation remains
+the next slice; the controller finale tests below are legacy regressions only.
 The [orbital-entry evidence](docs/orbital-entry-validation.md) covers compact
 hardware, research without white science, native ground manufacturing, genuine
 rocket uplift, platform ghost construction and physical Token return. Reproduce

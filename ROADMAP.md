@@ -24,13 +24,13 @@ v1.0 after Luke completes it.** Do not start that acceptance campaign while the
 ending is still being replaced. A separate public beta is optional, not another
 required development phase.
 
-Reviewed current source: `7660e91`, synchronized with `origin/main`. All **255
-Python tests pass** today; the installed engine reports **2.1.20, build 87512**.
-Native source/ZIP evidence below dates from October, not a new full qualification
-run today. The terrestrial accounting/customer/recycling/charging repairs and
-normal-quality rocket uplift are implemented. The approved orbital Model
-ending, banked orbital work and epilogue are not. Passing tests of the old
-controller ending do not make the replacement ending finishable.
+Planning baseline: `7660e91`, with 255 Python tests passing and engine
+**2.1.20, build 87512**. The subsequent banked-compute slice implements native
+orbital pause/slowdown, retained inputs/progress, and the approved scale-tier
+costs/yields. See the [new validation](docs/orbital-banked-compute-validation.md)
+for current source/ZIP results; October reports remain dated evidence. The
+orbital Model ending and epilogue are still pending. Passing legacy controller
+tests does not make the replacement ending finishable.
 
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
@@ -47,6 +47,7 @@ Build in three consecutive slices:
    three scale projects cost 2,000/3,000/6,000 Dollars and unlock
    50,000/100,000/200,000 equivalents per normal 20-second batch. Match direct
    Dataset yields to their Token variants and preserve native earned accounting.
+   **Implemented:** [banked-compute validation](docs/orbital-banked-compute-validation.md).
 2. **Physical Model and ground activation.** Assemble 20,000 physical Datasets
    plus one Rack into a Model in orbit, return it through real cargo logistics,
    and activate it in an existing Nauvis datacenter. Verify the cluster accepts
@@ -175,9 +176,10 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 3's banked-compute/scale-tier slice,
-followed by physical orbital Model assembly, return and activation. This turn
-updates the plan only; it does not implement those mechanics or change a save.
+**Immediate next implementation:** Phase 3's physical orbital Model assembly,
+return and Nauvis activation. Banked compute/scale tiers are complete; the old
+controller/capital finale still needs replacement. No player save or live
+process was changed by this implementation.
 
 ### Current Review And Consecutive Plan
 
@@ -289,8 +291,8 @@ replacement finale remains pending**.
   extra cash top-ups, about 4,500 blue circuits for hardware/launches and another
   4,500 for remaining research. It must use spare production, not double-count stock.
 
-First-cluster rocket uplift is qualified at normal quality. Proceed: implement banked
-compute, Model return and activation; finish native UI/epilogue and functional
+First-cluster rocket uplift and banked compute/scale tiers are implemented and
+tested. Proceed with Model assembly, return and activation; finish native UI/epilogue and functional
 satellite art; requalify source/exact ZIP, soaks and RC installation. The
 current private save and live processes remain unchanged by this cost study.
 
@@ -440,7 +442,8 @@ Historical fixture smoke tests are not proof of correct fresh-world sale gates.
 
 This section records the **current Lua**, not the next release's target design.
 The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) supersedes the
-controller finale and orbital reset policy below. Preserve the dated native
+controller finale below. Banked orbital work has replaced the old orbital reset
+policy; preserve the dated native
 evidence, but do not describe those fixtures as qualification of the new ending.
 
 The endgame is physical and uses vanilla rockets, cargo pods, and space
@@ -473,23 +476,26 @@ Entry research and the three compute scale tiers no longer require white
 science. Player hub requests must use custom minimum payloads for small
 hardware/cash shipments rather than waiting for full rockets.
 
-Every orbital training batch currently resets to zero on low power or inadequate cooling.
+Orbital low power slows/stops native crafting without canceling inputs or
+progress. Missing cooling pauses the cluster with a yellow status and resumes
+the same committed batch when restored. Ordinary terrestrial compute still
+scraps failed runs.
 Tokens for science and compact Training Datasets for the finale must physically
 return to Nauvis by cargo pod. Space does not beam energy to the planet.
 
 Cumulative orbital output opens three explicit scale projects:
 
 - **1M Tokens: Cluster Training**
-  - Costs 5,000 Dollars plus science.
-  - Unlocks 25,000-token orbital batches.
+  - Costs 2,000 Dollars plus science.
+  - Unlocks 50,000-token orbital batches.
 - **10M Tokens: Grid-scale Energy**
-  - Costs 15,000 Dollars plus science.
-  - Unlocks 50,000-token batches or one directly computed Training Dataset per
+  - Costs 3,000 Dollars plus science.
+  - Unlocks 100,000-token batches or two directly computed Training Datasets per
     batch, ordinary Dataset packaging, 3 MW Tandem Solar Arrays, and 1 GJ Grid
     Batteries as upgrades for the terrestrial energy products.
 - **100M Tokens: Hyperscale Training**
-  - Costs 30,000 Dollars plus science.
-  - Unlocks 100,000-token batches or two directly computed Training Datasets
+  - Costs 6,000 Dollars plus science.
+  - Unlocks 200,000-token batches or four directly computed Training Datasets
     per batch, and the final Planetary Energy Grid research.
 
 Both payload forms use the same Dollars, recipe time, power, and cooling as

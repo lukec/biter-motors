@@ -2589,7 +2589,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('threshold = 1000000,\n    technology = "bitermotors-orbital-cluster-training"', control)
         self.assertIn('threshold = 10000000,\n    technology = "bitermotors-grid-scale-energy"', control)
         self.assertIn('threshold = 100000000,\n    technology = "bitermotors-hyperscale-training"', control)
-        self.assertIn('["bitermotors-orbital-ai-token-hyperscale"] = 100000', control)
+        self.assertIn('["bitermotors-orbital-ai-token-hyperscale"] = 200000', control)
         self.assertIn("terrestrial_datacenter.module_slots = 0", data)
         self.assertIn('terrestrial_datacenter.allowed_effects = {"consumption", "speed", "pollution", "quality"}', data)
         self.assertIn("math.floor(threshold / 10)", data)
@@ -3342,19 +3342,20 @@ class BiterMotorsModTest(unittest.TestCase):
 
         for recipe_name, output in [
             ("bitermotors-orbital-ai-token", 10000),
-            ("bitermotors-orbital-ai-token-cluster", 25000),
-            ("bitermotors-orbital-ai-token-grid-scale", 50000),
+            ("bitermotors-orbital-ai-token-cluster", 50000),
+            ("bitermotors-orbital-ai-token-grid-scale", 100000),
         ]:
             start = data.index(f'recipe("{recipe_name}"')
             end = data.find('\n  recipe("', start + 1)
             block = data[start:end]
             self.assertIn('name = "bitermotors-dollar", amount = 1', block)
-            self.assertIn(f'name = "bitermotors-ai-token", amount = {output}', block)
+            amounts = re.findall(r'name = "bitermotors-ai-token", amount = (\d+)', block)
+            self.assertEqual(output, sum(map(int, amounts)))
         hyperscale_start = data.index('recipe("bitermotors-orbital-ai-token-hyperscale"')
         hyperscale_end = data.find('\n  recipe("', hyperscale_start + 1)
         hyperscale = data[hyperscale_start:hyperscale_end]
         self.assertEqual(
-            2,
+            4,
             hyperscale.count('name = "bitermotors-ai-token", amount = 50000'),
         )
 
@@ -3364,7 +3365,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('unlock("bitermotors-tandem-solar-array")', data)
         self.assertIn('unlock("bitermotors-grid-battery-array")', data)
 
-    def test_bitermotors_compute_runs_reset_when_underpowered(self):
+    def test_ground_compute_scraps_but_orbital_work_is_banked(self):
         control = (MOD / "control.lua").read_text()
         self.assertIn('["bitermotors-terrestrial-datacenter"] = true', control)
         self.assertIn('[ORBITAL_DATACENTER_CORE_NAME] = true', control)
@@ -3385,11 +3386,20 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("process_ev_self_drivings()", one_tick)
         self.assertIn('local budget = math.min(32, #queue.units)', control)
         self.assertIn('while processed < budget', control)
+        orbital_branch = monitor[monitor.index('if entity.name == ORBITAL_DATACENTER_CORE_NAME then'):
+                                 monitor.index('      if failure then')]
+        self.assertIn('orbital_core_has_cooling(entity)', orbital_branch)
+        self.assertIn('orbital-cooling-paused', orbital_branch)
+        self.assertIn('goto continue', orbital_branch)
+        self.assertNotIn('crafting_progress =', orbital_branch)
+        self.assertNotIn('power_failed', orbital_branch)
+        self.assertNotIn('find_entities_filtered', monitor)
         self.assertIn('track_bitermotors_compute_machine(entity)', control)
         self.assertIn('rebuild_bitermotors_compute_machines()', control)
         self.assertIn('function endgame_status(force)', control)
-        self.assertIn('reset_for_power = failure and failure.power == true', control)
-        self.assertIn('reset_for_cooling = failure and failure.cooling == true', control)
+        self.assertIn('power_limited = entity.status == defines.entity_status.no_power', control)
+        self.assertIn('paused_for_cooling = failure and failure.cooling == true', control)
+        self.assertIn('work_policy = "banked"', control)
 
     def test_customer_ev_owners_physically_commute_to_chargers(self):
         control = (MOD / "control.lua").read_text()

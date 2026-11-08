@@ -20,6 +20,7 @@ end
 local function report(status, fields)
   local row = fields or {}
   row.status, row.tick, row.assertions = status, game.tick, assertions
+  row.validation_scope = "legacy-controller-regression"
   helpers.write_file(REPORT, helpers.table_to_json(row) .. "\n", true)
 end
 
@@ -82,8 +83,8 @@ local function build_platform(name, extra_token_core)
     local recipe = i == 17 and "bitermotors-orbital-ai-token" or COMPUTE
     game.forces.player.recipes[recipe].enabled = true
     machine.set_recipe(recipe)
-    equal(input(machine).insert{name = "bitermotors-dollar", count = i == 17 and 1 or 313},
-      i == 17 and 1 or 313, "provided compute capital")
+    equal(input(machine).insert{name = "bitermotors-dollar", count = i == 17 and 1 or 157},
+      i == 17 and 1 or 157, "provided compute capital")
     row.cores[#row.cores + 1] = machine
     storage.by_core[machine.unit_number] = row
     local right_edge = math.floor(machine.position.x + machine.prototype.selection_box.right_bottom.x)
@@ -226,7 +227,7 @@ for _, recipe in ipairs({COMPUTE, "bitermotors-orbital-ai-token"}) do
   script.on_event(prototypes.recipe[recipe].on_crafted_event, function(event)
     local row = storage.by_core[event.entity.unit_number]
     if not row then return end
-    local amount = recipe == COMPUTE and 2 or 10000
+    local amount = recipe == COMPUTE and 4 or 10000
     row[recipe == COMPUTE and "datasets" or "tokens"] = row[recipe == COMPUTE and "datasets" or "tokens"] + amount
     storage[recipe == COMPUTE and "datasets" or "tokens"] = storage[recipe == COMPUTE and "datasets" or "tokens"] + amount
   end)
@@ -275,7 +276,7 @@ script.on_event(prototypes.recipe[TRAINING].on_crafted_event, function(event)
   equal(output(storage.controller).get_item_count("bitermotors-agi-model"), 1, "physical delivered-payload Model")
   local duration = game.tick - storage.training_tick + 1
   check(duration >= 71999 and duration <= 72001, "full delivered-payload training duration")
-  equal(state().cumulative_ai_tokens, 1001610000, "research and transport cannot earn compute again")
+  equal(state().cumulative_ai_tokens, 1004810000, "research and transport cannot earn compute again")
   storage.stage, storage.victory, storage.saved_tick = "reload", state().agi.victory, game.tick
   report("delivery_training_passed", {datasets = storage.datasets, delivered = storage.delivered,
     launched_pods = storage.launched, earned_equivalents = state().cumulative_ai_tokens,
@@ -292,7 +293,7 @@ script.on_nth_tick(1, function()
     if storage.stage == "reload" then
       equal(state().agi.completed, true, "delivered victory survives reload")
       equal(state().agi.victory.tick, storage.victory.tick, "victory does not replay")
-      equal(state().cumulative_ai_tokens, 1001610000, "delivered compute ledger survives reload")
+      equal(state().cumulative_ai_tokens, 1004810000, "delivered compute ledger survives reload")
       equal(storage.controller.products_finished, 1, "reload does not recraft Model")
       report("delivery_reload_passed", {saved_tick = storage.saved_tick, victory = state().agi.victory})
       storage.stage = "done"
@@ -326,10 +327,10 @@ script.on_nth_tick(1, function()
         capital = storage.capital.products_finished, loaders = loaders})
     end
   end
-  if storage.stage == "compute" and storage.datasets == 20032 and storage.tokens == 10000 then
-    equal(state().cumulative_ai_tokens, 1001610000, "actual native billion-equivalent computation")
+  if storage.stage == "compute" and storage.datasets == 20096 and storage.tokens == 10000 then
+    equal(state().cumulative_ai_tokens, 1004810000, "actual native billion-equivalent computation")
     for _, row in ipairs(storage.platforms) do
-      equal(row.datasets, 10016, "both platforms computed half the payload")
+      equal(row.datasets, 10048, "both platforms computed half the payload")
       for _, loader in ipairs(row.unloading) do loader.disabled_by_script = false end
     end
     storage.stage = "delivery"

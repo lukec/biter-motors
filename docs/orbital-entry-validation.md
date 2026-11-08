@@ -1,5 +1,10 @@
 # Native Orbital Entry Validation
 
+**Policy update, 2026-11-08:** this records October's entry qualification.
+Portable hardware and uplift remain valid; orbital scrapping and old scale
+costs/yields below are superseded by [banked-compute validation](orbital-banked-compute-validation.md).
+The current ZIP also requalifies genuine rocket uplift under the new policy.
+
 Date: **2026-10-08**. Source: **Biter Motors 0.1.1**, fresh isolated worlds.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 Scope: slice 1 of the [orbital ending](../feature_specs/orbital_agi_ending.md).

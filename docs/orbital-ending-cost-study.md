@@ -1,6 +1,6 @@
 # Orbital Ending Cost Study
 
-Date: **2026-10-08**. **Orbital-entry prototypes implemented; finale gameplay pending.**
+Date: **2026-11-08**. **Orbital hardware, banked work and scale tiers implemented; finale gameplay pending.**
 
 Native input: `economy-prototypes.json`, Factorio 2.1.20, normal quality, no modules or research productivity.
 Overrides are isolated in `scripts/model_orbital_ending.py`; the native capture is not relabeled as proposed data.
@@ -41,11 +41,11 @@ Research and Tokens can stream concurrently; two or more datacenters are optiona
 | 4 | 200,000 | 12 | 2.08h |
 
 Ideal direct AI/research cash: **21,191 Dollars**, including **5,681** for successful orbital batches.
-Comparable old remaining bill, after Terrestrial AI and initial datacenter/Biterfactory construction: **132,326 Dollars**.
+Comparable old remaining bill, after Terrestrial AI and initial datacenter/Biterfactory construction: **87,746 Dollars**.
 Both omit the existing factory and optional fleet, but the old bill includes its final controller/grid/capital. Old uplift remains unqualified.
 This excludes optional fleet/depot capital, fleet wear, prior terrestrial progression and existing factory costs.
 These proposed hardware recipes contain no Dollars; the expanded bill must agree, rather than assume that upstream ingredients are free.
-Compute-only ramp: **3.51h**. The current yields need **5.21h even with twelve cores online from the start**.
+Compute-only ramp: **3.51h**. The current yields need **2.63h even with twelve cores online from the start**.
 The candidate still consumes one billion physical training equivalents; labs' research Tokens are replaced, not counted twice.
 
 ## Hardware And Launches
@@ -145,7 +145,7 @@ python3 scripts/model_orbital_ending.py --json
 python3 -m unittest tests.test_orbital_ending_model
 ```
 
-Native source SHA-256: `880f6aad5e508f969fcffc5775e71c321e52b8f9ef5fdaa030d4bd2c1e90c574`.
+Native source SHA-256: `ca36365b88404f366a1ba2284c48cdfcc3f4ec931a3493dcb5a8d8cb5eeae700`.
 The model rejects stale native input and records a separate hash of all three model scripts in JSON. Running the model does not change gameplay.
 Launch rules: [Factorio Wiki](https://wiki.factorio.com/Rocket_silo).
 Platform construction/transport: [Factorio Wiki](https://wiki.factorio.com/Space_platform).

@@ -1,11 +1,14 @@
 # Orbital AGI Ending
 
-Design date: 2026-10-07. Updated: 2026-10-08.
-Status: **orbital-entry slice implemented; replacement finale pending**.
+Design date: 2026-10-07. Updated: 2026-11-08.
+Status: **orbital entry, banked work and scale tiers implemented; Model finale pending**.
 Source now has compact hardware, explicit cargo weights, one-radiator cooling
-and research without white science. The old 10 GW terrestrial finale and
-orbital run-scrapping policy remain until slice 2. No player save, installed mod
-or live process was changed. See [entry validation](../docs/orbital-entry-validation.md).
+and research without white science. Orbital interruptions now retain native
+inputs and progress, and the tier costs/yields below are implemented. The old
+10 GW terrestrial finale remains until Model assembly/return/activation replaces
+it. No player save, installed mod or live process was changed. See
+[entry validation](../docs/orbital-entry-validation.md) and
+[banked-work validation](../docs/orbital-banked-compute-validation.md).
 
 ## Campaign Contract
 
@@ -39,8 +42,8 @@ represents a cluster of rack-scale satellites, not a literal 250 MW single rack.
 
 ## Proposed Working Values
 
-The hardware table is implemented in source. Later research yields, Model
-completion and pause/resume below remain **modeled recommendations**. The full
+Hardware, scale research/yields and banked orbital work are implemented in
+source. Model completion/activation below remain **modeled recommendations**. The full
 [cost study](../docs/orbital-ending-cost-study.md) distinguishes native captures,
 proposal overrides, material frontiers and unmeasured play time.
 
@@ -166,8 +169,9 @@ Keep the ending out of the public README's marketing copy.
 
 ## Cost And Pacing Findings
 
-- Ideal remaining AI/research cash is 21,191 Dollars versus 132,326 under the
-  old ending's comparable post-terrestrial window. Prior terrestrial factories,
+- Ideal remaining AI/research cash is 21,191 Dollars; the original 2026-10-07
+  comparison was 132,326 under the old costs/ending. The refreshed study records
+  the current legacy-controller comparison after tier changes. Prior terrestrial factories,
   research and optional fleet capital are not funded again for free.
 - The first cluster uses nine automatic separate-item launches with partial
   minimum requests, including starter, foundation, belts/inserters and cash.
@@ -204,6 +208,9 @@ before freezing yields or promising the final campaign duration.
    power/cooling pause-and-resume, physical archive consumption, orbital Model
    output, real cargo-pod return and ground activation. Remove the obsolete
    controller/capital/uninterrupted-run runtime and player guidance.
+   **Banked-work/tier sub-slice completed 2026-11-08; Model completion remains
+   next.** [Native evidence](../docs/orbital-banked-compute-validation.md) keeps
+   this implementation separate from the pending replacement finale.
 3. **Ending interface and artwork:** progressive Token/Dataset/Model status,
    concise actionable blockers, native terminal epilogue, satellite-shaped
    core/solar/radiator art and readable filterable icons. No new HUD clutter.

@@ -1,6 +1,8 @@
 # Biter Motors Economy Freeze Model
 
 Captured engine: **2.1.20**; mod **0.1.1**.
+**Current alpha scope:** banked orbital work and new scale tiers are implemented; this budget still includes the legacy controller finale pending Model return/activation.
+
 Final prototypes and runtime policy: `docs/economy-prototypes.json`. Source freshness is
 checked by content hash, not string fragments. Budgets use normal quality, no modules,
 and zero research productivity. No infinite improvement is required.
@@ -29,9 +31,9 @@ a finishable campaign. See [the orbital ending cost study](orbital-ending-cost-s
 | terrestrial-ai | 750 | 750 | 0 |
 | autonomous-logistics | 750 | 750 | 750 |
 | orbital-compute | 1,500 | 1,500 | 1,500 |
-| orbital-cluster-training | 1,000 | 5,000 | 1,000 |
-| grid-scale-energy | 1,500 | 15,000 | 1,500 |
-| hyperscale-training | 3,000 | 30,000 | 3,000 |
+| orbital-cluster-training | 1,000 | 2,000 | 1,000 |
+| grid-scale-energy | 1,500 | 3,000 | 1,500 |
+| hyperscale-training | 2,000 | 6,000 | 2,000 |
 | planetary-energy-grid | 2,500 | 0 | 2,500 |
 
 Optional Foundry, Megatruck, Cybertrain, eSpider, and infinite improvements are excluded.
@@ -47,13 +49,13 @@ Base terrestrial efficiency is used; optional efficiency research reduces later 
 | Orbital band | Normal cycle | Batches | Operating Dollars | One-core hours |
 | --- | ---: | ---: | ---: | ---: |
 | orbital-ai-token | 20s | 100 | 100 | 0.56 |
-| orbital-ai-token-cluster | 20s | 360 | 360 | 2.00 |
-| orbital-ai-dataset-grid-scale | 20s | 1,800 | 1,800 | 10.00 |
-| orbital-ai-dataset-hyperscale | 20s | 9,001 | 9,001 | 50.01 |
+| orbital-ai-token-cluster | 20s | 180 | 180 | 1.00 |
+| orbital-ai-dataset-grid-scale | 20s | 900 | 900 | 5.00 |
+| orbital-ai-dataset-hyperscale | 20s | 4,501 | 4,501 | 25.01 |
 
 The 30-second recipe runs every **20 seconds** in a normal 1.5-speed core.
-Total: **11,261 operating Dollars, 62.56 core-hours**. Research costs are counted once separately.
-Later labs use 8,000 Tokens. Package 199 Datasets from early stock (one AM3: 2.65 minutes); use direct Dataset recipes after Grid-scale Energy.
+Total: **5,681 operating Dollars, 31.56 core-hours**. Research costs are counted once separately.
+Later labs use 7,000 Tokens. Package 199 Datasets from early stock (one AM3: 2.65 minutes); use direct Dataset recipes after Grid-scale Energy.
 The last batch replaces spent research payload; earned computation is not the same as physical inventory.
 One AM3 packages capital in 80s. The finale remains **20 uninterrupted minutes at 10 GW** (12 TJ).
 
@@ -61,12 +63,12 @@ One AM3 packages capital in 80s. The finale remains **20 uninterrupted minutes a
 
 | Cash sink | Dollars |
 | --- | ---: |
-| Required research | 54,500 |
+| Required research | 15,500 |
 | Terrestrial research compute | 2,260 |
-| Orbital compute and replacement payload | 11,261 |
+| Orbital compute and replacement payload | 5,681 |
 | Transition, controller, normal grid, and 8-core hardware | 16,815 |
 | Final Capital Allocations | 50,000 |
-| **Direct cash requirement** | **134,836** |
+| **Direct cash requirement** | **90,256** |
 
 Solar-only finale supply: **4,762 Tandem Arrays and 1,001 deployed Grid Battery Arrays**. Controller/final recipes consume 110 more arrays, which cannot double as grid storage.
 HD and Tandem panels consume **no Dollars**; the previous report's panel cash charges were stale.
@@ -104,17 +106,17 @@ revenue from overlapping depots. Fleet replacement uses conservative initial wea
 | Fleet/depot capital | 0 | 8,400 | 16,800 |
 | Net recurring Dollars/hour | 0 | 11,867 | 23,733 |
 | Full fleet cash payback | not unlocked | 0.71h | 0.71h |
-| Post-network funding window | >48h; finite ceiling | 8.03h | 2.85h |
+| Post-network funding window | >48h; finite ceiling | 4.37h | 1.62h |
 | Ideal EV selling time, before funding window | 5.28h | 5.28h | 5.28h |
 | Normal orbital cores | 4 | 8 | 16 |
-| Core work / selected cores | 15.64h | 7.82h | 3.91h |
-| Failed-batch cash sensitivity | 0 | 0 | 1,512 |
+| Core work / selected cores | 7.89h | 3.95h | 1.97h |
+| Failed-batch cash sensitivity | 0 | 0 | 260 |
 
 Funding and compute can overlap; adding these numbers is **not** a campaign-time estimate.
 Funding starts with EV cash already earned and assumes mature service can be financed. It
 counts fleet capex and finite battery adoption, but does not qualify natural bootstrapping.
 Core work excludes research waiting and idle cores at tier boundaries. Heavy sensitivity
-loses 10% of ordinary compute batches; retry time is not guessed. Extra manufacturing,
+loses 10% of terrestrial compute batches; orbital interruptions retain work and cash. Retry/delay time is not guessed. Extra manufacturing,
 charging, depot load, and existing industry require power above the 10 GW final load.
 
 ## Remaining Balance Decisions
@@ -122,8 +124,8 @@ charging, depot load, and existing industry require power above the 10 GW final 
 - A closed five-settlement market cannot fund the ending from one-time purchases alone. Expand, allow natural customer/nest growth, or unlock recurring service. Organic virtual growth is not instant new demand.
 - With two full depots, the 50,000-Dollar finale bill alone needs about 4.2 service hours. Evaluate a targeted capital adjustment against the 2-3-hour major-step target, not blanket cheaper research.
 - Measure actual panel/battery materials and transport throughput. Native delivery proves physical completion, not comfortable pacing.
-- Eight normal cores need about 6.25 active hours in the final compute band; sixteen need about 3.13. Compare practical core expansion and power/logistics throughput before changing Token yields.
-- Ordinary AI brownouts lose committed Dollars. Final AGI failure retains inputs: retry time/power, not another full capital package. Recycled capital and other inflows are not business profit.
+- Eight normal cores need about 3.13 active hours in the final compute band; sixteen need about 1.56. Compare practical core expansion and power/logistics throughput before further Token-yield changes.
+- Terrestrial AI brownouts lose committed Dollars. Orbital shortages retain inputs and progress; the legacy final controller retains inputs after a reset. Delays are not another cash bill. Recycled capital and other inflows are not business profit.
 
 No balance values are changed by this simulator. Phase 4 remains open for targeted decisions,
 functional art, and native UI qualification.

@@ -55,6 +55,15 @@ class OrbitalEndingTests(unittest.TestCase):
             self.assertNotIn("space-science-pack", native.get("prerequisites", []))
             self.assertNotIn("space-science-pack", dict(native["unit"]["ingredients"]))
 
+    def test_native_scale_tiers_match_approved_efficiency_and_research(self):
+        for technology, dollars in zip(model.RESEARCH[2:], (2000, 3000, 6000)):
+            self.assertEqual(dollars, self.catalog.research(technology))
+        for recipe, tokens in zip(model.ORBITAL_RECIPES, (10000, 50000, 100000, 200000)):
+            equivalents = self.catalog.output(recipe, model.TOKEN) + 50000 * self.catalog.output(recipe, model.DATASET)
+            self.assertEqual(tokens, equivalents)
+            self.assertEqual(1, self.catalog.ingredient(recipe, model.DOLLAR))
+            self.assertEqual(20, self.catalog.seconds(recipe, model.CORE))
+
     def test_proposed_mass_is_explicit_and_does_not_change_native_catalog(self):
         before = copy.deepcopy(self.catalog.data)
         candidate = model.proposed_catalog(self.catalog, self.proposal)

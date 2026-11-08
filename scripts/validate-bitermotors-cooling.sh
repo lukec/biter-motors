@@ -1,6 +1,72 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+validate_report() {
+python3 - "$@" <<'EOF_CHECK'
+import json
+import math
+import sys
+from pathlib import Path
+
+report, seed, save = map(Path, sys.argv[1:])
+assert all(path.is_file() and path.stat().st_size > 0 for path in (seed, save)), "missing real saves"
+rows = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
+assert all(type(row) is dict for row in rows), rows
+assert [row.get("status") for row in rows] == [
+    "cooling_policy_passed", "cooling_checkpoint", "orbital_banked_reload_passed",
+    "terrestrial_scrap_passed", "cooling_reload_passed"
+], rows
+policy, checkpoint, recovered, ground, final = rows
+for row in rows:
+    for key in ("tick", "assertions"):
+        assert type(row.get(key)) is int and row[key] > 0, (key, row)
+    assert not any("reset" in key for key in row), "obsolete reset evidence is not banked evidence"
+assert policy["tick"] < checkpoint["tick"] < recovered["tick"] < ground["tick"] == final["tick"], rows
+assert all(left["assertions"] < right["assertions"] for left, right in zip(rows[:3], rows[1:4])), rows
+assert final["assertions"] == ground["assertions"], rows
+
+def exact(row, **expected):
+    for key, value in expected.items():
+        assert type(row.get(key)) is type(value) and row[key] == value, (key, row)
+
+exact(policy, work_policy="banked", platforms=2, zero_vs_one=True,
+      capacity_scope="surface+force", before_first_craft_paused=True,
+      supplied_power_fixture=True, solar_power_multiplier=0)
+exact(checkpoint, work_policy="banked", failure="native_total_power", saved_file=save.name,
+      power_limited=True, paused_for_cooling=False, generated=10000, products=0, output=0,
+      quality="rare", dollars_supplied=1, dollars_remaining=0, replacement_dollars=0,
+      cooling_progress_preserved=True, blocked_output_generated=0, base_products=1, base_output=10000,
+      base_events=1)
+assert type(checkpoint.get("saved_tick")) is int and checkpoint["saved_tick"] == checkpoint["tick"], checkpoint
+for key in ("progress", "full_rate", "half_rate"):
+    value = checkpoint.get(key)
+    assert type(value) in (int, float) and math.isfinite(value) and value > 0, (key, checkpoint)
+assert checkpoint["progress"] < 1, checkpoint
+assert checkpoint["half_rate"] < checkpoint["full_rate"] * 0.8, checkpoint
+exact(recovered, work_policy="banked", saved_tick=checkpoint["saved_tick"], quality="rare",
+      replacement_dollars=0, dollars_supplied=1, dollars_remaining=0, recovered_products=1,
+      recovery_output_delta=10000, recovery_ledger_delta=10000, generated=20000, native_events=1)
+assert type(recovered.get("progress_after_reload")) in (int, float), recovered
+assert recovered["progress_after_reload"] == checkpoint["progress"], rows
+assert recovered["generated"] - checkpoint["generated"] == recovered["recovery_ledger_delta"], rows
+exact(ground, original_dollars=20, scrapped_dollars=20, failure_generated=0,
+      restored_without_inputs_products=0, retry_dollars=20, retry_products=1,
+      retry_output=20, retry_generated=20, native_events=1)
+exact(final, saved_tick=checkpoint["saved_tick"], work_policy="banked",
+      orbital_generated=recovered["generated"], terrestrial_generated=ground["retry_generated"],
+      platform_removal=True, separate_process_reload=True)
+print("Cooling fixture passed:", json.dumps(rows, sort_keys=True))
+EOF_CHECK
+}
+
+# Report-only validation never resolves or launches a Factorio executable.
+if [[ "${1:-}" == --check-report ]]; then
+  [[ $# == 4 ]] || { printf 'Usage: %s --check-report REPORT SEED CHECKPOINT\n' "$0" >&2; exit 2; }
+  validate_report "$2" "$3" "$4"
+  exit
+fi
+[[ $# == 0 ]] || { printf 'Unexpected cooling validator arguments\n' >&2; exit 2; }
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fixture="$repo_root/scripts/fixtures/cooling-control.lua"
 if [[ ! -f "$fixture" ]]; then
@@ -160,30 +226,4 @@ fi
 test -s "$checkpoint"
 python3 "$repo_root/scripts/validation_support.py" report "$report" --require-status cooling_reload_passed --minimum-tick 1
 
-python3 - "$report" "$save" "$checkpoint" <<'EOF_CHECK'
-import json
-import sys
-from pathlib import Path
-
-report, *saves = map(Path, sys.argv[1:])
-assert all(path.is_file() and path.stat().st_size > 0 for path in saves), saves
-rows = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
-assert [row.get("status") for row in rows] == [
-    "cooling_policy_passed", "cooling_checkpoint", "cooling_reload_passed"
-], rows
-assert all(type(row.get("assertions")) is int and row["assertions"] > 0 for row in rows), rows
-assert all(type(row.get("tick")) is int and row["tick"] > 0 for row in rows), rows
-policy, checkpoint, reload = rows
-assert policy["tick"] < checkpoint["tick"] < reload["tick"], rows
-assert checkpoint.get("failure") == "total_power" and checkpoint.get("saved_file") == saves[1].name, checkpoint
-assert type(checkpoint.get("saved_tick")) is int and reload.get("tick", 0) > checkpoint["saved_tick"], (checkpoint, reload)
-assert reload.get("saved_tick") == checkpoint["saved_tick"], (checkpoint, reload)
-assert reload.get("generated") == checkpoint.get("generated") + 10000, rows
-assert reload.get("recovered_products") == 1, reload
-assert reload.get("recovery_ledger_delta") == reload.get("recovery_output_delta") == 10000, reload
-assert reload.get("cooling_failure_reset") and reload.get("total_power_failure_reset"), reload
-assert reload.get("half_power_reset_and_recovery"), reload
-assert reload.get("platform_removal"), reload
-assert reload.get("platforms") == 2, reload
-print("Cooling fixture passed:", json.dumps(rows, sort_keys=True))
-EOF_CHECK
+validate_report "$report" "$save" "$checkpoint"

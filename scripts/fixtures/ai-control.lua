@@ -35,11 +35,11 @@ local function pure_fixtures()
   for _, case in ipairs({
     {"bitermotors-terrestrial-ai-token", 20},
     {"bitermotors-orbital-ai-token", 10000},
-    {"bitermotors-orbital-ai-token-cluster", 25000},
-    {"bitermotors-orbital-ai-token-grid-scale", 50000},
-    {"bitermotors-orbital-ai-token-hyperscale", 100000},
-    {"bitermotors-orbital-ai-dataset-grid-scale", 50000},
-    {"bitermotors-orbital-ai-dataset-hyperscale", 100000}
+    {"bitermotors-orbital-ai-token-cluster", 50000},
+    {"bitermotors-orbital-ai-token-grid-scale", 100000},
+    {"bitermotors-orbital-ai-token-hyperscale", 200000},
+    {"bitermotors-orbital-ai-dataset-grid-scale", 100000},
+    {"bitermotors-orbital-ai-dataset-hyperscale", 200000}
   }) do
     local track = AiAccounting.ensure()
     equal(AiAccounting.record(track, case[1], 1, "normal", false, 0), true, "approved completion")
@@ -50,8 +50,27 @@ local function pure_fixtures()
         * (product.name == DATASET and 50000 or 1)
     end
     equal(physical_equivalents, case[2], "ledger descriptor matches native physical outputs")
+    if case[1] ~= "bitermotors-terrestrial-ai-token" then
+      equal(prototypes.recipe[case[1]].energy, 30, "orbital batch takes thirty recipe seconds")
+      equal(#prototypes.recipe[case[1]].ingredients, 1, "one orbital operating input")
+      equal(prototypes.recipe[case[1]].ingredients[1].name, DOLLAR, "orbital operating currency")
+      equal(prototypes.recipe[case[1]].ingredients[1].amount, 1, "one Dollar per orbital batch")
+    end
     track = helpers.json_to_table(helpers.table_to_json(track))
     equal(track.generated, case[2], "serialized ledger conserves progress")
+  end
+  for _, case in ipairs({
+    {"bitermotors-orbital-cluster-training", 1000, 2},
+    {"bitermotors-grid-scale-energy", 1500, 2},
+    {"bitermotors-hyperscale-training", 2000, 3}
+  }) do
+    local technology = prototypes.technology[case[1]]
+    equal(technology.research_unit_count, case[2], "scale research cycle count")
+    local dollars = 0
+    for _, ingredient in pairs(technology.research_unit_ingredients) do
+      if ingredient.name == DOLLAR then dollars = dollars + ingredient.amount end
+    end
+    equal(dollars, case[3], "scale research Dollars per cycle")
   end
   local track = AiAccounting.ensure()
   equal(AiAccounting.record(track, "bitermotors-package-agi-training-dataset", 1, "normal", false, 6),
@@ -85,6 +104,7 @@ local function power(surface, position, force, terrestrial)
   local source = make(surface, "electric-energy-interface", position, force)
   source.electric_interface_mode = defines.electric_interface_mode.primary_output
   source.power_production, source.output_flow_limit = 10000000000, 10000000000
+  return source
 end
 
 local function task(surface, name, recipe, position, force, kind, quality)
@@ -111,12 +131,12 @@ local function platform(force, name, count)
     for y = -48, 64 do tiles[#tiles + 1] = {name = "space-platform-foundation", position = {x, y}} end
   end
   surface.set_tiles(tiles, false, false, false, true)
-  power(surface, {-48, -32}, force)
+  local source = power(surface, {-48, -32}, force)
   for index = 1, count * 8 do
     make(surface, "bitermotors-orbital-radiator-panel",
       {-54 + ((index - 1) % 18) * 6, 32 + math.floor((index - 1) / 18) * 6}, force)
   end
-  return surface
+  return surface, source
 end
 
 script.on_init(function()
@@ -161,7 +181,10 @@ script.on_init(function()
   end
   local second = game.create_force("ai-second-force")
   second.technologies["bitermotors-orbital-compute"].researched = true
-  local orbit_b = platform(second, "AI accounting B", 1)
+  local orbit_b, source_b = platform(second, "AI accounting B", 1)
+  -- Isolate the outage from the radiator's native 1 kW solar production.
+  orbit_b.solar_power_multiplier = 0
+  storage.dataset_power = source_b
   storage.other = task(orbit_b, CORE, "bitermotors-orbital-ai-dataset-hyperscale", {0, 12}, second)
   local payload_machine = storage.tasks[13].machine
   local edge = payload_machine.position.y + payload_machine.prototype.selection_box.right_bottom.y
@@ -192,15 +215,51 @@ for recipe_name in pairs(AiAccounting.recipes) do
     elseif row.kind == "removed" or row.kind == "destroyed" then
       row.machine.destroy{raise_destroy = row.kind == "removed"}
     elseif row.kind == "switch" and row.completions == 1 then
-      equal(output(row.machine).get_item_count(DATASET), 1, "direct grid-scale Dataset is physical")
+      equal(output(row.machine).get_item_count(DATASET), 2, "direct grid-scale Dataset is physical")
       row.machine.set_recipe("bitermotors-orbital-ai-token")
       input(row.machine).insert{name = DOLLAR, count = 1}
     end
   end)
 end
 
+local function dataset_pause_step()
+  local machine, source = storage.other.machine, storage.dataset_power
+  if not storage.dataset_pause_stage then
+    if machine.crafting_progress < 0.1 then return end
+    check(machine.crafting_progress < 0.8, "Dataset outage begins during genuine native work")
+    equal(input(machine).get_item_count(DOLLAR), 0, "Dataset original Dollar is committed")
+    storage.dataset_before_outage = machine.crafting_progress
+    source.power_production, source.output_flow_limit = 0, 0
+    source.energy, machine.energy = 0, 0
+    storage.dataset_pause_stage, storage.dataset_pause_tick = "draining", game.tick
+  elseif storage.dataset_pause_stage == "draining" then
+    if game.tick - storage.dataset_pause_tick < 60 then return end
+    check(machine.crafting_progress >= storage.dataset_before_outage,
+      "Dataset outage preserves positive native progress")
+    storage.dataset_held_progress = machine.crafting_progress
+    storage.dataset_pause_stage, storage.dataset_pause_tick = "holding", game.tick
+  elseif storage.dataset_pause_stage == "holding" then
+    if game.tick - storage.dataset_pause_tick < 180 then return end
+    equal(machine.crafting_progress, storage.dataset_held_progress, "Dataset full outage holds identical progress")
+    equal(input(machine).get_item_count(DOLLAR), 0, "Dataset outage retains original committed input")
+    equal(machine.products_finished, 0, "Dataset outage cannot prematurely finish a batch")
+    equal(storage.other.completions, 0, "Dataset outage cannot emit premature completion")
+    equal(output(machine).get_item_count(DATASET), 0, "Dataset outage cannot materialize payload")
+    equal(ledger(game.forces["ai-second-force"]).cumulative_ai_tokens, 0,
+      "Dataset outage cannot earn premature equivalents")
+    source.power_production, source.output_flow_limit = 10000000000, 10000000000
+    storage.dataset_pause_stage = "resuming"
+  elseif storage.dataset_pause_stage == "resuming" then
+    if machine.crafting_progress <= storage.dataset_held_progress then return end
+    equal(input(machine).get_item_count(DOLLAR), 0, "Dataset resumes without replacement Dollar")
+    equal(storage.other.completions, 0, "Dataset resumes original unfinished batch")
+    storage.dataset_pause_preserved, storage.dataset_pause_stage = true, "done"
+  end
+end
+
 local function native_step()
   local elapsed = game.tick - storage.started
+  if storage.dataset_pause_stage ~= "done" then dataset_pause_step() end
   if storage.checkpoint_started then
     if storage.normal.machine.crafting_progress < 0.98 then return end
     equal(storage.normal.completions, 1, "save contains a genuine unfinished second craft")
@@ -208,8 +267,12 @@ local function native_step()
     storage.saved_tick, storage.stage = game.tick, "reload"
     report("ai_accounting_passed", {generated = storage.saved_generated,
       native_generated = storage.events.player, pending_bonus = 2,
-      other_force_generated = 100000, platforms = 2, packaging_datasets = 1,
-      datasets_extracted_by_inserter = 18, native_milestone_unlocked = true})
+      other_force_generated = ledger(game.forces["ai-second-force"]).cumulative_ai_tokens,
+      platforms = 2, packaging_datasets = output(storage.pack.machine).get_item_count(DATASET),
+      datasets_extracted_by_inserter = storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET),
+      dataset_pause_preserved = storage.dataset_pause_preserved,
+      dataset_solar_power_multiplier = 0,
+      native_milestone_unlocked = true})
     game.server_save("bitermotors-ai-reload")
     return
   end
@@ -236,7 +299,7 @@ local function native_step()
   if not storage.pack_started then
     storage.pack_started = true
     local grid = storage.tasks[10]
-    equal(output(grid.machine).get_item_count(TOKEN), 50000, "grid-scale physical token batch")
+    equal(output(grid.machine).get_item_count(TOKEN), 100000, "grid-scale physical token batch")
     equal(input(storage.pack.machine).insert{name = TOKEN, count = output(grid.machine).remove{name = TOKEN, count = 50000}},
       50000, "earned Tokens supplied to ordinary packaging")
     storage.before_pack = ledger().cumulative_ai_tokens
@@ -253,7 +316,10 @@ local function native_step()
     return
   end
   if storage.tasks[13].completions < 9 then return end
-  if storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET) < 18 then return end
+  if storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET) < 36 then return end
+  equal(storage.tasks[13].completions, 9, "nine hyperscale native completions")
+  equal(storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET), 36,
+    "all direct hyperscale Datasets physically extracted")
   local progress = ledger()
   equal(storage.normal.completions, 1, "one base terrestrial craft")
   equal(output(storage.normal.machine).get_item_count(TOKEN), 22, "10% research bonus is physical")
@@ -264,12 +330,14 @@ local function native_step()
   equal(progress.terrestrial.native_generated, storage.events.player - progress.orbital.native_generated,
     "track-local terrestrial native events reconcile")
   equal(progress.cumulative_ai_tokens, storage.events.player + 6, "only three delivered research bonuses count")
-  equal(progress.cumulative_ai_tokens, storage.before_pack + 800000, "only additional native Dataset compute earns progress")
+  equal(progress.cumulative_ai_tokens, storage.before_pack + 1600000, "only additional native Dataset compute earns progress")
   equal(game.forces.player.technologies["bitermotors-orbital-cluster-training"].enabled,
     true, "genuine native Dataset computation unlocks orbital milestone")
   equal(progress.terrestrial.pending_bonus, 2, "blocked bonus remains pending at checkpoint")
-  equal(ledger(game.forces["ai-second-force"]).cumulative_ai_tokens, 100000, "other platform/force earns its own equivalents")
-  equal(output(storage.other.machine).get_item_count(DATASET), 2, "hyperscale direct payload is physical")
+  equal(ledger(game.forces["ai-second-force"]).cumulative_ai_tokens, 200000, "other platform/force earns its own equivalents")
+  equal(output(storage.other.machine).get_item_count(DATASET), 4, "hyperscale direct payload is physical")
+  equal(storage.dataset_pause_preserved, true, "Dataset power pause and resume preserve original batch")
+  equal(storage.other.completions, 1, "Dataset original Dollar completes exactly once after resume")
   equal(progress.agi.unlocked, false, "partial native computation cannot unlock final training")
   storage.other.machine.surface.platform.destroy(1)
   storage.other_platform_removed = true
@@ -299,7 +367,7 @@ script.on_event(defines.events.on_tick, function()
     equal(storage.normal.completions, 2, "recipe event subscriptions survive reload")
     equal(output(storage.normal.machine).get_item_count(TOKEN), 44, "second native craft and research bonus are physical")
     equal(storage.other.machine.valid, false, "other platform deletion completed before reload")
-    equal(ledger(game.forces["ai-second-force"]).cumulative_ai_tokens, 100000,
+    equal(ledger(game.forces["ai-second-force"]).cumulative_ai_tokens, 200000,
       "platform removal does not erase already computed equivalents")
     report("ai_reload_passed", {saved_tick = storage.saved_tick, generated = ledger().cumulative_ai_tokens})
     storage.stage = "done"

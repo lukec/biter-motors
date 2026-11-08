@@ -89,7 +89,9 @@ its workload progress.
 
 Use a save with at least two platforms and two powered, cooled, configured
 Orbital Datacenter Cores. All four orbital AI recipe tiers qualify; cores
-disabled by script or carrying a power/cooling reset do not:
+disabled by script, power-limited, or paused for cooling do not. The probe
+requires the explicit banked-work policy; old reset fields cannot silently
+qualify a core:
 
 ```bash
 scripts/soak-bitermotors-save.sh \

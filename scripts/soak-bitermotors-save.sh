@@ -194,10 +194,11 @@ local function snapshot(kind)
   local active_cores = 0
   for _, core in pairs(ending and ending.cores or {}) do
     if CORE_RECIPES[core.recipe or ""]
+      and core.work_policy == "banked"
       and core.cooled
       and not core.disabled_by_script
-      and not core.reset_for_power
-      and not core.reset_for_cooling
+      and not core.power_limited
+      and not core.paused_for_cooling
       and (core.power_fraction or 0) > 0 then
       active_cores = active_cores + 1
     end

@@ -22,6 +22,7 @@ end
 local function report(status, extra)
   local row = extra or {}
   row.status, row.tick, row.assertions = status, game.tick, assertions
+  row.validation_scope = "legacy-controller-regression"
   helpers.write_file(REPORT, helpers.table_to_json(row) .. "\n", true)
 end
 
@@ -185,6 +186,7 @@ local function start_training()
     datasets = datasets + output(core).get_item_count(DATASET)
   end
   check(datasets >= 20000, "physical final payload has genuinely been computed")
+  equal(state.cumulative_ai_tokens, datasets * 50000, "native Dataset payload reconciles earned equivalents")
   storage.earned_equivalents, storage.computed_datasets = state.cumulative_ai_tokens, datasets
   local remaining = 20000
   for _, core in ipairs(storage.cores) do

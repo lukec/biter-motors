@@ -61,6 +61,11 @@ changes that policy.
   cargo origin, destination, event order and conservation, not a fabricated delay.
 - Model both rocket and cargo-pod inventory limits. The validated 2.1.20 rocket
   has 20 slots but its ascent pod has 10; weights alone do not define capacity.
+- Orbital work banks native progress and committed inputs; never reset/reinsert
+  them to emulate a resume. Terrestrial ordinary compute still scraps failures.
+- Solar-panel prototypes require strictly positive production on 2.1.20. A test
+  may disable platform solar to isolate supplied EEI power, but must disclose
+  that limitation and never call it real orbital-generation qualification.
 
 ## Verification
 

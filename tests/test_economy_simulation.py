@@ -91,10 +91,10 @@ class EconomySimulationTests(unittest.TestCase):
 
     def test_physical_payload_accounts_for_tokens_spent_by_labs(self):
         plan = economy.campaign_plan(self.catalog)
-        self.assertEqual([100, 360, 1800, 9001], [band["batches"] for band in plan["bands"]])
-        self.assertEqual(8000, plan["orbital_research_tokens"])
+        self.assertEqual([100, 180, 900, 4501], [band["batches"] for band in plan["bands"]])
+        self.assertEqual(7000, plan["orbital_research_tokens"])
         self.assertEqual(199, plan["early_datasets_packaged"])
-        self.assertEqual(20001, plan["physical_datasets"] + plan["early_datasets_packaged"])
+        self.assertEqual(20003, plan["physical_datasets"] + plan["early_datasets_packaged"])
         self.assertGreaterEqual(plan["orbital_generated_equivalents"], self.catalog.runtime["agi_token_gate"])
 
     def test_compute_output_changes_required_batch_count(self):
@@ -128,8 +128,8 @@ class EconomySimulationTests(unittest.TestCase):
         self.assertEqual(5, self.catalog.item_dollars(economy.ARRAY))
         self.assertEqual(0, self.catalog.item_dollars(economy.TANDEM))
         plan = economy.campaign_plan(self.catalog)
-        self.assertEqual(54500, plan["research_dollars"])
-        self.assertEqual(134836, plan["direct_dollars"])
+        self.assertEqual(15500, plan["research_dollars"])
+        self.assertEqual(90256, plan["direct_dollars"])
         self.assertNotIn("foundry", economy.REQUIRED_TECHNOLOGIES)
         self.assertNotIn("bitermotors-megatruck-engineering", economy.REQUIRED_TECHNOLOGIES)
         self.assertEqual(22220, plan["grid_battery_opportunity_dollars"])
@@ -186,9 +186,19 @@ class EconomySimulationTests(unittest.TestCase):
     def test_failed_compute_adds_ordinary_cost_not_final_capital(self):
         base = economy.campaign_plan(self.catalog)
         retry = economy.campaign_plan(self.catalog, failed_fraction=0.1)
-        self.assertEqual(1512, retry["ordinary_ai_retry_dollars"])
+        self.assertEqual(260, retry["ordinary_ai_retry_dollars"])
+        self.assertEqual(260, retry["terrestrial_ai_retry_dollars"])
+        self.assertEqual(0, retry["orbital_ai_retry_dollars"])
         self.assertEqual(base["final_capital_dollars"], retry["final_capital_dollars"])
         self.assertEqual(base["direct_dollars"] + retry["ordinary_ai_retry_dollars"], retry["direct_dollars"])
+
+    def test_progress_policy_must_match_native_capture(self):
+        catalog = self.altered()
+        self.assertEqual({"terrestrial": "scrap", "orbital": "banked"},
+                         catalog.runtime["compute_progress_policy"])
+        catalog.runtime["compute_progress_policy"]["orbital"] = "reset"
+        with self.assertRaisesRegex(ValueError, "unsupported native compute-progress policy"):
+            economy.campaign_plan(catalog)
 
     def test_invalid_workloads_are_rejected(self):
         for failure in (-0.1, 1, 1.1):

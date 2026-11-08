@@ -13,7 +13,10 @@ playtest/publication gates are in [ROADMAP.md](../ROADMAP.md#remaining-plan-as-o
 Current source is `7660e91`; 255 Python tests pass and the installed engine
 still reports 2.1.20. Native qualification evidence remains dated below. The
 orbital-entry slice is complete, but the replacement ending is not. This
-planning refresh changes no gameplay or live save.
+planning refresh changed no gameplay or live save. **Subsequent implementation:**
+banked orbital work and approved scale costs/yields are now implemented; see
+[current validation](orbital-banked-compute-validation.md). Model assembly,
+return, activation and the epilogue remain pending.
 
 **Do not start the final acceptance playthrough yet.** The terrestrial game has
 enough content for v1. Finish and stabilize it rather than add another branch.
@@ -907,9 +910,9 @@ ending. Public patch-save support begins with the first public archive.
 
 ## Next Implementation Slice
 
-Continue **Phase 3**, not Phase 4. Implement banked orbital work and the approved
-scale-tier values, then physical Model assembly/return and native Nauvis
-activation. Remove the old controller/capital/uninterrupted-run path, update
+Continue **Phase 3**, not Phase 4. Banked orbital work and approved scale-tier
+values are implemented and tested. Next implement physical Model assembly/return
+and native Nauvis activation. Remove the old controller/capital/uninterrupted-run path, update
 the progressive UI and epilogue, and qualify the new ending through real cargo
 and separate-process reload. The normal-quality rocket-entry fixture is already
 complete; old ground-finale tests do not qualify the replacement ending.

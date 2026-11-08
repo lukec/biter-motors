@@ -95,10 +95,13 @@ assert [row.get("status") for row in rows] == [
     "delivery_training_passed", "delivery_reload_passed"
 ], rows
 assert all(type(row.get("assertions")) is int and row["assertions"] > 0 for row in rows), rows
+assert all(row.get("validation_scope") == "legacy-controller-regression" for row in rows), rows
 setup, compute, payload, training, reload = rows
 assert setup["tick"] < compute["tick"] < payload["tick"] < training["tick"] < reload["tick"], rows
-assert compute["datasets"] == 20_032 and compute["tokens"] == 10_000, compute
-assert compute["earned_equivalents"] == training["earned_equivalents"] == 1_001_610_000, rows
+assert compute["datasets"] == 20_096 and compute["tokens"] == 10_000, compute
+assert compute["earned_equivalents"] == training["earned_equivalents"] == 1_004_810_000, rows
+assert compute["earned_equivalents"] == compute["datasets"] * 50_000 + compute["tokens"], compute
+assert training["datasets"] == compute["datasets"], rows
 assert payload["delivered"] >= 20_000 and training["delivered"] >= 20_000, rows
 assert training["launched_pods"] >= 20 and training["researched_tick"] > compute["tick"], rows
 assert 71_999 <= training["training_ticks"] <= 72_001, training

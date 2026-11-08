@@ -117,6 +117,14 @@ class FinaleValidationRunnerTests(unittest.TestCase):
         self.assertNotIn('crafting_progress =', fixture)
         self.assertNotIn('bonus_progress =', fixture)
 
+    def test_legacy_scope_and_physical_compute_reconciliation(self):
+        fixture = (ROOT / "scripts/fixtures/finale-control.lua").read_text()
+        self.assertIn('row.validation_scope = "legacy-controller-regression"', fixture)
+        self.assertIn('row.get("validation_scope") == "legacy-controller-regression"', self.script)
+        self.assertIn('state.cumulative_ai_tokens, datasets * 50000', fixture)
+        self.assertIn('checkpoint["computed_datasets"] >= 20_000', self.script)
+        self.assertIn('checkpoint["earned_equivalents"] == checkpoint["computed_datasets"] * 50_000', self.script)
+
 
 if __name__ == "__main__":
     unittest.main()

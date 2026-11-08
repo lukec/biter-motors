@@ -1697,7 +1697,7 @@ expected_research = {
     "bitermotors-orbital-compute": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-orbital-cluster-training": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-grid-scale-energy": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-hyperscale-training": (3000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-hyperscale-training": (2000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-planetary-energy-grid": (2500, 60, rgbpys | {"bitermotors-ai-token"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
@@ -1709,9 +1709,9 @@ for technology_name, (count, time, ingredients) in expected_research.items():
             f"ingredients={sorted(actual_ingredients)}"
         )
 for technology_name, expected_dollars_per_cycle in {
-    "bitermotors-orbital-cluster-training": 5,
-    "bitermotors-grid-scale-energy": 10,
-    "bitermotors-hyperscale-training": 10,
+    "bitermotors-orbital-cluster-training": 2,
+    "bitermotors-grid-scale-energy": 2,
+    "bitermotors-hyperscale-training": 3,
 }.items():
     ingredients = {
         row[0]: row[1] for row in data["technology"][technology_name]["unit"]["ingredients"]
@@ -2036,6 +2036,20 @@ if orbital_core.get("surface_conditions") != [{"property": "gravity", "min": 0, 
 radiator = data["solar-panel"]["bitermotors-orbital-radiator-panel"]
 if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital Radiator Panel must be space-only")
+for name, cycles, dollars in (
+    ("bitermotors-orbital-cluster-training", 1000, 2),
+    ("bitermotors-grid-scale-energy", 1500, 2),
+    ("bitermotors-hyperscale-training", 2000, 3),
+):
+    unit = data["technology"][name]["unit"]
+    ingredients = dict(unit["ingredients"])
+    if unit["count"] != cycles or ingredients.get("bitermotors-dollar") != dollars:
+        raise SystemExit(f"Orbital scale research budget mismatch: {name}: {unit}")
+    if set(ingredients) != {
+        "automation-science-pack", "logistic-science-pack", "chemical-science-pack",
+        "production-science-pack", "utility-science-pack", "bitermotors-ai-token", "bitermotors-dollar",
+    } or any(amount != 1 for item, amount in ingredients.items() if item != "bitermotors-dollar"):
+        raise SystemExit(f"Orbital scale research science mismatch: {name}: {unit}")
 space_solar = data["solar-panel"]["bitermotors-high-density-space-solar-panel"]
 if space_solar["production"] != "20MW" or space_solar.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit(f"Space Solar Panel power or surface restriction mismatch: {space_solar}")
@@ -2102,9 +2116,9 @@ for level in range(1, 7):
     if technology.get("enabled") is not False:
         raise SystemExit(f"Terrestrial AI efficiency milestone must start runtime-gated: {level}")
 for recipe_name, expected_tokens in {
-    "bitermotors-orbital-ai-token-cluster": 25000,
-    "bitermotors-orbital-ai-token-grid-scale": 50000,
-    "bitermotors-orbital-ai-token-hyperscale": 100000,
+    "bitermotors-orbital-ai-token-cluster": 50000,
+    "bitermotors-orbital-ai-token-grid-scale": 100000,
+    "bitermotors-orbital-ai-token-hyperscale": 200000,
 }.items():
     recipe = data["recipe"][recipe_name]
     ingredients = {row["name"]: row["amount"] for row in recipe["ingredients"]}
@@ -2114,7 +2128,7 @@ for recipe_name, expected_tokens in {
     )
     if ingredients != {"bitermotors-dollar": 1} or tokens != expected_tokens:
         raise SystemExit(f"Orbital milestone recipe mismatch: {recipe_name} {recipe}")
-for tier, datasets in (("grid-scale", 1), ("hyperscale", 2)):
+for tier, datasets in (("grid-scale", 2), ("hyperscale", 4)):
     name = f"bitermotors-orbital-ai-dataset-{tier}"
     recipe = data["recipe"][name]
     if ({row["name"]: row["amount"] for row in recipe["ingredients"]} != {"bitermotors-dollar": 1}
@@ -2894,8 +2908,9 @@ undercooled_endgame = orbital_undercooled.get("endgame") or {}
 undercooled_cores = undercooled_endgame.get("cores") or []
 if (undercooled_endgame.get("cooling") or {}).get("radiators") != 0:
     raise SystemExit(f"orbital cooling smoke did not begin without radiators: {orbital_undercooled}")
-if len(undercooled_cores) != 1 or not undercooled_cores[0].get("reset_for_cooling"):
-    raise SystemExit(f"undercooled orbital batch did not reset: {orbital_undercooled}")
+if (len(undercooled_cores) != 1 or not undercooled_cores[0].get("paused_for_cooling")
+        or undercooled_cores[0].get("work_policy") != "banked"):
+    raise SystemExit(f"undercooled orbital batch did not pause: {orbital_undercooled}")
 if orbital_operating is None or not orbital_operating.get("first_radiator_created"):
     raise SystemExit(f"first orbital radiator was not installed: {orbital_operating}")
 operating_endgame = orbital_operating.get("endgame") or {}
@@ -2907,8 +2922,10 @@ if (operating_endgame.get("orbital") or {}).get("generated", 0) < 10_000:
     raise SystemExit(f"orbital cycle ledger did not count the completed batch: {orbital_operating}")
 brownout_endgame = (orbital_brownout or {}).get("endgame") or {}
 brownout_cores = brownout_endgame.get("cores") or []
-if len(brownout_cores) != 1 or not brownout_cores[0].get("reset_for_power"):
-    raise SystemExit(f"orbital brownout did not reset the active batch: {orbital_brownout}")
+if (len(brownout_cores) != 1 or not brownout_cores[0].get("power_limited")
+        or brownout_cores[0].get("crafting_progress", 0) <= 0
+        or brownout_cores[0].get("disabled_by_script")):
+    raise SystemExit(f"orbital outage lost native progress or was script-reset: {orbital_brownout}")
 if checked.get("grid_connections") != 0 or checked.get("grid_connection_created"):
     raise SystemExit(f"EV Charging Stations must not create wire-routing electric poles: {checked}")
 if not checked.get("v1_power_sinks_deferred"):

@@ -105,6 +105,61 @@ class AiValidationRunnerTests(unittest.TestCase):
         self.assertIn("for belt_x = right_edge + 1", fixture)
         self.assertIn("for y = bottom_edge + 1", fixture)
 
+    def test_scale_yields_recipe_costs_and_research_are_checked_natively(self):
+        fixture = (ROOT / "scripts/fixtures/ai-control.lua").read_text()
+        for recipe, equivalents in (
+            ("token", 10000), ("token-cluster", 50000),
+            ("token-grid-scale", 100000), ("token-hyperscale", 200000),
+            ("dataset-grid-scale", 100000), ("dataset-hyperscale", 200000),
+        ):
+            self.assertIn(f'{{"bitermotors-orbital-ai-{recipe}", {equivalents}}}', fixture)
+        for marker in (
+            "ledger descriptor matches native physical outputs",
+            'prototypes.recipe[case[1]].energy, 30',
+            'prototypes.recipe[case[1]].ingredients[1].amount, 1',
+            '{"bitermotors-orbital-cluster-training", 1000, 2}',
+            '{"bitermotors-grid-scale-energy", 1500, 2}',
+            '{"bitermotors-hyperscale-training", 2000, 3}',
+            'technology.research_unit_count', 'technology.research_unit_ingredients',
+            '"scale research Dollars per cycle"',
+        ):
+            self.assertIn(marker, fixture)
+
+    def test_new_native_totals_keep_packaging_bonus_and_force_boundaries(self):
+        fixture = (ROOT / "scripts/fixtures/ai-control.lua").read_text()
+        self.assertIn('"generated"] == 2_280_126', self.script)
+        self.assertIn('"native_generated"] == 2_280_120', self.script)
+        self.assertIn('"other_force_generated"] == 200_000', self.script)
+        self.assertIn('"datasets_extracted_by_inserter"] == 36', self.script)
+        self.assertIn('"packaging_datasets"] == 1', self.script)
+        self.assertIn('storage.tasks[13].completions, 9', fixture)
+        self.assertIn('storage.before_pack + 1600000', fixture)
+        self.assertIn('count = output(grid.machine).remove{name = TOKEN, count = 50000}', fixture)
+        self.assertIn('storage.saved_generated + 24', fixture)
+
+    def test_existing_dataset_batch_banks_work_across_native_power_outage(self):
+        fixture = (ROOT / "scripts/fixtures/ai-control.lua").read_text()
+        for marker in (
+            'orbit_b.solar_power_multiplier = 0',
+            'storage.dataset_before_outage = machine.crafting_progress',
+            'source.power_production, source.output_flow_limit = 0, 0',
+            '"Dataset full outage holds identical progress"',
+            '"Dataset outage retains original committed input"',
+            '"Dataset outage cannot emit premature completion"',
+            '"Dataset outage cannot materialize payload"',
+            '"Dataset outage cannot earn premature equivalents"',
+            '"Dataset resumes without replacement Dollar"',
+            '"Dataset original Dollar completes exactly once after resume"',
+            'dataset_pause_preserved = storage.dataset_pause_preserved',
+        ):
+            self.assertIn(marker, fixture)
+        pause = fixture[fixture.index("local function dataset_pause_step()"):
+                        fixture.index("local function native_step()")]
+        self.assertNotIn('.insert', pause)
+        self.assertNotIn('crafting_progress =', pause)
+        self.assertIn('"dataset_pause_preserved"] is True', self.script)
+        self.assertIn('"dataset_solar_power_multiplier"] == 0', self.script)
+
     def test_dump_validator_covers_payload_and_filterability(self):
         validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()
         self.assertIn('Compressed AI payload and packaging prototypes OK.', validator)

@@ -104,9 +104,12 @@ and AI Tokens, not white science.
 
 A normal cooled core consumes 1 Dollar and initially produces 10,000 physical AI
 Tokens every 20 seconds before further effects. Cumulative orbital output unlocks capital-and-science
-projects at 1M, 10M, and 100M Tokens, raising batches to 25,000, 50,000, and
-100,000 Tokens. Low power or insufficient cooling scraps the active batch and
-its operating Dollar.
+projects at 1M, 10M, and 100M Tokens. Research costs 2,000, 3,000 and 6,000 Dollars
+plus science, raising batches to 50,000, 100,000 and 200,000 Tokens. Grid-scale
+and hyperscale recipes can instead produce two or four 50,000-equivalent
+Datasets per Dollar. Low power slows/stops native work; insufficient cooling
+pauses the cluster with a yellow status. Both preserve native progress and
+committed inputs. Ordinary terrestrial AI still scraps its batch on low power.
 Tokens must return to Nauvis by cargo pod. Make the Tokens needed to research
 Autonomous Logistics and Orbital AI Infrastructure on land before unlocking
 orbital production. Bitertaxi service is an optional recurring-profit route,
@@ -114,6 +117,10 @@ not an orbital research prerequisite.
 
 The 10M milestone also unlocks direct upgrades from 300 kW HD panels to 3 MW
 Tandem Solar Arrays, and from 100 MJ Grid Batteries to 1 GJ Grid Battery Arrays.
+
+The approved orbital Model assembly/return/activation ending is not implemented
+yet. Until that next slice replaces it, the following legacy controller finale
+remains in the alpha; it is not the target release ending.
 
 Producing 1,000,000,000 cumulative AI Tokens unlocks the final training recipe.
 The Planetary Energy Grid Controller consumes:

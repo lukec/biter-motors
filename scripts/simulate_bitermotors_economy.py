@@ -60,6 +60,8 @@ def campaign_plan(catalog: EconomyCatalog, *, cores: int = 8,
                   failed_fraction: float = 0) -> dict:
     if cores < 1:
         raise ValueError("at least one core is required")
+    if catalog.runtime["compute_progress_policy"] != {"terrestrial": "scrap", "orbital": "banked"}:
+        raise ValueError("unsupported native compute-progress policy; refresh the economy model")
     research_dollars = sum(catalog.research(name) for name in REQUIRED_TECHNOLOGIES)
     pre_orbit = (P + "autonomous-logistics", P + "orbital-compute")
     terrestrial_tokens = sum(catalog.research(name, TOKEN) for name in pre_orbit)
@@ -107,9 +109,7 @@ def campaign_plan(catalog: EconomyCatalog, *, cores: int = 8,
         (ARRAY, arrays + catalog.ingredient(FINAL, ARRAY)), (TANDEM, panels), (CORE, cores),
         (P + "high-density-space-solar-panel", space_panels), (P + "orbital-radiator-panel", radiators)))
     terra_retry = retry_batches(terra_batches, failed_fraction)
-    orbital_retry = retry_batches(sum(band["batches"] for band in bands), failed_fraction)
-    retries = (terra_retry * catalog.ingredient(terra_recipe, DOLLAR)
-               + orbital_retry * catalog.ingredient(ORBITAL_RECIPES[0], DOLLAR))
+    retries = terra_retry * catalog.ingredient(terra_recipe, DOLLAR)
     terra_dollars = terra_batches * catalog.ingredient(terra_recipe, DOLLAR)
     direct = research_dollars + construction + terra_dollars + operating + final_capital + retries
     array_quantity = arrays + consumed_arrays
@@ -132,7 +132,8 @@ def campaign_plan(catalog: EconomyCatalog, *, cores: int = 8,
         "consumed_grid_battery_arrays": consumed_arrays, "core_count": cores,
         "space_panels": space_panels, "radiators": radiators,
         "construction_dollars": construction, "final_capital_dollars": final_capital,
-        "ordinary_ai_retry_dollars": retries, "direct_dollars": direct,
+        "ordinary_ai_retry_dollars": retries, "terrestrial_ai_retry_dollars": retries,
+        "orbital_ai_retry_dollars": 0, "direct_dollars": direct,
         "grid_battery_opportunity_dollars": array_quantity * sale_profit(catalog, "grid-battery"),
         "final_training_minutes": catalog.seconds(FINAL, CONTROLLER) / 60,
         "normal_final_run_energy_joules": power * catalog.seconds(FINAL, CONTROLLER),
@@ -224,6 +225,7 @@ def report(catalog: EconomyCatalog) -> str:
     cases = [finite_market(catalog, scenario) for scenario in SCENARIOS]
     lines = ["# Biter Motors Economy Freeze Model", "",
         f"Captured engine: **{catalog.data['factorio_version']}**; mod **{catalog.data['mod_version']}**.",
+        "**Current alpha scope:** banked orbital work and new scale tiers are implemented; this budget still includes the legacy controller finale pending Model return/activation.", "",
         "Final prototypes and runtime policy: `docs/economy-prototypes.json`. Source freshness is",
         "checked by content hash, not string fragments. Budgets use normal quality, no modules,",
         "and zero research productivity. No infinite improvement is required.", "",
@@ -301,14 +303,14 @@ def report(catalog: EconomyCatalog) -> str:
         "Funding starts with EV cash already earned and assumes mature service can be financed. It",
         "counts fleet capex and finite battery adoption, but does not qualify natural bootstrapping.",
         "Core work excludes research waiting and idle cores at tier boundaries. Heavy sensitivity",
-        "loses 10% of ordinary compute batches; retry time is not guessed. Extra manufacturing,",
+        "loses 10% of terrestrial compute batches; orbital interruptions retain work and cash. Retry/delay time is not guessed. Extra manufacturing,",
         "charging, depot load, and existing industry require power above the 10 GW final load.", "",
         "## Remaining Balance Decisions", "",
         "- A closed five-settlement market cannot fund the ending from one-time purchases alone. Expand, allow natural customer/nest growth, or unlock recurring service. Organic virtual growth is not instant new demand.",
         f"- With two full depots, the {n(plan['final_capital_dollars'])}-Dollar finale bill alone needs about {plan['final_capital_dollars']/cases[1]['net_taxi_dollars_per_hour']:.1f} service hours. Evaluate a targeted capital adjustment against the 2-3-hour major-step target, not blanket cheaper research.",
         "- Measure actual panel/battery materials and transport throughput. Native delivery proves physical completion, not comfortable pacing.",
-        "- Eight normal cores need about 6.25 active hours in the final compute band; sixteen need about 3.13. Compare practical core expansion and power/logistics throughput before changing Token yields.",
-        "- Ordinary AI brownouts lose committed Dollars. Final AGI failure retains inputs: retry time/power, not another full capital package. Recycled capital and other inflows are not business profit.", "",
+        f"- Eight normal cores need about {plan['bands'][-1]['one_core_hours']/8:.2f} active hours in the final compute band; sixteen need about {plan['bands'][-1]['one_core_hours']/16:.2f}. Compare practical core expansion and power/logistics throughput before further Token-yield changes.",
+        "- Terrestrial AI brownouts lose committed Dollars. Orbital shortages retain inputs and progress; the legacy final controller retains inputs after a reset. Delays are not another cash bill. Recycled capital and other inflows are not business profit.", "",
         "No balance values are changed by this simulator. Phase 4 remains open for targeted decisions,",
         "functional art, and native UI qualification.", "", "## Reproduce", "", "```bash",
         "scripts/validate-bitermotors-mod.sh  # prints an isolated artifact directory",

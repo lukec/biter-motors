@@ -98,10 +98,11 @@ assert [row["status"] for row in rows] == [
 assert all(row["assertions"] > 0 for row in rows), rows
 assert rows[1]["tick"] > 0, rows
 assert rows[0]["assertions"] >= 43 and rows[1]["assertions"] >= 26 and rows[2]["assertions"] >= 9, rows
-assert rows[1]["generated"] == 1_155_126 and rows[1]["native_generated"] == 1_155_120, rows
-assert rows[1]["other_force_generated"] == 100_000 and rows[1]["pending_bonus"] == 2, rows
+assert rows[1]["generated"] == 2_280_126 and rows[1]["native_generated"] == 2_280_120, rows
+assert rows[1]["other_force_generated"] == 200_000 and rows[1]["pending_bonus"] == 2, rows
 assert rows[1]["native_milestone_unlocked"] is True and rows[1]["platforms"] == 2, rows
-assert rows[1]["datasets_extracted_by_inserter"] == 18 and rows[1]["packaging_datasets"] == 1, rows
+assert rows[1]["datasets_extracted_by_inserter"] == 36 and rows[1]["packaging_datasets"] == 1, rows
+assert rows[1]["dataset_pause_preserved"] is True and rows[1]["dataset_solar_power_multiplier"] == 0, rows
 assert rows[2]["tick"] > rows[2]["saved_tick"], rows
 assert rows[2]["generated"] == rows[1]["generated"] + 24, rows
 print("AI fixture passed:", json.dumps(rows, sort_keys=True))
