@@ -4,8 +4,12 @@ Updated **2026-11-08**. Supported test engine: **Factorio 2.1.20, build 87512,
 mac-arm64, Space Age**. Mod: **Biter Motors 0.1.1 alpha**.
 
 This is the current ending. Older controller/finale reports are dated evidence
-for a removed design, not its acceptance tests. The skippable terminal epilogue,
-practical platform/pacing freeze and release qualification remain next.
+for a removed design, not its acceptance tests. The skippable terminal and
+progressive ending interface are implemented; see the
+[new terminal qualification](terminal-epilogue-validation.md) for current source
+and archive evidence. Practical platform/pacing freeze and release qualification
+remain next. The evidence table below preserves the preceding Model slice's
+dated baseline, not the current archive hash.
 
 ## Player Route
 
@@ -67,6 +71,8 @@ separate terrestrial/orbital tracks, banked core/cooling/power state and `agi`:
 - `models_assembled`, `models_returned`, `models_activated`;
 - `assembly_credits`, `return_credits`, `models_in_transit`;
 - `assembly_progress`, `activation_progress`, active machine counts;
+- `grid_scale_researched` and bounded `assembly`/`activation` machine summaries,
+  including native state, quality, input counts, committed payload and progress;
 - normal assembly/activation seconds and activation demand;
 - `completed` and persistent `victory` metadata.
 
@@ -170,7 +176,8 @@ path; the runner rejects stale bytes before starting the engine.
 
 ## Remaining Release Gates
 
-- Complete Phase 3C's progressive ending feedback and offline terminal epilogue.
+- Complete the remaining multi-player terminal acceptance in Phase 5; the
+  implemented scene and single-player persistence are qualified separately.
 - Prove the practical 1/4/8/12-cluster platform ramp and freeze pacing/art.
 - Run long terrestrial/orbital soaks, scale and multiplayer/configuration tests
   against the exact frozen archive, then rehearse clean installation.

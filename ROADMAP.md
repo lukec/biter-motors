@@ -31,8 +31,11 @@ costs/yields. See the [new validation](docs/orbital-banked-compute-validation.md
 for current source/ZIP results; October reports remain dated evidence. The
 physical Model ending is now implemented, including native orbital assembly,
 cargo return and ground activation. See the [current ending contract and native
-evidence](docs/endgame-validation.md). The epilogue remains Phase 3C; isolated
-mechanical qualification is not a frozen, playtest-ready campaign.
+evidence](docs/endgame-validation.md). Phase 3C now implements the progressive
+ending interface and persistent offline terminal; see
+[terminal qualification](docs/terminal-epilogue-validation.md). Isolated native
+qualification is still not a frozen, playtest-ready campaign. **Next: Phase 4's
+practical platform layout and pacing freeze.**
 
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
@@ -67,6 +70,10 @@ Build in three consecutive slices:
    Implement the approved skippable offline terminal scene from the ending
    spec. Update technology descriptions, inspectors, Progress, locale, metadata,
    fixtures and documentation together; remove obsolete finale directions.
+   **Implemented:** [terminal and final presentation](docs/terminal-epilogue-validation.md).
+   Native single-player checkpoints qualify thinking, reply, acknowledgement
+   and replay persistence. Real graphical join/Escape/reconnect supplements
+   those callbacks; simultaneous multi-player scene acceptance remains Phase 5.
 
 **Exit gate:** an isolated native test earns the required computation, consumes
 the actual payload, assembles and returns the Model, activates it, wins once,

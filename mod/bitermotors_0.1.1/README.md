@@ -135,10 +135,15 @@ play remains available.
 Both recipes begin disabled. Runtime unlocks assembly at the earned-compute and
 research gate, then activation after a credited native Model return. Completion
 credits are isolated by force and quality; victory persists through save/reload.
+After the victory screen, a short offline terminal scene is skippable and
+replayable from the Model icon in the completed Progress panel. Acknowledgement
+is per player and survives save/reload; the scene never pauses multiplayer.
 
 ## Interface
 
 - `Biter Motors Progress` shows only milestones relevant to unlocked content.
+- The final chapter separates earned compute from physical payload and guides
+  assembly, cargo return and activation, including power/cooling holds.
 - Entity inspectors explain Sales Offices, chargers, settlements, factories,
   datacenters, and orbital compute.
 - Coverage, alerts, status colors, and map tags identify actionable market and

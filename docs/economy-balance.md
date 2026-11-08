@@ -42,4 +42,4 @@ Funding and compute can overlap; their sum is not a campaign clock. New nests/gr
 Phase 4 remains open: practical I/O, shared blue-circuit capacity and active player time need evidence.
 No balance values are changed by this simulator. Prototype capture is not native ending or campaign qualification.
 
-Native source SHA-256: `4ee8ee9c393ca2066fb21e0c9087d78da26ebe8a2508558fe1e360a1ffcaebe0`.
+Native source SHA-256: `41aa2e052f7c4e65225716b391f661ca915bde261af0ae2320b8a078b5fb953f`.

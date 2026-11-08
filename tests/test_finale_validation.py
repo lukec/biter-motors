@@ -5,6 +5,56 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FinaleValidationTests(unittest.TestCase):
+    def test_epilogue_uses_native_players_gui_and_guarded_presentation_only(self):
+        source = (ROOT / "scripts/fixtures/epilogue-validation.lua").read_text()
+        for marker in ('game.get_player', 'player.gui.screen.bitermotors_epilogue',
+                       'player.opened', '"open_epilogue"', '"dismiss_epilogue"',
+                       '"epilogue_status"', 's.elapsed_ticks < 180', 's.elapsed_ticks >= 180',
+                       'f.first.force = f.unwon_force', 'f.first.force = game.forces.player',
+                       'frame(f.first).destroy()', '"thinking reload cannot acknowledge"',
+                       '"repeated thinking open preserves same native frame"',
+                       '"repeated thinking open preserves elapsed ticks"',
+                       '"repeated thinking open preserves acknowledgement"',
+                       '"repeated open cannot queue a delayed close"',
+                       '"replay never resets acknowledgement"', '"native late player creation queues epilogue"'):
+            self.assertIn(marker, source)
+        for forbidden in ('script.raise_event', 'storage.bitermotors_', 'game.speed =',
+                          'game.tick_paused =', 'trigger_victory', 'test_set_ai_token_progress'):
+            self.assertNotIn(forbidden, source)
+        runner = (ROOT / "scripts/validate-bitermotors-finale.sh").read_text()
+        self.assertIn('"$helper/epilogue-validation.lua"', runner)
+        self.assertIn('epilogue_thinking epilogue_reply epilogue_acknowledged', runner)
+        self.assertIn('bitermotors_stage_mod "$mods"', runner)
+        self.assertIn('BITERMOTORS_ENDING_PLAYER_SAVE', runner)
+        self.assertIn('"$player_save" "$save"', runner)
+
+    def test_progress_gui_is_instantiated_through_public_api_on_native_route(self):
+        helper = (ROOT / "scripts/fixtures/epilogue-validation.lua").read_text()
+        route = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
+        for marker in ('call("open_progress", f.first)', 'bitermotors_progress_panel',
+                       '"bitermotors_progress_content"', '"bitermotors_ending_stage"',
+                       '"bitermotors_ending_payload"', '"bitermotors_ending_progress"',
+                       '"native GUI does not show empty ingredients as missing"',
+                       '"completed Progress survives original machine removal"'):
+            self.assertIn(marker, helper)
+        self.assertIn('epilogue.progress(phase, phase .. "_checkpoint")', route)
+        self.assertIn('epilogue.progress(phase, phase .. "_reload")', route)
+        self.assertIn('epilogue.progress("won", "won_reload")', route)
+        self.assertIn('epilogue.progress_force_cache()', route)
+
+    def test_native_force_cache_probe_preserves_panel_and_never_clears_spoilers_before_assertion(self):
+        helper = (ROOT / "scripts/fixtures/epilogue-validation.lua").read_text()
+        probe = helper.split('function api.progress_force_cache()', 1)[1].split('function api.progress(', 1)[0]
+        code = "\n".join(line for line in probe.splitlines() if not line.lstrip().startswith("--"))
+        self.assertNotIn('call("open_epilogue"', code)
+        self.assertNotIn('locked(', code)
+        self.assertNotIn('.clear()', code)
+        self.assertEqual(code.count('panel.destroy()'), 1)
+        self.assertLess(code.index('local restored = complete(panel)'), code.index('panel.destroy()'))
+        self.assertIn('equal(returned, primed', code)
+        self.assertIn('"bitermotors_epilogue_open"', code)
+        self.assertIn('"bitermotors_epilogue_reply"', code)
+
     def test_return_uses_native_landing_station_then_actual_delivery_without_sweeps(self):
         control = (ROOT / "mod/bitermotors_0.1.1/control.lua").read_text()
         landing = control.split("function record_agi_model_landing(event)", 1)[1].split(
@@ -64,6 +114,12 @@ class FinaleValidationTests(unittest.TestCase):
         self.assertIn('helpers.json_to_table(helpers.table_to_json(ledger))', source)
         self.assertIn('storage.pure_ledger = ledger', source)
         self.assertNotIn('storage.bitermotors_', source)
+        self.assertIn('require("__bitermotors__/runtime/endgame_presentation")', source)
+        for marker in ("presentation victory precedence", "physical stock is not earned compute",
+                       "presentation empty inputs are committed", "presentation leaves input snapshot unchanged",
+                       "presentation actual pod transit", "presentation lost Model recovery",
+                       "presentation rejects NaN progress", "presentation_native_cases = assertions - before"):
+            self.assertIn(marker, source)
 
 
 if __name__ == "__main__":

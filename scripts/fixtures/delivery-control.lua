@@ -1,6 +1,7 @@
 -- Shared native ending rehearsal. The finale helper adds adversarial cases.
 local M = {}
 local Ledger = require("__bitermotors__/runtime/agi_completion")
+local EndgamePresentation = require("__bitermotors__/runtime/endgame_presentation")
 function M.run(options)
   options = options or {}
   local prefix = options.adversarial and "finale" or "delivery"
@@ -22,6 +23,9 @@ function M.run(options)
   local function equal(a, b, message)
     check(a == b, message .. ": " .. tostring(a) .. " != " .. tostring(b))
   end
+  local epilogue_enabled = require("epilogue-enabled")
+  local single_player = require("epilogue-single-player")
+  local epilogue = require("epilogue-validation").new(check, equal, epilogue_enabled, single_player)
   local function state(force)
     return remote.call("bitermotors", "agi_training_status", force or "player")
   end
@@ -39,6 +43,21 @@ function M.run(options)
     row.status, row.tick, row.assertions = status, game.tick, assertions
     row.validation_scope = "native-model-ending"
     row.payload_quality = payload_quality
+    row.epilogue = storage.epilogue_fixture and epilogue.snapshot() or nil
+    row.presentation_scope = not epilogue_enabled and "not-qualified"
+      or single_player and "native-single-player-gui-public-callbacks" or "native-offline-gui-public-callbacks"
+    row.epilogue_passed = row.epilogue_passed == true
+    row.single_player = single_player
+    row.multiplayer_qualified = false
+    row.native_player_isolation_qualified = row.epilogue_passed and epilogue_enabled and not single_player
+    row.epilogue_qualification = row.epilogue_passed
+      and (single_player and "native-offline-single-player-qualified" or "native-offline-player-isolation-qualified")
+      or epilogue_enabled and "native-offline-pending" or "not-qualified"
+    row.presentation_limits = "No synthetic GUI/join events. Actual mouse/Escape dispatch, network join and configuration-change acceptance require graphical integration."
+    if single_player then
+      row.presentation_limits = row.presentation_limits .. " Single player only: no native second-player isolation or late-creation qualification; thinking dismissal is on an already-acknowledged replay."
+    end
+    row.presentation_native_cases = storage.presentation_native_cases or 0
     row.limits = "Supplied construction, foundation, research, physical Dollars, Rack and EEI power; manual inventory transfers after verified native extraction. Not campaign economics, uplift or orbital solar qualification."
     helpers.write_file("bitermotors-" .. prefix .. ".jsonl", helpers.table_to_json(row) .. "\n", true)
   end
@@ -50,6 +69,9 @@ function M.run(options)
     return source, pole
   end
   local function checkpoint(phase, progress)
+    if phase == "assembly" or phase == "activation" or phase == "won" then
+      epilogue.progress(phase, phase .. "_checkpoint")
+    end
     storage.resume_phase, storage.stage = phase, "checkpoint"
     storage.saved_tick, storage.saved_progress = game.tick, progress
     storage.saved_products = phase == "assembly" and storage.assembler.products_finished
@@ -102,6 +124,52 @@ function M.run(options)
     return e
   end
   local function ledger_fixture()
+    -- Mandatory engine-Lua execution, even when optional Python Lua tests skip.
+    local before = assertions
+    local P = EndgamePresentation
+    equal(P.describe{completed = true, return_credits = 1}.stage_key, "complete", "presentation victory precedence")
+    equal(P.describe{models_activated = 1}.stage_key, "compute", "activation counter alone cannot present victory")
+    equal(P.describe{return_credits = 1, models_in_transit = 1}.stage_key, "activation", "returned credit precedes flight")
+    equal(P.describe{models_in_transit = 1, assembly_credits = 1}.status, "In flight", "presentation actual pod transit")
+    local dispatch = P.describe{assembly_credits = 1}
+    equal(dispatch.status, "Awaiting hub dispatch", "presentation physical Model dispatch")
+    check(dispatch.detail:find("Nauvis Cargo Landing Pad", 1, true), "presentation names actual return destination")
+    local lost = P.describe{unlocked = true, models_assembled = 1, models_returned = 1}
+    check(lost.objective:find("Rebuild the lost", 1, true), "presentation lost Model recovery")
+    local compute = P.describe{cumulative_ai_tokens = 50, required_ai_tokens = 100,
+      assembly = {datasets = 20000, racks = 1}}
+    equal(compute.progress, 0.5, "presentation earned compute fraction")
+    equal(compute.payload_value, nil, "physical stock is not earned compute")
+    for _, field in ipairs({"stage", "objective", "detail", "status", "icon"}) do
+      check(not compute[field]:find("Model", 1, true), "pre-gate presentation hides Model " .. field)
+    end
+    equal(P.describe{cumulative_ai_tokens = 100, required_ai_tokens = 100}.status,
+      "Awaiting research", "presentation earned gate still requires research")
+    for state_name, color in pairs({no_machine = "bad", select_recipe = "warning", needs_inputs = "warning",
+      working = "good", no_power = "warning", low_power = "warning", cooling = "warning", full_output = "warning"}) do
+      for _, activation in ipairs({false, true}) do
+        local view = P.describe{unlocked = true, return_credits = activation and 1 or 0,
+          assembly = {state = state_name}, activation = {state = state_name}}
+        equal(view.color, color, "presentation machine-state color " .. state_name)
+        equal(view.stage_key, activation and "activation" or "assembly", "presentation machine stage")
+        check(view.detail ~= "" and view.objective ~= "", "presentation actionable machine state")
+      end
+    end
+    for _, state_name in ipairs({"needs_inputs", "working", "no_power", "low_power", "cooling", "full_output"}) do
+      local input_state = {unlocked = true, assembly = {state = state_name, selected = true,
+        progress = 0.42, datasets = 0, racks = 0}}
+      local view = P.describe(input_state)
+      equal(view.payload_value, "Payload committed", "presentation empty inputs are committed")
+      equal(view.progress, 0.42, "presentation banked progress retained")
+      check(not view.detail:find("Load 20000", 1, true), "presentation never asks to reload committed payload")
+      equal(input_state.assembly.progress, 0.42, "presentation leaves input snapshot unchanged")
+    end
+    equal(P.describe{unlocked = true, assembly = {selected = true, progress = 2}}.progress, 1,
+      "presentation clamps native progress")
+    equal(P.describe{cumulative_ai_tokens = 0/0}.progress, 0, "presentation rejects NaN progress")
+    equal(P.describe{cumulative_ai_tokens = math.huge}.progress, 0, "presentation rejects infinite progress")
+    equal(P.describe{required_ai_tokens = 0}.progress, 1, "presentation handles zero requirement")
+    storage.presentation_native_cases = assertions - before
     local ledger = Ledger.ensure()
     Ledger.assemble(ledger, 1, 101, "rare")
     equal(Ledger.depart(ledger, 10, 110, 2, 101, {rare = 1}), false, "no cross-force departure")
@@ -160,6 +228,12 @@ function M.run(options)
     storage.terminal = make(land, DC, {24, 0}) -- Existing before any Model is assembled.
     storage.ground_power, storage.ground_pole = power(land, {18, 6}, true)
     storage.platform = platform("player", "Native Model origin")
+    equal(state().cumulative_ai_tokens, 0, "bootstrap cannot inject earned compute")
+    equal(state().models_assembled, 0, "bootstrap cannot inject assembly authority")
+    equal(state().models_returned, 0, "bootstrap cannot inject return authority")
+    equal(state().models_activated, 0, "bootstrap cannot inject activation authority")
+    equal(state().completed, false, "bootstrap cannot inject victory")
+    epilogue.init()
     local surface = storage.platform.surface
     storage.orbit_power = power(surface, {-72, -48}, false)
     force.recipes[COMPUTE].enabled = true
@@ -308,11 +382,20 @@ function M.run(options)
       equal(storage.stage, "checkpoint", "load expected checkpoint")
       check(game.tick > storage.saved_tick, "reload advances actual game tick")
       local phase = storage.resume_phase
+      if phase:find("^epilogue_") then
+        equal(state().completed, true, "epilogue reload retains genuine victory")
+        equal(helpers.table_to_json(state().victory), helpers.table_to_json(storage.victory), "epilogue cannot replace victory")
+        epilogue.reload(phase)
+        report(phase .. "_reload_passed", {saved_tick = storage.saved_tick})
+        storage.stage = "freeplay"
+        return
+      end
       if phase == "assembly" or phase == "activation" then
         local machine = phase == "assembly" and storage.assembler or storage.terminal
         equal(machine.products_finished, storage.saved_products, "no old output accepted as reload completion")
         check(machine.crafting_progress >= storage.saved_progress, "native committed progress survives reload")
         equal(state().completed, false, "partial reload cannot invent victory")
+        epilogue.progress(phase, phase .. "_reload")
         storage.reloaded_products = machine.products_finished
         storage.reloaded_output = count(output(machine), MODEL)
         storage[phase .. "_reload_tick"] = game.tick
@@ -358,16 +441,21 @@ function M.run(options)
         end
         storage.return_reload_tick = game.tick
       elseif phase == "won" then
+        storage.won_saved_tick = storage.saved_tick
         equal(state().completed, true, "victory survives separate-process reload")
         equal(helpers.table_to_json(state().victory), helpers.table_to_json(storage.victory), "once-only victory unchanged")
         equal(state().models_activated, 1, "reload does not reactivate")
         equal(game.finished, false, "continued freeplay survives reload")
+        epilogue.progress("won", "won_reload")
+        epilogue.progress_force_cache()
         -- Reuse the genuine displayed output, without creating a second credit.
         storage.replay = make(game.surfaces.nauvis, DC, {24, 0})
         recipe(storage.replay, ACTIVATE)
         transfer(storage.display, input(storage.replay), MODEL, 1)
         storage.freeplay_start, storage.stage = game.tick, "freeplay"
-        game.speed = 100
+        epilogue.reload("won")
+        if not epilogue_enabled then game.speed = 100 end
+        -- Keep checkpoint pacing while measuring the 180 simulation-tick scene.
         return
       end
       report(phase .. "_reload_passed", {saved_tick = storage.saved_tick,
@@ -502,6 +590,7 @@ function M.run(options)
         storage.stage = "activation"
       end
     elseif storage.stage == "activation" then
+      epilogue.prewin()
       if not storage.activation_sample_tick and storage.terminal.crafting_progress > 0.05 then
         storage.activation_sample_tick = game.tick
         storage.activation_sample_joules = storage.ground_pole.electric_network_statistics.get_input_count{
@@ -546,16 +635,21 @@ function M.run(options)
       transfer(output(storage.terminal), storage.display, MODEL, 1)
       storage.terminal.destroy{raise_destroy = true}
       equal(state().completed, true, "immediate post-event extraction/removal preserves victory")
+      epilogue.queued()
       checkpoint("won", 1)
-    elseif storage.stage == "freeplay" and game.tick >= storage.freeplay_start + 2400 then
+    elseif storage.stage == "freeplay" then
+      epilogue.tick(checkpoint)
+      if storage.stage == "checkpoint" or not epilogue.done()
+        or game.tick < storage.freeplay_start + 2400 then return end
       check(storage.replay.products_finished > 0, "genuine output reran native activation without a new credit")
       equal(state().models_assembled, 1, "no duplicate assembly during freeplay")
       equal(state().models_returned, 1, "no duplicate return during freeplay")
       equal(state().models_activated, 1, "no duplicate activation during freeplay")
       equal(helpers.table_to_json(state().victory), helpers.table_to_json(storage.victory), "victory stays once-only")
-      report("won_reload_passed", {saved_tick = storage.saved_tick, victory = state().victory,
+      report("won_reload_passed", {saved_tick = storage.won_saved_tick, victory = state().victory,
         freeplay_ticks = game.tick - storage.freeplay_start, native_activations = storage.native_activations,
-        activation_measured_watts = storage.activation_measured_watts})
+        activation_measured_watts = storage.activation_measured_watts, epilogue_passed = epilogue_enabled,
+        epilogue_evidence = epilogue.evidence()})
       storage.stage = "done"
     end
   end)

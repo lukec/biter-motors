@@ -2208,9 +2208,9 @@ class BiterMotorsModTest(unittest.TestCase):
         for optional in ("bitertaxi_fleets_produced", "chargers_v4", "bitertaxi_depots", "bitertaxi_sale_complete"):
             self.assertNotIn(optional, journey)
         self.assertIn("complete = autonomy_complete", journey)
-        self.assertIn("premium_complete = customer_complete and snapshot.mass_market_sale_complete", journey)
-        self.assertIn("mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched", journey)
-        self.assertIn("orbital_complete = autonomy_complete and snapshot.agi_models_assembled > 0", journey)
+        self.assertIn("premium_complete = snapshot.victory or (customer_complete and snapshot.mass_market_sale_complete)", journey)
+        self.assertIn("mass_market_complete = snapshot.victory or (premium_complete and snapshot.terrestrial_ai_researched)", journey)
+        self.assertIn("orbital_complete = snapshot.victory or (autonomy_complete and snapshot.agi_models_assembled > 0)", journey)
         self.assertIn("complete = orbital_complete and snapshot.victory", journey)
         self.assertIn("journey = progress_stages(snapshot)", control)
         self.assertIn("refresh_progress_panel", control)

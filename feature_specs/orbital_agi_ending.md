@@ -1,13 +1,14 @@
 # Orbital AGI Ending
 
 Design date: 2026-10-07. Updated: 2026-11-08.
-Status: **orbital entry, banked work, scale tiers and physical Model finale implemented**.
+Status: **orbital entry, banked work, scale tiers, physical Model finale and terminal implemented**.
 Source now has compact hardware, explicit cargo weights, one-radiator cooling
 and research without white science. Orbital interruptions now retain native
 inputs and progress, and the tier costs/yields below are implemented. The Model
 now assembles in orbit, returns by native cargo pod and activates on Nauvis.
-The old controller/capital finale has been removed; the terminal epilogue remains
-next. No player-save or live-process operation was performed; the source-linked
+The old controller/capital finale has been removed. The ending interface and
+offline terminal are implemented; see [terminal validation](../docs/terminal-epilogue-validation.md)
+for the current qualification boundary. No player-save or live-process operation was performed; the source-linked
 local mod will load these changes on a later restart. See
 [entry validation](../docs/orbital-entry-validation.md) and
 [banked-work validation](../docs/orbital-banked-compute-validation.md).
@@ -182,6 +183,28 @@ skippable/replayable, track per-player acknowledgement, and preserve that state
 through reload/join. Do not force multiplayer simulation to pause for each viewer.
 Keep the ending out of the public README's marketing copy.
 
+### Implemented Presentation Contract
+
+- The native victory screen comes first. After Continue, connected winning-force
+  players receive the terminal when they have no other entity/dialog open.
+- Thinking lasts 180 simulation ticks (three seconds at normal speed), with a
+  blinking cursor. Skip, Continue, X and Escape all close it. Replays do not
+  reset the player's original acknowledgement or Skip choice.
+- State is scoped to player, force and original victory tick. Disconnects
+  suspend rather than acknowledge; reload resumes the remaining thinking time.
+  A late player on the winning force is eligible independently. A player on an
+  unwon force cannot open the scene.
+- The completed Progress panel has a Model-icon button to replay the terminal.
+  All presentation is local game GUI; it neither pauses multiplayer nor calls
+  an external service.
+- Late Progress prioritizes earned compute, assembly, native cargo return and
+  activation. Physical payload counts are separate from earned compute. A
+  committed batch is labelled as committed, not as missing ingredients.
+- Native no-power, low-power, cooling and output-blocked states carry concise
+  actions. Completion remains visible after the final machines are removed.
+  Only open late-game panels refresh, once per second; no new inventory/world
+  polling is introduced.
+
 ## Cost And Pacing Findings
 
 - Ideal remaining AI/research cash is 21,191 Dollars; the original 2026-10-07
@@ -227,8 +250,10 @@ before freezing yields or promising the final campaign duration.
    [Banked-work evidence](../docs/orbital-banked-compute-validation.md) remains
    distinct from the [physical Model ending](../docs/endgame-validation.md).
 3. **Ending interface and artwork:** progressive Token/Dataset/Model status,
-   concise actionable blockers, native terminal epilogue, satellite-shaped
-   core/solar/radiator art and readable filterable icons. No new HUD clutter.
+   concise actionable blockers and native terminal epilogue are implemented.
+   [Terminal qualification](../docs/terminal-epilogue-validation.md) is separate
+   from Phase 4's satellite-shaped core/solar/radiator art and practical platform
+   freeze. No new HUD clutter.
 4. **Requalification:** test all relevant qualities, partial loads, real rocket
    ingredients, science consumption, supply interruption/recovery, full output,
    machine removal, persistence and two-force/multiplayer behavior on source and

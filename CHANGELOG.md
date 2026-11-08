@@ -5,6 +5,13 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Added the offline, skippable post-victory terminal, with three-second thinking,
+  native close/Escape handling, independent player/force acknowledgement,
+  disconnect/reload recovery and replay from the completed Progress panel.
+- Focused late Progress on earned compute, committed payload, assembly, native
+  cargo return and ground activation. Native power/cooling/output blockers show
+  actions; victory remains complete after machine removal. Only open late panels
+  refresh, without new whole-world or customer scans.
 - Replaced the controller finale with physical orbital Model assembly, native
   cargo return to a Nauvis Landing Pad and activation in an existing 8 MW
   Terrestrial Datacenter. Assembly consumes 20,000 Datasets and one Rack in
@@ -16,7 +23,7 @@ development namespace migration.
 - Removed the final controller, Capital Allocation packaging, 50,000-Dollar
   finale fee and required final research/white science. Hyperscale is optional.
   Updated progressive guidance, inspectors, prototype captures and economy
-  reports. The offline terminal epilogue and campaign/release freeze remain next.
+  reports. Practical platform/pacing and campaign/release freeze remain next.
 - Banked orbital work across power/cooling interruptions: native power shortage
   slows/stops crafting, while missing cooling pauses with a yellow status.
   Progress and committed inputs survive recovery and reload; ordinary terrestrial

@@ -184,6 +184,10 @@ process reloads. Reproduce it with `scripts/validate-bitermotors-delivery.sh`
 and `scripts/validate-bitermotors-finale.sh`. Supplied fixture infrastructure is
 not a natural campaign, practical-layout or long-soak qualification. The old
 controller reports remain dated historical evidence only.
+The [terminal/interface qualification](docs/terminal-epilogue-validation.md)
+covers the offline ending scene, progressive final-stage guidance, and native
+thinking/reply/acknowledgement/replay save boundaries. Its single-player mode
+does not claim simultaneous multiplayer qualification.
 The [economy/guidance evidence](docs/economy-guidance-validation.md) records
 prototype-derived Progress costs, business profit versus recovered capital,
 and three finite-market sensitivities. Prices are unchanged; design freeze,

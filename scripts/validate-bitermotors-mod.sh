@@ -389,9 +389,18 @@ script.on_init(function()
     surface.create_entity{name = "stone-wall", position = {372, y}, force = force}
     surface.create_entity{name = "stone-wall", position = {388, y}, force = force}
   end
-  local datacenter = create_named(surface, TERRESTRIAL_DATACENTER, {0, -40}, force)
-  local datacenter_pole = create_named(surface, POWER_POLE, {0, -35}, force)
-  local datacenter_power = create_named(surface, POWER_SOURCE, {2, -35}, force)
+  -- Keep the outage probe on one real grid, regardless of natural terrain.
+  local compute_tiles = {}
+  for x = -8, 8 do
+    for y = -48, -30 do compute_tiles[#compute_tiles + 1] = {name = "landfill", position = {x, y}} end
+  end
+  surface.set_tiles(compute_tiles)
+  for _, entity in pairs(surface.find_entities_filtered{
+    area = {{-8, -48}, {8, -30}}, type = {"tree", "simple-entity", "cliff"}
+  }) do entity.destroy() end
+  local datacenter = surface.create_entity{name = TERRESTRIAL_DATACENTER, position = {0, -40}, force = force}
+  local datacenter_pole = surface.create_entity{name = POWER_POLE, position = {0, -35}, force = force}
+  local datacenter_power = surface.create_entity{name = POWER_SOURCE, position = {2, -35}, force = force}
   local rail_tiles = {}
   for x = 216, 224 do
     for y = -20, 20 do rail_tiles[#rail_tiles + 1] = {name = "landfill", position = {x, y}} end
@@ -2602,7 +2611,7 @@ if reserve_fuel.get("fuel_top_speed_multiplier") != 0.1:
     raise SystemExit(f"eSpider limp-home fuel speed mismatch: {reserve_fuel}")
 print("eSpider native vehicle prototypes OK.")
 PY
-if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$tmp/create.log" 2>&1; then
+if ! "$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" --map-gen-seed 1062026 >"$tmp/create.log" 2>&1; then
   tail -120 "$tmp/create.log" >&2
   exit 1
 fi
@@ -3005,7 +3014,7 @@ if not next_charging_step.get("available") or next_charging_step.get("ev_owners_
 if next_charging_step.get("power_kw", 0) <= 0 or next_charging_step.get("ev_capacity_added", 0) <= 0:
     raise SystemExit(f"next charging load step omitted its power or EV capacity impact: {checked}")
 progress = checked.get("progress", {})
-if progress.get("stage") != "Prototype market validation" or progress.get("objective") != "Sell 50 Prototype Roadsters.":
+if progress.get("stage") != "Model assembly" or "AGI Model" not in progress.get("objective", ""):
     raise SystemExit(f"Biter Motors progress status did not identify the next concrete objective: {checked}")
 if progress.get("snapshot", {}).get("customer_ev_fleet") != 3:
     raise SystemExit(f"Biter Motors progress snapshot did not expose live EV market state: {checked}")

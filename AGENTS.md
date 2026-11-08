@@ -72,6 +72,10 @@ changes that policy.
 - Solar-panel prototypes require strictly positive production on 2.1.20. A test
   may disable platform solar to isolate supplied EEI power, but must disclose
   that limitation and never call it real orbital-generation qualification.
+- GUI/join events cannot be raised synthetically, and LuaGameScript has no
+  create_player API. Use purpose-created native players for GUI persistence
+  tests; distinguish public-callback tests from real clicks, joins and reconnects.
+  A one-player fixture does not qualify simultaneous multiplayer presentation.
 
 ## Verification
 

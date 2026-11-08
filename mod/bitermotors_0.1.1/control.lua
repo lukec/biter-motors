@@ -18,6 +18,9 @@ AiAccounting = require("runtime.ai_accounting")
 AgiCompletion = require("runtime.agi_completion")
 BusinessIncome = require("runtime.business_income")
 ProgressGuidance = require("runtime.progress_guidance")
+TerminalEpilogue = require("runtime.terminal_epilogue")
+EndgamePresentation = require("runtime.endgame_presentation")
+EndgameGui = require("runtime.endgame_gui")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -8434,15 +8437,62 @@ local function sync_all_force_unlocks()
   end
 end
 
+function agi_machine_presentation(machine, activation)
+  local recipe_name = activation and AGI_ACTIVATION_RECIPE_NAME or AGI_ASSEMBLY_RECIPE_NAME
+  local recipe, quality = machine.get_recipe()
+  local selected = recipe and recipe.name == recipe_name or false
+  local progress = selected and (machine.crafting_progress or 0) or 0
+  local view = {state = "select_recipe", selected = selected, progress = progress,
+    committed = progress > 0, quality = quality and quality.name or "normal",
+    unit_number = machine.unit_number, surface = machine.surface.name,
+    required_datasets = 20000, required_racks = 1}
+  if not selected then return view end
+  local inventory = machine.get_inventory(defines.inventory.crafter_input)
+  local function input_count(name)
+    return inventory and inventory.get_item_count{name = name, quality = view.quality} or 0
+  end
+  if activation then view.models = input_count(AGI_MODEL_ITEM_NAME)
+  else
+    view.datasets = input_count("bitermotors-agi-training-dataset")
+    view.racks = input_count("bitermotors-datacenter-rack")
+  end
+  if not activation and not orbital_core_has_cooling(machine) then view.state = "cooling"
+  elseif machine.status == defines.entity_status.no_power then view.state = "no_power"
+  elseif machine.status == defines.entity_status.low_power then view.state = "low_power"
+  elseif machine.status == defines.entity_status.full_output then view.state = "full_output"
+  elseif progress > 0 then view.state = "working"
+  else view.state = "needs_inputs" end
+  return view
+end
+
+function choose_agi_machine(current, candidate)
+  local rank = {no_machine = 0, select_recipe = 10, needs_inputs = 20,
+    full_output = 30, cooling = 40, no_power = 40, low_power = 40, working = 50}
+  local function score(row) return (rank[row.state] or 0) + (row.progress or 0) end
+  if not current or score(candidate) > score(current)
+    or (score(candidate) == score(current) and candidate.unit_number < current.unit_number) then
+    return candidate
+  end
+  return current
+end
+
 function agi_training_status(force)
   local cumulative = cumulative_ai_tokens_generated(force)
   local state = agi_completion_state()
   local earned = AgiCompletion.force(state, force.index)
   local assembly_progress, activation_progress = 0, 0
   local active_assemblies, active_activations = 0, 0
+  local assembly, activation
   for _, machine in pairs(bitermotors_compute_machines()) do
     if machine and machine.valid and machine.force == force then
       local recipe = current_recipe_name(machine)
+      local platform = machine.surface.platform
+      if machine.name == ORBITAL_DATACENTER_CORE_NAME and platform and platform.valid
+        and platform.space_location and platform.space_location.name == "nauvis" then
+        assembly = choose_agi_machine(assembly, agi_machine_presentation(machine, false))
+      elseif machine.name == TERRESTRIAL_DATACENTER_NAME and machine.surface == game.surfaces.nauvis then
+        activation = choose_agi_machine(activation, agi_machine_presentation(machine, true))
+      end
       if machine.name == ORBITAL_DATACENTER_CORE_NAME and recipe == AGI_ASSEMBLY_RECIPE_NAME then
         active_assemblies = active_assemblies + 1
         assembly_progress = math.max(assembly_progress, machine.crafting_progress or 0)
@@ -8467,6 +8517,9 @@ function agi_training_status(force)
     cumulative_ai_tokens = cumulative,
     required_ai_tokens = AGI_TOKEN_GATE,
     unlocked = cumulative >= AGI_TOKEN_GATE and researched(force, "bitermotors-grid-scale-energy"),
+    grid_scale_researched = researched(force, "bitermotors-grid-scale-energy"),
+    assembly = assembly or {state = "no_machine", progress = 0},
+    activation = activation or {state = "no_machine", progress = 0},
     models_assembled = earned.models_assembled,
     models_returned = earned.models_returned,
     models_activated = earned.models_activated,
@@ -8557,6 +8610,7 @@ local function trigger_victory(force, datacenter, quality)
     player_won = true,
     can_continue = true
   }
+  for _, player in pairs(force.players) do TerminalEpilogue.queue(player) end
 end
 
 function record_agi_model_completion(event)
@@ -10229,6 +10283,7 @@ local function progress_snapshot(force)
     agi_models_returned = agi.models_returned,
     agi_models_activated = agi.models_activated,
     agi_models_in_transit = agi.models_in_transit,
+    agi = agi,
     terrestrial_ai_tokens_generated = terrestrial_ai.generated,
     terrestrial_ai_efficiency_level = terrestrial_ai.researched_level,
     terrestrial_ai_next_threshold = terrestrial_ai.next_threshold,
@@ -10254,6 +10309,11 @@ local function progress_snapshot(force)
 end
 
 local function current_progress_objective(snapshot)
+  if snapshot.agi and (snapshot.victory or snapshot.grid_scale_energy_researched
+    or snapshot.agi_models_assembled > 0 or snapshot.agi_models_returned > 0) then
+    local ending = EndgamePresentation.describe(snapshot.agi)
+    return ending.stage, ending.objective, ending.detail
+  end
   local function research(name)
     return ProgressGuidance.research_summary(snapshot.research_costs[name])
   end
@@ -10384,12 +10444,12 @@ local function current_progress_objective(snapshot)
 end
 
 local function progress_stages(snapshot)
-  local customer_complete = snapshot.first_sale_complete
-  local premium_complete = customer_complete and snapshot.mass_market_sale_complete
-  local mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched
-  local autonomy_complete = mass_market_complete
-    and snapshot.autonomous_logistics_researched
-  local orbital_complete = autonomy_complete and snapshot.agi_models_assembled > 0
+  local customer_complete = snapshot.victory or snapshot.first_sale_complete
+  local premium_complete = snapshot.victory or (customer_complete and snapshot.mass_market_sale_complete)
+  local mass_market_complete = snapshot.victory or (premium_complete and snapshot.terrestrial_ai_researched)
+  local autonomy_complete = snapshot.victory or (mass_market_complete
+    and snapshot.autonomous_logistics_researched)
+  local orbital_complete = snapshot.victory or (autonomy_complete and snapshot.agi_models_assembled > 0)
   return {
     {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = customer_complete},
     {name = "Premium EVs", sprite = "item/bitermotors-premium-ev", complete = premium_complete},
@@ -10438,7 +10498,10 @@ function progress_objective_icon(stage)
     ["Model assembly"] = "item/bitermotors-agi-training-dataset",
     ["Model return"] = "item/bitermotors-agi-model",
     ["Model activation"] = "item/bitermotors-terrestrial-datacenter",
-    ["AGI achieved"] = "item/bitermotors-agi-model"
+    ["AGI achieved"] = "item/bitermotors-agi-model",
+    ["Earned compute"] = "item/bitermotors-ai-token",
+    ["Ground activation"] = "item/bitermotors-terrestrial-datacenter",
+    ["Complete"] = "item/bitermotors-agi-model"
   }
   return icons[stage] or "item/bitermotors-dollar"
 end
@@ -10476,6 +10539,14 @@ end
 
 function current_progress_measure(snapshot)
   if snapshot.victory then return "Model activated", 1, 1 end
+  if snapshot.agi and snapshot.grid_scale_energy_researched then
+    local ending = EndgamePresentation.describe(snapshot.agi)
+    if ending.stage_key == "compute" then
+      return "Earned AI equivalents", snapshot.ai_tokens_produced, snapshot.agi_token_gate
+    elseif ending.stage_key == "return" then return "Model returned", 0, 1
+    elseif ending.progress then return ending.stage, ending.progress, 1, true end
+    return nil
+  end
   if snapshot.orbital_compute_researched
     and snapshot.orbital_datacenter_cores > 0
     and snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
@@ -10593,11 +10664,22 @@ local function refresh_progress_panel(player)
   if not panel then
     return
   end
+  storage.bitermotors_endgame_progress_players = storage.bitermotors_endgame_progress_players or {}
+  if EndgameGui.relevant(player.force) then
+    if storage.bitermotors_progress_panel_signatures then
+      storage.bitermotors_progress_panel_signatures[player.index] = nil
+    end
+    storage.bitermotors_endgame_progress_players[player.index] = true
+    EndgameGui.render(player, panel, agi_training_status(player.force))
+    return
+  end
+  storage.bitermotors_endgame_progress_players[player.index] = nil
+  panel.tags = {}
   local display_scale = math.max(0.5, player.display_scale or 1)
   local gui_width = math.floor(player.display_resolution.width / display_scale)
   local gui_height = math.floor(player.display_resolution.height / display_scale)
-  local panel_width = math.max(540, math.min(600, gui_width - 80))
-  local content_height = math.max(480, math.min(1100, gui_height - 160))
+  local panel_width = math.max(280, math.min(600, gui_width - 48))
+  local content_height = math.max(160, math.min(1100, gui_height - 150))
   panel.style.width = panel_width
   storage.bitermotors_progress_panel_signatures = storage.bitermotors_progress_panel_signatures or {}
 
@@ -11752,12 +11834,26 @@ local function show_manufacturer_info_panel(player, entity)
 
   add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
   add_station_info_label(panel, string.format("Cycle progress: %d%%", math.floor((entity.crafting_progress or 0) * 100)))
-  add_section_heading(panel, "Inputs")
   local input_inventory = entity.get_inventory(crafter_input_inventory_id())
-  for _, ingredient in pairs(recipe.ingredients) do
-    if ingredient.type == "item" then
-      local current = input_inventory and input_inventory.get_item_count(ingredient.name) or 0
-      add_item_inventory_row(panel, ingredient.name, current, ingredient.amount)
+  local final_recipe = recipe.name == AGI_ASSEMBLY_RECIPE_NAME or recipe.name == AGI_ACTIVATION_RECIPE_NAME
+  if final_recipe then
+    local machine = agi_machine_presentation(entity, recipe.name == AGI_ACTIVATION_RECIPE_NAME)
+    local summary = agi_training_status(entity.force)
+    if recipe.name == AGI_ACTIVATION_RECIPE_NAME then summary.activation = machine
+    else summary.assembly = machine end
+    local view = EndgamePresentation.describe(summary)
+    add_station_info_label(panel, view.status, BITERMOTORS_STATE_COLORS[view.color])
+    if machine.committed then
+      add_station_info_label(panel, "Payload committed: inputs and progress are retained through interruptions.", BITERMOTORS_STATE_COLORS.good)
+    end
+  end
+  if not final_recipe or (entity.crafting_progress or 0) == 0 then
+    add_section_heading(panel, "Inputs")
+    for _, ingredient in pairs(recipe.ingredients) do
+      if ingredient.type == "item" then
+        local current = input_inventory and input_inventory.get_item_count(ingredient.name) or 0
+        add_item_inventory_row(panel, ingredient.name, current, ingredient.amount)
+      end
     end
   end
 
@@ -12276,6 +12372,7 @@ script.on_init(function()
   refresh_all_bitertaxi_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
+    TerminalEpilogue.reconcile(player)
     if player.gui.screen[PROGRESS_PANEL_NAME] then
       storage.bitermotors_progress_panel_signatures = storage.bitermotors_progress_panel_signatures or {}
       storage.bitermotors_progress_panel_signatures[player.index] = nil
@@ -12321,6 +12418,7 @@ script.on_configuration_changed(function()
   refresh_all_bitertaxi_coverage()
   for _, player in pairs(game.players) do
     sync_charger_placement_overlay(player)
+    TerminalEpilogue.reconcile(player)
     if player.gui.screen[PROGRESS_PANEL_NAME] then
       storage.bitermotors_progress_panel_signatures = storage.bitermotors_progress_panel_signatures or {}
       storage.bitermotors_progress_panel_signatures[player.index] = nil
@@ -12363,6 +12461,7 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
 end)
 
 script.on_event(defines.events.on_gui_click, function(event)
+  if TerminalEpilogue.handle_click(event) then return end
   local element = event.element
   if not element or not element.valid then
     return
@@ -12373,6 +12472,9 @@ script.on_event(defines.events.on_gui_click, function(event)
     or element.name == ENTITY_INFO_CLOSE_BUTTON_NAME and ENTITY_INFO_PANEL_NAME
   local panel = panel_name and player and player.gui.screen[panel_name]
   if panel then
+    if panel_name == PROGRESS_PANEL_NAME and storage.bitermotors_endgame_progress_players then
+      storage.bitermotors_endgame_progress_players[player.index] = nil
+    end
     panel.destroy()
   end
   if (panel_name == STATION_INFO_PANEL_NAME or panel_name == ENTITY_INFO_PANEL_NAME) and player then
@@ -12390,6 +12492,7 @@ script.on_event(defines.events.on_player_created, function(event)
     refresh_sales_office_coverage(player)
     refresh_bitertaxi_coverage(player)
     sync_charger_placement_overlay(player)
+    TerminalEpilogue.queue(player)
   end
 end)
 
@@ -12489,6 +12592,7 @@ end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
+  TerminalEpilogue.reconcile(player)
   release_charger_hover_overlay(event.player_index)
   sync_charger_placement_overlay(player)
   refresh_sales_office_coverage(player)
@@ -12497,15 +12601,23 @@ script.on_event(defines.events.on_player_joined_game, function(event)
 end)
 
 script.on_event(defines.events.on_player_left_game, function(event)
+  TerminalEpilogue.suspend(game.get_player(event.player_index), true)
   cancel_player_ev_self_drivings(event.player_index, "controlling player disconnected", false)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
   opened_bitermotors_entities()[event.player_index] = nil
   pending_settlement_inspectors()[event.player_index] = nil
   destroy_ev_driver_overlay(event.player_index)
+  if storage.bitermotors_endgame_progress_players then
+    storage.bitermotors_endgame_progress_players[event.player_index] = nil
+  end
 end)
 
 script.on_event(defines.events.on_player_removed, function(event)
+  TerminalEpilogue.remove_player(event.player_index)
+  if storage.bitermotors_endgame_progress_players then
+    storage.bitermotors_endgame_progress_players[event.player_index] = nil
+  end
   remove_player_ev_self_driving_history(event.player_index)
   release_charger_hover_overlay(event.player_index)
   charger_placement_overlay_states()[event.player_index] = nil
@@ -12525,6 +12637,7 @@ end)
 
 script.on_event(defines.events.on_player_changed_force, function(event)
   local player = game.get_player(event.player_index)
+  TerminalEpilogue.reconcile(player)
   cancel_player_ev_self_drivings(event.player_index, "player changed force", true)
   refresh_sales_office_coverage(player)
   refresh_bitertaxi_coverage(player)
@@ -12591,6 +12704,7 @@ script.on_event(defines.events.on_gui_opened, function(event)
 end)
 
 script.on_event(defines.events.on_gui_closed, function(event)
+  if TerminalEpilogue.handle_closed(event) then return end
   local player = event.player_index and game.get_player(event.player_index)
   if player and player.valid then
     local opened = opened_bitermotors_entities()[player.index]
@@ -12910,6 +13024,18 @@ function process_bitermotors_sales_office_buyer_chunk()
 end
 
 script.on_nth_tick(15, function()
+  TerminalEpilogue.update()
+  if game.tick % 60 == 0 then
+    for player_index in pairs(storage.bitermotors_endgame_progress_players or {}) do
+      local player = game.get_player(player_index)
+      local panel = player and player.valid and player.gui.screen[PROGRESS_PANEL_NAME]
+      if panel and EndgameGui.relevant(player.force) then
+        EndgameGui.render(player, panel, agi_training_status(player.force))
+      else
+        storage.bitermotors_endgame_progress_players[player_index] = nil
+      end
+    end
+  end
   open_pending_settlement_inspectors()
   if game.tick % 600 == 45 then
     flush_deferred_market_invalidations()
@@ -13654,6 +13780,15 @@ remote.add_interface("bitermotors", {
       open_progress_panel(player)
     end
     return player.gui.screen[PROGRESS_PANEL_NAME] ~= nil
+  end,
+  epilogue_status = function(player_index)
+    return TerminalEpilogue.status(game.get_player(player_index))
+  end,
+  open_epilogue = function(player_index)
+    return TerminalEpilogue.open(game.get_player(player_index))
+  end,
+  dismiss_epilogue = function(player_index)
+    return TerminalEpilogue.dismiss(game.get_player(player_index))
   end
 })
 
