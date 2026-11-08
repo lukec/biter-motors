@@ -18,10 +18,13 @@ sys.modules[SPEC.name] = model
 SPEC.loader.exec_module(model)
 
 
+from tests.test_economy_simulation import model_test_catalog
+
+
 class OrbitalEndingTests(unittest.TestCase):
     def setUp(self):
-        self.catalog = model.EconomyCatalog.load()
-        self.proposal = model.Proposal()
+        self.catalog = model_test_catalog()
+        self.proposal = model.ModelPlan()
 
     def test_real_engine_weights_keep_critical_cargo_launchable(self):
         result = model.shipments(self.catalog, {model.CORE: 1, model.DOLLAR: 100})
@@ -41,7 +44,7 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertIsNone(result["rockets"])
 
     def test_entry_prototypes_match_modeled_hardware_without_white_science(self):
-        candidate = model.proposed_catalog(self.catalog, self.proposal)
+        candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         for item in (model.CORE, model.SOLAR, model.RADIATOR):
             self.assertEqual([[-1.5, -1.5], [1.5, 1.5]],
                              self.catalog.data["entities"][item]["selection_box"])
@@ -64,9 +67,9 @@ class OrbitalEndingTests(unittest.TestCase):
             self.assertEqual(1, self.catalog.ingredient(recipe, model.DOLLAR))
             self.assertEqual(20, self.catalog.seconds(recipe, model.CORE))
 
-    def test_proposed_mass_is_explicit_and_does_not_change_native_catalog(self):
+    def test_native_mass_is_explicit_and_does_not_change_native_catalog(self):
         before = copy.deepcopy(self.catalog.data)
-        candidate = model.proposed_catalog(self.catalog, self.proposal)
+        candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         self.assertEqual(before, self.catalog.data)
         result = model.shipments(candidate, {model.CORE: 12, model.DOLLAR: 5681})
         self.assertFalse(result["blocked_items"])
@@ -83,7 +86,7 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertIn("space-platform-starter-pack", self.catalog.data["items"])
 
     def test_shipments_round_per_item_and_obey_both_constraints(self):
-        candidate = model.proposed_catalog(self.catalog, self.proposal)
+        candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         # Identical aggregate mass is not a license to mix automated cargo types.
         one = model.shipments(candidate, {model.CORE: 1, model.RADIATOR: 1})
         self.assertEqual(2, one["rockets"])
@@ -98,7 +101,7 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertEqual((9, 35), (first["rockets"], full["rockets"]))
         self.assertEqual(1200, full["payload"]["space-platform-foundation"])
         self.assertEqual(1300, full["placed_foundation_tiles"])
-        candidate = model.proposed_catalog(self.catalog, self.proposal)
+        candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         bill = model.supply_bill(candidate, full["manufacturing_roots"])
         self.assertEqual(1260, bill["recipe_batches"]["space-platform-foundation"])
         self.assertEqual(1750, full["launch_ingredients"]["rocket-fuel"])
@@ -119,16 +122,18 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_staged_automation_costs_more_than_fully_batched_payloads(self):
         budget = model.compute_budget(self.catalog, self.proposal)
         staged = model.staged_uplifts(self.catalog, self.proposal, budget)
-        self.assertEqual(49, staged["rockets"])
+        self.assertEqual(50, staged["rockets"])
         self.assertEqual(14, staged["extra_launches_above_batched"])
         self.assertEqual(12, sum(row["payload"][model.CORE] for row in staged["stages"]))
 
-    def test_proposed_power_ratio_accounts_for_nauvis_multiplier(self):
+    def test_native_power_ratio_accounts_for_nauvis_multiplier(self):
         plan = model.hardware_plan(self.catalog, self.proposal)
         self.assertEqual(3e9, plan["compute_watts"])
         self.assertEqual(3.6e9, plan["solar_watts"])
         with self.assertRaisesRegex(ValueError, "solar cannot"):
-            model.hardware_plan(self.catalog, replace(self.proposal, solar_peak_watts=10_000_000))
+            altered = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
+            altered.data["entities"][model.SOLAR]["production"] = "10MW"
+            model.hardware_plan(altered, self.proposal)
 
     def test_budget_counts_physical_archive_and_science_only_once(self):
         budget = model.compute_budget(self.catalog, self.proposal)
@@ -143,6 +148,7 @@ class OrbitalEndingTests(unittest.TestCase):
         before = model.compute_budget(self.catalog, self.proposal)
         altered = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         altered.data["entities"][model.CORE]["crafting_speed"] *= 2
+        altered.runtime["agi_assembly_seconds"] /= 2
         after = model.compute_budget(altered, self.proposal)
         self.assertEqual(before["orbital_dollars"], after["orbital_dollars"])
         self.assertAlmostEqual(before["core_hours"] / 2, after["core_hours"])
@@ -151,8 +157,8 @@ class OrbitalEndingTests(unittest.TestCase):
         result = model.analysis(self.catalog)
         hardware = result["hardware_supplies"]
         full = result["hardware_and_science_supplies"]
-        self.assertEqual(4490, hardware["supplies"]["processing-unit"])
-        self.assertEqual(8990, full["supplies"]["processing-unit"])
+        self.assertEqual(4540, hardware["supplies"]["processing-unit"])
+        self.assertEqual(9040, full["supplies"]["processing-unit"])
         self.assertNotIn(model.DOLLAR, hardware["supplies"])
         self.assertGreater(full["supplies"]["copper-plate"], hardware["supplies"]["copper-plate"])
         self.assertGreater(hardware["surplus"][model.P + "acidic-tailings"], 0)
@@ -225,11 +231,15 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertGreater(case["model_hours"], 6)
         self.assertNotIn(model.RESEARCH[-1], [row["technology"] for row in case["events"]])
         self.assertGreaterEqual(case["archive_equivalents"], 1e9)
+        self.assertIn(model.RESEARCH[-2], [row["technology"] for row in case["events"]])
+        for tiers in (0, 1):
+            with self.assertRaisesRegex(ValueError, "Grid-scale research is required"):
+                model.simulate(self.catalog, self.proposal, replace(model.BUSINESSES[0], research_tiers=tiers))
 
     def test_invalid_model_parameters_fail_early(self):
         for proposal in (replace(self.proposal, phase_cores=(1, 4)),
-                         replace(self.proposal, token_yields=(10000, 0, 100000, 200000)),
-                         replace(self.proposal, dollar_weight_grams=0)):
+                         replace(self.proposal, phase_cores=(1, 0, 8, 12)),
+                         replace(self.proposal, tiles_per_core=0)):
             with self.assertRaises(ValueError):
                 proposal.validate()
         for cores, platforms in ((0, 1), (1, 2), (1.5, 1)):
@@ -250,12 +260,47 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertIn("catalog is stale", result.stderr)
         self.assertEqual("", result.stdout)
 
-    def test_report_matches_versioned_study_and_discloses_bounds(self):
+    def test_report_discloses_native_evidence_bounds(self):
         result = model.analysis(self.catalog)
-        self.assertEqual(model.report(result), (ROOT / "docs/orbital-ending-cost-study.md").read_text())
-        for message in ("finale gameplay pending", "not a campaign-time prediction",
+        for message in ("native Model ending", "not a campaign-time prediction",
                         "hyperscale", "unmeasured", "not a tested platform blueprint", "silo-to-platform"):
             self.assertIn(message.lower(), model.report(result).lower())
+        self.assertNotIn("proposal", model.report(result).lower())
+        self.assertNotIn("10 GW", model.report(result))
+
+    def test_generated_report_matches_fresh_native_catalog(self):
+        native = model.EconomyCatalog.load()
+        self.assertEqual([], native.freshness_errors())
+        self.assertEqual(model.report(model.analysis(native)),
+                         (ROOT / "docs/orbital-ending-cost-study.md").read_text())
+
+    def test_report_distinguishes_hyperscale_and_later_start(self):
+        report = model.report(model.analysis(self.catalog))
+        for text in ("with optional Hyperscale", "after earlier terrestrial EV research",
+                     "includes pre-orbit", "economy report starts earlier", "no space (white)"):
+            self.assertIn(text, report)
+
+    def test_native_hardware_not_overridden_and_legacy_grid_not_charged(self):
+        before = copy.deepcopy(self.catalog.data)
+        result = model.analysis(self.catalog)
+        self.assertEqual(before, self.catalog.data)
+        roots = result["layouts"][0]["manufacturing_roots"]
+        self.assertNotIn(model.P + "planetary-grid-controller", roots)
+        self.assertNotIn(model.P + "grid-battery-array", roots)
+        self.assertNotIn(model.P + "capital-allocation", roots)
+        altered = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
+        altered.recipe(model.CORE)["ingredients"].append({"name": "processing-unit", "amount": 7})
+        changed = model.analysis(altered)
+        self.assertEqual(12 * 7, changed["hardware_supplies"]["supplies"]["processing-unit"]
+                         - result["hardware_supplies"]["supplies"]["processing-unit"])
+
+    def test_final_native_seconds_used_in_completion(self):
+        before = model.simulate(self.catalog, self.proposal, model.BUSINESSES[1])
+        altered = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
+        altered.recipe(model.ASSEMBLE)["energy_required"] *= 2
+        altered.runtime["agi_assembly_seconds"] *= 2
+        after = model.simulate(altered, self.proposal, model.BUSINESSES[1])
+        self.assertAlmostEqual(1/60, after["model_hours"] - before["model_hours"])
 
 
 if __name__ == "__main__":

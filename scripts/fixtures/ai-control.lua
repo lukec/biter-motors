@@ -31,7 +31,6 @@ local function output(machine) return machine.get_inventory(defines.inventory.cr
 
 local function pure_fixtures()
   check(prototypes.recipe[DATASET .. "-recycling"] == nil, "Datasets cannot reverse-recycle into fresh progress or capital")
-  check(prototypes.recipe["bitermotors-capital-allocation-recycling"] == nil, "Allocations cannot reverse-recycle")
   for _, case in ipairs({
     {"bitermotors-terrestrial-ai-token", 20},
     {"bitermotors-orbital-ai-token", 10000},
@@ -115,7 +114,7 @@ local function task(surface, name, recipe, position, force, kind, quality)
     quality = quality or "normal", force = force.name, completions = 0, native_bonus = 0}
   storage.tasks[#storage.tasks + 1] = row
   storage.by_unit[machine.unit_number] = row
-  if kind ~= "pack" and kind ~= "capital" then
+  if kind ~= "pack" then
     input(machine).insert{name = DOLLAR, count = name == DATACENTER and 20 or 1, quality = row.quality}
   end
   return row
@@ -163,9 +162,6 @@ script.on_init(function()
   storage.removed = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {8, 0}, force, "removed")
   storage.productivity = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {32, 0}, force, "productivity")
   storage.pack = task(land, "assembling-machine-2", "bitermotors-package-agi-training-dataset", {56, 0}, force, "pack")
-  storage.capital = task(land, "bitermotors-biterfactory-building", "bitermotors-package-capital-allocation", {56, 20}, force, "capital")
-  power(land, {40, 24}, force, true)
-  input(storage.capital.machine).insert{name = DOLLAR, count = 500}
 
   local orbit = platform(force, "AI accounting A", 7)
   for index, spec in ipairs({
@@ -186,7 +182,7 @@ script.on_init(function()
   orbit_b.solar_power_multiplier = 0
   storage.dataset_power = source_b
   storage.other = task(orbit_b, CORE, "bitermotors-orbital-ai-dataset-hyperscale", {0, 12}, second)
-  local payload_machine = storage.tasks[13].machine
+  local payload_machine = storage.tasks[12].machine
   local edge = payload_machine.position.y + payload_machine.prototype.selection_box.right_bottom.y
   storage.payload_chest = make(orbit, "steel-chest", {payload_machine.position.x, edge + 1.5}, force)
   local inserter = make(orbit, "fast-inserter", {payload_machine.position.x, edge + 0.5}, force)
@@ -290,7 +286,7 @@ local function native_step()
   end
   local ready = storage.blocked_checked and storage.productivity_seeded
   for _, row in ipairs(storage.tasks) do
-    if row.kind ~= "pack" and row.kind ~= "capital" then
+    if row.kind ~= "pack" then
       local target = row.kind == "switch" and 2 or 1
       ready = ready and row.completions >= target
     end
@@ -298,26 +294,25 @@ local function native_step()
   if not ready then return end
   if not storage.pack_started then
     storage.pack_started = true
-    local grid = storage.tasks[10]
+    local grid = storage.tasks[9]
     equal(output(grid.machine).get_item_count(TOKEN), 100000, "grid-scale physical token batch")
     equal(input(storage.pack.machine).insert{name = TOKEN, count = output(grid.machine).remove{name = TOKEN, count = 50000}},
       50000, "earned Tokens supplied to ordinary packaging")
     storage.before_pack = ledger().cumulative_ai_tokens
     return
   end
-  if output(storage.pack.machine).get_item_count(DATASET) ~= 1
-    or output(storage.capital.machine).get_item_count("bitermotors-capital-allocation") ~= 1 then return end
+  if output(storage.pack.machine).get_item_count(DATASET) ~= 1 then return end
   if not storage.milestone_started then
     equal(ledger().cumulative_ai_tokens, storage.before_pack, "packaging does not earn another compute event")
     equal(game.forces.player.technologies["bitermotors-orbital-cluster-training"].enabled,
       false, "less than a million orbital equivalents leaves first milestone locked")
     storage.milestone_started = true
-    input(storage.tasks[13].machine).insert{name = DOLLAR, count = 8}
+    input(storage.tasks[12].machine).insert{name = DOLLAR, count = 8}
     return
   end
-  if storage.tasks[13].completions < 9 then return end
+  if storage.tasks[12].completions < 9 then return end
   if storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET) < 36 then return end
-  equal(storage.tasks[13].completions, 9, "nine hyperscale native completions")
+  equal(storage.tasks[12].completions, 9, "nine hyperscale native completions")
   equal(storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET), 36,
     "all direct hyperscale Datasets physically extracted")
   local progress = ledger()

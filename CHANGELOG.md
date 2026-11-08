@@ -5,6 +5,18 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Replaced the controller finale with physical orbital Model assembly, native
+  cargo return to a Nauvis Landing Pad and activation in an existing 8 MW
+  Terrestrial Datacenter. Assembly consumes 20,000 Datasets and one Rack in
+  one normal minute; activation takes 30 normal seconds and returns the Model.
+- Qualified victory with force/platform/quality-scoped native assembly, return
+  and activation credits. Inventory/statistics injection cannot win; extraction,
+  machine removal and separate-process reload retain earned completion. Model
+  assembly and activation preserve committed work through interruptions.
+- Removed the final controller, Capital Allocation packaging, 50,000-Dollar
+  finale fee and required final research/white science. Hyperscale is optional.
+  Updated progressive guidance, inspectors, prototype captures and economy
+  reports. The offline terminal epilogue and campaign/release freeze remain next.
 - Banked orbital work across power/cooling interruptions: native power shortage
   slows/stops crafting, while missing cooling pauses with a yellow status.
   Progress and committed inputs survive recovery and reload; ordinary terrestrial
@@ -14,14 +26,12 @@ development namespace migration.
   50,000/100,000/200,000 Token equivalents per Dollar. Grid-scale/hyperscale
   direct output is two/four Datasets, with matching native earned accounting.
 - Refreshed the prototype-backed budgets and excluded banked orbital work from
-  lost-Dollar retry costs. Model return/activation and the replacement victory
-  ending remain pending; old controller fixtures are legacy regressions only.
+  lost-Dollar retry costs.
 - Made orbital entry compact and launchable: 3x3 Compute Clusters, one Radiator
   per cluster, and five 20 MW Solar Wings yielding 300 MW in Nauvis orbit.
   Simplified cluster/wing recipes, set explicit hardware/currency/Model cargo
   weights, removed white science from compute research, and added practical
-  partial-payload hub instructions. The replacement orbital Model finale is
-  still pending; the old controller ending remains until the next slice.
+  partial-payload hub instructions.
 - Restored Factorio 2.1.20 compatibility for EV, Cybertrain, and eSpider
   drive-charge fuel items; both engine dependencies now require 2.1.20.
 - Hardened isolated validators and soak evidence against zero-exit Lua errors,

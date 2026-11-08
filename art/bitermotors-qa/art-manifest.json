@@ -405,32 +405,6 @@
       "status": "inherited-placeholder"
     },
     {
-      "review_id": "entity:bitermotors-planetary-grid-controller",
-      "prototype_id": "bitermotors-planetary-grid-controller",
-      "name": "Planetary Grid Controller",
-      "kind": "entity",
-      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/planetary-grid-controller/planetary-grid-controller.png",
-      "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/planetary-grid-controller.png",
-      "footprint_tiles": [
-        3,
-        3
-      ],
-      "scale": 0.19,
-      "icon_dimensions": [
-        256,
-        256
-      ],
-      "source_dimensions": [
-        512,
-        512
-      ],
-      "preview_dimensions": [
-        97,
-        97
-      ],
-      "status": "bitmap"
-    },
-    {
       "review_id": "vehicle:bitermotors-prototype-roadster",
       "prototype_id": "bitermotors-prototype-roadster",
       "name": "Prototype Roadster",
@@ -803,20 +777,6 @@
       "trigger": "Fleet allocated"
     },
     {
-      "name": "Grid charge stages",
-      "path": "../../mod/bitermotors_0.1.1/graphics/animation/grid-charge-stages.png",
-      "source_dimensions": [
-        1024,
-        128
-      ],
-      "frame_dimensions": [
-        128,
-        128
-      ],
-      "frame_count": 8,
-      "trigger": "Charging only"
-    },
-    {
       "name": "Grid Battery charging",
       "path": "../../mod/bitermotors_0.1.1/graphics/animation/grid-battery-charge.png",
       "source_dimensions": [
@@ -861,8 +821,7 @@
     "bitermotors-terrestrial-datacenter",
     "bitermotors-orbital-datacenter-core",
     "bitermotors-orbital-radiator-panel",
-    "bitermotors-high-density-space-solar-panel",
-    "bitermotors-planetary-grid-controller"
+    "bitermotors-high-density-space-solar-panel"
   ],
   "vehicles": [
     "bitermotors-prototype-roadster",
@@ -921,7 +880,6 @@
     "orbital-radiator-panel.png",
     "phosphate.png",
     "planetary-grid-charge.png",
-    "planetary-grid-controller.png",
     "planetary-grid-segment.png",
     "premium-ev.png",
     "prototype-roadster.png",
@@ -949,7 +907,6 @@
     "Biterfactory loading bays",
     "Datacenter cooling fans",
     "Bitertaxi dispatch lights",
-    "Grid charge stages",
     "Grid Battery charging",
     "Grid Battery discharging"
   ],

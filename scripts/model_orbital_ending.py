@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Cost a proposed orbital ending without rewriting the native gameplay catalog."""
+"""Cost the native orbital Model ending with explicit economic and pacing limits."""
 
 from __future__ import annotations
 
 import argparse
-import copy
 import hashlib
 import json
 import math
@@ -12,7 +11,7 @@ from collections import Counter, deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from bitermotors_economy_catalog import CATALOG, DATASET, DOLLAR, TOKEN, EconomyCatalog, amount, energy
+from bitermotors_economy_catalog import CATALOG, DATASET, DOLLAR, TOKEN, EconomyCatalog, amount, energy, ASSEMBLE
 from simulate_bitermotors_economy import CORE, ORBITAL_RECIPES, TERRESTRIAL, campaign_plan
 
 P = "bitermotors-"
@@ -37,40 +36,20 @@ CLEAN_ROUTES = {
 
 
 @dataclass(frozen=True)
-class Proposal:
-    """Model-only overrides: hardware/tiers are implemented; Model completion remains proposed."""
-    name: str = "Recommended orbital ending"
+class ModelPlan:
+    """Layout assumptions only; recipes, research, masses and timing are native."""
+    name: str = "Native orbital Model ending"
     phase_cores: tuple[int, ...] = (1, 4, 8, 12)
-    token_yields: tuple[int, ...] = (10000, 50000, 100000, 200000)
-    tier_cycles: tuple[int, ...] = (1000, 1500, 2000)
-    tier_dollars_per_cycle: tuple[int, ...] = (2, 2, 3)
     solar_panels_per_core: int = 5
-    solar_peak_watts: int = 20000000
-    radiators_per_core: int = 1
     tiles_per_core: int = 100
-    rack_count: int = 8
-    low_density_structures: int = 40
-    lfp_packs: int = 12
-    core_weight_grams: int = 100000
-    solar_weight_grams: int = 25000
-    radiator_weight_grams: int = 100000
-    dollar_weight_grams: int = 10
-    model_weight_grams: int = 1000
-    final_training_seconds: int = 60
-    commissioning_seconds: int = 30
 
     def validate(self):
-        if len(self.phase_cores) != 4 or len(self.token_yields) != 4:
-            raise ValueError("four compute phases required")
-        if len(self.tier_cycles) != 3 or len(self.tier_dollars_per_cycle) != 3:
-            raise ValueError("three research tiers required")
-        if any(value <= 0 for key, values in asdict(self).items() if key != "name"
-               for value in (values if isinstance(values, tuple) else (values,))):
-            raise ValueError("proposal quantities must be positive")
+        if len(self.phase_cores) != 4 or any(value <= 0 or int(value) != value for value in self.phase_cores):
+            raise ValueError("four positive integer compute phases required")
         if sorted(self.phase_cores) != list(self.phase_cores):
             raise ValueError("core ramp must not decrease")
-        if sorted(self.token_yields) != list(self.token_yields):
-            raise ValueError("compute yield must not decrease")
+        if self.solar_panels_per_core <= 0 or self.tiles_per_core <= 0:
+            raise ValueError("layout quantities must be positive")
 
 
 @dataclass(frozen=True)
@@ -97,65 +76,49 @@ BUSINESSES = (
 )
 
 
-def proposed_catalog(catalog: EconomyCatalog, proposal: Proposal) -> EconomyCatalog:
-    proposal.validate()
-    data = copy.deepcopy(catalog.data)
-    data["recipes"][CORE]["ingredients"] = [
-        {"type": "item", "name": P + "datacenter-rack", "amount": proposal.rack_count},
-        {"type": "item", "name": "low-density-structure", "amount": proposal.low_density_structures},
-        {"type": "item", "name": P + "lfp-battery-pack", "amount": proposal.lfp_packs}]
-    data["recipes"][SOLAR]["ingredients"] = [
-        {"type": "item", "name": P + "high-density-solar-array", "amount": 2},
-        {"type": "item", "name": "processing-unit", "amount": 10},
-        {"type": "item", "name": "low-density-structure", "amount": 5},
-        {"type": "item", "name": P + "high-energy-battery-pack", "amount": 2}]
-    for name, weight in ((CORE, proposal.core_weight_grams), (SOLAR, proposal.solar_weight_grams),
-                         (RADIATOR, proposal.radiator_weight_grams), (DOLLAR, proposal.dollar_weight_grams),
-                         (MODEL, proposal.model_weight_grams)):
-        data["launch"]["item_weights_grams"][name] = weight
-    return EconomyCatalog(data)
-
-
-def research_rows(catalog: EconomyCatalog, proposal: Proposal) -> list[dict]:
+def research_rows(catalog: EconomyCatalog, plan: ModelPlan) -> list[dict]:
     rows = []
-    for index, name in enumerate(RESEARCH):
+    for name in RESEARCH:
         unit = catalog.data["technologies"][name]["unit"]
-        cycles = unit["count"] if index < 2 else proposal.tier_cycles[index - 2]
-        dollars = amount(unit["ingredients"], DOLLAR) if index < 2 else proposal.tier_dollars_per_cycle[index - 2]
+        cycles = unit["count"]
+        dollars = amount(unit["ingredients"], DOLLAR)
         rows.append({"technology": name, "cycles": cycles, "dollars_per_cycle": dollars,
                      "tokens_per_cycle": amount(unit["ingredients"], TOKEN),
                      "science": {item: amount(unit["ingredients"], item) for item in SCIENCE}})
     return rows
 
 
-def compute_budget(catalog: EconomyCatalog, proposal: Proposal) -> dict:
-    rows = research_rows(catalog, proposal)
+def compute_budget(catalog: EconomyCatalog, plan: ModelPlan) -> dict:
+    plan.validate()
+    ending = catalog.model_ending()
+    rows = research_rows(catalog, plan)
     pre_tokens = sum(row["cycles"] * row["tokens_per_cycle"] for row in rows[:2])
     research_tokens = sum(row["cycles"] * row["tokens_per_cycle"] for row in rows[2:])
     terra = P + "terrestrial-ai-token"
     terra_batches = math.ceil(pre_tokens / catalog.output(terra, TOKEN))
-    cycle = catalog.seconds(ORBITAL_RECIPES[0], CORE)
     milestones = [row["threshold"] for row in catalog.runtime["orbital_milestones"]]
-    target = catalog.ingredient(P + "agi-training-run", DATASET) * catalog.runtime["dataset_tokens"]
+    target = catalog.ingredient(ASSEMBLE, DATASET) * catalog.runtime["dataset_tokens"]
     targets = milestones + [max(catalog.runtime["agi_token_gate"], target + research_tokens)]
+    yields = [catalog.output(recipe, TOKEN) + catalog.output(recipe, DATASET) * catalog.runtime["dataset_tokens"] for recipe in ORBITAL_RECIPES]
     generated = 0
     bands = []
     for index, threshold in enumerate(targets):
-        batches = math.ceil(max(0, threshold - generated) / proposal.token_yields[index])
-        generated += batches * proposal.token_yields[index]
-        bands.append({"target": threshold, "yield": proposal.token_yields[index], "batches": batches,
-                      "cores": proposal.phase_cores[index], "core_hours": batches * cycle / 3600,
-                      "ramped_hours": batches * cycle / (3600 * proposal.phase_cores[index])})
+        cycle = catalog.seconds(ORBITAL_RECIPES[index], CORE)
+        batches = math.ceil(max(0, threshold - generated) / yields[index])
+        generated += batches * yields[index]
+        bands.append({"target": threshold, "yield": yields[index], "batches": batches,
+                      "cores": plan.phase_cores[index], "core_hours": batches * cycle / 3600,
+                      "ramped_hours": batches * cycle / (3600 * plan.phase_cores[index])})
     return {"research_dollars": sum(row["cycles"] * row["dollars_per_cycle"] for row in rows),
             "research_science": {item: sum(row["cycles"] * row["science"][item] for row in rows) for item in SCIENCE},
             "terrestrial_tokens": pre_tokens, "orbital_research_tokens": research_tokens,
             "terrestrial_batches": terra_batches,
             "terrestrial_dollars": terra_batches * catalog.ingredient(terra, DOLLAR),
             "terrestrial_minutes": terra_batches * catalog.seconds(terra, TERRESTRIAL) / 60,
-            "physical_archive_target": target, "generated_equivalents": generated,
-            "orbital_dollars": sum(row["batches"] for row in bands) * catalog.ingredient(ORBITAL_RECIPES[0], DOLLAR),
+            "model_ending": ending, "physical_archive_target": target, "generated_equivalents": generated,
+            "orbital_dollars": sum(row["batches"] * catalog.ingredient(recipe, DOLLAR) for row, recipe in zip(bands, ORBITAL_RECIPES)),
             "core_hours": sum(row["core_hours"] for row in bands),
-            "normal_cycle_seconds": cycle,
+            "normal_cycle_seconds": catalog.seconds(ORBITAL_RECIPES[0], CORE),
             "ramped_compute_hours": sum(row["ramped_hours"] for row in bands), "bands": bands}
 
 
@@ -181,24 +144,26 @@ def shipments(catalog: EconomyCatalog, payload: dict[str, int]) -> dict:
             "capacity_per_rocket": capacities}
 
 
-def hardware_plan(catalog: EconomyCatalog, proposal: Proposal, *, cores: int = 12,
+def hardware_plan(catalog: EconomyCatalog, plan: ModelPlan, *, cores: int = 12,
                   platforms: int = 1, operating_dollars: int = 0,
                   include_final_model: bool = False) -> dict:
     if not 1 <= platforms <= cores or int(cores) != cores or int(platforms) != platforms:
         raise ValueError("integer cores >= platforms >= 1 required")
-    proposed = proposed_catalog(catalog, proposal)
+    plan.validate()
     totals, launches = Counter(), 0
     per_platform = []
     for index in range(platforms):
         count = cores // platforms + (index < cores % platforms)
         coins = operating_dollars // platforms + (index < operating_dollars % platforms)
-        payload = {"space-platform-starter-pack": 1, "space-platform-foundation": count * proposal.tiles_per_core,
-                   CORE: count, SOLAR: count * proposal.solar_panels_per_core,
-                   RADIATOR: count * proposal.radiators_per_core,
+        payload = {"space-platform-starter-pack": 1, "space-platform-foundation": count * plan.tiles_per_core,
+                   CORE: count, SOLAR: count * plan.solar_panels_per_core,
+                   RADIATOR: count * catalog.runtime["radiators_per_core"],
                    "transport-belt": count * 12, "inserter": count * 4, DOLLAR: coins}
-        transport = shipments(proposed, payload)
+        if include_final_model and index == 0:
+            payload[P + "datacenter-rack"] = catalog.ingredient(ASSEMBLE, P + "datacenter-rack")
+        transport = shipments(catalog, payload)
         if transport["blocked_items"]:
-            raise ValueError("proposed hardware is not launchable: " + str(transport["blocked_items"]))
+            raise ValueError("native hardware is not launchable: " + str(transport["blocked_items"]))
         per_platform.append({"cores": count, "payload": payload, **transport})
         launches += transport["rockets"]
         totals.update(payload)
@@ -208,41 +173,42 @@ def hardware_plan(catalog: EconomyCatalog, proposal: Proposal, *, cores: int = 1
     del roots[DOLLAR]
     roots.update(launch_ingredients)
     roots.update({"rocket-silo": 1, "cargo-landing-pad": 1})
-    if include_final_model:
-        roots[P + "datacenter-rack"] += 1
     core_power = energy(catalog.data["entities"][CORE]["energy_usage"])
-    power = cores * proposal.solar_panels_per_core * proposal.solar_peak_watts * catalog.data["nauvis_orbit_solar_multiplier"]
+    power = cores * plan.solar_panels_per_core * energy(catalog.data["entities"][SOLAR]["production"]) * catalog.data["nauvis_orbit_solar_multiplier"]
     if power < cores * core_power:
-        raise ValueError("proposal solar cannot sustain its cores")
+        raise ValueError("plan solar cannot sustain its cores")
     return {"cores": cores, "platforms": platforms, "payload": dict(totals), "per_platform": per_platform,
             "rockets": launches, "launch_ingredients": launch_ingredients, "manufacturing_roots": dict(roots),
-            "placed_foundation_tiles": cores * proposal.tiles_per_core + platforms * 100,
+            "placed_foundation_tiles": cores * plan.tiles_per_core + platforms * 100,
             "compute_watts": cores * core_power, "solar_watts": power,
             "assembly_only_silo_minutes": launches * catalog.data["launch"]["parts_per_rocket"] *
                 catalog.recipe("rocket-part")["energy_required"] / catalog.data["launch"]["silo_crafting_speed"] / 60}
 
 
-def staged_uplifts(catalog: EconomyCatalog, proposal: Proposal, budget: dict) -> dict:
-    proposed = proposed_catalog(catalog, proposal)
+def staged_uplifts(catalog: EconomyCatalog, plan: ModelPlan, budget: dict) -> dict:
+    plan.validate()
     stages, rockets, previous = [], 0, 0
-    for index, cores in enumerate(proposal.phase_cores):
+    for index, cores in enumerate(plan.phase_cores):
         added = cores - previous
-        payload = {CORE: added, SOLAR: added * proposal.solar_panels_per_core,
-                   RADIATOR: added * proposal.radiators_per_core,
-                   "space-platform-foundation": added * proposal.tiles_per_core,
+        payload = {CORE: added, SOLAR: added * plan.solar_panels_per_core,
+                   RADIATOR: added * catalog.runtime["radiators_per_core"],
+                   "space-platform-foundation": added * plan.tiles_per_core,
                    "transport-belt": added * 12, "inserter": added * 4,
-                   DOLLAR: budget["bands"][index]["batches"]}
+                   DOLLAR: budget["bands"][index]["batches"] * catalog.ingredient(ORBITAL_RECIPES[index], DOLLAR)}
         if not index:
             payload["space-platform-starter-pack"] = 1
-        transport = shipments(proposed, payload)
+        if index == len(plan.phase_cores) - 1:
+            payload[P + "datacenter-rack"] = catalog.ingredient(ASSEMBLE, P + "datacenter-rack")
+        transport = shipments(catalog, payload)
         if transport["blocked_items"]:
             raise ValueError("staged shipment is blocked")
         rockets += transport["rockets"]
         stages.append({"cores": cores, "payload": payload, **transport})
         previous = cores
     return {"rockets": rockets, "stages": stages,
-            "extra_launches_above_batched": rockets - hardware_plan(catalog, proposal,
-                cores=proposal.phase_cores[-1], operating_dollars=int(budget["orbital_dollars"]))["rockets"]}
+            "extra_launches_above_batched": rockets - hardware_plan(catalog, plan,
+                cores=plan.phase_cores[-1], operating_dollars=int(budget["orbital_dollars"]),
+                include_final_model=True)["rockets"]}
 
 
 def supply_bill(catalog: EconomyCatalog, roots: dict[str, float]) -> dict:
@@ -304,9 +270,9 @@ def supply_bill(catalog: EconomyCatalog, roots: dict[str, float]) -> dict:
             "recipe_batches": batches}
 
 
-def simulate(catalog: EconomyCatalog, proposal: Proposal, business: Business, *, horizon_minutes=1440) -> dict:
+def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, horizon_minutes=1440) -> dict:
     """Minute cash/research/compute flow; instant available hardware is an explicit bound."""
-    proposal.validate()
+    plan.validate()
     if horizon_minutes <= 0 or int(horizon_minutes) != horizon_minutes:
         raise ValueError("positive integer horizon required")
     if min(business.settlements, business.population, business.science_sets_per_minute) <= 0:
@@ -316,13 +282,14 @@ def simulate(catalog: EconomyCatalog, proposal: Proposal, business: Business, *,
         raise ValueError("negative business input")
     if business.remaining_battery_buyers > business.population:
         raise ValueError("battery buyers exceed population")
-    if business.research_tiers not in (0, 1, 2, 3):
-        raise ValueError("invalid optional research tier count")
     runtime = catalog.runtime
     if business.allocated_fleet > min(business.taxi_depots * runtime["bitertaxi_max_fleet"],
                                       business.population // runtime["bitertaxi_customers_per_vehicle"]):
         raise ValueError("taxi allocation exceeds unique customers or depot capacity")
-    rows, budget = research_rows(catalog, proposal)[:business.research_tiers + 2], compute_budget(catalog, proposal)
+    if business.research_tiers not in (2, 3):
+        raise ValueError("Grid-scale research is required; Hyperscale is optional")
+    rows, budget = research_rows(catalog, plan)[:business.research_tiers + 2], compute_budget(catalog, plan)
+    yields = [catalog.output(recipe, TOKEN) + catalog.output(recipe, DATASET) * runtime["dataset_tokens"] for recipe in ORBITAL_RECIPES]
     per_settlement = [business.remaining_battery_buyers // business.settlements +
                       (i < business.remaining_battery_buyers % business.settlements) for i in range(business.settlements)]
     eligible = [math.ceil(count * runtime["grid_battery_initial_adoption"]) for count in per_settlement]
@@ -391,12 +358,15 @@ def simulate(catalog: EconomyCatalog, proposal: Proposal, business: Business, *,
             terra_produced += batches * output
             terra_bank += batches * output
         if recipe_index >= 0 and orbital < target:
+            cycle = catalog.seconds(ORBITAL_RECIPES[recipe_index], CORE)
+            if 60 % cycle:
+                raise ValueError("minute model requires whole native cycles; refine the step for changed speeds")
             cost = catalog.ingredient(ORBITAL_RECIPES[recipe_index], DOLLAR)
-            batches = min(int(60 / cycle) * proposal.phase_cores[recipe_index], math.floor(wallet / cost),
-                          math.ceil((target - orbital) / proposal.token_yields[recipe_index]))
+            batches = min(int(60 / cycle) * plan.phase_cores[recipe_index], math.floor(wallet / cost),
+                          math.ceil((target - orbital) / yields[recipe_index]))
             wallet -= batches * cost
             spent["orbital_compute"] += batches * cost
-            orbital += batches * proposal.token_yields[recipe_index]
+            orbital += batches * yields[recipe_index]
             if batches and first_output is None:
                 first_output = minute
         if research_index < len(rows):
@@ -420,8 +390,9 @@ def simulate(catalog: EconomyCatalog, proposal: Proposal, business: Business, *,
                         recipe_index = research_index - 1
                     research_progress = 0
                     research_index += 1
-        if research_index == len(rows) and orbital - spent["orbital_research_tokens"] >= budget["physical_archive_target"]:
-            finished = minute + (proposal.final_training_seconds + proposal.commissioning_seconds) / 60
+        if (research_index == len(rows) and orbital >= runtime["agi_token_gate"]
+                and orbital - spent["orbital_research_tokens"] >= budget["physical_archive_target"]):
+            finished = minute + (budget["model_ending"]["assembly_seconds"] + budget["model_ending"]["activation_seconds"]) / 60
             break
     else:
         finished = None
@@ -446,135 +417,90 @@ def model_fingerprint() -> str:
     return digest.hexdigest()
 
 
-def analysis(catalog: EconomyCatalog, proposal=Proposal()) -> dict:
-    budget = compute_budget(catalog, proposal)
-    proposed = proposed_catalog(catalog, proposal)
-    layouts = [hardware_plan(catalog, proposal, cores=proposal.phase_cores[-1], platforms=count,
+def analysis(catalog: EconomyCatalog, plan=ModelPlan()) -> dict:
+    budget = compute_budget(catalog, plan)
+    plan.validate()
+    layouts = [hardware_plan(catalog, plan, cores=plan.phase_cores[-1], platforms=count,
                              operating_dollars=int(budget["orbital_dollars"]),
                              include_final_model=True) for count in (1, 2, 3)]
-    first = hardware_plan(catalog, proposal, cores=1, operating_dollars=100)
-    staged = staged_uplifts(catalog, proposal, budget)
+    first = hardware_plan(catalog, plan, cores=1, operating_dollars=100)
+    staged = staged_uplifts(catalog, plan, budget)
     roots = Counter(layouts[0]["manufacturing_roots"])
     for entry in catalog.recipe("rocket-part")["ingredients"]:
         roots[entry["name"]] += staged["extra_launches_above_batched"] * catalog.data["launch"]["parts_per_rocket"] * entry["amount"]
-    supplies = supply_bill(proposed, dict(roots))
+    supplies = supply_bill(catalog, dict(roots))
     with_science = Counter(roots)
     with_science.update(budget["research_science"])
-    total_supplies = supply_bill(proposed, dict(with_science))
+    total_supplies = supply_bill(catalog, dict(with_science))
     native = campaign_plan(catalog, cores=12)
     native_lift = shipments(catalog, {CORE: 1, DOLLAR: 100})
     return {"schema": 1, "native_source_sha256": catalog.data["source_sha256"], "native_capture": catalog.data["capture"],
-            "model_sha256": model_fingerprint(), "proposal": asdict(proposal),
-            "budget": budget, "research": research_rows(catalog, proposal),
+            "model_sha256": model_fingerprint(), "plan": asdict(plan),
+            "budget": budget, "research": research_rows(catalog, plan),
             "first_cluster": first, "layouts": layouts, "staged_uplifts": staged,
             "hardware_supplies": supplies,
             "hardware_and_science_supplies": total_supplies, "native_lift": native_lift,
             "native_ending": {"weights_grams": catalog.data["launch"]["item_weights_grams"],
                 "rocket_limit_grams": catalog.data["launch"]["capacity_grams"],
                 "direct_dollars_from_campaign": native["direct_dollars"],
-                "research_dollars_after_terrestrial_ai": sum(catalog.research(name) for name in RESEARCH),
-                "final_capital_dollars": native["final_capital_dollars"],
-                "remaining_direct_dollars": native["direct_dollars"] -
-                    (native["research_dollars"] - sum(catalog.research(name) for name in RESEARCH)) -
-                    catalog.item_dollars(P + "biterfactory-v2") - catalog.item_dollars(TERRESTRIAL),
-                "constant_12_core_compute_hours": native["orbital_parallel_compute_hours"],
-                "tandem_arrays": native["tandem_arrays"], "grid_battery_arrays": native["grid_battery_arrays"]},
-            "businesses": [simulate(catalog, proposal, business) for business in BUSINESSES]}
+                **catalog.model_ending()},
+            "businesses": [simulate(catalog, plan, business) for business in BUSINESSES]}
 
 
 def report(result: dict) -> str:
-    budget, first, layout = result["budget"], result["first_cluster"], result["layouts"][0]
-    fmt = lambda value: f"{value:,.0f}"
-    lines = ["# Orbital Ending Cost Study", "", "Date: **2026-11-08**. **Orbital hardware, banked work and scale tiers implemented; finale gameplay pending.**", "",
-        "Native input: `economy-prototypes.json`, Factorio 2.1.20, normal quality, no modules or research productivity.",
-        "Overrides are isolated in `scripts/model_orbital_ending.py`; the native capture is not relabeled as proposed data.",
-        "This is **not a campaign-time prediction**. All existing terrestrial industry and one datacenter are assumed built.",
-        "The minute model assumes hardware, colored science inputs, power and transport are available when needed.",
-        "Construction/exploration, damaged grids, ore throughput, waste disposal and cargo delays are unmeasured.", "",
-        "## Native Transport Readiness", "",
-        f"The captured core weighs **{fmt(result['native_ending']['weights_grams'][CORE])} g** versus a **{fmt(result['native_ending']['rocket_limit_grams'])} g** rocket limit.",
-        f"A native Dollar weighs **{fmt(result['native_ending']['weights_grams'][DOLLAR])} g**: only {result['native_lift']['capacity_per_rocket'][DOLLAR]} fit per rocket. The AGI Model weighs **{fmt(result['native_ending']['weights_grams'][MODEL])} g**.",
-        "The former 1,208,326-g core, 250,025-g Dollar and 2,147,483,647-g Model defaults were corrected on 2026-10-08.",
-        "The rocket has 20 inventory slots but its native cargo pod has 10; uplift budgets respect both, using the tighter 10-slot limit.",
-        "Mass arithmetic alone is not qualification: actual silo-to-platform launches are required, including partial-load minimums.",
-        "Earlier delivery fixtures placed cores directly on platforms. They qualify output return, not hardware uplift.",
-        "See [orbital-entry qualification](orbital-entry-validation.md) for native launch evidence and supplied-input limits.",
-        f"Blocked modeled native cargo: {', '.join(result['native_lift']['blocked_items']) or 'none'}.", "",
-        "## Candidate Research And Compute", "", "| Upgrade | Science sets | Dollars |", "| --- | ---: | ---: |"]
-    for row in result["research"]:
-        lines.append(f"| {row['technology'].removeprefix(P)} | {fmt(row['cycles'])} | {fmt(row['cycles'] * row['dollars_per_cycle'])} |")
-    lines += ["", "No white science, planetary-controller research or final capital package is required in the candidate.",
-        f"Before orbit: **{fmt(budget['terrestrial_dollars'])} Dollars**, {budget['terrestrial_minutes']:.1f} active minutes of one 8 MW datacenter.",
-        "Research and Tokens can stream concurrently; two or more datacenters are optional, not a gate.", "",
-        f"| Orbital tier | Tokens / {budget['normal_cycle_seconds']:g}s batch | Target online cores | Compute-only band |", "| --- | ---: | ---: | ---: |"]
-    for i, row in enumerate(budget["bands"]):
-        lines.append(f"| {i+1} | {fmt(row['yield'])} | {row['cores']} | {row['ramped_hours']:.2f}h |")
-    total = budget["research_dollars"] + budget["terrestrial_dollars"] + budget["orbital_dollars"]
-    lines += ["", f"Ideal direct AI/research cash: **{fmt(total)} Dollars**, including **{fmt(budget['orbital_dollars'])}** for successful orbital batches.",
-        f"Comparable old remaining bill, after Terrestrial AI and initial datacenter/Biterfactory construction: **{fmt(result['native_ending']['remaining_direct_dollars'])} Dollars**.",
-        "Both omit the existing factory and optional fleet, but the old bill includes its final controller/grid/capital. Old uplift remains unqualified.",
-        "This excludes optional fleet/depot capital, fleet wear, prior terrestrial progression and existing factory costs.",
-        "These proposed hardware recipes contain no Dollars; the expanded bill must agree, rather than assume that upstream ingredients are free.",
-        f"Compute-only ramp: **{budget['ramped_compute_hours']:.2f}h**. The current yields need **{result['native_ending']['constant_12_core_compute_hours']:.2f}h even with twelve cores online from the start**.",
-        "The candidate still consumes one billion physical training equivalents; labs' research Tokens are replaced, not counted twice.", "",
-        "## Hardware And Launches", "", "| Metric | First cluster | 12 clusters, one platform |", "| --- | ---: | ---: |",
-        f"| Compute units | 1 | {layout['cores']} |", f"| Space solar panels | 5 | {layout['payload'][SOLAR]} |",
-        f"| Radiators | 1 | {layout['payload'][RADIATOR]} |",
-        f"| Placed foundation tiles, including starter hub area | {first['placed_foundation_tiles']} | {layout['placed_foundation_tiles']} |",
-        f"| Additional foundation uplift | {first['payload']['space-platform-foundation']} | {layout['payload']['space-platform-foundation']} |",
-        f"| Batched automatic uplifts | {first['rockets']} | {layout['rockets']} |",
-        f"| Rocket fuel, LDS, blue circuits for launches, each | {first['launch_ingredients']['rocket-fuel']} | {layout['launch_ingredients']['rocket-fuel']} |",
-        f"| Assembly-only lower bound, one unmoduled silo | {first['assembly_only_silo_minutes']:.1f}min | {layout['assembly_only_silo_minutes']:.1f}min |",
-        f"| Compute / solar generation | {first['compute_watts']/1e6:g} / {first['solar_watts']/1e6:g} MW | {layout['compute_watts']/1e9:g} / {layout['solar_watts']/1e9:g} GW |", "",
-        "Automatic uplift counts sum whole rockets for each item and each platform, respect item weights and inventory slots,",
-        "and assume custom minimum requests allow partial loads. They do not assume manually mixed cargo.",
-        "They are batched budgets: phased deliveries and ongoing cash top-ups can require extra partial launches.",
-        f"A single-platform 1/4/8/12 build ramp takes **{result['staged_uplifts']['rockets']}** separate-item launches versus **{layout['rockets']}** fully batched launches.",
-        f"That adds **{result['staged_uplifts']['extra_launches_above_batched'] * 50}** of each launch ingredient; upgrade/research waits can require further currency top-ups.",
-        "Silo construction, starter-pack manufacture, belts and inserters are included in the supply bill.",
-        "Each starter pack manufactures 60 foundations but creates 100 placed tiles; those are not the same quantity.",
-        "The 100-extra-tiles-per-cluster envelope is a layout assumption, not a tested platform blueprint.", "",
-        "| Platforms for 12 clusters | Batched uplifts | Placed tiles |", "| --- | ---: | ---: |"]
-    for row in result["layouts"]:
-        lines.append(f"| {row['platforms']} | {row['rockets']} | {row['placed_foundation_tiles']} |")
-    lines += ["", "## Factory Supply Bill", "",
-        f"The following bill uses the **{result['staged_uplifts']['rockets']}-launch staged ramp**, not the cheaper fully batched shipment plan.",
-        "Recipes are expanded through all intermediate components to a named supply frontier, not raw ore or a free-input assumption.",
-        "Use clean/dry battery routes already unlocked by Capital Scaling. Native multi-output recipes run jointly: their co-products are credited once.",
-        "No module/intrinsic machine productivity is applied; this is conservative on manufacture, not on missing build time.", "",
-        "| Supply | Hardware + launches | Hardware + launches + remaining research |", "| --- | ---: | ---: |"]
-    for item in sorted(result["hardware_and_science_supplies"]["supplies"]):
-        lines.append(f"| {item.removeprefix(P)} | {fmt(result['hardware_supplies']['supplies'].get(item, 0))} | {fmt(result['hardware_and_science_supplies']['supplies'][item])} |")
-    lines += ["", "Science totals assume no existing science stock. Blue circuits, electric engines, fuel, plates and fluids are frontier supplies,",
-        "not their raw ore/oil totals. Manufacturing energy and neutralization of acidic tailings must still be provided.",
-        f"Hardware-route tailings: **{fmt(result['hardware_supplies']['surplus'].get(P+'acidic-tailings', 0))}** fluid units.", "",
-        "## Cash Flow Sensitivities", "",
-        "All cases start with 2,000 Dollars and the first datacenter already built, at 60 effective science sets/minute.",
-        "Only remaining Grid Battery adopters generate finite sales; no old EV profit or already-sold batteries are earned again.",
-        "Taxi cases assume the 5,000-sale gate was earned earlier, but finance their fleet/depot incrementally only after Autonomy research completes.",
-        "Taxi income is capped by unique living customers, native fleet limits and conservative initial wear. No mature fleet is free.",
-        "During research/funding waits, existing orbital cores keep working if funded. The cumulative output is banked, not discarded at upgrades.",
-        "The finite-market route deliberately skips Hyperscale: efficiency upgrades are optional, not permissions to win.", "",
-        "| Case | Remaining battery buyers | Financed taxi vehicles | First orbital output | Model completion |", "| --- | ---: | ---: | ---: | ---: |"]
+    budget = result["budget"]
+    ending = result["native_ending"]
+    lines = ["# Orbital Ending Cost Study", "",
+        "Native Model ending; normal quality, no modules or research productivity.",
+        "This is **not a campaign-time prediction**. Existing terrestrial industry/datacenter are assumed built.",
+        "Manufacturing, construction, exploration, power and cargo delays are unmeasured.",
+        "The 4-6-hour chapter is a target, not observed active playtime.", "",
+        "## Native Ending", "",
+        f"Normal assembly: **{ending['assembly_seconds']:g}s**; ground activation: **{ending['activation_seconds']:g}s at {ending['activation_watts']/1e6:g} MW**.",
+        "20,000 physical Datasets plus one Rack assemble the Model; return it and activate on Nauvis.",
+        "Earned 1B and physical payload are separate. Research-consumed Tokens must be replaced.",
+        "Hyperscale is optional. No controller, Capital Allocation or required white science remains.",
+        f"Ideal orbital-chapter AI/research cash **with optional Hyperscale**: **{budget['research_dollars'] + budget['terrestrial_dollars'] + budget['orbital_dollars']:,.0f} Dollars**.",
+        "This starts after earlier terrestrial EV research and initial factory/datacenter construction are paid; it still includes pre-orbit Autonomy/Orbital research and terrestrial compute. The economy report starts earlier and skips Hyperscale by default, so its direct-cash total has a different scope.",
+        "Research uses automation (red), logistic (green), chemical (blue), production (purple) and utility (yellow) science; no space (white).",
+        f"Compute-only ramp: {budget['ramped_compute_hours']:.2f}h.", "",
+        "## Hardware And Logistics", "",
+        "Automatic uplifts round separately by item/platform and respect both mass and inventory slots.",
+        "Silo-to-platform native qualification is separate from this arithmetic; return cargo delays are not modeled.",
+        "Starter manufacture consumes 60 foundations but creates 100 placed tiles.",
+        "The 100-extra-tiles-per-cluster envelope is not a tested platform blueprint.",
+        f"Native Rack mass: **{ending['weights_grams'][P + 'datacenter-rack']:,} g**; Model mass: **{ending['weights_grams'][MODEL]:,} g**.",
+        f"Rocket lift limit: **{ending['rocket_limit_grams']:,} g**; both rocket and cargo-pod inventory limits apply.",
+        f"First cluster: {result['first_cluster']['rockets']} launches.",
+        f"Fully batched twelve-cluster payload, including final Rack: {result['layouts'][0]['rockets']} launches.",
+        f"Staged ramp: {result['staged_uplifts']['rockets']} launches.", "",
+        "## Factory Supply Frontier", "",
+        "Hardware includes launches, final Rack, silo and landing pad. Prior factory is not charged again.",
+        "Joint co-products are credited once; no machine productivity is assumed.",
+        "| Supply | Hardware + launches | With remaining science |", "| --- | ---: | ---: |"]
+    for item, count in sorted(result["hardware_and_science_supplies"]["supplies"].items()):
+        lines.append(f"| {item} | {result['hardware_supplies']['supplies'].get(item, 0):,.0f} | {count:,.0f} |")
+    lines += ["", "Plates, fluids, blue circuits, engines and fuel are frontier supplies, not raw ore or free inputs.",
+        "Tailings disposal, manufacturing energy and existing factory demand remain outside this bill.", "",
+        "## Finite Cash Flow", "",
+        "Cases start with 2,000 Dollars and 60 effective science sets/minute; science stock/manufacture is not free evidence.",
+        "Only remaining battery buyers pay. Unique living customers cap taxis; fleets/depots and wear are financed after Autonomy.",
+        "No limitless new nests, repeated EV generations or mature free fleet are assumed.",
+        "| Case | Batteries sold | Fleet | Ideal model hours |", "| --- | ---: | ---: | ---: |"]
     for case in result["businesses"]:
-        b = case["business"]
-        first_time = f"{case['first_orbital_output_minute']}min" if case['first_orbital_output_minute'] else "not reached"
-        end_time = f"{case['model_hours']:.2f}h" if case['model_hours'] else "not finished in 24h"
-        lines.append(f"| {b['name']} | {b['remaining_battery_buyers']} | {case['active_fleet']} | {first_time} | {end_time} |")
-    lines += ["", "These are ideal-input economic/compute clocks, not observed active playtime. A 4-6-hour chapter remains a design target.",
-        "Compare it against science manufacture, materials, actual blueprints, native uplifts and player build time before freezing recipes.", "",
-        "## Manufacture Sensitivity", "", "| Available incremental blue-circuit output | Hardware bill production floor |", "| --- | ---: |"]
-    blue = result["hardware_supplies"]["supplies"].get("processing-unit", 0)
+        hours = f"{case['model_hours']:.2f}" if case["model_hours"] is not None else "not finished in 24h"
+        lines.append(f"| {case['business']['name']} | {case['batteries_sold']} | {case['active_fleet']} | {hours} |")
+    lines += ["", "## Shared Blue-Circuit Capacity", "",
+        "| Spare blue circuits/min | Hardware floor | Hardware + science floor |", "| --- | ---: | ---: | ---: |"]
     for rate in (20, 60, 120):
-        lines.append(f"| {rate}/min | {blue/rate/60:.2f}h |")
-    lines += ["", "Those rates must be spare after other factory demand. The science bill also consumes blue circuits; no double allocation is permitted.",
-        "Other commodities can bottleneck first. A factory that makes only 20 spare blue circuits/minute may need a supply upgrade, not more idle waiting.", "",
-        "## Reproduce", "", "```bash", "python3 scripts/model_orbital_ending.py --output docs/orbital-ending-cost-study.md",
-        "python3 scripts/model_orbital_ending.py --json", "python3 -m unittest tests.test_orbital_ending_model", "```", "",
+        hardware = result["hardware_supplies"]["supplies"].get("processing-unit", 0)
+        total = result["hardware_and_science_supplies"]["supplies"].get("processing-unit", 0)
+        lines.append(f"| {rate} | {hardware/rate/60:.2f}h | {total/rate/60:.2f}h |")
+    lines += ["", "Do not allocate the same blue-circuit production twice. Other materials can bottleneck first.",
+        "These elapsed ideal-input clocks exclude practical I/O, build time and transport; they cannot qualify campaign pacing.",
+        "Prototype capture does not qualify native Model return, activation, victory persistence or a complete campaign.", "",
         f"Native source SHA-256: `{result['native_source_sha256']}`.",
-        "The model rejects stale native input and records a separate hash of all three model scripts in JSON. Running the model does not change gameplay.",
-        "Launch rules: [Factorio Wiki](https://wiki.factorio.com/Rocket_silo).",
-        "Platform construction/transport: [Factorio Wiki](https://wiki.factorio.com/Space_platform).", ""]
+        f"Model SHA-256: `{result['model_sha256']}`.", ""]
     return "\n".join(lines)
 
 

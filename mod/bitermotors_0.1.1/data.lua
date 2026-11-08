@@ -529,7 +529,6 @@ local datacenter_icon = generated_icon("terrestrial-datacenter")
 local orbital_datacenter_core_icon = generated_icon("orbital-datacenter-core")
 local orbital_radiator_panel_icon = generated_icon("orbital-radiator-panel")
 local high_density_space_solar_panel_icon = generated_icon("high-density-space-solar-panel")
-local planetary_grid_controller_icon = generated_icon("planetary-grid-controller")
 local high_density_solar_array_icon = generated_icon("high-density-solar-array")
 local tandem_solar_array_icon = generated_icon("tandem-solar-array")
 local grid_battery_icon = generated_icon("grid-battery")
@@ -807,10 +806,6 @@ data:extend({
   },
   {
     type = "recipe-category",
-    name = "bitermotors-planetary-grid"
-  },
-  {
-    type = "recipe-category",
     name = "bitermotors-bitertaxi-depot"
   },
   {
@@ -902,9 +897,6 @@ data:extend({
   item("bitermotors-agi-training-dataset", ai_token_icon, "science-pack", "h[agi-training-dataset]", 1000, {
     flags = {"always-show"}, weight = 1000, auto_recycle = false
   }),
-  item("bitermotors-capital-allocation", dollar_icon, "bitermotors-capital", "b[capital-allocation]", 100, {
-    flags = {"always-show"}, auto_recycle = false
-  }),
   item("bitermotors-agi-model", agi_model_icon, "science-pack", "i[agi-model]", 1, {
     flags = {"always-show"}, weight = 1000, auto_recycle = false
   }),
@@ -990,8 +982,7 @@ data:extend({
   }),
   item("bitermotors-high-density-space-solar-panel", high_density_space_solar_panel_icon, "energy", "d[high-density-space-solar-panel]", 10, {
     place_result = "bitermotors-high-density-space-solar-panel", weight = 25000
-  }),
-  item("bitermotors-planetary-grid-controller", planetary_grid_controller_icon, "bitermotors-infrastructure", "h[planetary-grid-controller]", 1, {place_result = "bitermotors-planetary-grid-controller"})
+  })
 })
 
 local sales_office = copied_assembler(
@@ -1489,34 +1480,6 @@ high_density_space_solar_panel.surface_conditions = {
   }
 }
 
-local planetary_grid_controller = copied_assembler(
-  "assembling-machine-2",
-  "bitermotors-planetary-grid-controller",
-  planetary_grid_controller_icon,
-  "bitermotors-planetary-grid-controller",
-  {"bitermotors-planetary-grid"},
-  "10GW",
-  1
-)
-planetary_grid_controller.energy_source.emissions_per_minute = nil
-planetary_grid_controller.energy_source.drain = "0W"
-planetary_grid_controller.allowed_effects = {}
-planetary_grid_controller.effect_receiver = {
-  uses_module_effects = false,
-  uses_beacon_effects = false,
-  uses_surface_effects = false,
-  uses_local_effects = false
-}
-planetary_grid_controller.quality_affects_energy_usage = false
-planetary_grid_controller.quality_affects_module_slots = false
-planetary_grid_controller.crafting_speed_quality_multiplier = {}
-for quality_name in pairs(data.raw.quality) do
-  planetary_grid_controller.crafting_speed_quality_multiplier[quality_name] = 1
-end
-planetary_grid_controller.graphics_set = generated_entity_animation("planetary-grid-controller", 0.19, {
-  working_animation("grid-charge-stages", 128, 128, 0.42, {0, -0.25}, 0.12, true)
-})
-
 local espider_legs = {}
 for index = 1, 8 do
   local leg = table.deepcopy(data.raw["spider-leg"]["spidertron-leg-" .. index])
@@ -1626,7 +1589,6 @@ data:extend({
   orbital_datacenter_core,
   orbital_radiator_panel,
   high_density_space_solar_panel,
-  planetary_grid_controller,
   espider,
   electric_vehicles[1],
   electric_vehicles[2],
@@ -2105,15 +2067,6 @@ data:extend({
     },
     {{type = "item", name = "bitermotors-high-density-space-solar-panel", amount = 1}}, 30
   ),
-  recipe("bitermotors-planetary-grid-controller", {"advanced-crafting"}, "bitermotors-infrastructure", "h[planetary-grid-controller]",
-    {
-      {type = "item", name = "bitermotors-biterfactory-module", amount = 100},
-      {type = "item", name = "bitermotors-grid-battery-array", amount = 10},
-      {type = "item", name = "substation", amount = 100},
-      {type = "item", name = "bitermotors-dollar", amount = 10000}
-    },
-    {{type = "item", name = "bitermotors-planetary-grid-controller", amount = 1}}, 600
-  ),
 
   recipe("bitermotors-sell-prototype-roadster", {"bitermotors-sales"}, "bitermotors-capital", "a[sell-roadster]",
     {
@@ -2240,20 +2193,24 @@ data:extend({
     {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 1,
     {allow_productivity = false, allow_quality = false, auto_recycle = false}
   ),
-  recipe("bitermotors-package-capital-allocation", {"advanced-crafting"}, "bitermotors-capital", "b[capital-allocation]",
-    {{type = "item", name = "bitermotors-dollar", amount = 500}},
-    {{type = "item", name = "bitermotors-capital-allocation", amount = 1}}, 1,
-    {allow_productivity = false, allow_quality = false, auto_recycle = false}
-  ),
-  recipe("bitermotors-agi-training-run", {"bitermotors-planetary-grid"}, "science-pack", "i[agi-training-run]",
+  -- Runtime unlocks assembly after 1B earned equivalents and Grid-scale AI
+  -- Compute research, then activation after a genuine native Model return.
+  recipe("bitermotors-assemble-agi-model", {"bitermotors-orbital-compute"}, "science-pack", "i[assemble-agi-model]",
     {
       {type = "item", name = "bitermotors-agi-training-dataset", amount = 20000},
-      {type = "item", name = "bitermotors-capital-allocation", amount = 100},
-      {type = "item", name = "bitermotors-grid-battery-array", amount = 100},
-      {type = "item", name = "processing-unit", amount = 10000}
+      {type = "item", name = "bitermotors-datacenter-rack", amount = 1}
     },
-    {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 1200,
-    {allow_productivity = false, allow_quality = false, raise_on_crafted = true}
+    {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 90,
+    {
+      allow_productivity = false, allow_quality = false, auto_recycle = false,
+      raise_on_crafted = true,
+      surface_conditions = {{property = "gravity", min = 0, max = 0}}
+    }
+  ),
+  recipe("bitermotors-activate-agi-model", {"bitermotors-datacenter"}, "science-pack", "j[activate-agi-model]",
+    {{type = "item", name = "bitermotors-agi-model", amount = 1}},
+    {{type = "item", name = "bitermotors-agi-model", amount = 1}}, 30,
+    {allow_productivity = false, allow_quality = false, auto_recycle = false, raise_on_crafted = true}
   )
 })
 
@@ -2558,25 +2515,6 @@ data:extend({
       {"bitermotors-dollar", 2}
     },
     60
-  ),
-  tech("bitermotors-planetary-energy-grid",
-    "__bitermotors__/graphics/icons/planetary-grid-controller.png",
-    {"bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power"},
-    {
-      unlock("bitermotors-planetary-grid-controller"),
-      unlock("bitermotors-package-capital-allocation")
-    },
-    2500,
-    {
-      {"automation-science-pack", 1},
-      {"logistic-science-pack", 1},
-      {"chemical-science-pack", 1},
-      {"production-science-pack", 1},
-      {"utility-science-pack", 1},
-      {"space-science-pack", 1},
-      {"bitermotors-ai-token", 1}
-    },
-    60
   )
 })
 
@@ -2813,8 +2751,8 @@ for _, recipe_name in pairs({
   "bitermotors-orbital-ai-dataset-grid-scale",
   "bitermotors-orbital-ai-dataset-hyperscale",
   "bitermotors-package-agi-training-dataset",
-  "bitermotors-package-capital-allocation",
-  "bitermotors-agi-training-run"
+  "bitermotors-assemble-agi-model",
+  "bitermotors-activate-agi-model"
 }) do
   data.raw.recipe[recipe_name].allow_quality = false
 end

@@ -15,6 +15,7 @@ SalesOfficeMarket = require("runtime.sales_office_market")
 NamespaceMigration = require("runtime.namespace_migration")
 ReservationPlanner = require("runtime.reservation_planner")
 AiAccounting = require("runtime.ai_accounting")
+AgiCompletion = require("runtime.agi_completion")
 BusinessIncome = require("runtime.business_income")
 ProgressGuidance = require("runtime.progress_guidance")
 
@@ -152,18 +153,13 @@ ORBITAL_DATACENTER_CORE_NAME = "bitermotors-orbital-datacenter-core"
 ORBITAL_RADIATOR_PANEL_NAME = "bitermotors-orbital-radiator-panel"
 HIGH_DENSITY_SPACE_SOLAR_PANEL_NAME = "bitermotors-high-density-space-solar-panel"
 ORBITAL_RADIATORS_PER_CORE = 1
-local GRID_CONTROLLER_NAME = "bitermotors-planetary-grid-controller"
-AGI_TRAINING_RECIPE_NAME = "bitermotors-agi-training-run"
+AGI_ASSEMBLY_RECIPE_NAME = "bitermotors-assemble-agi-model"
+AGI_ACTIVATION_RECIPE_NAME = "bitermotors-activate-agi-model"
 AGI_MODEL_ITEM_NAME = "bitermotors-agi-model"
 AGI_TOKEN_GATE = 1000000000
-AGI_TRAINING_SECONDS = 1200
-AGI_TRAINING_POWER_WATTS = 10000000000
-AGI_MINIMUM_BUFFER_FRACTION = 0.9
-AGI_RESET_PROGRESS = 1e-12
 BITERMOTORS_COMPUTE_RECIPES = {
-  ["bitermotors-terrestrial-datacenter"] = true,
-  [ORBITAL_DATACENTER_CORE_NAME] = true,
-  ["bitermotors-planetary-grid-controller"] = AGI_TRAINING_RECIPE_NAME
+  ["bitermotors-terrestrial-datacenter"] = "bitermotors-terrestrial-ai-token",
+  [ORBITAL_DATACENTER_CORE_NAME] = true
 }
 local DOLLAR_NAME = "bitermotors-dollar"
 local PROTOTYPE_ROADSTER_NAME = "bitermotors-prototype-roadster"
@@ -1089,16 +1085,9 @@ function bitermotors_compute_queue()
   return storage.bitermotors_compute_queue
 end
 
-function agi_training_power_queue()
-  storage.bitermotors_agi_power_queue = PowerQueue.ensure(storage.bitermotors_agi_power_queue)
-  return storage.bitermotors_agi_power_queue
-end
-
-function agi_training_power_failed(entity)
-  return entity.status == defines.entity_status.no_power
-    or entity.status == defines.entity_status.low_power
-    or (entity.electric_buffer_size > 0
-      and entity.energy < entity.electric_buffer_size * AGI_MINIMUM_BUFFER_FRACTION)
+function agi_completion_state()
+  storage.bitermotors_agi_completion = AgiCompletion.ensure(storage.bitermotors_agi_completion)
+  return storage.bitermotors_agi_completion
 end
 
 function orbital_radiator_panels()
@@ -1196,8 +1185,7 @@ end
 function track_bitermotors_compute_machine(entity)
   if entity and entity.valid and entity.unit_number and BITERMOTORS_COMPUTE_RECIPES[entity.name] then
     bitermotors_compute_machines()[entity.unit_number] = entity
-    local queue = entity.name == GRID_CONTROLLER_NAME
-      and agi_training_power_queue() or bitermotors_compute_queue()
+    local queue = bitermotors_compute_queue()
     if not queue.members[entity.unit_number] then
       PowerQueue.track(queue, entity.unit_number)
     end
@@ -1211,7 +1199,6 @@ function rebuild_bitermotors_compute_machines()
   storage.bitermotors_compute_machines = {}
   storage.bitermotors_compute_power_failures = storage.bitermotors_compute_power_failures or {}
   storage.bitermotors_compute_queue = {units = {}, index = 1, members = {}}
-  storage.bitermotors_agi_power_queue = {units = {}, index = 1, members = {}}
   storage.bitermotors_orbital_radiator_panels = {}
   local names = {}
   for name in pairs(BITERMOTORS_COMPUTE_RECIPES) do names[#names + 1] = name end
@@ -1269,7 +1256,6 @@ local function reset_compute_queue_progress(queue)
         if power_recovered and cooling_recovered
           and (not failure.retry_tick or game.tick >= failure.retry_tick) then
           entity.disabled_by_script = false
-          if entity.name == GRID_CONTROLLER_NAME then entity.custom_status = nil end
           bitermotors_compute_power_failures()[unit_number] = nil
         end
         goto continue
@@ -1280,26 +1266,16 @@ local function reset_compute_queue_progress(queue)
       local status = entity.status
       local power_failed = status == defines.entity_status.no_power
         or status == defines.entity_status.low_power
-      if entity.name == GRID_CONTROLLER_NAME then
-        power_failed = agi_training_power_failed(entity)
-      end
       local cooling_failed = not orbital_core_has_cooling(entity)
       if recipe_matches and (entity.crafting_progress or 0) > 0
         and (power_failed or cooling_failed) then
-        -- Native zero cancels the committed batch; a negligible positive value retains its inputs.
-        entity.crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0
+        -- Only ordinary terrestrial Token runs are scrapped; Model activation banks work.
+        entity.crafting_progress = 0
         entity.disabled_by_script = true
         bitermotors_compute_power_failures()[unit_number] = {
           power = power_failed,
-          cooling = cooling_failed,
-          retry_tick = entity.name == GRID_CONTROLLER_NAME and game.tick + 60 or nil
+          cooling = cooling_failed
         }
-        if entity.name == GRID_CONTROLLER_NAME then
-          entity.custom_status = {
-            diode = defines.entity_status_diode.red,
-            label = {"bitermotors-status.agi-power-reset"}
-          }
-        end
       end
     end
     ::continue::
@@ -1307,22 +1283,23 @@ local function reset_compute_queue_progress(queue)
 end
 
 function reset_underpowered_compute_progress()
-  -- Final training cannot wait behind a large orbital compute registry.
-  reset_compute_queue_progress(agi_training_power_queue())
   reset_compute_queue_progress(bitermotors_compute_queue())
 end
 
 function sync_agi_training_unlock(force, announce)
   if not force or not force.valid then return false end
   local cumulative = cumulative_ai_tokens_generated(force)
-  local unlocked = cumulative >= AGI_TOKEN_GATE
-  local recipe = force.recipes and force.recipes[AGI_TRAINING_RECIPE_NAME]
+  local unlocked = cumulative >= AGI_TOKEN_GATE and researched(force, "bitermotors-grid-scale-energy")
+  local recipe = force.recipes and force.recipes[AGI_ASSEMBLY_RECIPE_NAME]
   if recipe then recipe.enabled = unlocked end
+  local progress = AgiCompletion.force(agi_completion_state(), force.index)
+  local activation = force.recipes and force.recipes[AGI_ACTIVATION_RECIPE_NAME]
+  if activation then activation.enabled = progress.models_returned > 0 end
   local unlocks = agi_training_unlocks()
   if unlocked and not unlocks[force.name] then
     unlocks[force.name] = true
     if announce ~= false then
-      force.print("[Biter Motors] One billion cumulative AI Tokens generated. AGI Training Run is now available in the Planetary Energy Grid Controller.")
+      force.print("[Biter Motors] One billion earned AI Token equivalents. Assemble 20,000 Training Datasets and one Datacenter Rack into an AGI Model in an Orbital Compute Cluster, then return it to a Nauvis Cargo Landing Pad.")
     end
   end
   return unlocked
@@ -7753,11 +7730,6 @@ local function victory_forces()
   return storage.bitermotors_victory_forces
 end
 
-local function grid_controllers()
-  storage.bitermotors_grid_controllers = storage.bitermotors_grid_controllers or {}
-  return storage.bitermotors_grid_controllers
-end
-
 local function first_prototype_sales()
   storage.bitermotors_first_prototype_sales = storage.bitermotors_first_prototype_sales or {}
   return storage.bitermotors_first_prototype_sales
@@ -8167,26 +8139,11 @@ function first_prototype_sale_unlocked(force)
     or force_has_first_prototype_sale_history(force)
 end
 
-local function track_grid_controller(entity)
-  if entity and entity.valid and entity.name == GRID_CONTROLLER_NAME and entity.unit_number then
-    grid_controllers()[entity.unit_number] = entity
-  end
-end
-
 local function track_sales_office(entity)
   if entity and entity.valid and entity.name == SALES_OFFICE_NAME and entity.unit_number then
     local products = sales_office_products_finished()
     if products[entity.unit_number] == nil then
       products[entity.unit_number] = safe_products_finished(entity)
-    end
-  end
-end
-
-local function rebuild_grid_controllers()
-  storage.bitermotors_grid_controllers = {}
-  for _, surface in pairs(game.surfaces) do
-    for _, controller in pairs(surface.find_entities_filtered{name = GRID_CONTROLLER_NAME}) do
-      track_grid_controller(controller)
     end
   end
 end
@@ -8318,8 +8275,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Start with one Compute Cluster, one Radiator and five Solar Wings on a stationary Nauvis platform. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars; otherwise automatic rockets wait for full loads. Return the physical AI Tokens to Nauvis.",
   ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 50,000 AI Tokens per Dollar.",
   ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 100,000 Tokens or two Datasets per Dollar.",
-  ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 200,000 AI Tokens or four Datasets per Dollar. Planetary Energy Grid research is available.",
-  ["bitermotors-planetary-energy-grid"] = "[Biter Motors] Planetary Energy Grid researched. Build the 10 GW controller, scale cumulative AI Token production to one billion, then complete the final AGI Training Run."
+  ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 200,000 AI Tokens or four Datasets per Dollar. Bank 20,000 Datasets for orbital Model assembly; one billion earned equivalents unlocks it."
 }
 
 local function announce_research_completion(research)
@@ -8480,30 +8436,50 @@ end
 
 function agi_training_status(force)
   local cumulative = cumulative_ai_tokens_generated(force)
-  local active = 0
-  local progress = 0
-  for unit_number, controller in pairs(grid_controllers()) do
-    if not controller.valid then
-      grid_controllers()[unit_number] = nil
-    elseif controller.force == force then
-      local recipe = current_recipe_name(controller)
-      if recipe == AGI_TRAINING_RECIPE_NAME then
-        active = active + 1
-        if not bitermotors_compute_power_failures()[unit_number] then
-          progress = math.max(progress, controller.crafting_progress or 0)
-        end
+  local state = agi_completion_state()
+  local earned = AgiCompletion.force(state, force.index)
+  local assembly_progress, activation_progress = 0, 0
+  local active_assemblies, active_activations = 0, 0
+  for _, machine in pairs(bitermotors_compute_machines()) do
+    if machine and machine.valid and machine.force == force then
+      local recipe = current_recipe_name(machine)
+      if machine.name == ORBITAL_DATACENTER_CORE_NAME and recipe == AGI_ASSEMBLY_RECIPE_NAME then
+        active_assemblies = active_assemblies + 1
+        assembly_progress = math.max(assembly_progress, machine.crafting_progress or 0)
+      elseif machine.name == TERRESTRIAL_DATACENTER_NAME and recipe == AGI_ACTIVATION_RECIPE_NAME
+        and machine.surface == game.surfaces.nauvis then
+        active_activations = active_activations + 1
+        activation_progress = math.max(activation_progress, machine.crafting_progress or 0)
       end
+    end
+  end
+  local assembly_credits, return_credits, in_transit = 0, 0, 0
+  for _, qualities in pairs(earned.assembly_credits) do
+    for _, count in pairs(qualities) do assembly_credits = assembly_credits + count end
+  end
+  for _, count in pairs(earned.return_credits) do return_credits = return_credits + count end
+  for _, transit in pairs(state.pods) do
+    if transit.force_index == force.index then
+      for _, count in pairs(transit.qualities) do in_transit = in_transit + count end
     end
   end
   return {
     cumulative_ai_tokens = cumulative,
     required_ai_tokens = AGI_TOKEN_GATE,
-    unlocked = cumulative >= AGI_TOKEN_GATE,
-    active_controllers = active,
-    progress = progress,
-    training_seconds = AGI_TRAINING_SECONDS,
-    required_power_watts = AGI_TRAINING_POWER_WATTS,
-    minimum_buffer_fraction = AGI_MINIMUM_BUFFER_FRACTION,
+    unlocked = cumulative >= AGI_TOKEN_GATE and researched(force, "bitermotors-grid-scale-energy"),
+    models_assembled = earned.models_assembled,
+    models_returned = earned.models_returned,
+    models_activated = earned.models_activated,
+    assembly_credits = assembly_credits,
+    return_credits = return_credits,
+    models_in_transit = in_transit,
+    active_assemblies = active_assemblies,
+    active_activations = active_activations,
+    assembly_progress = assembly_progress,
+    activation_progress = activation_progress,
+    assembly_seconds = 60,
+    activation_seconds = 30,
+    activation_power_watts = 8000000,
     victory = storage.bitermotors_agi_victory and storage.bitermotors_agi_victory[force.name],
     completed = victory_forces()[force.name] == true
   }
@@ -8553,7 +8529,7 @@ function endgame_status(force)
   }
 end
 
-local function trigger_victory(force, controller, quality)
+local function trigger_victory(force, datacenter, quality)
   if not force or not force.valid then
     return
   end
@@ -8566,13 +8542,13 @@ local function trigger_victory(force, controller, quality)
   storage.bitermotors_agi_victory = storage.bitermotors_agi_victory or {}
   storage.bitermotors_agi_victory[force.name] = {
     tick = game.tick,
-    source = "native-training-completion",
-    training_seconds = AGI_TRAINING_SECONDS,
-    required_power_watts = AGI_TRAINING_POWER_WATTS,
+    source = "native-model-activation",
+    assembly_seconds = 60,
+    activation_seconds = 30,
     model_quality = quality,
     cumulative_ai_tokens = cumulative_ai_tokens_generated(force),
-    surface = controller and controller.valid and controller.surface.name or nil,
-    position = controller and controller.valid and controller.position or nil
+    surface = datacenter.surface.name,
+    position = {x = datacenter.position.x, y = datacenter.position.y}
   }
 
   force.print("[Biter Motors] AGI achieved. The trained model is online, and humanity now has a new tool for deciding what comes next.")
@@ -8583,14 +8559,82 @@ local function trigger_victory(force, controller, quality)
   }
 end
 
-function record_agi_training_completion(event)
-  -- This event follows the final energy draw; its depleted buffer is not a brownout.
-  local controller = event.entity
-  if event.recipe ~= AGI_TRAINING_RECIPE_NAME or event.bonus
-    or not controller or not controller.valid or controller.name ~= GRID_CONTROLLER_NAME
-    or cumulative_ai_tokens_generated(controller.force) < AGI_TOKEN_GATE
-    or bitermotors_compute_power_failures()[controller.unit_number] then return end
-  trigger_victory(controller.force, controller, event.product_quality)
+function record_agi_model_completion(event)
+  local machine = event.entity
+  if event.bonus or not machine or not machine.valid
+    or cumulative_ai_tokens_generated(machine.force) < AGI_TOKEN_GATE
+    or not researched(machine.force, "bitermotors-grid-scale-energy") then return end
+  local state = agi_completion_state()
+  if event.recipe == AGI_ASSEMBLY_RECIPE_NAME and machine.name == ORBITAL_DATACENTER_CORE_NAME then
+    local platform = machine.surface.platform
+    if not platform or not platform.valid or platform.force ~= machine.force
+      or not platform.space_location or platform.space_location.name ~= "nauvis" then return end
+    AgiCompletion.assemble(state, machine.force.index, machine.surface.index, event.product_quality)
+    machine.force.print("[Biter Motors] AGI Model assembled. Return it through the platform hub to a Nauvis Cargo Landing Pad, then activate it in a Terrestrial Datacenter.")
+  elseif event.recipe == AGI_ACTIVATION_RECIPE_NAME
+    and machine.name == TERRESTRIAL_DATACENTER_NAME and machine.surface == game.surfaces.nauvis
+    and AgiCompletion.activate(state, machine.force.index, event.product_quality) then
+    -- Native completions survive immediate output extraction, recipe changes and machine removal.
+    trigger_victory(machine.force, machine, event.product_quality)
+  end
+end
+
+function record_agi_model_departure(event)
+  local pod = event.cargo_pod
+  if not pod or not pod.valid or not pod.unit_number then return end
+  local origin = pod.cargo_pod_origin
+  if not origin or not origin.valid or origin.type ~= "space-platform-hub"
+    or origin.force ~= pod.force then return end
+  local inventory = pod.get_inventory(defines.inventory.cargo_unit)
+  if not inventory then return end
+  local cargo = {}
+  for slot = 1, #inventory do
+    local stack = inventory[slot]
+    if stack.valid_for_read and stack.name == AGI_MODEL_ITEM_NAME then
+      cargo[stack.quality.name] = (cargo[stack.quality.name] or 0) + stack.count
+    end
+  end
+  if not next(cargo) then return end
+  local state = agi_completion_state()
+  local progress = state.forces[origin.force.index]
+  if not progress or not progress.assembly_credits[origin.surface.index] then return end
+  AgiCompletion.depart(state, pod.unit_number, script.register_on_object_destroyed(pod),
+    origin.force.index, origin.surface.index, cargo)
+end
+
+function record_agi_model_landing(event)
+  local pod = event.cargo_pod
+  if not pod or not pod.valid or not pod.unit_number then return end
+  local state = agi_completion_state()
+  local transit = state.pods[pod.unit_number]
+  if not transit then return end
+  -- The destination exists at landing but is cleared before delivered_cargo.
+  -- Its station remains the landing pad even when an attached bay supplies the hatch.
+  local destination = pod.cargo_pod_destination
+  local pad = destination.type == defines.cargo_destination.station and destination.station
+  if pad and pad.valid and pad.type == "cargo-landing-pad"
+    and pad.force == pod.force and pad.surface == game.surfaces.nauvis
+    and pod.surface == pad.surface then
+    transit.landing_pad = pad
+  end
+end
+
+function record_agi_model_return(event)
+  local pod = event.cargo_pod
+  if not pod or not pod.valid or not pod.unit_number then return end
+  local state = agi_completion_state()
+  local transit = state.pods[pod.unit_number]
+  if not transit then return end
+  local pad = transit.landing_pad
+  if event.spawned_container or not pad or not pad.valid or pad.type ~= "cargo-landing-pad"
+    or pad.force ~= pod.force or pad.surface ~= game.surfaces.nauvis or pod.surface ~= pad.surface then
+    AgiCompletion.forget_pod(state, pod.unit_number)
+    return
+  end
+  if AgiCompletion.deliver(state, pod.unit_number, pad.force.index) then
+    sync_agi_training_unlock(pad.force, false)
+    pad.force.print("[Biter Motors] AGI Model returned to Nauvis. Feed it into a Terrestrial Datacenter and select Activate AGI Model: 30 seconds at its ordinary 8 MW.")
+  end
 end
 
 function clear_office_buyer_reservation(office_unit_number)
@@ -10100,7 +10144,6 @@ local function progress_snapshot(force)
     orbital_cluster_researched = researched(force, "bitermotors-orbital-cluster-training"),
     grid_scale_energy_researched = researched(force, "bitermotors-grid-scale-energy"),
     hyperscale_training_researched = researched(force, "bitermotors-hyperscale-training"),
-    planetary_grid_researched = researched(force, "bitermotors-planetary-energy-grid"),
     first_sale_complete = first_sale_complete,
     premium_sale_complete = premium_sale_complete,
     mass_market_sale_complete = first_mass_market_ev_sales()[force.name] == true,
@@ -10180,10 +10223,12 @@ local function progress_snapshot(force)
     ai_tokens_produced = cumulative_ai_tokens_generated(force),
     agi_token_gate = agi.required_ai_tokens,
     agi_training_unlocked = agi.unlocked,
-    agi_training_active = agi.active_controllers,
-    agi_training_progress = agi.progress,
-    agi_models_produced = count_item_produced(force, AGI_MODEL_ITEM_NAME),
-    grid_controllers = count_entities(force, "bitermotors-planetary-grid-controller"),
+    agi_assembly_progress = agi.assembly_progress,
+    agi_activation_progress = agi.activation_progress,
+    agi_models_assembled = agi.models_assembled,
+    agi_models_returned = agi.models_returned,
+    agi_models_activated = agi.models_activated,
+    agi_models_in_transit = agi.models_in_transit,
     terrestrial_ai_tokens_generated = terrestrial_ai.generated,
     terrestrial_ai_efficiency_level = terrestrial_ai.researched_level,
     terrestrial_ai_next_threshold = terrestrial_ai.next_threshold,
@@ -10319,21 +10364,21 @@ local function current_progress_objective(snapshot)
     )
   elseif not snapshot.grid_scale_energy_researched then
     return "Grid-scale energy", "Research Grid-scale Energy.", research("bitermotors-grid-scale-energy") .. " Unlock 3 MW Tandem Solar Arrays, 1 GJ Grid Battery Arrays, and 100,000-token orbital batches."
-  elseif snapshot.orbital_ai_tokens_generated < 100000000 then
+  elseif snapshot.orbital_ai_tokens_generated < 100000000 and not snapshot.agi_training_unlocked then
     return "Hyperscale AI", "Generate 100 million cumulative orbital AI Token equivalents.", string.format(
       "Orbital output: %d / 100,000,000. Grid-scale batches produce 100,000 Tokens or two Training Datasets per Dollar.",
       snapshot.orbital_ai_tokens_generated
     )
-  elseif not snapshot.hyperscale_training_researched then
-    return "Hyperscale AI", "Research Hyperscale Training.", research("bitermotors-hyperscale-training") .. " Unlock 200,000 Tokens or four Datasets per batch and Planetary Energy Grid research."
-  elseif not snapshot.planetary_grid_researched then
-    return "Planetary grid", "Research Planetary Energy Grid.", research("bitermotors-planetary-energy-grid") .. " Prepare a reliable 10 GW terrestrial supply."
-  elseif snapshot.grid_controllers == 0 then
-    return "AGI infrastructure", "Build a Planetary Energy Grid Controller.", "The controller is the final 10 GW training facility. Any low-power condition scraps the entire active training run."
+  elseif not snapshot.hyperscale_training_researched and not snapshot.agi_training_unlocked then
+    return "Hyperscale AI", "Scale toward one billion earned AI Token equivalents.", research("bitermotors-hyperscale-training") .. " Optional Hyperscale Training doubles each batch to 200,000 Tokens or four Datasets. You may also finish with Grid-scale production; save 20,000 physical Datasets for Model assembly."
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Token equivalents.", "Terrestrial compute can begin the climb, but orbital compute provides endgame scale. Each computed Training Dataset counts as 50,000 Tokens. Spent output still counts; repackaging does not count again."
+  elseif snapshot.agi_models_assembled == 0 then
+    return "Model assembly", "Assemble an AGI Model in orbit.", "Feed 20,000 physical Training Datasets and one Datacenter Rack into an Orbital Compute Cluster. Select Assemble AGI Model; a normal cluster takes one minute. Low power or missing cooling pauses work without losing the committed payload."
+  elseif snapshot.agi_models_returned == 0 then
+    return "Model return", "Return the AGI Model to Nauvis.", "Move the Model into its platform hub and request it at a Nauvis Cargo Landing Pad. Native cargo delivery unlocks activation; possessing an injected Model does not."
   elseif not snapshot.victory then
-    return "AGI training", "Complete the AGI Training Run.", "Return 20,000 Training Datasets from orbital compute (or package existing Tokens in assemblers), and package 50,000 Dollars into 100 allocations. Add 100 Grid Battery Arrays and 10,000 Processing Units, then sustain 10 GW for 20 minutes."
+    return "Model activation", "Activate the Model in a Nauvis datacenter.", "Feed the returned Model into an existing Terrestrial Datacenter and select Activate AGI Model. Activation takes 30 normal seconds at 8 MW and retains its progress during low power. The Model is returned as output."
   end
   return "AGI achieved", "The AGI Model is online.", "Biter Motors victory achieved; you may continue building."
 end
@@ -10344,7 +10389,7 @@ local function progress_stages(snapshot)
   local mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched
   local autonomy_complete = mass_market_complete
     and snapshot.autonomous_logistics_researched
-  local orbital_complete = autonomy_complete and snapshot.planetary_grid_researched
+  local orbital_complete = autonomy_complete and snapshot.agi_models_assembled > 0
   return {
     {name = "Customer market", sprite = "item/bitermotors-sales-office", complete = customer_complete},
     {name = "Premium EVs", sprite = "item/bitermotors-premium-ev", complete = premium_complete},
@@ -10389,10 +10434,10 @@ function progress_objective_icon(stage)
     ["Hyperscale AI"] = "item/bitermotors-orbital-datacenter-core",
     ["Orbital power"] = "item/bitermotors-high-density-space-solar-panel",
     ["Orbital cooling"] = "item/bitermotors-orbital-radiator-panel",
-    ["Planetary grid"] = "item/bitermotors-planetary-grid-controller",
-    ["AGI infrastructure"] = "item/bitermotors-planetary-grid-controller",
     ["AGI scale"] = "item/bitermotors-ai-token",
-    ["AGI training"] = "item/bitermotors-agi-training-dataset",
+    ["Model assembly"] = "item/bitermotors-agi-training-dataset",
+    ["Model return"] = "item/bitermotors-agi-model",
+    ["Model activation"] = "item/bitermotors-terrestrial-datacenter",
     ["AGI achieved"] = "item/bitermotors-agi-model"
   }
   return icons[stage] or "item/bitermotors-dollar"
@@ -10430,7 +10475,7 @@ function progress_health(snapshot)
 end
 
 function current_progress_measure(snapshot)
-  if snapshot.victory then return "AGI training", 1, 1 end
+  if snapshot.victory then return "Model activated", 1, 1 end
   if snapshot.orbital_compute_researched
     and snapshot.orbital_datacenter_cores > 0
     and snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
@@ -10445,11 +10490,16 @@ function current_progress_measure(snapshot)
   if snapshot.grid_scale_energy_researched and snapshot.orbital_ai_tokens_generated < 100000000 then
     return "Orbital AI Tokens", snapshot.orbital_ai_tokens_generated, 100000000
   end
-  if snapshot.planetary_grid_researched and not snapshot.agi_training_unlocked then
+  if snapshot.grid_scale_energy_researched and not snapshot.agi_training_unlocked then
     return "Cumulative AI Tokens", snapshot.ai_tokens_produced, snapshot.agi_token_gate
   end
   if snapshot.agi_training_unlocked and not snapshot.victory then
-    return "AGI training", snapshot.agi_training_progress, 1, true
+    if snapshot.agi_models_assembled == 0 then
+      return "Model assembly", snapshot.agi_assembly_progress, 1, true
+    elseif snapshot.agi_models_returned == 0 then
+      return "Model returned", 0, 1
+    end
+    return "Model activation", snapshot.agi_activation_progress, 1, true
   end
   local autonomy_tokens = snapshot.research_costs["bitermotors-autonomous-logistics"].ingredients["bitermotors-ai-token"]
   if snapshot.terrestrial_ai_researched and not snapshot.autonomous_logistics_researched
@@ -11001,7 +11051,7 @@ local function refresh_progress_panel(player)
         and BITERMOTORS_STATE_COLORS.warning or BITERMOTORS_STATE_COLORS.good,
       tooltip = snapshot.orbital_ai_next_threshold
         and "Cumulative orbital output enables a capital-and-science research milestone at 1M, 10M, and 100M Tokens. Each milestone unlocks a more efficient recipe."
-        or "All three orbital production milestones are available. Use the 100,000-token recipe to scale toward the one-billion-token AGI run."
+        or "All three orbital production milestones are available. Hyperscale yields 200,000 Tokens or four Datasets per Dollar; retain physical payload for Model assembly."
     }
   end
   if snapshot.energy_products_researched
@@ -11034,23 +11084,25 @@ local function refresh_progress_panel(player)
       tooltip = "The physical biter is the Grid Battery reservation. Buyers walk to the Sales Office, wait for product, then carry it home before the installation is counted."
     }
   end
-  if snapshot.planetary_grid_researched then
+  if snapshot.grid_scale_energy_researched then
     compute_rows[#compute_rows + 1] = {
-      sprite = "item/bitermotors-agi-training-dataset", label = "AGI training",
-      value = snapshot.victory and "Complete"
-        or (snapshot.agi_training_unlocked
-          and string.format("%d%%", math.floor(snapshot.agi_training_progress * 100))
-          or string.format(
-            "%s / %s AI Tokens",
-            format_grouped_integer(snapshot.ai_tokens_produced),
-            format_grouped_integer(snapshot.agi_token_gate)
-          )),
+      sprite = "item/bitermotors-agi-training-dataset", label = "Earned compute",
+      value = string.format("%s / %s", format_grouped_integer(snapshot.ai_tokens_produced),
+        format_grouped_integer(snapshot.agi_token_gate)),
+      color = snapshot.agi_training_unlocked and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
+      tooltip = "Native computation earns this milestone even if output is spent on research. Packaging existing Tokens does not earn it again. Assembly separately consumes 20,000 physical Datasets and one Rack in orbit."
+    }
+  end
+  if snapshot.agi_training_unlocked then
+    local value = snapshot.victory and "Activated"
+      or snapshot.agi_models_returned > 0 and string.format("Activation %d%%", math.floor(snapshot.agi_activation_progress * 100))
+      or snapshot.agi_models_in_transit > 0 and "Returning to Nauvis"
+      or snapshot.agi_models_assembled > 0 and "Awaiting cargo return"
+      or string.format("Assembly %d%%", math.floor(snapshot.agi_assembly_progress * 100))
+    compute_rows[#compute_rows + 1] = {
+      sprite = "item/bitermotors-agi-model", label = "AGI Model", value = value,
       color = snapshot.victory and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.warning,
-      tooltip = snapshot.victory
-        and "AGI training completed. Biter Motors's victory condition has been achieved."
-        or (snapshot.agi_training_unlocked
-          and "The AGI training run is active. Any power shortage resets this run to zero, so maintain full grid reliability."
-          or "Generate the required cumulative AI Tokens to unlock the final AGI training run. Orbital compute is intended to provide the necessary scale.")
+      tooltip = "Assemble in orbit, return through the hub to a Nauvis Cargo Landing Pad, then activate in a Terrestrial Datacenter. Assembly and activation preserve progress through interruptions. Victory persists after output extraction or machine removal."
     }
   end
   add_progress_section(content, "Business", market_rows)
@@ -11605,7 +11657,14 @@ local function show_manufacturer_info_panel(player, entity)
     if config.productivity then
       add_station_info_label(panel, config.productivity)
     end
-    if entity.name == TERRESTRIAL_DATACENTER_NAME then
+    if entity.name == TERRESTRIAL_DATACENTER_NAME
+      and current_recipe_name(entity) == AGI_ACTIVATION_RECIPE_NAME then
+      local finale = agi_training_status(entity.force)
+      add_station_info_label(panel, "Model activation: 30 normal seconds at 8 MW; no operating Dollar fee.")
+      add_station_info_label(panel, "Power interruptions retain the Model and activation progress.")
+      add_station_info_label(panel, finale.completed and "AGI activated; continued freeplay is available."
+        or string.format("Returned Model credits: %d. Only a native Nauvis return qualifies victory.", finale.return_credits))
+    elseif entity.name == TERRESTRIAL_DATACENTER_NAME then
       local status = ai_efficiency_track_status(entity.force, "terrestrial")
       add_station_info_label(panel, "Capital burn: 20 Dollars per 30-second cycle (40 Dollars/minute at full speed)")
       add_station_info_label(panel, string.format(
@@ -11640,15 +11699,20 @@ local function show_manufacturer_info_panel(player, entity)
       local compute_recipe = AiAccounting.recipes[selected_recipe]
       local selected_output = compute_recipe and compute_recipe.tokens or status.tokens_per_cycle
       local datasets = selected_recipe and string.find(selected_recipe, "orbital-ai-dataset", 1, true)
-      add_station_info_label(panel, "Capital burn: 1 Dollar per 30-second cycle")
-      add_station_info_label(panel, string.format(
-        "AI output: %g Token equivalents/cycle (%g/minute at full power)",
-        selected_output,
-        selected_output * entity.crafting_speed * 60 / 30
-      ))
-      if datasets then
-        add_station_info_label(panel, string.format("Payload: %g Training Datasets/cycle (50,000 Tokens each)",
-          selected_output / AiAccounting.dataset_tokens))
+      if selected_recipe == AGI_ASSEMBLY_RECIPE_NAME then
+        add_station_info_label(panel, "Model assembly: 20,000 Datasets + 1 Rack; one normal minute.")
+        add_station_info_label(panel, "Return the finished Model through this platform's hub to a Nauvis Cargo Landing Pad.")
+      else
+        add_station_info_label(panel, "Capital burn: 1 Dollar per 30-second cycle")
+        add_station_info_label(panel, string.format(
+          "AI output: %g Token equivalents/cycle (%g/minute at full power)",
+          selected_output,
+          selected_output * entity.crafting_speed * 60 / 30
+        ))
+        if datasets then
+          add_station_info_label(panel, string.format("Payload: %g Training Datasets/cycle (50,000 Tokens each)",
+            selected_output / AiAccounting.dataset_tokens))
+        end
       end
       add_station_info_label(panel, status.next_threshold
         and string.format(
@@ -11656,7 +11720,7 @@ local function show_manufacturer_info_panel(player, entity)
           status.generated,
           status.next_threshold
         )
-        or string.format("Orbital scale: %d cumulative Tokens; hyperscale recipe unlocked", status.generated))
+        or string.format("Orbital scale: %d cumulative Tokens; all scale milestones available", status.generated))
       add_station_info_label(panel, string.format(
         "Cooling: %d / %d cores online; %d / %d Radiator Panels",
         cooling.cooled_cores,
@@ -11665,8 +11729,8 @@ local function show_manufacturer_info_panel(player, entity)
         cooling.required_radiators
       ))
       add_station_info_label(panel, datasets
-        and "Logistics: return compact Training Datasets to Nauvis by cargo pod."
-        or "Logistics: return physical AI Tokens for science; grid-scale compute also offers compact Training Datasets.")
+        and "Payload: retain 20,000 physical Datasets in orbit for Model assembly."
+        or "Logistics: return AI Tokens for science; retain the final Dataset payload in orbit.")
     end
   end
 
@@ -11677,6 +11741,11 @@ local function show_manufacturer_info_panel(player, entity)
       and "Next: select the available sales contract for the product you are supplying."
       or config.recipe_prompt
       or "Next: select " .. config.default_product .. ", an Energy Product, or a vertically integrated component recipe."
+    if entity.name == TERRESTRIAL_DATACENTER_NAME and agi_training_status(entity.force).models_returned > 0 then
+      next_step = "Next: feed the returned AGI Model here and select Activate AGI Model."
+    elseif entity.name == ORBITAL_DATACENTER_CORE_NAME and agi_training_status(entity.force).unlocked then
+      next_step = "Next: supply 20,000 Datasets and one Rack, then select Assemble AGI Model."
+    end
     add_station_info_label(panel, next_step)
     return
   end
@@ -11709,6 +11778,9 @@ local function show_manufacturer_info_panel(player, entity)
   elseif entity.name == ORBITAL_DATACENTER_CORE_NAME
     and (entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power) then
     next_step = "Power limited: restore the 250 MW supply. Native work slows/stops without losing progress or committed inputs."
+  elseif recipe.name == AGI_ACTIVATION_RECIPE_NAME
+    and (entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power) then
+    next_step = "Power limited: restore the 8 MW supply. The Model and activation progress are retained."
   elseif entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power then
     next_step = "Blocked: restore electric power to this machine."
   elseif entity.status == defines.entity_status.full_output then
@@ -12168,8 +12240,12 @@ for recipe_name in pairs(BusinessIncome.sale_recipes) do
     end
   end)
 end
-script.on_event(prototypes.recipe[AGI_TRAINING_RECIPE_NAME].on_crafted_event,
-  record_agi_training_completion)
+for _, recipe_name in ipairs({AGI_ASSEMBLY_RECIPE_NAME, AGI_ACTIVATION_RECIPE_NAME}) do
+  script.on_event(prototypes.recipe[recipe_name].on_crafted_event, record_agi_model_completion)
+end
+script.on_event(defines.events.on_cargo_pod_started_ascending, record_agi_model_departure)
+script.on_event(defines.events.on_cargo_pod_finished_descending, record_agi_model_landing)
+script.on_event(defines.events.on_cargo_pod_delivered_cargo, record_agi_model_return)
 
 script.on_init(function()
   storage.bitermotors_ev_self_driving = EvSelfDriving.ensure(nil)
@@ -12182,7 +12258,6 @@ script.on_init(function()
   cleanup_orphaned_bitertaxi_depot_power()
   rebuild_electric_vehicles()
   rebuild_cybertrain_runtime()
-  rebuild_grid_controllers()
   rebuild_bitermotors_compute_machines()
   rebuild_sales_offices()
   rebuild_customer_vehicle_aggregates()
@@ -12227,7 +12302,6 @@ script.on_configuration_changed(function()
   cleanup_orphaned_bitertaxi_depot_power()
   rebuild_electric_vehicles()
   rebuild_cybertrain_runtime()
-  rebuild_grid_controllers()
   rebuild_bitermotors_compute_machines()
   rebuild_sales_offices()
   rebuild_customer_vehicle_aggregates()
@@ -12550,7 +12624,6 @@ for _, event_name in pairs({
 	        mark_bitermotors_market_dirty(entity.force, reason)
 	      end
 		      handle_station_built(entity, event)
-		      track_grid_controller(entity)
 		      track_bitermotors_compute_machine(entity)
 		      track_orbital_radiator_panel(entity)
 		      track_sales_office(entity)
@@ -12675,7 +12748,6 @@ for _, event_name in pairs({
 		        bitermotors_compute_machines()[unit_number] = nil
 		        bitermotors_compute_power_failures()[unit_number] = nil
 		        bitermotors_compute_queue().members[unit_number] = nil
-		        agi_training_power_queue().members[unit_number] = nil
 		        if orbital_radiator_panels()[unit_number] then
 		          orbital_radiator_panels()[unit_number] = nil
 		          mark_orbital_cooling_dirty()
@@ -12723,9 +12795,18 @@ for _, event_name in pairs({
 end
 
 script.on_event(defines.events.on_object_destroyed, function(event)
+  local state = agi_completion_state()
+  local pod_id = state.registrations[event.registration_number]
+  if pod_id then AgiCompletion.forget_pod(state, pod_id) end
   if event.type == defines.target_type.entity and event.useful_id
     and customer_unit_registry()[event.useful_id] then
     unregister_customer_unit_number(event.useful_id)
+  end
+end)
+
+script.on_event(defines.events.on_surface_deleted, function(event)
+  for _, progress in pairs(agi_completion_state().forces) do
+    progress.assembly_credits[event.surface_index] = nil
   end
 end)
 
@@ -13533,7 +13614,12 @@ remote.add_interface("bitermotors", {
       consumer_sales_gates = EV_SALES_GATES,
       charger_tiers = STATION_CONFIGS,
       radiators_per_core = ORBITAL_RADIATORS_PER_CORE,
-      compute_progress_policy = {terrestrial = "scrap", orbital = "banked"},
+      compute_progress_policy = {terrestrial = "scrap", orbital = "banked", activation = "banked"},
+      agi_assembly_recipe = AGI_ASSEMBLY_RECIPE_NAME,
+      agi_activation_recipe = AGI_ACTIVATION_RECIPE_NAME,
+      agi_assembly_seconds = 60,
+      agi_activation_seconds = 30,
+      agi_activation_power_watts = 8000000,
       bitertaxi_customers_per_vehicle = BITERTAXI_CUSTOMERS_PER_VEHICLE,
       bitertaxi_max_fleet = BITERTAXI_MAX_FLEET,
       bitertaxi_vehicle_minutes_per_dollar = BITERTAXI_REVENUE_VEHICLE_MINUTES_PER_DOLLAR,

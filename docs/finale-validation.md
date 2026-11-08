@@ -1,5 +1,10 @@
 # Native Finale Validation
 
+**Historical controller design, superseded 2026-11-08:** current fixtures now
+exercise orbital Model assembly, native return and ground activation. See the
+[current contract and evidence](endgame-validation.md); the results below are
+not qualification of that replacement.
+
 Date: **2026-10-06**. This Phase 3 slice implements R04/R05 and qualifies the
 final controller's native timing, power, retry, and completion contract.
 The subsequent [delivery/cooling slice](endgame-delivery-validation.md) closes

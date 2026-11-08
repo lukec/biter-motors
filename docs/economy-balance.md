@@ -1,145 +1,45 @@
 # Biter Motors Economy Freeze Model
 
 Captured engine: **2.1.20**; mod **0.1.1**.
-**Current alpha scope:** banked orbital work and new scale tiers are implemented; this budget still includes the legacy controller finale pending Model return/activation.
 
-Final prototypes and runtime policy: `docs/economy-prototypes.json`. Source freshness is
-checked by content hash, not string fragments. Budgets use normal quality, no modules,
-and zero research productivity. No infinite improvement is required.
+Native Model assembly and ground activation; Hyperscale is optional.
+**Default cash budget skips Hyperscale.** It includes the listed terrestrial EV/energy research, initial Biterfactory V2/datacenter construction, and the AI route through Model activation; it is not a full crash-landing budget.
+The orbital study starts later: earlier terrestrial EV research and initial factory/datacenter construction are already paid, while its ideal AI/research subtotal includes optional Hyperscale. These are different scopes, not competing totals.
+No controller, final capital package or required white science is included.
+**Not a total campaign-time forecast.** Active construction, exploration, science manufacture and cargo delays are unmeasured.
+Normal quality, no modules/research productivity; prior factory power is assumed available.
+Recovered capital is not new business profit and cannot fund purchases twice.
 
-**Not a total campaign-time forecast.** Ore/chemistry throughput, building, science manufacture/
-research speed, combat, exploration, rocket uplifts, walking, and cargo congestion are not
-simulated. Native spawns/new nests are excluded from closed-market cases. Active building/
-exploration time is **unmeasured**, not zero. Intrinsic Biterfactory productivity can lower
-construction cash/material use; the unbonused budget is conservative, not an optimum.
-Recovered-capital credit is zero in these budgets: do not treat recycling as new business profit
-or fund purchases twice from the same returned capital.
+## Cash
 
-**Transport scope (2026-10-08):** critical cargo now has explicit portable weights.
-This model still excludes hardware uplift and cannot establish
-a finishable campaign. See [the orbital ending cost study](orbital-ending-cost-study.md).
-
-## Research And Gates
-
-| Required research | Science cycles | Dollars | AI Tokens |
-| --- | ---: | ---: | ---: |
-| premium-ev-program | 250 | 250 | 0 |
-| advanced-battery-chemistry | 300 | 300 | 0 |
-| energy-products | 200 | 200 | 0 |
-| ev-charging-network | 150 | 150 | 0 |
-| capital-scaling | 600 | 600 | 0 |
-| terrestrial-ai | 750 | 750 | 0 |
-| autonomous-logistics | 750 | 750 | 750 |
-| orbital-compute | 1,500 | 1,500 | 1,500 |
-| orbital-cluster-training | 1,000 | 2,000 | 1,000 |
-| grid-scale-energy | 1,500 | 3,000 | 1,500 |
-| hyperscale-training | 2,000 | 6,000 | 2,000 |
-| planetary-energy-grid | 2,500 | 0 | 2,500 |
-
-Optional Foundry, Megatruck, Cybertrain, eSpider, and infinite improvements are excluded.
-The 50-Roadster and 250-Premium sales gates still apply. The 2,000 Mass-market and 5,000
-consumer-sale gates unlock optional Megatruck and Bitertaxi production; neither gates orbital
-research. Each living customer may purchase each generation once, not unlimited repeat EVs.
-
-## Corrected AI Budget
-
-Before orbit, 2,250 research Tokens need **113 terrestrial batches, 2,260 Dollars, and 56.5 active minutes at 8 MW**.
-Base terrestrial efficiency is used; optional efficiency research reduces later operation.
-
-| Orbital band | Normal cycle | Batches | Operating Dollars | One-core hours |
-| --- | ---: | ---: | ---: | ---: |
-| orbital-ai-token | 20s | 100 | 100 | 0.56 |
-| orbital-ai-token-cluster | 20s | 180 | 180 | 1.00 |
-| orbital-ai-dataset-grid-scale | 20s | 900 | 900 | 5.00 |
-| orbital-ai-dataset-hyperscale | 20s | 4,501 | 4,501 | 25.01 |
-
-The 30-second recipe runs every **20 seconds** in a normal 1.5-speed core.
-Total: **5,681 operating Dollars, 31.56 core-hours**. Research costs are counted once separately.
-Later labs use 7,000 Tokens. Package 199 Datasets from early stock (one AM3: 2.65 minutes); use direct Dataset recipes after Grid-scale Energy.
-The last batch replaces spent research payload; earned computation is not the same as physical inventory.
-One AM3 packages capital in 80s. The finale remains **20 uninterrupted minutes at 10 GW** (12 TJ).
-
-## Cash And Power
-
-| Cash sink | Dollars |
+| Sink | Dollars |
 | --- | ---: |
-| Required research | 15,500 |
+| Required research (including terrestrial EV/energy) | 9,500 |
+| Initial factories and ending hardware | 260 |
 | Terrestrial research compute | 2,260 |
-| Orbital compute and replacement payload | 5,681 |
-| Transition, controller, normal grid, and 8-core hardware | 16,815 |
-| Final Capital Allocations | 50,000 |
-| **Direct cash requirement** | **90,256** |
+| Orbital compute and replacement payload | 10,181 |
+| Terrestrial failure allowance | 0 |
+| **Direct cash total (no Hyperscale)** | 22,201 |
 
-Solar-only finale supply: **4,762 Tandem Arrays and 1,001 deployed Grid Battery Arrays**. Controller/final recipes consume 110 more arrays, which cannot double as grid storage.
-HD and Tandem panels consume **no Dollars**; the previous report's panel cash charges were stale.
-Forgone battery sales: up to 22,220 Dollars, **not another cash bill**, and only realizable with eligible buyers.
+Required science: automation (red), logistic (green) and chemical (blue), **7,000 each**; production (purple) and utility (yellow), **6,100 each**; **no space (white)**. No existing science stock or research productivity is credited.
 
-Partial material bill, before HD/base-battery recipes, other industry, poles, and transport:
+Native assembly: **60s** in the normal orbital cluster; ground activation: **30s at 8 MW**.
+The 1B earned gate and physical 20,000-Dataset payload are separate; research Tokens are replaced.
+Orbital work is banked; terrestrial failures alone add retry cash.
+Hardware uplift is excluded; see the orbital ending cost study for material frontiers and launches.
 
-- `tandem_arrays`: 4,762
-- `grid_battery_arrays_including_consumed`: 1,111
-- `hd_panels_for_tandem`: 4,762
-- `lfp_packs_for_array_upgrades`: 26,664
-- `processing_units_before_hd_panel_and_grid_battery_base_recipes`: 79,840
-- `low_density_structures_for_tandem`: 47,620
+## Finite Markets
 
-Solar/Array productivity makes **more items per craft**, not more watts/joules per placed
-entity. It saves materials, not placed counts. Quality and nuclear are optional alternatives.
-This report does not prove raw-material production can sustain a specific campaign cadence.
-
-## Finite-Market Scenarios
-
-Assume 200 living customers per developed settlement, all three required EV generations sold
-already, finite battery adoption (5% initially, then 5% of remaining eligibility every five
-minutes), and unique allocated taxi customers. No unlimited repeat battery sales or duplicate
-revenue from overlapping depots. Fleet replacement uses conservative initial wear, not mature safety.
-
-| Metric | Restricted market | Typical expansion | Taxi / energy heavy |
+| Case | Finite profit ceiling | Taxi fleet | Funding hours |
 | --- | ---: | ---: | ---: |
-| Settlements | 5 | 10 | 20 |
-| Living customers | 1,000 | 2,000 | 4,000 |
-| Consumer purchase capacity | 3,000 | 6,000 | 12,000 |
-| Finite EV + Grid Battery profit ceiling | 24,000 | 48,000 | 96,000 |
-| Taxi gate from those sales | needs expansion | ready | ready |
-| Organic-only wait to fill taxi gate; no new nests | 33.4h | 0.0h | 0.0h |
-| Allocated taxi fleet | 0 | 400 | 800 |
-| Fleet/depot capital | 0 | 8,400 | 16,800 |
-| Net recurring Dollars/hour | 0 | 11,867 | 23,733 |
-| Full fleet cash payback | not unlocked | 0.71h | 0.71h |
-| Post-network funding window | >48h; finite ceiling | 4.37h | 1.62h |
-| Ideal EV selling time, before funding window | 5.28h | 5.28h | 5.28h |
-| Normal orbital cores | 4 | 8 | 16 |
-| Core work / selected cores | 7.89h | 3.95h | 1.97h |
-| Failed-batch cash sensitivity | 0 | 0 | 260 |
+| Restricted market | 24,000 | 0 | 3.35 |
+| Typical expansion | 48,000 | 400 | 0.7 |
+| Taxi / energy heavy | 96,000 | 800 | 0.35 |
 
-Funding and compute can overlap; adding these numbers is **not** a campaign-time estimate.
-Funding starts with EV cash already earned and assumes mature service can be financed. It
-counts fleet capex and finite battery adoption, but does not qualify natural bootstrapping.
-Core work excludes research waiting and idle cores at tier boundaries. Heavy sensitivity
-loses 10% of terrestrial compute batches; orbital interruptions retain work and cash. Retry/delay time is not guessed. Extra manufacturing,
-charging, depot load, and existing industry require power above the 10 GW final load.
+Finite battery adoption and unique living customers cap demand; overlapping depots cannot duplicate service.
+EV cash is already earned at this checkpoint; fleets/depots are paid, not free.
+Funding and compute can overlap; their sum is not a campaign clock. New nests/growth are excluded.
+Phase 4 remains open: practical I/O, shared blue-circuit capacity and active player time need evidence.
+No balance values are changed by this simulator. Prototype capture is not native ending or campaign qualification.
 
-## Remaining Balance Decisions
-
-- A closed five-settlement market cannot fund the ending from one-time purchases alone. Expand, allow natural customer/nest growth, or unlock recurring service. Organic virtual growth is not instant new demand.
-- With two full depots, the 50,000-Dollar finale bill alone needs about 4.2 service hours. Evaluate a targeted capital adjustment against the 2-3-hour major-step target, not blanket cheaper research.
-- Measure actual panel/battery materials and transport throughput. Native delivery proves physical completion, not comfortable pacing.
-- Eight normal cores need about 3.13 active hours in the final compute band; sixteen need about 1.56. Compare practical core expansion and power/logistics throughput before further Token-yield changes.
-- Terrestrial AI brownouts lose committed Dollars. Orbital shortages retain inputs and progress; the legacy final controller retains inputs after a reset. Delays are not another cash bill. Recycled capital and other inflows are not business profit.
-
-No balance values are changed by this simulator. Phase 4 remains open for targeted decisions,
-functional art, and native UI qualification.
-
-## Reproduce
-
-```bash
-scripts/validate-bitermotors-mod.sh  # prints an isolated artifact directory
-python3 scripts/bitermotors_economy_catalog.py --dump <artifacts>/script-output/data-raw-dump.json --runtime-contract <artifacts>/script-output/bitermotors-economy-contract.json
-python3 scripts/simulate_bitermotors_economy.py --check-source --output docs/economy-balance.md
-```
-
-Solar/storage equations: [Official Factorio Wiki](https://wiki.factorio.com/Power_production).
-The exporter verifies the validator's capture manifest, raw-dump/runtime hashes, and unchanged
-source before recording a catalog. It cannot legitimize a stale dump by hashing today's source.
-
-Standard orbital rocket payload arithmetic does not predict the number of downward cargo pods.
+Native source SHA-256: `4ee8ee9c393ca2066fb21e0c9087d78da26ebe8a2508558fe1e360a1ffcaebe0`.

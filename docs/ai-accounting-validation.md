@@ -3,6 +3,9 @@
 **Update, 2026-11-08:** preserve the dated counts below as historical evidence.
 [Banked-compute validation](orbital-banked-compute-validation.md) records the
 new 50k/100k/200k tiers, Dataset interruption check and current accounting totals.
+The controller/capital ending below has since been removed; see the
+[physical Model ending](endgame-validation.md). Current accounting fixtures no
+longer construct Capital Allocations.
 
 Date: **2026-10-06**. Phase 3's payload/accounting slice addresses R16 and
 implements the compressed production/packaging portion of R03. The subsequent

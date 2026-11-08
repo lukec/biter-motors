@@ -40,7 +40,6 @@ class ArtQaTests(unittest.TestCase):
             "bitermotors-orbital-datacenter-core",
             "bitermotors-orbital-radiator-panel",
             "bitermotors-high-density-space-solar-panel",
-            "bitermotors-planetary-grid-controller",
             "bitermotors-prototype-roadster",
             "bitermotors-premium-ev",
             "bitermotors-mass-market-ev",
@@ -110,6 +109,13 @@ class ArtQaTests(unittest.TestCase):
         with patch.object(ART_QA, "GRAPHICS", ROOT / "missing-graphics"):
             with self.assertRaises((FileNotFoundError, ValueError)):
                 ART_QA.critical_asset_records()
+
+    def test_retired_finale_assets_are_not_presented_for_review(self):
+        self.assertNotIn("bitermotors-planetary-grid-controller",
+                         {record["prototype_id"] for record in self.records()})
+        self.assertNotIn("planetary-grid-controller.png", {path.name for path in ART_QA.icon_paths()})
+        self.assertNotIn("planetary-grid-controller", ART_QA.entity_cards() + ART_QA.icon_cards())
+        self.assertNotIn("grid-charge-stages.png", {entry[1] for entry in ART_QA.ANIMATIONS})
 
     def test_inventory_only_items_do_not_claim_spidertron_entity_art(self):
         records = {r["prototype_id"]: r for r in self.records()}

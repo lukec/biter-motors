@@ -30,7 +30,6 @@ ENTITY_ASSETS = [
     ("bitermotors-orbital-datacenter-core", "Orbital Compute Cluster", "orbital-datacenter-core/orbital-datacenter-core.png", "orbital-datacenter-core.png", 3, 0.18, "bitmap"),
     ("bitermotors-orbital-radiator-panel", "Orbital Radiator", None, "orbital-radiator-panel.png", 3, 1.0, "inherited-placeholder"),
     ("bitermotors-high-density-space-solar-panel", "Space Solar Wing", None, "high-density-space-solar-panel.png", 3, 1.0, "inherited-placeholder"),
-    ("bitermotors-planetary-grid-controller", "Planetary Grid Controller", "planetary-grid-controller/planetary-grid-controller.png", "planetary-grid-controller.png", 3, 0.19, "bitmap"),
 ]
 
 ANIMATIONS = [
@@ -46,7 +45,6 @@ ANIMATIONS = [
     ("Biterfactory loading bays", "biterfactory-loading-lights.png", 512, 128, "Crafting only"),
     ("Datacenter cooling fans", "datacenter-cooling-fans.png", 128, 64, "Compute active"),
     ("Bitertaxi dispatch lights", "bitertaxi-dispatch-lights.png", 128, 64, "Fleet allocated"),
-    ("Grid charge stages", "grid-charge-stages.png", 128, 128, "Charging only"),
     ("Grid Battery charging", "grid-battery-charge.png", 512, 512, "Cyan charge sequence"),
     ("Grid Battery discharging", "grid-battery-discharge.png", 512, 512, "Amber discharge sequence"),
 ]
@@ -66,6 +64,12 @@ OTHER_ASSETS = [
     ("bitermotors-agi-training-dataset", "AGI Training Dataset", None, "ai-token.png", "Inventory item; no placed entity bitmap"),
     ("bitermotors-agi-model", "AGI Model", None, "agi-model.png", "Inventory item; no placed entity bitmap"),
 ]
+
+
+def icon_paths() -> list[Path]:
+    # Retired controller art may remain on disk, but is not campaign QA content.
+    return [path for path in sorted((GRAPHICS / "icons").glob("*.png"))
+            if path.stem != "planetary-grid-controller"]
 
 
 def rel(path: Path) -> str:
@@ -154,7 +158,7 @@ def entity_cards() -> str:
 
 def icon_cards() -> str:
     cards = []
-    for index, path in enumerate(sorted((GRAPHICS / "icons").glob("*.png"))):
+    for index, path in enumerate(icon_paths()):
         name = path.stem.replace("-", " ").title()
         asset_id = f"icon:{path.stem}"
         cards.append(f"""
@@ -254,7 +258,7 @@ def main() -> int:
         "animation_assets": animation_assets,
         "entities": [entry["prototype_id"] for entry in critical if entry["kind"] == "entity"],
         "vehicles": [entry["prototype_id"] for entry in critical if entry["kind"] == "vehicle"],
-        "icons": [path.name for path in sorted((GRAPHICS / "icons").glob("*.png"))],
+        "icons": [path.name for path in icon_paths()],
         "animations": [entry[0] for entry in ANIMATIONS],
         "technology": [path.name for path in sorted((GRAPHICS / "technology").glob("*.png"))],
         "blender": {

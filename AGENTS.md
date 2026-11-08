@@ -59,6 +59,12 @@ changes that policy.
   footprints change; a completion ledger does not prove physical extraction.
 - Native starter ascension and delivery can share a simulation tick. Validate
   cargo origin, destination, event order and conservation, not a fabricated delay.
+- Cargo delivery clears `cargo_pod_destination` before its callback on 2.1.20.
+  Capture the actual station in `on_cargo_pod_finished_descending`, then credit
+  only `on_cargo_pod_delivered_cargo`. Arrival alone is not cargo delivery.
+- Script-forced `set_recipe` can bypass native surface selection restrictions.
+  Keep explicit canonical-surface/force guards on victory events; test those
+  guards rather than assuming a fixture's incompatible machine cannot craft.
 - Model both rocket and cargo-pod inventory limits. The validated 2.1.20 rocket
   has 20 slots but its ascent pod has 10; weights alone do not define capacity.
 - Orbital work banks native progress and committed inputs; never reset/reinsert

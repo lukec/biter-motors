@@ -172,24 +172,18 @@ and a real pending-bonus/in-progress-craft reload. Reproduce that slice with
 final cargo delivery or a complete AGI victory run.
 The [banked-compute evidence](docs/orbital-banked-compute-validation.md) covers
 orbital interruption/reload with the original committed Dollar, terrestrial
-scrapping and the new 50k/100k/200k scale tiers. Model return/activation remains
-the next slice; the controller finale tests below are legacy regressions only.
+scrapping and the new 50k/100k/200k scale tiers.
 The [orbital-entry evidence](docs/orbital-entry-validation.md) covers compact
 hardware, research without white science, native ground manufacturing, genuine
 rocket uplift, platform ghost construction and physical Token return. Reproduce
-it with `scripts/validate-bitermotors-uplift.sh`. The replacement orbital Model
-ending remains a subsequent slice; entry qualification is not campaign victory.
-The separate [finale evidence](docs/finale-validation.md) covers complete native
-20-minute runs, actual 10 GW consumption, quality/effect isolation, outages,
-Model extraction, and native checkpoint/reload. Reproduce it with
-`scripts/validate-bitermotors-finale.sh`. Its supplied infrastructure is not a
-fresh campaign or a cargo-delivery test.
-The [delivery/cooling evidence](docs/endgame-delivery-validation.md) completes
-the isolated physical-endgame checks: native orbital cargo, lab research,
-controller construction, full payload loading, training, and failure recovery.
-Reproduce with `scripts/validate-bitermotors-delivery.sh` and
-`scripts/validate-bitermotors-cooling.sh`. These supplied worlds are not natural
-campaign or long-soak qualification.
+it with `scripts/validate-bitermotors-uplift.sh`; entry qualification alone is
+not campaign victory. The [physical Model ending](docs/endgame-validation.md)
+covers native orbital assembly, real cargo-pod return, ground activation,
+interruption recovery, extraction/removal, false-win rejection and separate
+process reloads. Reproduce it with `scripts/validate-bitermotors-delivery.sh`
+and `scripts/validate-bitermotors-finale.sh`. Supplied fixture infrastructure is
+not a natural campaign, practical-layout or long-soak qualification. The old
+controller reports remain dated historical evidence only.
 The [economy/guidance evidence](docs/economy-guidance-validation.md) records
 prototype-derived Progress costs, business profit versus recovered capital,
 and three finite-market sensitivities. Prices are unchanged; design freeze,

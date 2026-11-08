@@ -97,13 +97,12 @@ class AiValidationRunnerTests(unittest.TestCase):
         self.assertNotIn('test_set_ai_token_progress', fixture)
         self.assertNotIn('crafting_progress =', fixture)
 
-    def test_delivery_fixture_tracks_compact_core_output_boundaries(self):
+    def test_delivery_fixture_qualifies_actual_orbital_model_ending(self):
         fixture = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
-        self.assertIn("machine.prototype.selection_box.right_bottom.x", fixture)
-        self.assertIn("machine.prototype.selection_box.right_bottom.y", fixture)
-        self.assertIn("native loader targets current core footprint", fixture)
-        self.assertIn("for belt_x = right_edge + 1", fixture)
-        self.assertIn("for y = bottom_edge + 1", fixture)
+        self.assertIn("bitermotors-assemble-agi-model", fixture)
+        self.assertIn("bitermotors-activate-agi-model", fixture)
+        self.assertIn("on_cargo_pod_delivered_cargo", fixture)
+        self.assertNotIn("bitermotors-planetary-grid-controller", fixture)
 
     def test_scale_yields_recipe_costs_and_research_are_checked_natively(self):
         fixture = (ROOT / "scripts/fixtures/ai-control.lua").read_text()
@@ -132,7 +131,7 @@ class AiValidationRunnerTests(unittest.TestCase):
         self.assertIn('"other_force_generated"] == 200_000', self.script)
         self.assertIn('"datasets_extracted_by_inserter"] == 36', self.script)
         self.assertIn('"packaging_datasets"] == 1', self.script)
-        self.assertIn('storage.tasks[13].completions, 9', fixture)
+        self.assertIn('storage.tasks[12].completions, 9', fixture)
         self.assertIn('storage.before_pack + 1600000', fixture)
         self.assertIn('count = output(grid.machine).remove{name = TOKEN, count = 50000}', fixture)
         self.assertIn('storage.saved_generated + 24', fixture)

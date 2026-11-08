@@ -1,12 +1,13 @@
 # Orbital AGI Ending
 
 Design date: 2026-10-07. Updated: 2026-11-08.
-Status: **orbital entry, banked work and scale tiers implemented; Model finale pending**.
+Status: **orbital entry, banked work, scale tiers and physical Model finale implemented**.
 Source now has compact hardware, explicit cargo weights, one-radiator cooling
 and research without white science. Orbital interruptions now retain native
-inputs and progress, and the tier costs/yields below are implemented. The old
-10 GW terrestrial finale remains until Model assembly/return/activation replaces
-it. No player-save or live-process operation was performed; the source-linked
+inputs and progress, and the tier costs/yields below are implemented. The Model
+now assembles in orbit, returns by native cargo pod and activates on Nauvis.
+The old controller/capital finale has been removed; the terminal epilogue remains
+next. No player-save or live-process operation was performed; the source-linked
 local mod will load these changes on a later restart. See
 [entry validation](../docs/orbital-entry-validation.md) and
 [banked-work validation](../docs/orbital-banked-compute-validation.md).
@@ -41,14 +42,15 @@ The Token/Dataset fiction compresses AI work into Factorio items. A Dataset is
 real inference tokens scientifically guarantees AGI. The compact satellite art
 represents a cluster of rack-scale satellites, not a literal 250 MW single rack.
 
-## Proposed Working Values
+## Implemented Working Values
 
-Hardware, scale research/yields and banked orbital work are implemented in
-source. Model completion/activation below remain **modeled recommendations**. The full
+Hardware, scale research/yields, banked orbital work and Model
+completion/activation below are implemented in source. The full
 [cost study](../docs/orbital-ending-cost-study.md) distinguishes native captures,
-proposal overrides, material frontiers and unmeasured play time.
+material frontiers and unmeasured play time. Current recipes and timing are
+captured from the engine rather than supplied as proposal overrides.
 
-| Hardware | Normal footprint | Operation | Proposed manufacturing recipe |
+| Hardware | Normal footprint | Operation | Manufacturing recipe |
 | --- | --- | --- | --- |
 | Orbital Compute Cluster | 3x3 | 250 MW, current 1.5 crafting speed | 8 Datacenter Racks + 40 LDS + 12 LFP Battery Packs |
 | Space Solar Wing | 3x3 | 20 MW nominal; 60 MW in Nauvis orbit | 2 HD Panels + 10 blue circuits + 5 LDS + 2 High-energy Packs |
@@ -124,7 +126,7 @@ item/recipe and 50,000-Dollar finale charge from the campaign. Tandem Solar and
 Grid Battery Arrays may remain useful terrestrial upgrades without mandatory
 final placement or consumption counts.
 
-The proposed orbital final recipe consumes 20,000 Datasets and one Datacenter
+The orbital final recipe consumes 20,000 Datasets and one Datacenter
 Rack and produces one portable AGI Model. Approximately one normal minute is
 enough for the final native craft; this is compilation/assembly of work already
 performed, not another long training countdown. Disable final productivity and
@@ -150,6 +152,18 @@ save/reload and multiplayer without per-tick whole-world scans or inventory poll
 The ordinary final craft may benefit from quality speed; no special
 quality-independent countdown or 90%-buffer requirement remains.
 
+Native assembly records one force/platform/quality credit, independent of the
+machine's output inventory. A hub's actual outgoing Model pod reserves that
+credit; delivery into the same force's canonical Nauvis Cargo Landing Pad grants
+one quality-matched activation credit. Destroyed pods forfeit their reservation.
+Native activation consumes that credit and persistently latches victory once.
+The authority is event-based and bounded to credits and live cargo pods, not
+per-tick inventory/world scans. Ordinary same-quality items have no unique serial
+identity: these credits prove completion of the genuine chain, not which
+individual fungible item a player subsequently moved. Injected stock or raw
+production statistics cannot fabricate the chain. Output extraction, recipe
+changes and machine removal do not erase earned completion.
+
 ## Epilogue
 
 After persistent victory is recorded, show a short native terminal panel:
@@ -171,14 +185,14 @@ Keep the ending out of the public README's marketing copy.
 ## Cost And Pacing Findings
 
 - Ideal remaining AI/research cash is 21,191 Dollars; the original 2026-10-07
-  comparison was 132,326 under the old costs/ending. The refreshed study records
-  the current legacy-controller comparison after tier changes. Prior terrestrial factories,
+  comparison was 132,326 under the removed costs/ending. The refreshed study
+  uses the implemented Model recipes and native timing. Prior terrestrial factories,
   research and optional fleet capital are not funded again for free.
 - The first cluster uses nine automatic separate-item launches with partial
   minimum requests, including starter, foundation, belts/inserters and cash.
 - Twelve clusters fit a paper 1,300-tile single-platform envelope. Batched
-  uplifts need 35 rockets; a 1/4/8/12 staged ramp needs 49 before extra top-ups.
-  The staged bill contains 4,490 blue circuits, 2,450 rocket fuel and substantial
+  uplifts need 36 rockets; a 1/4/8/12 staged ramp needs 50 before extra top-ups,
+  including the final Rack. The staged bill contains 4,540 blue circuits, 2,500 rocket fuel and substantial
   steel/copper. The physical recipe and blueprint work must still be tested.
 - At 60 effective science sets/minute and 2,000 starting Dollars, partially
   utilized taxi cases finish the ideal-input cash/compute model in about 5.7 h,
@@ -209,9 +223,9 @@ before freezing yields or promising the final campaign duration.
    power/cooling pause-and-resume, physical archive consumption, orbital Model
    output, real cargo-pod return and ground activation. Remove the obsolete
    controller/capital/uninterrupted-run runtime and player guidance.
-   **Banked-work/tier sub-slice completed 2026-11-08; Model completion remains
-   next.** [Native evidence](../docs/orbital-banked-compute-validation.md) keeps
-   this implementation separate from the pending replacement finale.
+   **Banked-work/tier and Model completion implemented 2026-11-08.**
+   [Banked-work evidence](../docs/orbital-banked-compute-validation.md) remains
+   distinct from the [physical Model ending](../docs/endgame-validation.md).
 3. **Ending interface and artwork:** progressive Token/Dataset/Model status,
    concise actionable blockers, native terminal epilogue, satellite-shaped
    core/solar/radiator art and readable filterable icons. No new HUD clutter.

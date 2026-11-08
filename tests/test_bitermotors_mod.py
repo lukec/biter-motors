@@ -457,12 +457,11 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-ev-charging-station-v4",
             "bitermotors-ai-token",
             "bitermotors-agi-model",
-            "bitermotors-agi-training-run",
+            "bitermotors-assemble-agi-model",
+            "bitermotors-activate-agi-model",
             "bitermotors-agi-training-dataset",
-            "bitermotors-capital-allocation",
             "bitermotors-terrestrial-datacenter",
             "bitermotors-orbital-datacenter-core",
-            "bitermotors-planetary-grid-controller",
             "bitermotors-sell-premium-ev",
             "bitermotors-orbital-ai-token",
         ]:
@@ -867,7 +866,7 @@ class BiterMotorsModTest(unittest.TestCase):
         ]
         technology = data[
             data.index('tech("bitermotors-espider-engineering"'):
-            data.index('tech("bitermotors-planetary-energy-grid"')
+            data.index('local battery_material_recovery = tech(')
         ]
 
         self.assertIn('table.deepcopy(data.raw["spider-vehicle"].spidertron)', prototype)
@@ -913,7 +912,8 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-sell-megatruck",
             "bitermotors-terrestrial-ai-token",
             "bitermotors-orbital-ai-token",
-            "bitermotors-agi-training-run",
+            "bitermotors-assemble-agi-model",
+            "bitermotors-activate-agi-model",
         ]:
             self.assertIn(f'"{recipe_name}"', data[data.index("for _, recipe_name in pairs({", data.index("allow_productivity = false")):])
         self.assertIn("data.raw.recipe[recipe_name].allow_quality = false", data)
@@ -945,7 +945,6 @@ class BiterMotorsModTest(unittest.TestCase):
             "datacenter-rack",
             "structural-casting",
             "agi-model",
-            "planetary-grid-controller",
             "bitertaxi-depot",
             "biterfactory-v2",
             "tandem-solar-array",
@@ -980,7 +979,7 @@ class BiterMotorsModTest(unittest.TestCase):
         with Image.open(MOD / "thumbnail.png") as image:
             self.assertEqual(image.size, (144, 144))
             self.assertEqual(image.mode, "RGB")
-        for slug in ["bitertaxi-depot", "planetary-grid-controller"]:
+        for slug in ["bitertaxi-depot", "orbital-datacenter-core"]:
             entity_path = MOD / f"graphics/entity/{slug}/{slug}.png"
             self.assertTrue(entity_path.exists())
             with Image.open(entity_path) as image:
@@ -1080,8 +1079,6 @@ class BiterMotorsModTest(unittest.TestCase):
             "biterfactory",
             "terrestrial-ai",
             "autonomous-logistics",
-            "planetary-energy-grid",
-            "achieving-agi",
         ]:
             path = MOD / "graphics/technology" / f"{technology}.png"
             self.assertTrue(path.exists(), technology)
@@ -1094,7 +1091,6 @@ class BiterMotorsModTest(unittest.TestCase):
             "ev-charging-station-v2",
             "terrestrial-datacenter",
             "bitertaxi-depot",
-            "planetary-grid-controller",
         ]:
             self.assertIn(f'"__bitermotors__/graphics/icons/{clean_subject}.png"', data)
 
@@ -1102,7 +1098,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('working_animation("biterfactory-loading-lights", 512, 128, 0.325', data)
         self.assertIn('tier == 2 and "biterfactory-v2-activity" or "biterfactory-v1-activity"', data)
         self.assertIn('working_animation("datacenter-cooling-fans"', data)
-        self.assertIn('working_animation("grid-charge-stages"', data)
+        self.assertNotIn('working_animation("grid-charge-stages"', data)
         self.assertIn('rendering.draw_sprite{', control)
         self.assertIn("function update_charger_stall_visuals(force_refresh)", control)
         self.assertIn('scale = 0.75', control)
@@ -1116,7 +1112,9 @@ class BiterMotorsModTest(unittest.TestCase):
         manifest = json.loads((qa.parent / "art-manifest.json").read_text())
         page = qa.read_text()
         self.assertTrue(qa.exists())
-        self.assertEqual(len(manifest["critical_assets"]), 27)
+        self.assertEqual(len(manifest["critical_assets"]), 26)
+        self.assertNotIn("bitermotors-planetary-grid-controller",
+                         {entry["prototype_id"] for entry in manifest["critical_assets"]})
         self.assertIn("Scripted local rendering", manifest["blender"]["pipeline"])
         self.assertIn("Biter Motors Artwork QA", page)
         self.assertIn("Directional vehicle production math", page)
@@ -1353,7 +1351,7 @@ class BiterMotorsModTest(unittest.TestCase):
         ]
         autonomous_tech = data[
             data.index('tech("bitermotors-autonomous-logistics"'):
-            data.index('tech("bitermotors-planetary-energy-grid"')
+            data.index('tech("bitermotors-espider-engineering"')
         ]
         token_recipe = data[
             data.index('recipe("bitermotors-terrestrial-ai-token"'):
@@ -2011,7 +2009,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "graphics/icons/ev-charging-station-v2.png",
             "graphics/icons/grid-battery.png",
             "graphics/icons/bitertaxi-depot.png",
-            "graphics/icons/planetary-grid-controller.png",
+            "graphics/icons/orbital-datacenter-core.png",
         ]:
             self.assertIn(clean_subject, data)
         station_recipe = data[data.index('recipe("bitermotors-ev-charging-station"'):data.index('recipe("bitermotors-ev-charging-station-v2"')]
@@ -2058,7 +2056,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('unlock("bitermotors-ev-charging-station-v2")', charging_tech)
         self.assertNotIn('unlock("bitermotors-ev-charging-station")', charging_tech)
         capital_scaling_tech = data[data.index('tech("bitermotors-capital-scaling"'):data.index('tech("bitermotors-ev-charging-network"')]
-        autonomous_tech = data[data.index('tech("bitermotors-autonomous-logistics"'):data.index('tech("bitermotors-planetary-energy-grid"')]
+        autonomous_tech = data[data.index('tech("bitermotors-autonomous-logistics"'):data.index('tech("bitermotors-espider-engineering"')]
         self.assertIn('unlock("bitermotors-ev-charging-station-v3")', capital_scaling_tech)
         self.assertIn('unlock("bitermotors-ev-charging-station-v4")', autonomous_tech)
         self.assertIn('v4_recipe.enabled = researched(force, "bitermotors-autonomous-logistics")', control)
@@ -2212,7 +2210,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("complete = autonomy_complete", journey)
         self.assertIn("premium_complete = customer_complete and snapshot.mass_market_sale_complete", journey)
         self.assertIn("mass_market_complete = premium_complete and snapshot.terrestrial_ai_researched", journey)
-        self.assertIn("orbital_complete = autonomy_complete and snapshot.planetary_grid_researched", journey)
+        self.assertIn("orbital_complete = autonomy_complete and snapshot.agi_models_assembled > 0", journey)
         self.assertIn("complete = orbital_complete and snapshot.victory", journey)
         self.assertIn("journey = progress_stages(snapshot)", control)
         self.assertIn("refresh_progress_panel", control)
@@ -2255,7 +2253,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("player.display_resolution.height / display_scale", control)
         self.assertIn("content.style.maximal_height = content_height", control)
         self.assertIn("Cumulative AI Tokens", control)
-        self.assertIn("if snapshot.planetary_grid_researched then", control)
+        self.assertIn("if snapshot.grid_scale_energy_researched then", control)
+        self.assertIn('label = "Earned compute"', control)
+        self.assertIn('label = "AGI Model"', control)
+        for field in ("agi_models_assembled", "agi_models_returned", "agi_models_in_transit", "agi_activation_progress"):
+            self.assertIn("snapshot." + field, control)
         self.assertIn("AI Tokens produced", control)
         self.assertIn('add_progress_section(content, "Compute", compute_rows)', control)
         self.assertIn("cumulative_ai_tokens_generated", control)
@@ -3038,15 +3040,16 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("settlement opposition", roadmap)
         self.assertIn("Post-Alpha Candidates", roadmap)
 
-    def test_agi_victory_roadmap_replaces_legacy_ending(self):
-        roadmap = (ROOT / "ROADMAP.md").read_text()
-        self.assertIn("### AGI Victory", roadmap)
-        self.assertIn("1,000,000,000 cumulative AI Token equivalents", roadmap)
-        self.assertIn("20,000 AGI Training Datasets", roadmap)
-        self.assertIn("100 Capital Allocations", roadmap)
-        self.assertIn("Sustain the controller's 10 GW draw for 20 minutes", roadmap)
-        self.assertIn("Native completion produces one physical AGI Model and triggers victory once", roadmap)
-        self.assertNotIn("Kardashev", roadmap)
+    def test_agi_victory_spec_requires_physical_orbital_model_and_native_activation(self):
+        spec = " ".join((ROOT / "feature_specs/orbital_agi_ending.md").read_text().split())
+        self.assertIn("20,000 Datasets and one Datacenter Rack", spec)
+        self.assertIn("genuine native orbital Model completion", spec)
+        self.assertIn("genuine native Nauvis activation", spec)
+        self.assertIn("possessing/injecting a Model", spec)
+        self.assertIn("force separation", spec)
+        self.assertIn("quality", spec)
+        self.assertIn("Hyperscale is not a permission to win", spec)
+        self.assertIn("Approximately 30 normal seconds", spec)
 
     def test_customer_reconciliation_is_not_per_second(self):
         control = (MOD / "control.lua").read_text()
@@ -3258,38 +3261,67 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("remains friendly during its patience period", control)
         self.assertIn('summary, summary_color = string.format("%d stalls available."', control)
 
-    def test_bitermotors_victory_is_agi_training_run(self):
+    def test_bitermotors_victory_requires_native_model_assembly_return_and_activation(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
-        self.assertIn('"bitermotors-planetary-grid-controller"', data)
-        self.assertIn('"bitermotors-agi-model"', data)
-        self.assertIn('recipe("bitermotors-agi-training-run"', data)
-        self.assertIn('tech("bitermotors-planetary-energy-grid"', data)
-        self.assertIn('unlock("bitermotors-planetary-grid-controller")', data)
-        self.assertNotIn('bitermotors-kardashev-type-1', data)
-        self.assertNotIn('bitermotors-planetary-grid-charge', data)
-        controller = data[data.index('"bitermotors-planetary-grid-controller"'):data.index('planetary_grid_controller.energy_source')]
-        self.assertIn('"10GW"', controller)
-        charge_recipe = data[data.index('recipe("bitermotors-agi-training-run"'):data.index('add_lab_input("lab", "bitermotors-dollar")')]
-        for expected in ['name = "bitermotors-agi-training-dataset", amount = 20000', 'name = "bitermotors-capital-allocation", amount = 100', 'name = "bitermotors-grid-battery-array", amount = 100', 'name = "processing-unit", amount = 10000', 'name = "bitermotors-agi-model", amount = 1', '1200']:
-            self.assertIn(expected, charge_recipe)
+        self.assertIn('AgiCompletion = require("runtime.agi_completion")', control)
+        for retired in ("bitermotors-planetary-grid-controller", "bitermotors-planetary-energy-grid",
+                        "bitermotors-agi-training-run", "bitermotors-capital-allocation",
+                        "bitermotors-package-capital-allocation", "bitermotors-planetary-grid-segment",
+                        "bitermotors-kardashev-type-1", "bitermotors-k1-knowledge"):
+            self.assertNotIn(retired, data)
+        assembly = data[data.index('recipe("bitermotors-assemble-agi-model"'):
+                        data.index('recipe("bitermotors-activate-agi-model"')]
+        activation = data[data.index('recipe("bitermotors-activate-agi-model"'):
+                          data.index('add_lab_input("lab", "bitermotors-dollar")')]
+        self.assertEqual([
+            ("bitermotors-agi-training-dataset", "20000"),
+            ("bitermotors-datacenter-rack", "1"), ("bitermotors-agi-model", "1"),
+        ], re.findall(r'name = "([^"]+)", amount = (\d+)', assembly))
+        self.assertEqual([("bitermotors-agi-model", "1")] * 2,
+                         re.findall(r'name = "([^"]+)", amount = (\d+)', activation))
+        self.assertIn('{"bitermotors-orbital-compute"}', assembly)
+        self.assertIn('{"bitermotors-datacenter"}', activation)
+        helper = data[data.index("local function recipe("):data.index("local function unlock(")]
+        self.assertIn("enabled = false", helper)
+        for name, recipe in (("bitermotors-assemble-agi-model", assembly),
+                             ("bitermotors-activate-agi-model", activation)):
+            self.assertNotIn(f'unlock("{name}")', data)
+            self.assertNotIn("enabled = true", recipe)
+            for guard in ("allow_productivity = false", "allow_quality = false",
+                          "auto_recycle = false", "raise_on_crafted = true"):
+                self.assertIn(guard, recipe)
         self.assertIn('name = "bitermotors-ai-token", amount = 50000', data)
-        capital_recipe = data[
-            data.index('recipe("bitermotors-package-capital-allocation"'):
-            data.index('recipe("bitermotors-agi-training-run"')
-        ]
-        self.assertIn('name = "bitermotors-dollar", amount = 500', capital_recipe)
-        for embodied_input in [
-            '"bitermotors-planetary-grid-segment"',
-            '"space-science-pack"',
-        ]:
-            self.assertNotIn(embodied_input, charge_recipe)
-        self.assertNotIn('"bitermotors-planetary-grid-segment"', data)
-        self.assertNotIn("bitermotors-k1-knowledge", data)
         self.assertIn('AGI_TOKEN_GATE = 1000000000', control)
-        self.assertIn('record_agi_training_completion', control)
-        self.assertNotIn('controller_has_agi_model', control)
-        self.assertNotIn('finish_completed_agi_training', control)
+        unlock = control[control.index("function sync_agi_training_unlock("):
+                         control.index("function sync_agi_training_unlock(") + 1600]
+        self.assertIn('cumulative >= AGI_TOKEN_GATE and researched(force, "bitermotors-grid-scale-energy")', unlock)
+        self.assertNotIn('researched(force, "bitermotors-hyperscale-training")', unlock)
+        self.assertIn("activation.enabled = progress.models_returned > 0", unlock)
+        completion = control[control.index("function record_agi_model_completion("):
+                             control.index("function record_agi_model_departure(")]
+        for guard in ("event.bonus", "not machine.valid", "cumulative_ai_tokens_generated(machine.force) < AGI_TOKEN_GATE",
+                      'researched(machine.force, "bitermotors-grid-scale-energy")',
+                      "event.recipe == AGI_ASSEMBLY_RECIPE_NAME", "machine.name == ORBITAL_DATACENTER_CORE_NAME",
+                      "platform.force ~= machine.force", 'platform.space_location.name ~= "nauvis"',
+                      "event.recipe == AGI_ACTIVATION_RECIPE_NAME", "machine.name == TERRESTRIAL_DATACENTER_NAME",
+                      "machine.surface == game.surfaces.nauvis",
+                      "AgiCompletion.assemble(state, machine.force.index, machine.surface.index, event.product_quality)",
+                      "AgiCompletion.activate(state, machine.force.index, event.product_quality)",
+                      "trigger_victory(machine.force, machine, event.product_quality)"):
+            self.assertIn(guard, completion)
+        self.assertLess(completion.index("AgiCompletion.activate("), completion.index("trigger_victory("))
+        for sampled in ("get_output_inventory", "get_item_count", "products_finished", "get_recipe", "count_item_produced"):
+            self.assertNotIn(sampled, completion)
+        self.assertIn('ipairs({AGI_ASSEMBLY_RECIPE_NAME, AGI_ACTIVATION_RECIPE_NAME})', control)
+        self.assertIn('script.on_event(prototypes.recipe[recipe_name].on_crafted_event, record_agi_model_completion)', control)
+        victory = control[control.index("local function trigger_victory("):control.index("function record_agi_model_completion(")]
+        self.assertIn('if victories[force.name] then\n    return', victory)
+        self.assertIn('victories[force.name] = true', victory)
+        self.assertIn('storage.bitermotors_agi_victory[force.name]', victory)
+        self.assertIn('source = "native-model-activation"', victory)
+        self.assertIn('model_quality = quality', victory)
+        self.assertIn('can_continue = true', victory)
         self.assertIn('sync_agi_training_unlock(force, true)', control)
         self.assertIn('function cumulative_ai_tokens_generated(force)', control)
         self.assertNotIn(
@@ -3301,28 +3333,36 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('"Cumulative AI Tokens"', control)
         self.assertIn('game.set_game_state', control)
 
-    def test_agi_training_duration_matches_recipe_status_and_guidance(self):
+    def test_agi_model_durations_match_machine_speed_status_and_guidance(self):
         data = (MOD / "data.lua").read_text()
         control = (MOD / "control.lua").read_text()
         locale = (MOD / "locale/en/bitermotors.cfg").read_text()
         readme = (MOD / "README.md").read_text()
-        validator = (ROOT / "scripts/validate-bitermotors-mod.sh").read_text()
-        recipe = data[
-            data.index('recipe("bitermotors-agi-training-run"'):
-            data.index('add_lab_input("lab", "bitermotors-dollar")')
-        ]
-        recipe_seconds = re.search(
-            r'name = "bitermotors-agi-model", amount = 1\}\}, (\d+),', recipe
-        )
-        status_seconds = re.search(r'^AGI_TRAINING_SECONDS = (\d+)$', control, re.M)
-        self.assertIsNotNone(recipe_seconds)
-        self.assertIsNotNone(status_seconds)
-        self.assertEqual(int(recipe_seconds.group(1)), 20 * 60)
-        self.assertEqual(recipe_seconds.group(1), status_seconds.group(1))
-        self.assertIn("sustain 10 GW for 20 minutes", control)
-        self.assertIn("20-minute AGI Training Run", locale)
-        self.assertIn("10 GW for 20 uninterrupted minutes", readme)
-        self.assertIn('agi_recipe.get("energy_required") != 1200', validator)
+        status = control[control.index("function agi_training_status("):control.index("function endgame_status(")]
+        for recipe_name, machine_name, next_machine, expected_speed, expected_seconds in (
+            ("bitermotors-assemble-agi-model", "orbital_datacenter_core", "orbital_radiator_panel", 1.5, 60),
+            ("bitermotors-activate-agi-model", "terrestrial_datacenter", "bitertaxi_depot", 1, 30),
+        ):
+            recipe = data[data.index(f'recipe("{recipe_name}"'):]
+            recipe = recipe[:recipe.index('\n  )')]
+            duration = re.search(r'name = "bitermotors-agi-model", amount = 1\}\}, (\d+),', recipe)
+            machine = data[data.index(f"local {machine_name} ="):data.index(f"local {next_machine} =")]
+            speed = re.search(r'"\d+MW",\s+([\d.]+)\s+\)', machine)
+            self.assertIsNotNone(duration)
+            self.assertIsNotNone(speed)
+            self.assertEqual(expected_speed, float(speed.group(1)))
+            self.assertEqual(expected_seconds, int(duration.group(1)) / float(speed.group(1)))
+        self.assertIn("assembly_seconds = 60", status)
+        self.assertIn("activation_seconds = 30", status)
+        self.assertIn("activation_power_watts = 8000000", status)
+        self.assertIn("one minute", control)
+        self.assertIn("30 normal seconds at 8 MW", control)
+        self.assertIn("One minute at normal speed", locale)
+        self.assertIn("30 seconds at normal speed", locale)
+        self.assertIn("one minute at normal cluster speed", readme)
+        self.assertIn("30 seconds at", readme)
+        for obsolete in ("10 GW", "20-minute AGI Training Run", "20 uninterrupted minutes"):
+            self.assertNotIn(obsolete, locale + readme)
 
     def test_late_grid_energy_upgrades_and_orbital_milestones(self):
         data = (MOD / "data.lua").read_text()
@@ -3365,11 +3405,82 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('unlock("bitermotors-tandem-solar-array")', data)
         self.assertIn('unlock("bitermotors-grid-battery-array")', data)
 
-    def test_ground_compute_scraps_but_orbital_work_is_banked(self):
+    def test_native_model_cargo_requires_credited_origin_quality_and_same_force_nauvis_delivery(self):
         control = (MOD / "control.lua").read_text()
-        self.assertIn('["bitermotors-terrestrial-datacenter"] = true', control)
-        self.assertIn('[ORBITAL_DATACENTER_CORE_NAME] = true', control)
-        self.assertIn('["bitermotors-planetary-grid-controller"] = AGI_TRAINING_RECIPE_NAME', control)
+        runtime = (MOD / "runtime/agi_completion.lua").read_text()
+        departure = control[control.index("function record_agi_model_departure("):
+                            control.index("function record_agi_model_landing(")]
+        landing = control[control.index("function record_agi_model_landing("):
+                            control.index("function record_agi_model_return(")]
+        delivery = control[control.index("function record_agi_model_return("):
+                           control.index("function clear_office_buyer_reservation(")]
+        for guard in ('origin.type ~= "space-platform-hub"', "origin.force ~= pod.force",
+                      "defines.inventory.cargo_unit", "stack.name == AGI_MODEL_ITEM_NAME",
+                      "cargo[stack.quality.name]", "progress.assembly_credits[origin.surface.index]",
+                      "script.register_on_object_destroyed(pod)"):
+            self.assertIn(guard, departure)
+        for guard in ("local transit = state.pods[pod.unit_number]", "if not transit then return end",
+                      "local destination = pod.cargo_pod_destination",
+                      "destination.type == defines.cargo_destination.station and destination.station",
+                      'pad and pad.valid and pad.type == "cargo-landing-pad"',
+                      "pad.force == pod.force and pad.surface == game.surfaces.nauvis",
+                      "pod.surface == pad.surface", "transit.landing_pad = pad"):
+            self.assertIn(guard, landing)
+        self.assertNotIn("AgiCompletion.deliver(", landing)
+        self.assertNotIn("sync_agi_training_unlock(", landing)
+        for guard in ("local transit = state.pods[pod.unit_number]", "if not transit then return end",
+                      "local pad = transit.landing_pad",
+                      'event.spawned_container or not pad or not pad.valid or pad.type ~= "cargo-landing-pad"',
+                      "pad.force ~= pod.force or pad.surface ~= game.surfaces.nauvis or pod.surface ~= pad.surface",
+                      "AgiCompletion.forget_pod(state, pod.unit_number)",
+                      "AgiCompletion.deliver(state, pod.unit_number, pad.force.index)"):
+            self.assertIn(guard, delivery)
+        self.assertNotIn("pod.cargo_pod_destination", delivery)
+        for block in (landing, delivery):
+            self.assertNotIn("find_entities_filtered", block)
+            self.assertNotIn("cargo_bay_connection_owner", block)
+            self.assertNotIn("on_nth_tick", block)
+        for event, handler in (("on_cargo_pod_started_ascending", "record_agi_model_departure"),
+                               ("on_cargo_pod_finished_descending", "record_agi_model_landing"),
+                               ("on_cargo_pod_delivered_cargo", "record_agi_model_return")):
+            self.assertIn(f"script.on_event(defines.events.{event}, {handler})", control)
+            self.assertEqual(1, len(re.findall(r"script\.on_event\(defines\.events\." + event + r"\s*,", control)))
+            self.assertEqual(2, control.count(handler))
+        self.assertIn("storage.bitermotors_agi_completion = AgiCompletion.ensure(storage.bitermotors_agi_completion)", control)
+        assemble = runtime[runtime.index("function AgiCompletion.assemble("):runtime.index("function AgiCompletion.depart(")]
+        depart = runtime[runtime.index("function AgiCompletion.depart("):runtime.index("function AgiCompletion.forget_pod(")]
+        deliver = runtime[runtime.index("function AgiCompletion.deliver("):runtime.index("function AgiCompletion.activate(")]
+        activate = runtime[runtime.index("function AgiCompletion.activate("):]
+        self.assertIn("AgiCompletion.force(state, force_index)", assemble)
+        self.assertIn("progress.assembly_credits[surface_index]", assemble)
+        self.assertIn("credits[quality] = (credits[quality] or 0) + 1", assemble)
+        for guard in ("if state.pods[pod_id] then return false end", "state.forces[force_index]",
+                      "progress.assembly_credits[surface_index]", "if not available then return false end",
+                      "math.min(count, available[quality] or 0)", "available[quality] = available[quality] - amount",
+                      "if not next(reserved) then return false end", "qualities = reserved"):
+            self.assertIn(guard, depart)
+        self.assertIn("local transit = AgiCompletion.forget_pod(state, pod_id)", deliver)
+        self.assertIn("transit.force_index ~= force_index then return false end", deliver)
+        self.assertIn("progress.return_credits[quality] = (progress.return_credits[quality] or 0) + count", deliver)
+        self.assertIn("progress.models_returned = progress.models_returned + count", deliver)
+        self.assertIn("state.forces[force_index]", activate)
+        self.assertIn("(progress.return_credits[quality] or 0) == 0 then return false end", activate)
+        self.assertIn("progress.return_credits[quality] = progress.return_credits[quality] - 1", activate)
+        self.assertIn("progress.models_activated = progress.models_activated + 1", activate)
+        destroyed = control[control.index("script.on_event(defines.events.on_object_destroyed,"):
+                            control.index("script.on_event(defines.events.on_biter_base_built,")]
+        self.assertIn("state.registrations[event.registration_number]", destroyed)
+        self.assertIn("AgiCompletion.forget_pod(state, pod_id)", destroyed)
+        self.assertIn("progress.assembly_credits[event.surface_index] = nil", destroyed)
+
+    def test_ground_compute_scraps_but_orbital_and_activation_work_are_banked(self):
+        control = (MOD / "control.lua").read_text()
+        registry = control[control.index("BITERMOTORS_COMPUTE_RECIPES = {"):
+                           control.index('local DOLLAR_NAME =')]
+        self.assertIn('["bitermotors-terrestrial-datacenter"] = "bitermotors-terrestrial-ai-token"', registry)
+        self.assertIn('[ORBITAL_DATACENTER_CORE_NAME] = true', registry)
+        self.assertNotIn("AGI_ACTIVATION_RECIPE_NAME", registry)
+        self.assertNotIn("planetary-grid-controller", registry)
         self.assertIn('status == defines.entity_status.low_power', control)
         self.assertIn('status == defines.entity_status.no_power', control)
         monitor = control[control.index('local function reset_compute_queue_progress(queue)'):
@@ -3377,7 +3488,11 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('local power_failed = status == defines.entity_status.no_power\n'
                       '        or status == defines.entity_status.low_power', monitor)
         self.assertNotIn('entity.electric_buffer_size * 0.1', monitor)
-        self.assertIn('entity.crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0', control)
+        self.assertIn('local required_recipe = BITERMOTORS_COMPUTE_RECIPES[entity.name]', monitor)
+        self.assertIn('local recipe_matches = required_recipe == true or (recipe and recipe.name == required_recipe)', monitor)
+        self.assertIn('if recipe_matches and (entity.crafting_progress or 0) > 0', monitor)
+        self.assertIn('entity.crafting_progress = 0', monitor)
+        self.assertNotIn("AGI_RESET_PROGRESS", monitor)
         self.assertIn('entity.disabled_by_script = true', control)
         self.assertIn('entity.energy >= entity.electric_buffer_size * 0.9', control)
         self.assertIn('entity.disabled_by_script = false', control)
@@ -3843,7 +3958,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-biterfactory-v2",
             "bitermotors-terrestrial-datacenter",
             "bitermotors-orbital-datacenter-core",
-            "bitermotors-planetary-grid-controller",
+            "bitermotors-agi-model",
         ]:
             item_line = next(line for line in data.splitlines() if f'item("{name}"' in line)
             self.assertIn(", 1, {", item_line, name)
@@ -3889,16 +4004,18 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn('"electromagnetic-science-pack"', orbital)
         self.assertNotIn('"bitermotors-satellite-constellation"', orbital)
 
-        planetary = data[data.index('tech("bitermotors-planetary-energy-grid"'):
-                         data.index('local battery_material_recovery')]
-        self.assertIn('"nuclear-power"', planetary)
+        finale_recipes = data[data.index('recipe("bitermotors-assemble-agi-model"'):
+                              data.index('add_lab_input("lab", "bitermotors-dollar")')]
         for science_pack in [
             "metallurgic-science-pack",
             "electromagnetic-science-pack",
             "agricultural-science-pack",
             "cryogenic-science-pack",
         ]:
-            self.assertNotIn(f'"{science_pack}"', planetary)
+            self.assertNotIn(f'"{science_pack}"', finale_recipes)
+        self.assertNotIn('tech("bitermotors-planetary-energy-grid"', data)
+        self.assertIn('property = "gravity", min = 0, max = 0', finale_recipes)
+        self.assertIn('data.raw.planet.nauvis.surface_properties', final_fixes)
 
         self.assertIn('local module_3 = module_family .. "-module-3"', updates)
         self.assertIn('{"bitermotors-dollar", 10}', updates)

@@ -121,4 +121,15 @@ for _, prototypes in pairs(data.raw) do
   end
 end
 
+-- Native conditions exclude orbit/other planets; runtime additionally requires
+-- the canonical Nauvis surface, not a modded surface with matching properties.
+local activation_conditions = {}
+local nauvis_properties = data.raw.planet.nauvis.surface_properties or {}
+for _, property in ipairs({"gravity", "pressure", "magnetic-field"}) do
+  local value = nauvis_properties[property]
+  if value == nil then value = data.raw["surface-property"][property].default_value end
+  activation_conditions[#activation_conditions + 1] = {property = property, min = value, max = value}
+end
+data.raw.recipe["bitermotors-activate-agi-model"].surface_conditions = activation_conditions
+
 require("prototypes.recipe_recycling").refresh()

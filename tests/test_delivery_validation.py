@@ -1,76 +1,127 @@
 import json
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+RUNNER = ROOT / "scripts/validate-bitermotors-finale.sh"
+FIXTURE = ROOT / "scripts/fixtures/delivery-control.lua"
 
 
 class DeliveryValidationTests(unittest.TestCase):
-    def test_native_delivery_cannot_be_replaced_with_inventory_injection(self):
-        source = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
+    def test_route_uses_native_payload_and_cargo_not_progress_injection(self):
+        source = FIXTURE.read_text()
         for marker in ("on_cargo_pod_started_ascending", "on_cargo_pod_delivered_cargo",
-                       "space_platform_hub_requester", "trash_not_requested = true",
-                       "request(storage.pad, DATASET, 20000)", "both real platforms delivered",
-                       "actual native billion-equivalent computation", "native inserters commit entire Dataset payload"):
+                       "cargo_pod_origin", "space_platform_hub_requester", "trash_not_requested = true",
+                       "actual full 20k input loading assertion", "native inserter physically extracted Model",
+                       "one billion native earned equivalents", "19999 Datasets cannot assemble",
+                       "new physical Model produced after assembly reload",
+                       "new native activation event after activation reload",
+                       "orbital outage banks progress", "one native assembly"):
             self.assertIn(marker, source)
         for forbidden in ("test_set_ai_token_progress", "crafting_progress =", "bonus_progress =",
                           "create_cargo_pod", "force_finish_ascending", "force_finish_descending",
-                          "insert{name = DATASET", "remove{name = DATASET", "cargo_pod_destination ="):
+                          "cargo_pod_destination =", "storage.bitermotors_"):
             self.assertNotIn(forbidden, source)
+        self.assertEqual(40 * 125 * 4 * 50000, 1_000_000_000)
 
-    def test_final_technology_and_construction_are_native(self):
-        source = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
-        self.assertIn('event.by_script, false', source)
-        self.assertIn('force.add_research(RESEARCH)', source)
-        self.assertIn('storage.builder.set_recipe(CONTROLLER)', source)
-        self.assertIn('storage.builder.products_finished, 1', source)
-        self.assertIn('storage.capital.products_finished, 100', source)
-        self.assertNotIn('force.technologies[RESEARCH].researched = true', source)
-        self.assertIn('full delivered-payload training duration', source)
-        self.assertIn('for _, loader in ipairs(storage.final_loaders) do loader.disabled_by_script = true end', source)
-        self.assertIn('for _, loader in ipairs(storage.final_loaders) do loader.disabled_by_script = false end', source)
-        self.assertIn('constructed controller has an unobstructed footprint', source)
-        self.assertIn('sections.add_section()', source)
+    def test_runner_is_isolated_bounded_and_inspects_even_successful_logs(self):
+        source = RUNNER.read_text()
+        wrapper = (ROOT / "scripts/validate-bitermotors-delivery.sh").read_text()
+        self.assertIn("BITERMOTORS_ENDING_CASE=delivery exec bash", wrapper)
+        for marker in ('bitermotors_stage_mod "$mods"', '--bind 127.0.0.1 --port "$port"',
+                       'kill -INT "$server_pid"', 'for _ in {1..1200}', '--minimum-tick 1',
+                       'for phase in assembly flight return activation won', '--benchmark-ticks 2461',
+                       'bitermotors_check_log "$log" --expect-marker Goodbye'):
+            self.assertIn(marker, source)
+        self.assertNotIn("killall", source)
+        self.assertLess(source.index('if ! bitermotors_check_log "$log"'),
+                        source.index('if (( status != 0 ))'))
+        for name in ("delivery", "finale"):
+            self.assertTrue((ROOT / f"scripts/validate-bitermotors-{name}.sh").stat().st_mode & 0o111)
+        result = subprocess.run(["bash", "-n", str(RUNNER)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_runner_has_exact_staging_checkpoint_log_and_duration_guards(self):
-        path = ROOT / "scripts/validate-bitermotors-delivery.sh"
-        source = path.read_text()
-        self.assertTrue(path.stat().st_mode & 0o111)
-        self.assertIn('bitermotors_stage_mod "$mods"', source)
-        self.assertIn('--bind 127.0.0.1 --port "$port"', source)
-        self.assertIn('kill -INT "$pid"', source)
-        self.assertNotIn('killall', source)
-        self.assertIn('--expect-marker Goodbye', source)
-        self.assertIn('--benchmark-ticks 61 --benchmark-runs 1', source)
-        self.assertIn('test -s "$reload"', source)
-        self.assertIn('71_999 <= training["training_ticks"] <= 72_001', source)
-        self.assertIn('reload["victory"] == training["victory"]', source)
-        metadata = re.search(r"<<'EOF_INFO'\n(.*?)\nEOF_INFO", source, re.S)
-        info = json.loads(metadata.group(1))
-        self.assertIn('base >= 2.1.20', info['dependencies'])
-        self.assertIn('space-age >= 2.1.20', info['dependencies'])
 
-    def test_scale_yields_conserve_actual_compute_through_legacy_delivery(self):
-        fixture = (ROOT / "scripts/fixtures/delivery-control.lua").read_text()
-        runner = (ROOT / "scripts/validate-bitermotors-delivery.sh").read_text()
-        for marker in (
-            'i == 17 and 1 or 157', 'recipe == COMPUTE and 4 or 10000',
-            'storage.datasets == 20096', 'row.datasets, 10048',
-            '"research and transport cannot earn compute again"',
-            '"delivered compute ledger survives reload"',
-            'row.validation_scope = "legacy-controller-regression"',
-        ):
-            self.assertIn(marker, fixture)
-        self.assertEqual(32 * 157 * 4, 20096)
-        self.assertEqual(20096 * 50000 + 10000, 1004810000)
-        for marker in (
-            'compute["datasets"] == 20_096', '== 1_004_810_000',
-            'compute["datasets"] * 50_000 + compute["tokens"]',
-            'training["datasets"] == compute["datasets"]',
-            'row.get("validation_scope") == "legacy-controller-regression"',
-        ):
-            self.assertIn(marker, runner)
+class EndingReportContractTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.directory = Path(self.temp.name)
+        self.checker = re.search(r"<<'EOF_CHECK'\n(.*?)\nEOF_CHECK", RUNNER.read_text(), re.S).group(1)
+        statuses = ["payload_passed", "assembly_checkpoint", "assembly_reload_passed", "assembly_passed",
+                    "flight_checkpoint", "flight_reload_passed", "return_checkpoint", "return_reload_passed", "activation_checkpoint",
+                    "activation_reload_passed", "won_checkpoint", "won_reload_passed"]
+        self.rows = [{"status": status, "tick": 10 * (i + 1), "assertions": i + 1,
+                      "validation_scope": "native-model-ending", "limits": "supplied construction",
+                      "payload_quality": "normal"} for i, status in enumerate(statuses)]
+        self.rows[0].update(datasets_loaded=20000, earned_equivalents=1000000000)
+        self.rows[1].update(progress=0.4, products=125)
+        self.rows[3].update(products_after_reload=126, assembly_reload_tick=30, native_completion_tick=35)
+        self.rows[4].update(models_in_transit=1, return_credits=0, pod=77)
+        self.rows[5].update(pod=77)
+        self.rows[6].update(models_returned=1)
+        self.rows[8].update(progress=0.4, products=0)
+        self.rows[10].update(models_activated=1, victory={"tick": 110})
+        for checkpoint, reload in ((1, 2), (4, 5), (6, 7), (8, 9), (10, 11)):
+            self.rows[reload]["saved_tick"] = self.rows[checkpoint]["tick"]
+        self.rows[11].update(victory={"tick": 110}, native_activations=1, freeplay_ticks=2400,
+                            activation_measured_watts=8000000)
+        for phase in ("seed", "assembly", "flight", "return", "activation", "won"):
+            (self.directory / f"bitermotors-delivery-{phase}.zip").write_bytes(b"fixture checkpoint")
+
+    def run_check(self):
+        report = self.directory / "report.jsonl"
+        report.write_text("".join(json.dumps(row) + "\n" for row in self.rows))
+        return subprocess.run([sys.executable, "-c", self.checker, str(report), str(self.directory), "delivery"],
+                              capture_output=True, text=True)
+
+    def test_accepts_complete_report(self):
+        result = self.run_check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rejects_tick_zero(self):
+        self.rows[0]["tick"] = 0
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_old_products_after_reload(self):
+        self.rows[3]["products_after_reload"] = 125
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_old_native_event_after_reload(self):
+        self.rows[3]["native_completion_tick"] = 29
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_partial_payload(self):
+        self.rows[0]["datasets_loaded"] = 19999
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_missing_or_duplicate_phase(self):
+        self.rows.insert(3, dict(self.rows[2]))
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_missing_native_checkpoint(self):
+        (self.directory / "bitermotors-delivery-return.zip").unlink()
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_paused_freeplay(self):
+        self.rows[11]["freeplay_ticks"] = 0
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_changed_victory_after_reload(self):
+        self.rows[11]["victory"] = {"tick": 120}
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_replaced_inflight_pod(self):
+        self.rows[5]["pod"] = 78
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_rejects_flight_save_after_delivery(self):
+        self.rows[4]["return_credits"] = 1
+        self.assertNotEqual(self.run_check().returncode, 0)
 
 
 if __name__ == "__main__":

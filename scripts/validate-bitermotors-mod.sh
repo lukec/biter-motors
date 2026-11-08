@@ -69,9 +69,9 @@ EOF_DATA
 
 cat > "$smoke/control.lua" <<'EOF_LUA'
 local REPORT = "bitermotors-smoke.jsonl"
-local CONTROLLER = "bitermotors-planetary-grid-controller"
+local MODEL_TERMINAL = "bitermotors-terrestrial-datacenter"
 local AGI_MODEL = "bitermotors-agi-model"
-local AGI_RECIPE = "bitermotors-agi-training-run"
+local AGI_RECIPE = "bitermotors-activate-agi-model"
 local DOLLAR = "bitermotors-dollar"
 local GRID_CONNECTION = "bitermotors-ev-charging-grid-connection"
 local POWER_SINK = "bitermotors-ev-charging-power-sink"
@@ -168,7 +168,7 @@ script.on_init(function()
   economy_contract.launch_item_weights = {}
   for _, name in ipairs({
     ORBITAL_CORE, ORBITAL_RADIATOR, SPACE_SOLAR, DOLLAR,
-    "bitermotors-agi-training-dataset", AGI_MODEL,
+    "bitermotors-agi-training-dataset", "bitermotors-datacenter-rack", AGI_MODEL,
     "space-platform-starter-pack", "space-platform-foundation",
     "transport-belt", "inserter"
   }) do
@@ -190,7 +190,7 @@ script.on_init(function()
     "bitermotors-cybertrain-logistics",
     "bitermotors-espider-engineering",
     "bitermotors-orbital-compute",
-    "bitermotors-planetary-energy-grid"
+    "bitermotors-grid-scale-energy"
   }) do
     if force.technologies[technology_name] then
       force.technologies[technology_name].researched = true
@@ -293,7 +293,7 @@ script.on_init(function()
   local far_biter_spawner = create_named(surface, BITER_SPAWNER, {1400, 0}, game.forces.enemy)
   local hostile_worm = create_named(surface, WORM, {180, 100}, game.forces.enemy)
   local legacy_customer_worm = create_named(surface, WORM, {190, 100}, game.forces[CUSTOMER_FORCE])
-  local controller = create_named(surface, CONTROLLER, {24, -24}, force)
+  local model_terminal = create_named(surface, MODEL_TERMINAL, {24, -24}, force)
   local biterfactory = create_named(surface, BITERFACTORY, {24, 24}, force)
   local biterfactory_v2 = create_named(surface, BITERFACTORY_V2, {40, 24}, force)
   local biterfactory_economics_test = create_named(surface, BITERFACTORY, {80, 80}, force)
@@ -430,8 +430,8 @@ script.on_init(function()
     bitertaxi_power.power_usage = 0
     bitertaxi_power.output_flow_limit = 20000000
   end
-  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not bitertaxi_only_spawner or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not controller or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not vanilla_spider or not espider or not datacenter or not datacenter_pole or not datacenter_power then
-    write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, controller = controller ~= nil, biterfactory = biterfactory ~= nil, biterfactory_v2 = biterfactory_v2 ~= nil, solar_array = solar_array ~= nil, grid_battery = grid_battery ~= nil}
+  if not milestone_office or not reservation_office or not bitertaxi_office or not grid_battery_office or not grid_battery_office_pole or not bitertaxi_center or not bitertaxi_substation or not bitertaxi_power or not bitertaxi_only_spawner or not pole or not station or not station_v2 or not biter_spawner or not commanded_biter or not customer_buyer_2 or not customer_buyer_3 or not customer_buyer_4 or not outer_customer_spawner or not outer_customer_biter or not customer_turret or not far_biter_spawner or not hostile_worm or not legacy_customer_worm or not model_terminal or not biterfactory or not biterfactory_v2 or not biterfactory_economics_test or not solar_array or not grid_battery or not power_source or not roadster or not self_driving_ev or not blocked_self_driving_ev or not vanilla_spider or not espider or not datacenter or not datacenter_pole or not datacenter_power then
+    write_report{tick = game.tick, status = "failed", reason = "entity creation failed", milestone_office = milestone_office ~= nil, reservation_office = reservation_office ~= nil, pole = pole ~= nil, station = station ~= nil, station_v2 = station_v2 ~= nil, biter_spawner = biter_spawner ~= nil, far_biter_spawner = far_biter_spawner ~= nil, hostile_worm = hostile_worm ~= nil, legacy_customer_worm = legacy_customer_worm ~= nil, model_terminal = model_terminal ~= nil, biterfactory = biterfactory ~= nil, biterfactory_v2 = biterfactory_v2 ~= nil, solar_array = solar_array ~= nil, grid_battery = grid_battery ~= nil}
     return
   end
 
@@ -493,7 +493,7 @@ script.on_init(function()
     "bitermotors", "test_set_ai_token_progress", "player", 1000000000, 0
   )
   storage.agi_training_status = remote.call("bitermotors", "agi_training_status", "player")
-  pcall(function() controller.set_recipe(AGI_RECIPE) end)
+  pcall(function() model_terminal.set_recipe(AGI_RECIPE) end)
   pcall(function() biterfactory.set_recipe(PREMIUM_EV_RECIPE) end)
   pcall(function() biterfactory_v2.set_recipe(MASS_MARKET_EV_RECIPE) end)
   pcall(function() biterfactory_economics_test.set_recipe(PREMIUM_EV_ECONOMICS_RECIPE) end)
@@ -554,7 +554,7 @@ script.on_init(function()
     script.raise_event(defines.events.script_raised_built, {entity = station_v4})
   end
   script.raise_event(defines.events.script_raised_built, {entity = biterfactory})
-  script.raise_event(defines.events.script_raised_built, {entity = controller})
+  script.raise_event(defines.events.script_raised_built, {entity = model_terminal})
   script.raise_event(defines.events.script_raised_built, {entity = datacenter})
   script.raise_event(defines.events.script_raised_built, {entity = roadster})
 
@@ -566,7 +566,7 @@ script.on_init(function()
   storage.bitertaxi_office = bitertaxi_office
   storage.grid_battery_office = grid_battery_office
   storage.station_v2_unit_number = station_v2.unit_number
-  storage.controller_unit_number = controller.unit_number
+  storage.model_terminal_unit_number = model_terminal.unit_number
   storage.biterfactory_unit_number = biterfactory.unit_number
   storage.biterfactory_v2_unit_number = biterfactory_v2.unit_number
   storage.solar_array_unit_number = solar_array.unit_number
@@ -620,7 +620,7 @@ script.on_init(function()
     far_biter_spawner_unit_number = far_biter_spawner.unit_number,
     hostile_worm_unit_number = hostile_worm.unit_number,
     legacy_customer_worm_unit_number = legacy_customer_worm.unit_number,
-    controller_unit_number = controller.unit_number,
+    model_terminal_unit_number = model_terminal.unit_number,
     biterfactory_unit_number = biterfactory.unit_number,
     biterfactory_v2_unit_number = biterfactory_v2.unit_number,
     solar_array_unit_number = storage.solar_array_unit_number,
@@ -1091,8 +1091,8 @@ script.on_nth_tick(1, function()
   end
   storage.insertion_reported = true
   local surface = game.get_surface(storage.surface_index or 1)
-  local controller = surface and find_unit(surface, CONTROLLER, storage.controller_unit_number)
-  local output = controller and controller.get_inventory(output_inventory_id())
+  local model_terminal = surface and find_unit(surface, MODEL_TERMINAL, storage.model_terminal_unit_number)
+  local output = model_terminal and model_terminal.get_inventory(output_inventory_id())
   write_report{
     tick = game.tick,
     status = "inserted_model_rejected",
@@ -1117,7 +1117,7 @@ script.on_nth_tick(3781, function()
   local bitertaxi_office = find_unit(surface, SALES_OFFICE, storage.bitertaxi_office_unit_number)
   local grid_battery_office = find_unit(surface, SALES_OFFICE, storage.grid_battery_office_unit_number)
   local station_v2 = find_unit(surface, STATION_V2, storage.station_v2_unit_number)
-  local controller = find_unit(surface, CONTROLLER, storage.controller_unit_number)
+  local model_terminal = find_unit(surface, MODEL_TERMINAL, storage.model_terminal_unit_number)
   local biter_spawner = find_unit(surface, BITER_SPAWNER, storage.biter_spawner_unit_number)
   local bitertaxi_only_spawner = find_unit(
     surface,
@@ -1146,7 +1146,6 @@ script.on_nth_tick(3781, function()
   )
   local datacenter = find_unit(surface, TERRESTRIAL_DATACENTER, storage.datacenter_unit_number)
   local station_output = station_v2 and station_v2.get_inventory(defines.inventory.chest)
-  local controller_inventory = controller and controller.get_inventory(output_inventory_id())
   local station_recipe = game.forces.player.recipes["bitermotors-ev-charging-station"]
   local station_v2_recipe = game.forces.player.recipes["bitermotors-ev-charging-station-v2"]
   local station_v3_recipe = game.forces.player.recipes["bitermotors-ev-charging-station-v3"]
@@ -1387,7 +1386,8 @@ script.on_nth_tick(3781, function()
     charger_reservations = reservations,
     charger_reservations_generated = reservations > 0,
     agi_training_unlocked = agi_training and agi_training.unlocked,
-    agi_training_selected = controller and controller.get_recipe() and controller.get_recipe().name == AGI_RECIPE
+    agi_assembly_enabled = game.forces.player.recipes["bitermotors-assemble-agi-model"].enabled,
+    agi_activation_enabled = game.forces.player.recipes[AGI_RECIPE].enabled
   }
 end)
 
@@ -1496,8 +1496,8 @@ end)
 script.on_nth_tick(18520, function()
   if game.tick < 18520 then return end
   local surface = game.get_surface(storage.surface_index or 1)
-  local controller = surface and find_unit(surface, CONTROLLER, storage.controller_unit_number)
-  local inventory = controller and controller.get_inventory(output_inventory_id())
+  local model_terminal = surface and find_unit(surface, MODEL_TERMINAL, storage.model_terminal_unit_number)
+  local inventory = model_terminal and model_terminal.get_inventory(output_inventory_id())
   local inserted = inventory and inventory.insert{name = AGI_MODEL, count = 1} or 0
   assert(inserted == 1, "could not seed the negative output-insertion case")
   storage.inserted_model_tick = game.tick
@@ -1534,7 +1534,8 @@ control = Path(sys.argv[1]).read_text()
 required_markers = {
     "ORBITAL_RADIATORS_PER_CORE = 1": "one-radiator orbital cooling rule",
     "orbital_core_has_cooling": "orbital cooling assignment",
-    "crafting_progress = entity.name == GRID_CONTROLLER_NAME and AGI_RESET_PROGRESS or 0": "compute run reset on service loss",
+    "entity.crafting_progress = 0": "ordinary terrestrial run reset on service loss",
+    '"bitermotors-terrestrial-ai-token"': "scrapping is recipe-specific, not Model activation",
     "defines.entity_status.low_power": "low-power handling",
 }
 for marker, description in required_markers.items():
@@ -1698,7 +1699,6 @@ expected_research = {
     "bitermotors-orbital-cluster-training": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-grid-scale-energy": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
     "bitermotors-hyperscale-training": (2000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-planetary-energy-grid": (2500, 60, rgbpys | {"bitermotors-ai-token"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -1755,67 +1755,50 @@ if set(data["technology"]["epic-quality"].get("prerequisites", [])) != {"quality
     raise SystemExit("Epic Quality must be re-homed to terrestrial AI")
 if set(data["technology"]["legendary-quality"].get("prerequisites", [])) != {"epic-quality", "bitermotors-orbital-compute"}:
     raise SystemExit("Legendary Quality must be re-homed to Nauvis orbital compute")
-agi_gate = data["technology"].get("bitermotors-planetary-energy-grid")
 dataset_gate = data["technology"].get("bitermotors-grid-scale-energy")
-if not agi_gate or not dataset_gate or "bitermotors-package-agi-training-dataset" not in {
+if not dataset_gate or "bitermotors-package-agi-training-dataset" not in {
     effect.get("recipe") for effect in dataset_gate.get("effects", [])
     if effect.get("type") == "unlock-recipe"
-} or "bitermotors-package-capital-allocation" not in {
-    effect.get("recipe") for effect in agi_gate.get("effects", [])
-    if effect.get("type") == "unlock-recipe"
 }:
-    raise SystemExit("Grid-scale and final AGI technologies must unlock physical packaging")
-if set(agi_gate.get("prerequisites", [])) != {
-    "bitermotors-hyperscale-training", "bitermotors-autonomous-logistics", "nuclear-power",
-}:
-    raise SystemExit(f"Planetary Grid prerequisites mismatch: {agi_gate.get('prerequisites')}")
-agi_recipe = data["recipe"]["bitermotors-agi-training-run"]
+    raise SystemExit("Grid-scale research must unlock physical Dataset packaging")
+agi_recipe = data["recipe"]["bitermotors-assemble-agi-model"]
 agi_ingredients = {row["name"]: row["amount"] for row in agi_recipe["ingredients"]}
 agi_results = {row["name"]: row["amount"] for row in agi_recipe["results"]}
 if agi_ingredients != {
     "bitermotors-agi-training-dataset": 20000,
-    "bitermotors-capital-allocation": 100,
-    "bitermotors-grid-battery-array": 100,
-    "processing-unit": 10000,
+    "bitermotors-datacenter-rack": 1,
 } or agi_results != {"bitermotors-agi-model": 1}:
-    raise SystemExit(f"Final AGI Training Run recipe mismatch: {agi_recipe}")
-if agi_recipe.get("energy_required") != 1200:
-    raise SystemExit(f"Final AGI Training Run must take 20 base recipe minutes: {agi_recipe}")
+    raise SystemExit(f"Orbital Model assembly recipe mismatch: {agi_recipe}")
+if agi_recipe.get("energy_required") != 90 or agi_recipe.get("categories") != ["bitermotors-orbital-compute"]:
+    raise SystemExit(f"Model assembly must take one normal cluster minute: {agi_recipe}")
+activation = data["recipe"]["bitermotors-activate-agi-model"]
+nauvis_properties = data["planet"]["nauvis"].get("surface_properties", {})
+activation_conditions = [
+    {"property": name, "min": nauvis_properties.get(name, data["surface-property"][name]["default_value"]),
+     "max": nauvis_properties.get(name, data["surface-property"][name]["default_value"])}
+    for name in ("gravity", "pressure", "magnetic-field")
+]
+if ({row["name"]: row["amount"] for row in activation["ingredients"]} != {"bitermotors-agi-model": 1}
+        or {row["name"]: row["amount"] for row in activation["results"]} != {"bitermotors-agi-model": 1}
+        or activation.get("energy_required") != 30
+        or activation.get("categories") != ["bitermotors-datacenter"]
+        or activation.get("surface_conditions") != activation_conditions):
+    raise SystemExit(f"Native Nauvis Model activation recipe mismatch: {activation}")
+for name in ("bitermotors-assemble-agi-model", "bitermotors-activate-agi-model"):
+    recipe = data["recipe"][name]
+    if (recipe.get("enabled") is not False or recipe.get("raise_on_crafted") is not True
+            or recipe.get("allow_productivity") is not False
+            or recipe.get("allow_quality") is not False or recipe.get("auto_recycle") is not False):
+        raise SystemExit(f"Model recipe must be runtime gated, native and non-multiplying: {name}")
+for kind, name in (("technology", "bitermotors-planetary-energy-grid"),
+                   ("item", "bitermotors-capital-allocation"),
+                   ("assembling-machine", "bitermotors-planetary-grid-controller"),
+                   ("recipe", "bitermotors-agi-training-run")):
+    if name in data.get(kind, {}):
+        raise SystemExit(f"Obsolete finale prototype remains: {name}")
 dataset_recipe = data["recipe"]["bitermotors-package-agi-training-dataset"]
 if {row["name"]: row["amount"] for row in dataset_recipe["ingredients"]} != {"bitermotors-ai-token": 50000}:
     raise SystemExit(f"AGI training dataset must consume physical AI Tokens: {dataset_recipe}")
-capital_recipe = data["recipe"]["bitermotors-package-capital-allocation"]
-if {row["name"]: row["amount"] for row in capital_recipe["ingredients"]} != {"bitermotors-dollar": 500}:
-    raise SystemExit(f"Capital Allocation must package 500 Dollars: {capital_recipe}")
-controller = data["assembling-machine"]["bitermotors-planetary-grid-controller"]
-if controller["energy_usage"] != "10GW":
-    raise SystemExit(f"Planetary Grid Controller must draw 10 GW: {controller['energy_usage']}")
-if agi_recipe.get("raise_on_crafted") is not True:
-    raise SystemExit("AGI victory must use the native recipe-completion event")
-if controller.get("allowed_effects") not in ([], {}):
-    raise SystemExit("Final training cannot receive module/beacon effects")
-receiver = controller.get("effect_receiver", {})
-for source in ("uses_module_effects", "uses_beacon_effects", "uses_surface_effects", "uses_local_effects"):
-    if receiver.get(source) is not False:
-        raise SystemExit(f"Final training must reject {source}")
-speed_by_quality = controller.get("crafting_speed_quality_multiplier", {})
-if any(speed_by_quality.get(quality) != 1 for quality in data["quality"]):
-    raise SystemExit("Every supported final-controller quality must run at speed one")
-if controller.get("quality_affects_energy_usage") or controller.get("quality_affects_module_slots"):
-    raise SystemExit("Quality must not reduce final power or add module slots")
-if controller.get("module_slots", 0) != 0 or controller["energy_source"].get("drain") != "0W":
-    raise SystemExit("Final training must have zero module slots and idle drain")
-controller_recipe = data["recipe"]["bitermotors-planetary-grid-controller"]
-controller_ingredients = {
-    row["name"]: row["amount"] for row in controller_recipe["ingredients"]
-}
-if controller_ingredients != {
-    "bitermotors-biterfactory-module": 100,
-    "bitermotors-grid-battery-array": 10,
-    "substation": 100,
-    "bitermotors-dollar": 10000,
-}:
-    raise SystemExit(f"Planetary Grid Controller recipe mismatch: {controller_recipe}")
 
 expected_terrestrial_recipes = {
     "electric-furnace": {"steel-plate": 10, "electronic-circuit": 10, "stone-brick": 10},
@@ -2142,14 +2125,14 @@ for tier, datasets in (("grid-scale", 2), ("hyperscale", 4)):
     technology = "bitermotors-grid-scale-energy" if tier == "grid-scale" else "bitermotors-hyperscale-training"
     if name not in {effect.get("recipe") for effect in data["technology"][technology]["effects"]}:
         raise SystemExit(f"Compressed compute lacks matching research unlock: {name}")
-for name in ("bitermotors-package-agi-training-dataset", "bitermotors-package-capital-allocation"):
+for name in ("bitermotors-package-agi-training-dataset",):
     recipe = data["recipe"][name]
     if (recipe.get("categories") != ["advanced-crafting"]
             or recipe.get("allow_productivity") is not False
             or recipe.get("allow_quality") is not False
             or recipe.get("raise_on_crafted", False)):
         raise SystemExit(f"Packaging must be ordinary, non-multiplying industry: {name}")
-for name in ("bitermotors-agi-training-dataset", "bitermotors-capital-allocation", "bitermotors-agi-model"):
+for name in ("bitermotors-agi-training-dataset", "bitermotors-agi-model"):
     if "always-show" not in data["item"][name].get("flags", []):
         raise SystemExit(f"Endgame payload must remain filterable before unlock: {name}")
 dataset = data["item"]["bitermotors-agi-training-dataset"]
@@ -2390,7 +2373,8 @@ runtime_milestone_recipes = {
     "bitermotors-biterfactory-building",
     "bitermotors-high-density-solar-array-batch",
     "bitermotors-cell-scale-high-nickel",
-    "bitermotors-agi-training-run",
+    "bitermotors-assemble-agi-model",
+    "bitermotors-activate-agi-model",
 }
 missing_unlocks = bitermotors_recipes - technology_unlocks - runtime_milestone_recipes
 if missing_unlocks:
@@ -3109,8 +3093,8 @@ if growth.get("charger_reservations", 0) < 1:
     )
 if checked.get("logistic_roboports") != 0:
     raise SystemExit(f"smoke test should prove charger output without a logistics network: {checked}")
-if not checked.get("agi_training_unlocked") or not checked.get("agi_training_selected"):
-    raise SystemExit(f"one-billion-token gate did not unlock/select AGI training: {checked}")
+if not checked.get("agi_training_unlocked") or not checked.get("agi_assembly_enabled") or checked.get("agi_activation_enabled"):
+    raise SystemExit(f"earned gate must unlock assembly but cannot bypass native Model return: {checked}")
 if insertion is None or insertion.get("agi_models") != 1 or insertion.get("victory") is not False:
     raise SystemExit(f"An inserted AGI Model must not win: {insertion}")
 game_finished = insertion.get("game_finished", {})

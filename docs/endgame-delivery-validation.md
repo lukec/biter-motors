@@ -1,9 +1,10 @@
 # Native Endgame Delivery And Cooling Validation
 
-**Update, 2026-11-08:** the reset policy and old yields below are historical.
-[Banked-compute validation](orbital-banked-compute-validation.md) records current
-pause/reload behavior and new tiers. Updated controller/delivery fixtures are
-explicitly legacy regressions, not qualification of the pending orbital Model ending.
+**Historical controller design, superseded 2026-11-08:** the current delivery
+fixture exercises Model assembly in orbit, native Model return and ground
+activation. See the [current contract and evidence](endgame-validation.md).
+[Banked-compute validation](orbital-banked-compute-validation.md) separately
+records orbital interruption policy; the controller results below are dated.
 
 Date: **2026-10-06**. Mod: **Biter Motors 0.1.1**, fresh worlds only.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.

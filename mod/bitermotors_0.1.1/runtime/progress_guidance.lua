@@ -6,7 +6,7 @@ ProgressGuidance.technologies = {
   "bitermotors-capital-scaling", "bitermotors-terrestrial-ai",
   "bitermotors-autonomous-logistics", "bitermotors-orbital-compute",
   "bitermotors-orbital-cluster-training", "bitermotors-grid-scale-energy",
-  "bitermotors-hyperscale-training", "bitermotors-planetary-energy-grid"
+  "bitermotors-hyperscale-training"
 }
 
 function ProgressGuidance.research_cost(technology)

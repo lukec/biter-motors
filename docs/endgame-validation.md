@@ -1,85 +1,177 @@
-# Endgame Validation Contract
+# Physical Model Ending: Contract And Validation
 
-The Biter Motors endgame is a physical orbital-compute campaign ending in one
-uninterrupted 20-minute, 10 GW AGI training run. This document defines the
-runtime signals that must agree before release.
+Updated **2026-11-08**. Supported test engine: **Factorio 2.1.20, build 87512,
+mac-arm64, Space Age**. Mod: **Biter Motors 0.1.1 alpha**.
 
-## Current Validation Status
+This is the current ending. Older controller/finale reports are dated evidence
+for a removed design, not its acceptance tests. The skippable terminal epilogue,
+practical platform/pacing freeze and release qualification remain next.
 
-The [2026-10-05 v1 review](v1-readiness-review.md) found current-version load,
-statistics-direction, physical-payload, victory-completion, and final-controller
-effect defects. Native compute accounting and fixed final training/completion
-are now implemented; see [accounting evidence](ai-accounting-validation.md) and
-[finale evidence](finale-validation.md). The
-[delivery/cooling evidence](endgame-delivery-validation.md) closes Phase 3's
-isolated native gate. This contract is not a full release certificate: finish
-economy/guidance/art freeze, candidate soaks/multiplayer, and clean-install
-rehearsal before Luke's final fresh campaign.
+## Player Route
 
-## Authoritative AI Token Accounting
+1. Earn **one billion cumulative AI Token equivalents** through native compute.
+   Terrestrial and orbital output count; packaging, moved inventory, injected
+   items and raw production statistics do not. Research-consumed output still
+   counts as earned work, but cannot also supply the physical final payload.
+2. Research **Grid-scale Energy**. Hyperscale is an optional efficiency upgrade,
+   not permission to win. No white science or additional final research is needed.
+3. In an **Orbital Compute Cluster over Nauvis**, select **Assemble AGI Model**:
+   **20,000 physical Training Datasets + one Datacenter Rack -> one AGI Model**.
+   Its 90 recipe-seconds take **60 actual seconds** at normal cluster speed 1.5.
+   The entire payload must fit and be consumed by a genuine native craft.
+4. Extract the Model into that platform's hub and request it at a **Nauvis Cargo
+   Landing Pad**. The native cargo pod must actually deliver it.
+5. Feed the returned Model into an existing **Terrestrial Datacenter** on Nauvis
+   and select **Activate AGI Model**. This is **30 recipe-seconds / 30 normal
+   seconds at 8 MW**, returns the Model as output and latches victory once.
+   Continued freeplay remains available.
 
-Completed native Terrestrial Datacenter and Orbital Datacenter Core recipes
-are the authoritative cumulative AI Token-equivalent ledger. Scripted research
-bonuses count only when physically inserted. Statistics, transfers, packaging,
-and arbitrary inventory insertion cannot establish earned computation.
-Item/fluid statistics use `input` for production and `output` for consumption;
-electric-network statistics instead use `input` for consumption; see the
-[official API](https://lua-api.factorio.com/latest/classes/LuaFlowStatistics.html).
+Both final recipes reject productivity, quality rerolls and recycling. The
+ordinary machine-quality speed benefit remains; there is no quality-independent
+countdown, capital package, special controller, 50,000-Dollar fee or 10 GW run.
+The Model remains filterable while locked, stacks to one and weighs 1 kg.
 
-Physical AI Tokens supply research and ordinary Dataset packaging. Grid-scale
-and hyperscale cores can output compact Datasets directly, worth 50,000 computed
-equivalents each. Packaging existing Tokens earns no additional progress and
-does not require a 10 GW controller.
+## Interruptions And Authority
 
-The cumulative ledger controls:
+Orbital low power slows/stops native crafting. Missing local radiator capacity
+pauses the cluster without resetting its progress or canceling committed inputs.
+Ground activation likewise banks its Model and progress through low power.
+Only the ordinary terrestrial AI Token recipe retains the run-scrapping policy.
 
-- the Biter Motors Progress Compute section;
-- terrestrial efficiency and orbital scale milestones;
-- the one-billion-token AGI Training Run unlock;
-- victory metadata and endgame telemetry.
+Native recipe-completion events earn assembly/activation credit, never output
+inventory presence or sampled current recipes. Assembly credit is scoped to
+**force + platform + product quality**. An actual outgoing hub pod reserves at
+most its matching Model cargo. Native delivery into that force's canonical Nauvis
+pad grants matching activation credit. Lost pods forfeit reservations. Wrong
+force, wrong quality, a non-Nauvis surface, an injected Model or a replayed cargo
+event cannot fabricate a qualified chain.
 
-## Runtime Status
+Native activation consumes a return credit and records persistent victory
+metadata with source `native-model-activation`. Immediate output extraction,
+recipe changes or machine removal cannot erase earned milestones or victory.
+There is no per-tick world/inventory scan: the authority consists of small
+force/platform/quality counters and tracked in-transit pods, with event cleanup.
 
-`remote.call("bitermotors", "endgame_status", "player")` reports:
+**Provenance boundary:** ordinary same-quality Factorio items have no individual
+serial identity. Credit conservation proves the genuine chain happened; it
+cannot distinguish identical stacks subsequently exchanged by an administrator
+or another mod. No claim of tamper resistance to arbitrary script modification
+is made. Supplying a Model alone cannot fabricate any stage.
 
-- cumulative, terrestrial, and orbital AI Token totals;
-- native item-stat production for discrepancy diagnosis, not progression;
-- orbital core and radiator totals;
-- each core's recipe, progress, power fraction, cooling assignment, and reset
-  reason;
-- AGI unlock, training progress, the 1,200-second/10 GW contract, the 90%
-  power-buffer threshold, and persistent native-completion victory metadata.
+## Read-Only Signals
 
-This interface is read-only. The smoke-only `test_set_ai_token_progress` helper
-is unavailable unless the validation mod is loaded.
+`remote.call("bitermotors", "endgame_status", "player")` reports earned compute,
+separate terrestrial/orbital tracks, banked core/cooling/power state and `agi`:
 
-## Final Training Contract
+- `unlocked`, `cumulative_ai_tokens`, `required_ai_tokens`;
+- `models_assembled`, `models_returned`, `models_activated`;
+- `assembly_credits`, `return_credits`, `models_in_transit`;
+- `assembly_progress`, `activation_progress`, active machine counts;
+- normal assembly/activation seconds and activation demand;
+- `completed` and persistent `victory` metadata.
 
-Every controller quality runs at native speed one. Final training ignores
-module, beacon, surface, and local effects. The base recipe lasts 1,200 seconds,
-has no productivity or quality multiplication, and draws 10 GW while working.
-The native completion event is authoritative; an inserted Model cannot win.
+The existing `agi_training_status` remote method exposes the same new Model
+status. No legacy controller aliases or save migrations were added. Progress
+reveals earned compute and physical Model stages only when relevant; inspectors
+explain Dataset retention in orbit and the two different terrestrial policies.
+The smoke-only milestone setter remains unavailable in ordinary games.
 
-Controllers have a separate bounded power queue: at most 32 controllers are
-checked per tick, independently of other AI machines. Up to 32 are all checked
-every tick; larger registries rotate. A low/no-power status or a sampled buffer
-below 90% scraps active progress. The internal buffer provides only a tiny
-flicker tolerance, not a grace period measured in seconds. Inputs stay committed.
-After a one-second retry hold and buffer recovery, training starts again from
-zero without another full set of inputs. Native exact-zero progress cancels the
-committed batch, so a negligible `1e-12` sentinel preserves it internally; the
-public status reports 0% while held. Native red status explains the hold.
+## Reproduce
 
-The completion callback follows the final energy draw, so its now-depleted
-buffer must not veto a completed native run. Persistent failure state and the
-earned billion-equivalent gate still guard completion. Victory latches once per
-force and survives output removal and reload. The finale fixture exercises ten
-full runs, not merely an injected win or an accelerated final recipe.
+```bash
+python3 -m unittest discover tests
+scripts/validate-bitermotors-mod.sh
+scripts/validate-bitermotors-ai.sh
+scripts/validate-bitermotors-cooling.sh
+scripts/validate-bitermotors-delivery.sh
+scripts/validate-bitermotors-finale.sh
+```
 
-## Release Evidence Still Required
+The delivery case uses normal payload quality; finale repeats the complete path
+with rare payload and adversarial checks. The ending fixture earns the billion
+through **5,000 genuine hyperscale Dataset completions** using 5,000 supplied
+physical Dollars. It removes Hyperscale research before assembly, proving it is
+not a final permission gate. It never writes crafting progress or seeds earned
+compute storage.
 
-- Complete the first real orbital batch on a player-built Nauvis platform.
-- Run a one-hour soak with several operating cores and at least two platforms.
-- Complete the uninterrupted 20-minute, 10 GW AGI run in a non-sandbox campaign.
-- Qualify multiplayer joins and harmless configuration changes during outages
-  and training against the final candidate archive.
+Checkpoints restart separate Factorio processes during interrupted assembly,
+with the original Model pod in flight, after native return, during interrupted
+activation and after victory. Recovery must produce
+a **new native event and new physical output**, not merely retain an old item.
+No artificial flight delay is introduced. Both Model cases prove the exact
+native pod's identity, cargo and reserved credit survive an actual in-flight
+checkpoint, then earn a new delivery after reload. This is distinct from the
+earlier starter-pack ascension/delivery that could share a tick. Pure ledger
+fixtures also exercise replay, loss, serialization and cross-boundary credits.
+
+Fixtures supply construction, foundation, research, physical operating Dollars,
+the final Rack and electric-energy-interface power; platform solar is disabled
+to isolate outages from the radiator's small native solar scaffold. Conserving
+inventory transfers stage earned outputs, while native inserters prove Model
+extraction and the hub/pod/pad performs actual cargo return. This is mechanical
+ending qualification, **not** a natural campaign, real solar-layout proof,
+manufacturing throughput, a long soak or multiplayer join acceptance. Native
+rocket uplift is separately qualified by `validate-bitermotors-uplift.sh`.
+
+## This Slice's Evidence
+
+All runs used isolated temporary user/mod directories on the engine above.
+No live server/client was restarted and no player save was edited. The existing
+development-mod symlink will see these source changes on its next load; running
+Factorio processes do not hot-reload them.
+
+| Check | Final Source | Exact ZIP |
+| --- | --- | --- |
+| Broad prototype/runtime smoke and native catalog capture | Pass | Pass |
+| AI accounting, Dataset payload and native reload | Pass | Pass |
+| Banked orbital work, cooling/power recovery, terrestrial scrapping | Pass | Pass |
+| Native nine-launch first-cluster uplift and Token return | Pass | Pass |
+| Normal Model assembly -> pod return -> activation -> victory/freeplay | Pass | Pass |
+| Rare Model route with injected/statistics/force/quality/replay negatives | Pass | Pass |
+
+**284 Python tests pass**, plus package/source matching, namespace/artifact
+checks and `git diff --check`. Each complete ending case earns a genuine billion,
+accepts and commits the entire 20,000-Dataset batch, waits beyond a full craft
+with blocked output, banks interrupted assembly and activation, extracts the
+Model with a native inserter, removes the assembly machine, returns the actual
+pod and consumes exactly one activation credit. Five checkpoint/reload
+boundaries survive; the won save advances **2,400 further freeplay ticks**
+without replaying victory. A supplied Model can run a native activation recipe
+but cannot win without the earned native chain. Runtime surface checks also
+reject script-forced orbital activation; fixture `set_recipe` can bypass native
+selection restrictions and is not proof of what a normal GUI permits.
+
+The native activation probe measures **8,266,666.875 J over 60 ticks**, about
+**8.267 MW** including ordinary idle drain. The recipe's **rated working demand
+is 8 MW**, unchanged from terrestrial compute; it is not a new grid challenge.
+
+Final runtime/prototype source SHA-256:
+`4ee8ee9c393ca2066fb21e0c9087d78da26ebe8a2508558fe1e360a1ffcaebe0`.
+
+Tested deterministic archive: `bitermotors_0.1.1.zip`, SHA-256:
+`7b2dc733948a0ac1b5a2b6f8b00bdb583ed9aa5c136176b5502b454d1dad645c`.
+It remains an alpha development package, not a release candidate or publication.
+
+Retained local evidence:
+
+| Case | Source Artifacts | ZIP Artifacts |
+| --- | --- | --- |
+| Smoke/capture | `/tmp/bitermotors-validate.Nka9x5` | `/tmp/bitermotors-validate.4jjudO` |
+| AI | `/tmp/bitermotors-ai.Nx82kg` | `/tmp/bitermotors-ai.U7VpBh` |
+| Cooling | `/tmp/bitermotors-cooling.tMWDq2` | `/tmp/bitermotors-cooling.Mqy9Fl` |
+| Uplift | `/tmp/bitermotors-uplift.ODziA7` | `/tmp/bitermotors-uplift.DATS87` |
+| Normal ending | `/tmp/bitermotors-delivery.JCNABZ` | `/tmp/bitermotors-delivery.0DfPwc` |
+| Rare/adversarial ending | `/tmp/bitermotors-finale.UJcsUv` | `/tmp/bitermotors-finale.Gl5O3j` |
+
+The archive is retained locally under `/tmp/bitermotors-model-ending-package`.
+Temporary saves/logs are intentionally not committed. Reproduce ZIP validation
+by setting `BITERMOTORS_MOD_ARCHIVE` to the current matching archive's absolute
+path; the runner rejects stale bytes before starting the engine.
+
+## Remaining Release Gates
+
+- Complete Phase 3C's progressive ending feedback and offline terminal epilogue.
+- Prove the practical 1/4/8/12-cluster platform ramp and freeze pacing/art.
+- Run long terrestrial/orbital soaks, scale and multiplayer/configuration tests
+  against the exact frozen archive, then rehearse clean installation.
+- Finish Luke's non-sandbox fresh campaign through Model activation and reload.

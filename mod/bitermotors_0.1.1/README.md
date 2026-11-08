@@ -38,7 +38,7 @@ The retired private-development namespace is not retained as an alias.
     late terrestrial eSpider.
 11. Fund Terrestrial Datacenters with continuous power and Dollars.
 12. Launch physical orbital AI infrastructure and return AI Tokens to Nauvis.
-13. Sustain a 10-gigawatt final training run to produce an AGI Model.
+13. Assemble an AGI Model in orbit, return it, and activate it on Nauvis.
 
 ## Customer Contract
 
@@ -118,29 +118,29 @@ not an orbital research prerequisite.
 The 10M milestone also unlocks direct upgrades from 300 kW HD panels to 3 MW
 Tandem Solar Arrays, and from 100 MJ Grid Batteries to 1 GJ Grid Battery Arrays.
 
-The approved orbital Model assembly/return/activation ending is not implemented
-yet. Until that next slice replaces it, the following legacy controller finale
-remains in the alpha; it is not the target release ending.
+After one billion earned AI Token equivalents and Grid-scale Energy
+research, assemble 20,000 physical AGI Training Datasets and one Datacenter Rack
+into one AGI Model in an existing orbital cluster. Hyperscale research is
+optional. Assembly takes one minute at normal cluster speed; power and cooling
+interruptions retain committed work. Native terrestrial and orbital computation
+both count toward the earned total; packaging existing Tokens does not.
 
-Producing 1,000,000,000 cumulative AI Tokens unlocks the final training recipe.
-The Planetary Energy Grid Controller consumes:
+Return the actual Model by native cargo pod to Nauvis, then select Activate AGI
+Model in an existing Terrestrial Datacenter. Activation takes 30 seconds at
+normal speed and ordinary 8 MW draw, returning the Model as its output. Neither
+recipe permits productivity or quality rerolls. Genuine native assembly,
+return and activation qualify victory; possession alone does not. Continued
+play remains available.
 
-- 20,000 AGI Training Datasets, each packaging 50,000 AI Tokens
-- 100 Capital Allocations, each packaging 500 Dollars
-- 100 Grid Battery Arrays
-- 10,000 Processing Units
-
-The controller must sustain 10 GW for 20 uninterrupted minutes. Low power resets
-the run but retains its committed inputs for a retry. Quality and modules cannot
-speed up or reduce the power cost of final training. A genuine completed run
-produces one physical AGI Model and wins the campaign; extracting that Model
-does not cancel victory. Continued play remains available.
+Both recipes begin disabled. Runtime unlocks assembly at the earned-compute and
+research gate, then activation after a credited native Model return. Completion
+credits are isolated by force and quality; victory persists through save/reload.
 
 ## Interface
 
 - `Biter Motors Progress` shows only milestones relevant to unlocked content.
 - Entity inspectors explain Sales Offices, chargers, settlements, factories,
-  datacenters, and the final controller.
+  datacenters, and orbital compute.
 - Coverage, alerts, status colors, and map tags identify actionable market and
   power failures.
 - `/bitermotors-status` opens or reports the current progression objective.

@@ -29,8 +29,10 @@ Planning baseline: `7660e91`, with 255 Python tests passing and engine
 orbital pause/slowdown, retained inputs/progress, and the approved scale-tier
 costs/yields. See the [new validation](docs/orbital-banked-compute-validation.md)
 for current source/ZIP results; October reports remain dated evidence. The
-orbital Model ending and epilogue are still pending. Passing legacy controller
-tests does not make the replacement ending finishable.
+physical Model ending is now implemented, including native orbital assembly,
+cargo return and ground activation. See the [current ending contract and native
+evidence](docs/endgame-validation.md). The epilogue remains Phase 3C; isolated
+mechanical qualification is not a frozen, playtest-ready campaign.
 
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
@@ -57,6 +59,7 @@ Build in three consecutive slices:
    injected items/statistics, output extraction or machine removal must not
    fabricate or erase victory. Remove the controller, Capital Allocation fee,
    obsolete required research and old 10 GW/uninterrupted-run contract.
+   **Implemented:** [physical Model ending](docs/endgame-validation.md).
 3. **Ending feedback and epilogue.** Progressively reveal player-relevant
    stages. Show earned compute separately from physical payload, explain
    pause/blocker states, guide Model return and
@@ -176,10 +179,12 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 3's physical orbital Model assembly,
-return and Nauvis activation. Banked compute/scale tiers are complete; the old
-controller/capital finale still needs replacement. No player save or live
-process was changed by this implementation.
+**Immediate next implementation:** Phase 3C's ending feedback and skippable
+terminal epilogue, followed by the Phase 4 practical platform/pacing freeze.
+Orbital Model assembly, native return and Nauvis activation have replaced the
+controller/capital finale. No player save or live process was changed by this
+implementation; the development mod symlink will load this source on a later
+restart, not hot-reload it into the running world.
 
 ### Current Review And Consecutive Plan
 
@@ -230,8 +235,7 @@ brownouts, grace/anger/recovery, multi-office transactions, and separate reload.
 All four focused regressions and broad smoke pass on source and the exact ZIP.
 **Phase 3 is reopened as of 2026-10-07.** The earlier fixtures passed within
 their recorded bounds, but supplied hardware directly on platforms instead of
-qualifying rocket uplift. The new orbital ending is designed and costed, not
-fully implemented. Its first entry slice now has compact hardware, portable
+qualifying rocket uplift. The orbital entry slice has compact hardware, portable
 weights, one-radiator cooling and research without white science; see the
 [orbital-entry evidence](docs/orbital-entry-validation.md). Compressed Dataset
 output, ordinary packaging, and native-event
@@ -240,17 +244,12 @@ AI accounting are implemented. The
 compute output, quality, native bonus events, blocked output, immediate recipe
 changes/removal, force isolation, physical inserter extraction, and separate
 reload. Earned Token equivalents exclude inventory transfers, packaging, and
-item-statistics injection. **R04/R05 are implemented:** the finale is fixed at
-20 uninterrupted simulation minutes and 10 GW across all qualities and ignores
-external effects. Victory latches on native completion, not Model inventory.
-The [finale fixture](docs/finale-validation.md) covers real billion-equivalent
-compute, full-length runs, retained-input outage retries, extraction/removal,
-and save/reload. The [delivery/cooling evidence](docs/endgame-delivery-validation.md)
-covers R03's downward-delivery path: two platforms deliver genuinely computed Datasets through native
-hubs/pods/landing-pad logistics into real lab research, controller construction,
-payload loading, full training, and persistent victory. Orbital cooling
-allocation/removal, half-power/total-outage reset, and separate-process recovery
-also pass. **Phase 4's first slice is implemented:**
+item-statistics injection. The old controller's R04/R05 regressions are dated
+evidence, not the present design. Native Model assembly, real downward cargo,
+ground activation, completion latching and persistence now replace that path;
+see the [current ending contract](docs/endgame-validation.md). Orbital work
+banks committed inputs and progress; ordinary terrestrial AI still scraps
+failed batches. **Phase 4's first slice is implemented:**
 the [economy/guidance evidence](docs/economy-guidance-validation.md) records
 native research costs/throughput, optional-route guidance, genuine business
 profit versus recovered capital, and three source-hashed finite-market models.
@@ -266,8 +265,8 @@ chemistry, or future feature branch belongs in this release sequence.
 
 The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) and
 [cost study](docs/orbital-ending-cost-study.md) define the next implementation
-slices. Modeling is complete; **orbital entry is implemented, and the
-replacement finale remains pending**.
+slices. **Orbital entry, banked compute, scale tiers and the physical Model
+finale are implemented.** The terminal scene and campaign freeze remain next.
 
 - Reuse ordinary rockets and the existing terrestrial supply chains. Approximately
   twelve compact compute clusters are a balancing reference, not a count gate.
@@ -438,13 +437,12 @@ Historical fixture smoke tests are not proof of correct fresh-world sale gates.
 - Low power scraps the active run.
 - Cumulative token milestones unlock increasingly efficient research.
 
-## Implemented Endgame (Replacement Pending)
+## Implemented Endgame
 
-This section records the **current Lua**, not the next release's target design.
-The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) supersedes the
-controller finale below. Banked orbital work has replaced the old orbital reset
-policy; preserve the dated native
-evidence, but do not describe those fixtures as qualification of the new ending.
+This section records the **current Lua**. The
+[orbital AGI ending spec](feature_specs/orbital_agi_ending.md) defines the current
+contract; [native ending evidence](docs/endgame-validation.md) distinguishes
+mechanics qualification from the still-required final campaign.
 
 The endgame is physical and uses vanilla rockets, cargo pods, and space
 platforms.
@@ -480,8 +478,9 @@ Orbital low power slows/stops native crafting without canceling inputs or
 progress. Missing cooling pauses the cluster with a yellow status and resumes
 the same committed batch when restored. Ordinary terrestrial compute still
 scraps failed runs.
-Tokens for science and compact Training Datasets for the finale must physically
-return to Nauvis by cargo pod. Space does not beam energy to the planet.
+Tokens for science physically return to Nauvis by cargo pod. Retain the compact
+Dataset payload in orbit, assemble the Model there, and return that Model.
+Space does not beam energy to the planet.
 
 Cumulative orbital output opens three explicit scale projects:
 
@@ -496,24 +495,21 @@ Cumulative orbital output opens three explicit scale projects:
 - **100M Tokens: Hyperscale Training**
   - Costs 6,000 Dollars plus science.
   - Unlocks 200,000-token batches or four directly computed Training Datasets
-    per batch, and the final Planetary Energy Grid research.
+    per batch. This is an efficiency option, not permission to win.
 
 Both payload forms use the same Dollars, recipe time, power, and cooling as
 their tier. Each Dataset represents 50,000 Token equivalents; 20,000 Datasets
 embody the billion-equivalent final payload. Datasets stack to 1,000 and weigh
-1 kg each (1,000 per standard cargo payload, 20 payloads for the final inputs).
-This is prototype weight arithmetic, not an exact downward-pod count. The
-native delivery fixture uses 84 automatic pods, including research Tokens and
-partial shipments, to supply its final run.
+1 kg each. No downward Dataset shipments are required for the final craft;
+only the resulting 1 kg Model must return to Nauvis.
 Separate native completion ledgers track terrestrial and orbital computation.
 Packaging existing Tokens, recycling, and transfers cannot earn progress again.
 
 ### AGI Victory
 
 The implemented final progression contract is below. Native computation,
-compressed payload, fixed final time/power, and completion latching have
-focused engine coverage. Real multi-platform delivery, lab research, controller
-construction, final payload loading, and cooling/power recovery now pass.
+compressed payload, orbital assembly, native cargo return, ground activation
+and completion latching have focused engine coverage.
 Economy/design freeze, candidate scaling/soaks/multiplayer, clean-install
 rehearsal, and the natural final campaign remain required before release.
 
@@ -522,22 +518,21 @@ The current recipe sequence is:
 1. Compute 1,000,000,000 cumulative AI Token equivalents.
 2. Produce compact Training Datasets directly in grid-scale/hyperscale orbital
    cores, or package existing Tokens in ordinary assemblers or Biterfactories.
-3. Package Dollars in 500-Dollar Capital Allocations using ordinary industry.
-4. Build a Planetary Energy Grid Controller.
-5. Supply:
-   - 20,000 AGI Training Datasets
-   - 100 Capital Allocations
-   - 100 Grid Battery Arrays
-   - 10,000 Processing Units
-6. Sustain the controller's 10 GW draw for 20 minutes.
-7. Low/no power or a sampled buffer below 90% scraps progress; committed inputs
-   remain available for a full retry after power recovers.
-8. Native completion produces one physical AGI Model and triggers victory once,
-   even if the Model is immediately extracted. Continued play remains available.
+3. With Grid-scale Energy researched, assemble 20,000 AGI Training Datasets and
+   one Datacenter Rack in an Orbital Compute Cluster: one normal minute.
+4. Extract the Model into that platform's hub and request it at a Nauvis Cargo
+   Landing Pad. Native delivery unlocks activation.
+5. Feed it into an existing Terrestrial Datacenter and select Activate AGI
+   Model: 30 normal seconds at the ordinary 8 MW; the Model returns as output.
+6. Native activation consumes the same force/quality's returned-Model credit
+   and latches victory once. Continued freeplay remains available.
 
-The cumulative gate makes orbital scaling practically necessary. The physical
-recipe and uninterrupted 10-gigawatt run ensure that the terrestrial factory,
-capital loop, and power grid remain part of the finale.
+Orbital assembly and ground activation preserve progress and committed inputs
+through interruptions. Ordinary terrestrial AI still scraps failed runs. Earned
+compute and native assembly/return/activation are required; injected inventory
+or statistics do not win. Extraction, recipe changes, removal and reload do not
+erase completed milestones. Hyperscale is optional, with no separate capital
+package, final-controller building, white science or long power countdown.
 
 ## Public Beta Gates
 
@@ -579,9 +574,8 @@ Status: **complete**
 
 Status: **playtest required**
 
-- [x] Choose and implement the modeled 10 GW balanced ending documented in
-      `docs/economy-balance.md`; the 25 GW sensitivity is no longer a release
-      candidate.
+- [x] Implement the physical orbital Model and ground-activation ending in
+      `feature_specs/orbital_agi_ending.md`; retire the controller/capital finale.
 - [x] Make completed AI production cycles the authoritative cumulative counter
       for progression, the Compute panel, the AGI gate, and victory metadata.
 - [x] Add a read-only endgame status contract for token tracks, orbital cooling,

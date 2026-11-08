@@ -2,7 +2,9 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fixture="$repo_root/scripts/fixtures/finale-control.lua"
+kind="${BITERMOTORS_ENDING_CASE:-finale}"
+[[ "$kind" == delivery || "$kind" == finale ]] || { printf 'Unknown ending case: %s\n' "$kind" >&2; exit 2; }
+fixture="$repo_root/scripts/fixtures/$kind-control.lua"
 if [[ ! -f "$fixture" ]]; then
   printf 'Finale fixture is not ready: %s\n' "$fixture" >&2
   exit 2
@@ -17,15 +19,13 @@ if [[ ! -x "$factorio_bin" ]]; then
   exit 2
 fi
 
-tmp="$(mktemp -d /tmp/bitermotors-finale.XXXXXX)"
+tmp="$(mktemp -d "/tmp/bitermotors-$kind.XXXXXX")"
 mods="$tmp/mods"
-helper="$mods/bitermotors_finale_validation_0.1.1"
-save="$tmp/saves/bitermotors-finale-seed.zip"
-midrun="$tmp/saves/bitermotors-finale-midrun.zip"
-completed="$tmp/saves/bitermotors-finale-completed.zip"
-report="$tmp/script-output/bitermotors-finale.jsonl"
+helper="$mods/bitermotors_${kind}_validation_0.1.1"
+save="$tmp/saves/bitermotors-$kind-seed.zip"
+report="$tmp/script-output/bitermotors-$kind.jsonl"
 mkdir -p "$helper" "$tmp/saves" "$tmp/script-output"
-printf 'Isolated finale artifacts: %s\n' "$tmp"
+printf 'Isolated %s artifacts: %s\n' "$kind" "$tmp"
 bitermotors_stage_mod "$mods"
 
 cat > "$tmp/config.ini" <<EOF_CONFIG
@@ -33,15 +33,18 @@ cat > "$tmp/config.ini" <<EOF_CONFIG
 read-data=$read_data
 write-data=$tmp
 EOF_CONFIG
-cat > "$mods/mod-list.json" <<'EOF_MODS'
+cat > "$mods/mod-list.json" <<EOF_MODS
 {"mods":[{"name":"base","enabled":true},{"name":"space-age","enabled":true},
-{"name":"bitermotors","enabled":true},{"name":"bitermotors_finale_validation","enabled":true}]}
+{"name":"bitermotors","enabled":true},{"name":"bitermotors_${kind}_validation","enabled":true}]}
 EOF_MODS
-cat > "$helper/info.json" <<'EOF_INFO'
-{"name":"bitermotors_finale_validation","version":"0.1.1","title":"Biter Motors Finale Validation","author":"Codex",
+cat > "$helper/info.json" <<EOF_INFO
+{"name":"bitermotors_${kind}_validation","version":"0.1.1","title":"Biter Motors Native Ending Validation","author":"Codex",
 "factorio_version":"2.1","dependencies":["base >= 2.1.20","space-age >= 2.1.20","bitermotors >= 0.1.1"]}
 EOF_INFO
 cp "$fixture" "$helper/control.lua"
+if [[ "$kind" == finale ]]; then
+  cp "$repo_root/scripts/fixtures/delivery-control.lua" "$helper/native-ending.lua"
+fi
 python3 - "$read_data/server-settings.example.json" "$tmp/server-settings.json" <<'EOF_SERVER'
 import json
 import sys
@@ -134,6 +137,7 @@ EOF_STATUS
   done
   if (( found == 0 )); then
     if (( server_stopped == 0 )); then stop_server; fi
+    bitermotors_check_log "$log" --expect-marker Goodbye || true
     tail -120 "$log" >&2
     printf 'Required phase was not reached: %s and %s in %s\n' "$status" "$checkpoint" "$tmp" >&2
     return 1
@@ -149,43 +153,62 @@ EOF_STATUS
     --require-status "$status" --minimum-tick 1
 }
 
-start_server "$save" "$tmp/midrun-server.log"
-wait_for_phase "$midrun" finale_checkpoint "$tmp/midrun-server.log"
-start_server "$midrun" "$tmp/completed-server.log"
-wait_for_phase "$completed" finale_training_passed "$tmp/completed-server.log"
+source_save="$save"
+for phase in assembly flight return activation won; do
+  checkpoint="$tmp/saves/bitermotors-$kind-$phase.zip"
+  phase_log="$tmp/$phase-server.log"
+  start_server "$source_save" "$phase_log"
+  wait_for_phase "$checkpoint" "${phase}_checkpoint" "$phase_log"
+  source_save="$checkpoint"
+done
 
-run_engine "$tmp/reload.log" --benchmark "$completed" --benchmark-ticks 61 --benchmark-runs 1
-bitermotors_check_log "$tmp/reload.log" --expect-updates 61 --expect-marker Goodbye
+run_engine "$tmp/reload.log" --benchmark "$source_save" --benchmark-ticks 2461 --benchmark-runs 1
+bitermotors_check_log "$tmp/reload.log" --expect-updates 2461 --expect-marker Goodbye
 python3 "$repo_root/scripts/validation_support.py" report "$report" \
-  --require-status finale_reload_passed --minimum-tick 1
+  --require-status won_reload_passed --minimum-tick 1
 
-python3 - "$report" "$save" "$midrun" "$completed" <<'EOF_CHECK'
+python3 - "$report" "$tmp/saves" "$kind" <<'EOF_CHECK'
 import json
 import sys
 from pathlib import Path
 
-report, *saves = map(Path, sys.argv[1:])
-assert all(path.is_file() and path.stat().st_size > 0 for path in saves), saves
+report, save_dir = map(Path, sys.argv[1:3])
+kind = sys.argv[3]
+for phase in ("seed", "assembly", "flight", "return", "activation", "won"):
+    path = save_dir / f"bitermotors-{kind}-{phase}.zip"
+    assert path.is_file() and path.stat().st_size > 0, path
 rows = [json.loads(line) for line in report.read_text().splitlines() if line.strip()]
-statuses = ["finale_policy_passed", "finale_checkpoint", "finale_training_passed", "finale_reload_passed"]
+statuses = ["payload_passed", "assembly_checkpoint", "assembly_reload_passed", "assembly_passed",
+            "flight_checkpoint", "flight_reload_passed", "return_checkpoint", "return_reload_passed", "activation_checkpoint",
+            "activation_reload_passed", "won_checkpoint", "won_reload_passed"]
 assert [row.get("status") for row in rows] == statuses, rows
 assert all(type(row.get("assertions")) is int and row["assertions"] > 0 for row in rows), rows
-assert all(row.get("validation_scope") == "legacy-controller-regression" for row in rows), rows
-policy, checkpoint, training, reload = rows
+assert all(row.get("validation_scope") == "native-model-ending" and row.get("limits") for row in rows), rows
+assert all(row.get("payload_quality") == ("rare" if kind == "finale" else "normal") for row in rows), rows
 assert all(type(row.get("tick")) is int and row["tick"] > 0 for row in rows), rows
-assert type(checkpoint.get("progress")) in (int, float) and 0 < checkpoint["progress"] < 1, checkpoint
-assert checkpoint["computed_datasets"] >= 20_000, checkpoint
-assert checkpoint["earned_equivalents"] == checkpoint["computed_datasets"] * 50_000, checkpoint
-assert training.get("training_seconds") == 1200, training
-assert training.get("required_power_watts") == 10_000_000_000, training
-cases = training.get("completion_cases")
-assert isinstance(cases, list) and len(cases) >= 8, training
-assert all(isinstance(case, dict) and 71999 <= case.get("duration_ticks", 0) <= 72001 for case in cases), cases
-assert all(abs(case.get("total_joules", 0) - 12_000_000_000_000) <= 10_000_000_000 / 60 * 2 for case in cases), cases
-assert type(reload.get("saved_tick")) is int and reload["tick"] > reload["saved_tick"], reload
-victory = training.get("victory")
-assert isinstance(victory, dict) and victory, training
-assert reload.get("victory") == victory, reload
-assert sum(row.get("status") == "finale_training_passed" for row in rows) == 1, rows
-print("Finale fixture passed:", json.dumps(rows, sort_keys=True))
+assert all(a["tick"] < b["tick"] for a, b in zip(rows, rows[1:])), rows
+by_status = {row["status"]: row for row in rows}
+payload = by_status["payload_passed"]
+assert payload["datasets_loaded"] == 20_000 and payload["earned_equivalents"] == 1_000_000_000, payload
+for phase in ("assembly", "activation"):
+    checkpoint = by_status[f"{phase}_checkpoint"]
+    assert type(checkpoint.get("progress")) in (int, float) and 0 < checkpoint["progress"] < 1, checkpoint
+for phase in ("assembly", "flight", "return", "activation", "won"):
+    checkpoint = by_status[f"{phase}_checkpoint"]
+    reload = by_status[f"{phase}_reload_passed"]
+    assert reload["saved_tick"] == checkpoint["tick"] and reload["tick"] > reload["saved_tick"], reload
+assembly = by_status["assembly_passed"]
+assert assembly["products_after_reload"] > by_status["assembly_checkpoint"]["products"], assembly
+assert assembly["native_completion_tick"] > assembly["assembly_reload_tick"], assembly
+flight = by_status["flight_checkpoint"]
+assert flight["models_in_transit"] == 1 and flight["return_credits"] == 0, flight
+assert flight["pod"] == by_status["flight_reload_passed"]["pod"], rows
+assert by_status["return_checkpoint"]["models_returned"] == 1, rows
+assert by_status["won_checkpoint"]["models_activated"] == 1, rows
+reload = by_status["won_reload_passed"]
+assert reload["native_activations"] == 1 and reload["freeplay_ticks"] >= 2400, reload
+assert abs(reload["activation_measured_watts"] - 8_000_000) < 400_000, reload
+assert isinstance(reload["victory"], dict) and reload["victory"], reload
+assert reload["victory"] == by_status["won_checkpoint"]["victory"], rows
+print("Native ending fixture passed:", json.dumps(rows, sort_keys=True))
 EOF_CHECK

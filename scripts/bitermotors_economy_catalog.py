@@ -13,6 +13,9 @@ CATALOG = ROOT / "docs/economy-prototypes.json"
 DOLLAR = "bitermotors-dollar"
 TOKEN = "bitermotors-ai-token"
 DATASET = "bitermotors-agi-training-dataset"
+MODEL = "bitermotors-agi-model"
+ASSEMBLE = "bitermotors-assemble-agi-model"
+ACTIVATE = "bitermotors-activate-agi-model"
 
 REQUIRED_TECHNOLOGIES = (
     "bitermotors-premium-ev-program", "bitermotors-advanced-battery-chemistry",
@@ -20,11 +23,12 @@ REQUIRED_TECHNOLOGIES = (
     "bitermotors-capital-scaling", "bitermotors-terrestrial-ai",
     "bitermotors-autonomous-logistics", "bitermotors-orbital-compute",
     "bitermotors-orbital-cluster-training", "bitermotors-grid-scale-energy",
-    "bitermotors-hyperscale-training", "bitermotors-planetary-energy-grid",
 )
+OPTIONAL_TECHNOLOGIES = ("bitermotors-hyperscale-training",)
 ENTITY_TYPES = ("assembling-machine", "solar-panel", "accumulator", "container")
 RECIPE_FIELDS = ("ingredients", "results", "energy_required", "categories", "category",
-                 "allow_productivity", "maximum_productivity", "raise_on_crafted")
+                 "allow_productivity", "allow_quality", "maximum_productivity", "raise_on_crafted",
+                 "surface_conditions")
 BASELINE_ROUTES = {
     "bitermotors-lithium-carbonate": "bitermotors-lithium-extraction",
     "bitermotors-nickel-sulfate": "bitermotors-dirty-nickel-refining",
@@ -100,7 +104,7 @@ def extract(raw: dict, runtime: dict) -> dict:
         name: {key: value for key, value in technology.items()
                if key in ("unit", "prerequisites", "effects")}
         for name, technology in raw["technology"].items()
-        if name in REQUIRED_TECHNOLOGIES or name in (
+        if name in REQUIRED_TECHNOLOGIES + OPTIONAL_TECHNOLOGIES or name in (
             "bitermotors-high-density-solar-productivity", "bitermotors-grid-battery-productivity",
             "bitermotors-megatruck-engineering", "bitermotors-battery-material-recovery",
             "bitermotors-cybertrain-logistics", "foundry", "logistic-system")
@@ -147,6 +151,7 @@ def extract(raw: dict, runtime: dict) -> dict:
     missing = set(REQUIRED_TECHNOLOGIES) - technologies.keys()
     if missing:
         raise ValueError(f"missing required research: {sorted(missing)}")
+    EconomyCatalog(catalog).model_ending()
     return catalog
 
 
@@ -176,6 +181,54 @@ class EconomyCatalog:
     def research(self, name: str, item: str = DOLLAR) -> float:
         unit = self.data["technologies"][name]["unit"]
         return unit["count"] * amount(unit["ingredients"], item)
+
+    def model_ending(self) -> dict:
+        """Reject legacy captures rather than silently inventing a replacement ending."""
+        fields = ("agi_assembly_recipe", "agi_activation_recipe", "agi_assembly_seconds",
+                  "agi_activation_seconds", "agi_activation_power_watts")
+        if any(field not in self.runtime for field in fields):
+            raise ValueError("native Model ending contract missing; fresh native capture required")
+        contract = {
+            "assembly_recipe": self.runtime["agi_assembly_recipe"],
+            "activation_recipe": self.runtime["agi_activation_recipe"],
+            "assembly_seconds": self.runtime["agi_assembly_seconds"],
+            "activation_seconds": self.runtime["agi_activation_seconds"],
+            "activation_watts": self.runtime["agi_activation_power_watts"],
+            "assembly_machine": "bitermotors-orbital-datacenter-core",
+            "activation_machine": "bitermotors-terrestrial-datacenter",
+        }
+        for field, expected in (("assembly_recipe", ASSEMBLE), ("activation_recipe", ACTIVATE)):
+            if contract[field] != expected:
+                raise ValueError(f"unsupported Model ending {field}")
+        derived = {
+            "assembly_seconds": self.seconds(ASSEMBLE, contract["assembly_machine"]),
+            "activation_seconds": self.seconds(ACTIVATE, contract["activation_machine"]),
+            "activation_watts": energy(self.data["entities"][contract["activation_machine"]]["energy_usage"]),
+        }
+        for field, value in derived.items():
+            if value != contract[field]:
+                raise ValueError(f"native Model ending {field} disagrees with prototypes")
+        if (self.ingredient(ASSEMBLE, DATASET) != 20000
+                or self.ingredient(ASSEMBLE, "bitermotors-datacenter-rack") != 1
+                or self.output(ASSEMBLE, MODEL) != 1
+                or self.ingredient(ACTIVATE, MODEL) != 1 or self.output(ACTIVATE, MODEL) != 1
+                or self.runtime["agi_token_gate"] != 1000000000):
+            raise ValueError("unsupported native Model payload or earned gate")
+        if (len(self.recipe(ASSEMBLE)["ingredients"]) != 2
+                or len(self.recipe(ACTIVATE)["ingredients"]) != 1
+                or len(self.recipe(ASSEMBLE)["results"]) != 1
+                or len(self.recipe(ACTIVATE)["results"]) != 1):
+            raise ValueError("unexpected native Model fee or payload")
+        for name in REQUIRED_TECHNOLOGIES + OPTIONAL_TECHNOLOGIES:
+            technology = self.data["technologies"][name]
+            if (amount(technology["unit"]["ingredients"], "space-science-pack")
+                    or "space-science-pack" in technology.get("prerequisites", [])):
+                raise ValueError("white science must not gate native Model compute")
+        for recipe in (ASSEMBLE, ACTIVATE):
+            if (self.recipe(recipe).get("allow_productivity", True)
+                    or self.recipe(recipe).get("allow_quality", True)):
+                raise ValueError("Model recipes must disable productivity and quality rerolls")
+        return dict(contract, **derived)
 
     def item_dollars(self, item: str, visiting: frozenset = frozenset()) -> float:
         if item == DOLLAR:

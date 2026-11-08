@@ -17,18 +17,54 @@ SPEC.loader.exec_module(economy)
 import bitermotors_economy_catalog as catalog_module
 
 
+def model_test_catalog():
+    """Synthetic unit-test data only, never a native capture or generated report."""
+    data = copy.deepcopy(economy.EconomyCatalog.load().data)
+    if "agi_assembly_recipe" in data["runtime"]:
+        return economy.EconomyCatalog(data)
+    data["recipes"][economy.ASSEMBLE] = {
+        "ingredients": [{"name": economy.DATASET, "amount": 20000},
+                        {"name": economy.P + "datacenter-rack", "amount": 1}],
+        "results": [{"name": economy.MODEL, "amount": 1}], "energy_required": 90,
+        "allow_productivity": False, "allow_quality": False}
+    data["recipes"][economy.ACTIVATE] = {
+        "ingredients": [{"name": economy.MODEL, "amount": 1}],
+        "results": [{"name": economy.MODEL, "amount": 1}], "energy_required": 30,
+        "allow_productivity": False, "allow_quality": False}
+    data["runtime"].update({
+        "agi_assembly_recipe": economy.ASSEMBLE, "agi_activation_recipe": economy.ACTIVATE,
+        "agi_assembly_seconds": 60, "agi_activation_seconds": 30,
+        "agi_activation_power_watts": 8000000})
+    data["runtime"]["compute_progress_policy"]["activation"] = "banked"
+    # Explicit hypothetical mass for unit arithmetic, not a native weight claim.
+    data["launch"]["item_weights_grams"][economy.P + "datacenter-rack"] = 100000
+    return economy.EconomyCatalog(data)
+
+
 class EconomySimulationTests(unittest.TestCase):
     def setUp(self):
-        self.catalog = economy.EconomyCatalog.load()
+        self.catalog = model_test_catalog()
 
     def altered(self):
         return economy.EconomyCatalog(copy.deepcopy(self.catalog.data))
 
-    def test_native_snapshot_matches_current_mod_source(self):
-        self.assertEqual([], economy.validate_source_snapshot())
+    def test_capture_provenance_is_distinct_from_current_source_freshness(self):
+        native = economy.EconomyCatalog.load()
+        self.assertEqual(bool(native.freshness_errors()), native.data["source_sha256"] != catalog_module.source_fingerprint())
         self.assertEqual(self.catalog.data["capture"]["source_sha256"], self.catalog.data["source_sha256"])
         self.assertEqual("2.1.20", self.catalog.data["factorio_version"])
         self.assertFalse(any(name.startswith("bitermotors-smoke-") for name in self.catalog.data["recipes"]))
+
+    def test_native_catalog_requires_new_contract_before_reporting(self):
+        native = economy.EconomyCatalog.load()
+        if "agi_assembly_recipe" not in native.runtime:
+            with self.assertRaisesRegex(ValueError, "fresh native capture required"):
+                native.model_ending()
+        else:
+            ending = native.model_ending()
+            self.assertEqual(60, ending["assembly_seconds"])
+            self.assertEqual(30, ending["activation_seconds"])
+            self.assertEqual(8000000, ending["activation_watts"])
 
     def test_stale_source_is_rejected_not_refreshed_by_model(self):
         catalog = self.altered()
@@ -83,6 +119,7 @@ class EconomySimulationTests(unittest.TestCase):
         plan = economy.campaign_plan(self.catalog)
         catalog = self.altered()
         catalog.data["entities"][economy.CORE]["crafting_speed"] *= 2
+        catalog.runtime["agi_assembly_seconds"] /= 2
         changed = economy.campaign_plan(catalog)
         self.assertEqual(20, plan["bands"][0]["normal_cycle_seconds"])
         self.assertAlmostEqual(plan["orbital_one_core_hours"] / 2, changed["orbital_one_core_hours"])
@@ -91,51 +128,62 @@ class EconomySimulationTests(unittest.TestCase):
 
     def test_physical_payload_accounts_for_tokens_spent_by_labs(self):
         plan = economy.campaign_plan(self.catalog)
-        self.assertEqual([100, 180, 900, 4501], [band["batches"] for band in plan["bands"]])
-        self.assertEqual(7000, plan["orbital_research_tokens"])
+        self.assertEqual([100, 180, 9901], [band["batches"] for band in plan["bands"]])
+        self.assertEqual(2500, plan["orbital_research_tokens"])
         self.assertEqual(199, plan["early_datasets_packaged"])
-        self.assertEqual(20003, plan["physical_datasets"] + plan["early_datasets_packaged"])
+        self.assertEqual(20001, plan["physical_datasets"] + plan["early_datasets_packaged"])
         self.assertGreaterEqual(plan["orbital_generated_equivalents"], self.catalog.runtime["agi_token_gate"])
 
     def test_compute_output_changes_required_batch_count(self):
         catalog = self.altered()
-        catalog.data["recipes"][economy.ORBITAL_RECIPES[-1]]["results"][0]["amount"] *= 2
+        catalog.data["recipes"][economy.ORBITAL_RECIPES[-2]]["results"][0]["amount"] *= 2
         changed = economy.campaign_plan(catalog)
         original = economy.campaign_plan(self.catalog)
         self.assertLess(changed["orbital_operating_dollars"], original["orbital_operating_dollars"])
         self.assertGreaterEqual(changed["physical_datasets"] + changed["early_datasets_packaged"], 20000)
 
-    def test_grid_and_consumed_storage_are_not_counted_twice(self):
+    def test_native_model_timing_and_no_legacy_grid_double_count(self):
         plan = economy.campaign_plan(self.catalog)
-        self.assertEqual(4762, plan["tandem_arrays"])
-        self.assertEqual(1001, plan["grid_battery_arrays"])
-        self.assertEqual(110, plan["consumed_grid_battery_arrays"])
-        self.assertEqual(1111, plan["power_material_bill"]["grid_battery_arrays_including_consumed"])
-        self.assertEqual(20, plan["final_training_minutes"])
-        self.assertEqual(12e12, plan["normal_final_run_energy_joules"])
-
-    def test_power_changes_scale_physical_assets(self):
-        catalog = self.altered()
-        catalog.data["entities"][economy.CONTROLLER]["energy_usage"] = "20GW"
-        changed = economy.campaign_plan(catalog)
-        self.assertEqual(9524, changed["tandem_arrays"])
-        self.assertEqual(2001, changed["grid_battery_arrays"])
-        self.assertEqual(24e12, changed["normal_final_run_energy_joules"])
-
-    def test_recursive_construction_cash_and_optional_branches(self):
-        self.assertEqual(250, self.catalog.item_dollars("bitermotors-biterfactory-v2"))
-        self.assertEqual(10, self.catalog.item_dollars(economy.TERRESTRIAL))
-        self.assertEqual(5, self.catalog.item_dollars(economy.ARRAY))
-        self.assertEqual(0, self.catalog.item_dollars(economy.TANDEM))
-        plan = economy.campaign_plan(self.catalog)
-        self.assertEqual(15500, plan["research_dollars"])
-        self.assertEqual(90256, plan["direct_dollars"])
-        self.assertNotIn("foundry", economy.REQUIRED_TECHNOLOGIES)
-        self.assertNotIn("bitermotors-megatruck-engineering", economy.REQUIRED_TECHNOLOGIES)
-        self.assertEqual(22220, plan["grid_battery_opportunity_dollars"])
+        self.assertEqual(60, plan["model_ending"]["assembly_seconds"])
+        self.assertEqual(30, plan["model_ending"]["activation_seconds"])
+        self.assertEqual(8e6, plan["model_ending"]["activation_watts"])
+        self.assertNotIn("final_capital_dollars", plan)
+        self.assertNotIn("grid_battery_arrays", plan)
+        expected = sum(count * self.catalog.item_dollars(item) for item, count in (
+            (economy.P + "biterfactory-v2", 1), (economy.TERRESTRIAL, 1),
+            (economy.P + "datacenter-rack", 1), (economy.CORE, 8),
+            (economy.P + "high-density-space-solar-panel", plan["space_panels"]),
+            (economy.P + "orbital-radiator-panel", plan["radiators"])))
+        self.assertEqual(expected, plan["construction_dollars"])
         self.assertEqual(plan["direct_dollars"], sum(plan[key] for key in (
             "research_dollars", "construction_dollars", "terrestrial_operating_dollars",
-            "orbital_operating_dollars", "final_capital_dollars", "ordinary_ai_retry_dollars")))
+            "orbital_operating_dollars", "ordinary_ai_retry_dollars")))
+        self.assertNotIn("bitermotors-hyperscale-training", economy.REQUIRED_TECHNOLOGIES)
+        self.assertNotIn("bitermotors-planetary-energy-grid", economy.REQUIRED_TECHNOLOGIES)
+        self.assertEqual(0, plan["research_science"]["space-science-pack"])
+        self.assertGreater(economy.campaign_plan(self.catalog, hyperscale=True)["research_dollars"],
+                           plan["research_dollars"])
+
+    def test_native_contract_is_required_and_timing_is_cross_checked(self):
+        catalog = self.altered()
+        del catalog.runtime["agi_assembly_recipe"]
+        with self.assertRaisesRegex(ValueError, "fresh native capture required"):
+            economy.campaign_plan(catalog)
+        catalog = self.altered()
+        catalog.runtime["agi_assembly_seconds"] = 90
+        with self.assertRaisesRegex(ValueError, "disagrees"):
+            economy.campaign_plan(catalog)
+
+    def test_extra_final_fee_and_white_research_fail_closed(self):
+        catalog = self.altered()
+        catalog.recipe(economy.ASSEMBLE)["ingredients"].append({"name": economy.DOLLAR, "amount": 1})
+        with self.assertRaisesRegex(ValueError, "fee or payload"):
+            economy.campaign_plan(catalog)
+        catalog = self.altered()
+        catalog.data["technologies"]["bitermotors-grid-scale-energy"]["unit"]["ingredients"].append(
+            ["space-science-pack", 1])
+        with self.assertRaisesRegex(ValueError, "white science"):
+            economy.campaign_plan(catalog)
 
     def test_missing_or_cyclic_construction_routes_fail_closed(self):
         catalog = self.altered()
@@ -151,9 +199,9 @@ class EconomySimulationTests(unittest.TestCase):
         case = economy.finite_market(self.catalog, economy.SCENARIOS[0])
         self.assertEqual(3000, case["consumer_purchase_capacity"])
         self.assertEqual(24000, case["finite_profit_ceiling_without_taxis"])
-        self.assertEqual(1000, case["grid_batteries_sold_in_window"])
+        self.assertLessEqual(case["grid_batteries_sold_in_window"], 1000)
         self.assertFalse(case["taxi_gate_ready_from_required_generations"])
-        self.assertIsNone(case["funding_window_hours"])
+        self.assertIsNotNone(case["funding_window_hours"])
         self.assertEqual(667, case["new_customers_needed_for_taxi_gate"])
         self.assertEqual(33.35, case["organic_only_taxi_gate_wait_hours"])
 
@@ -189,12 +237,12 @@ class EconomySimulationTests(unittest.TestCase):
         self.assertEqual(260, retry["ordinary_ai_retry_dollars"])
         self.assertEqual(260, retry["terrestrial_ai_retry_dollars"])
         self.assertEqual(0, retry["orbital_ai_retry_dollars"])
-        self.assertEqual(base["final_capital_dollars"], retry["final_capital_dollars"])
+        self.assertNotIn("final_capital_dollars", retry)
         self.assertEqual(base["direct_dollars"] + retry["ordinary_ai_retry_dollars"], retry["direct_dollars"])
 
     def test_progress_policy_must_match_native_capture(self):
         catalog = self.altered()
-        self.assertEqual({"terrestrial": "scrap", "orbital": "banked"},
+        self.assertEqual({"terrestrial": "scrap", "orbital": "banked", "activation": "banked"},
                          catalog.runtime["compute_progress_policy"])
         catalog.runtime["compute_progress_policy"]["orbital"] = "reset"
         with self.assertRaisesRegex(ValueError, "unsupported native compute-progress policy"):
@@ -211,13 +259,29 @@ class EconomySimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             economy.finite_market(self.catalog, economy.Scenario("negative", 1, 200, 1, -1, 1))
 
-    def test_report_matches_generated_document_and_discloses_limits(self):
+    def test_report_discloses_limits_without_legacy_charge(self):
         report = economy.report(self.catalog)
-        self.assertEqual(report + "\n" if not report.endswith("\n") else report,
-                         (ROOT / "docs/economy-balance.md").read_text())
-        for claim in ("Not a total campaign-time forecast", "active", "finite battery adoption",
-                      "not another cash bill", "Phase 4 remains open", "No balance values are changed"):
-            self.assertIn(claim, report)
+        for claim in ("Not a total campaign-time forecast", "active", "Finite battery adoption",
+                      "Phase 4 remains open", "No balance values are changed"):
+            self.assertIn(claim.lower(), report.lower())
+        self.assertNotIn("10 GW", report)
+        self.assertNotIn("20 uninterrupted", report)
+
+    def test_report_names_cash_sinks_and_distinguishes_starting_scopes(self):
+        report = economy.report(self.catalog)
+        for text in ("Default cash budget skips Hyperscale", "terrestrial EV/energy research",
+                     "not a full crash-landing budget", "orbital study starts later",
+                     "different scopes, not competing totals", "Direct cash total (no Hyperscale)",
+                     "automation (red)", "logistic (green)", "chemical (blue)",
+                     "production (purple)", "utility (yellow)", "no space (white)"):
+            self.assertIn(text, report)
+        for key in ("research_dollars", "construction_dollars", "direct_dollars"):
+            self.assertNotIn(key, report)
+
+    def test_generated_report_matches_fresh_native_catalog(self):
+        native = economy.EconomyCatalog.load()
+        self.assertEqual([], native.freshness_errors())
+        self.assertEqual(economy.report(native), (ROOT / "docs/economy-balance.md").read_text())
 
 
 if __name__ == "__main__":
