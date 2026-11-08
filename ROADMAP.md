@@ -17,10 +17,173 @@ published as a beta or v1. It requires a finishable campaign, release soak
 evidence, and an exact-archive rehearsal. Optional art polish and a trailer must
 not delay a proven ending.
 
+### Remaining Plan As Of 2026-11-08
+
+**Two milestones: a frozen, finishable private playtest candidate; then public
+v1.0 after Luke completes it.** Do not start that acceptance campaign while the
+ending is still being replaced. A separate public beta is optional, not another
+required development phase.
+
+Reviewed current source: `7660e91`, synchronized with `origin/main`. All **255
+Python tests pass** today; the installed engine reports **2.1.20, build 87512**.
+Native source/ZIP evidence below dates from October, not a new full qualification
+run today. The terrestrial accounting/customer/recycling/charging repairs and
+normal-quality rocket uplift are implemented. The approved orbital Model
+ending, banked orbital work and epilogue are not. Passing tests of the old
+controller ending do not make the replacement ending finishable.
+
+The remaining phases preserve the original review's numbering: **3 through 8**.
+Complete them consecutively. Each implementation slice updates its actual
+artifacts, tests and remaining gaps here; completion means its exit gate passes,
+not just that the code exists.
+
+#### Phase 3: Complete The Approved Ending
+
+Build in three consecutive slices:
+
+1. **Banked compute and scale tiers.** Orbital low power or missing cooling
+   pauses/slows work without losing committed inputs or progress. Keep ordinary
+   terrestrial run-scrapping. Apply the approved research/yield changes: the
+   three scale projects cost 2,000/3,000/6,000 Dollars and unlock
+   50,000/100,000/200,000 equivalents per normal 20-second batch. Match direct
+   Dataset yields to their Token variants and preserve native earned accounting.
+2. **Physical Model and ground activation.** Assemble 20,000 physical Datasets
+   plus one Rack into a Model in orbit, return it through real cargo logistics,
+   and activate it in an existing Nauvis datacenter. Verify the cluster accepts
+   the entire input batch. Target approximately one normal minute for assembly
+   and 30 seconds for activation, not another long training/power challenge.
+   Victory requires earned compute and genuine native assembly/activation;
+   injected items/statistics, output extraction or machine removal must not
+   fabricate or erase victory. Remove the controller, Capital Allocation fee,
+   obsolete required research and old 10 GW/uninterrupted-run contract.
+3. **Ending feedback and epilogue.** Progressively reveal player-relevant
+   stages. Show earned compute separately from physical payload, explain
+   pause/blocker states, guide Model return and
+   activation, and persist victory and per-player epilogue acknowledgement.
+   Implement the approved skippable offline terminal scene from the ending
+   spec. Update technology descriptions, inspectors, Progress, locale, metadata,
+   fixtures and documentation together; remove obsolete finale directions.
+
+**Exit gate:** an isolated native test earns the required computation, consumes
+the actual payload, assembles and returns the Model, activates it, wins once,
+continues play and survives a separate-process reload. Include outages/cooling
+recovery, partial shipments, blocked output, immediate extraction/removal,
+quality and force isolation. Do not substitute the old finale fixture.
+
+#### Phase 4: Freeze Pacing And Functional Presentation
+
+- Build a practical first-cluster layout and representative 1/4/8/12-cluster
+  ramps with appropriate inserters, belts and hub settings. Twelve is a sizing
+  reference, not a victory gate. The basic uplift fixture's roughly 73-minute
+  raw-Token extraction/return is not acceptable evidence of practical I/O.
+- Recompute real research, construction, cash, power, battery-material, rocket
+  and science demands from the final prototypes. Include manufacturing and
+  cargo delays, and do not allocate the same blue-circuit production twice.
+  Check a modest market of roughly ten settlements and an alternative to
+  mandatory Bitertaxi expansion; avoid requiring limitless new nests or AFK cash.
+- Aim for a major upgrade every 2-3 active hours and roughly 4-6 active hours
+  for the orbital chapter. These are targets to qualify, not observed campaign
+  times. The earlier 5.7-hour ideal-input model already excludes construction
+  and delivery, so it cannot establish the target. Tune before the campaign.
+- Audit fresh starts on at least five seeds, resource access, and every critical
+  technology's ingredients, manufacturing machine and science prerequisites.
+  No removed-planet material, hidden unlock or optional vehicle/quality branch
+  may block the ending.
+- Give the cluster, radiator and solar wing clear platform-appropriate art with
+  distinct silhouettes and correct footprints. Check existing critical assets,
+  locked-item filters, tier/readability cues and native UI at two scales,
+  day/night and remote view. Fix functional confusion, not every aesthetic flaw.
+- Freeze the spoiler-light campaign contract, default start, supported engine,
+  prototype identifiers and core recipes. Move unrelated ideas to post-v1.
+
+**Exit gate:** the new route is buildable and understandable without console
+help, known mandatory money/transport stalls are resolved, and only small
+numerical balance changes should be necessary during Luke's campaign.
+
+#### Phase 5: Qualify Reliability And Scale On The Exact Archive
+
+- Close R14's packaging gap first: use approved tracked inputs, reject secrets,
+  saves/runtime files and external symlinks, derive versions/paths from the
+  manifest, and finish shipped image/audio provenance and redistribution notes.
+- Build a deterministic candidate ZIP and record its hash. Run broad smoke and
+  relevant native regressions against source and that exact archive, including
+  the new ending, new-world start, persistence and two-force behavior.
+- Run the existing **four simulated-hour terrestrial** and **one simulated-hour
+  multi-platform orbital** soaks. Requested benchmark updates alone do not prove
+  time advanced or that the economy was working; inspect state progress too.
+- Benchmark 25/100/250/500 settlements at the bounded visible-unit cap, with
+  sales, growth, battery adoption, charging commutes, inspectors and grid changes.
+  Profile Grid Battery installation work and charger placement/removal before
+  deciding which optimizations are needed. Do not target 20,000 physical movers.
+- Test real two-player join/reconnect, ownership/force boundaries, save/load,
+  harmless configuration changes, fast replacements and hidden-entity cleanup.
+
+**Exit gate:** no runtime errors, lost progress, duplicated rewards, unbounded
+backlogs or recurring second-scale hitches. Meet existing measured budgets:
+average <=8 ms, warm p99 <=16.667 ms and warm maximum <=100 ms on the recorded
+test machine/workload. A failing gate produces a focused fix and rerun, not a
+blanket rewrite or another feature branch.
+
+#### Phase 6: Rehearse Installation And Declare Playtest Ready
+
+- Install the exact candidate into clean user directories with only declared
+  dependencies; create, save, reload and join single/multiplayer worlds.
+- Have one outside player complete the early customer/manufacturing loop
+  without developer coaching. Fix demonstrated discovery blockers.
+- Publish the candidate manifest, supported configuration, short player guide,
+  known limitations and save/backup procedure. Freeze its version, ZIP hash,
+  settings and campaign seed; no source-symlink-only acceptance run.
+
+**Milestone A: ready for Luke's final playtest.** Phases 3-6 pass, no P0/P1 or
+known path-blocking P2 remains, and a native rehearsal reaches the actual new
+victory. Launching your fresh campaign is an explicit handoff, not an automatic
+server/client restart or a replacement of your current save.
+
+#### Phase 7: Finish One Real Fresh Campaign
+
+- Play non-sandbox from the approved landing kit through Model activation and
+  victory, without refunded cash, injected compute or developer-only unlocks.
+- Keep milestone saves and bounded read-only records of time, earnings,
+  research, power, population, production and AI output. No external coach or
+  telemetry system may be required for the mod to function.
+- Allow logged small numeric balance adjustments. Treat a crash, softlock,
+  state loss or major pacing redesign as an RC defect: preserve a backup, fix
+  and retest the affected gate, then explicitly decide whether earlier campaign
+  evidence remains valid. Never silently reset the game.
+- Save/reload after victory and verify continued freeplay. Capture a few
+  spoiler-light, physically plausible gameplay scenes with Luke's approval;
+  never reposition the live player/vehicle merely to obtain a screenshot.
+
+**Exit gate:** one complete, understandable and enjoyable campaign with no
+critical workaround and credible pacing. The isolated fixture proves mechanics;
+this playthrough proves the game hangs together.
+
+#### Phase 8: Publish And Support V1
+
+- Apply only approved final fixes. Rehearse the numeric 1.0.0 metadata/package
+  version; if bytes change, rebuild and rerun affected gates and exact-archive
+  installation, including loading campaign checkpoints and the won save.
+- Finalize changelog, requirements, supported version, known issues, licenses,
+  asset provenance, feedback channel and a small set of real gameplay images.
+- Tag the exact release source, upload its validated ZIP to the mod portal,
+  download it independently and verify install/load before announcing it.
+- Start the public save-compatibility contract at that first public archive.
+  Triage crashes, broken saves and progression blockers before adding features.
+
+**Milestone B: shipped.** The public download installs and reproduces the
+campaign we tested. A YouTube trailer, more marketing art, comprehensive art
+replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
+other new mechanics are not release blockers.
+
+**Immediate next implementation:** Phase 3's banked-compute/scale-tier slice,
+followed by physical orbital Model assembly, return and activation. This turn
+updates the plan only; it does not implement those mechanics or change a save.
+
 ### Current Review And Consecutive Plan
 
-The [2026-10-05 v1 readiness review](docs/v1-readiness-review.md) is the current
-implementation plan. Reviewed commit: `54c12ac`; installed engine: **2.1.20**.
+The [2026-10-05 v1 readiness review](docs/v1-readiness-review.md) supplies the
+findings and dated evidence; the remaining plan above governs current work.
+Reviewed commit: `54c12ac`; baseline engine: **2.1.20**.
 The reviewed source could not load on that build. **Phase 1 is now complete:**
 the compatibility defect is fixed, isolated source and exact-archive smoke
 tests pass without a shim, and validators/soaks reject incomplete evidence.
@@ -498,7 +661,7 @@ Status: **functional, not final**
 
 ### Gate 6: Compatibility Contract
 
-Status: **historically archive validated on 2.1.14; current 2.1.20 load blocked**
+Status: **source/ZIP load qualified on 2.1.20; broader release qualification open**
 
 The checked items below were validated locally with the Factorio 2.1.14 engine
 using an isolated user directory and the exact packaged archive. CI reproduces

@@ -8,6 +8,13 @@ implementation status is recorded below.
 
 ## Verdict
 
+**2026-11-08 planning refresh:** the active remaining sequence and explicit
+playtest/publication gates are in [ROADMAP.md](../ROADMAP.md#remaining-plan-as-of-2026-11-08).
+Current source is `7660e91`; 255 Python tests pass and the installed engine
+still reports 2.1.20. Native qualification evidence remains dated below. The
+orbital-entry slice is complete, but the replacement ending is not. This
+planning refresh changes no gameplay or live save.
+
 **Do not start the final acceptance playthrough yet.** The terrestrial game has
 enough content for v1. Finish and stabilize it rather than add another branch.
 The initial compatibility defect is fixed in Phase 1; Phase 2 is complete with
@@ -758,9 +765,11 @@ qualification of the replacement ending. Phase 3 is reopened on 2026-10-07:
       accelerated final crafting; remove the Model immediately as a second case.
 
 **Deliverables:** endgame fixes, revised contract, complete native delivery/win tests.
-**Exit gate:** 1B earned equivalents reconcile; final inputs arrive through real
-logistics; cooling and power failures reset/recover; the complete run wins once
-under every supported quality/output-extraction configuration.
+**Current exit gate:** 1B earned equivalents reconcile with the physical
+archive; native orbital Model assembly, cargo return and Nauvis activation win
+once and survive reload. Orbital cooling/power pauses preserve work; ordinary
+terrestrial compute retains its scrapping policy. The 20-minute ground-run
+results below describe the superseded implementation, not this exit gate.
 
 **Payload/accounting slice complete 2026-10-06:**
 [verification](ai-accounting-validation.md). Grid-scale/hyperscale direct
@@ -892,22 +901,24 @@ ending. Public patch-save support begins with the first public archive.
 | Grid Battery sales | Purchaser stays at showroom; installation/adoption; repeat neighbor demand; no duplicate currency/installation; growth and office-count scaling. |
 | Vehicles | Five EVs, eSpider and Cybertrain; low battery, charging, reverse sound, collision/wreck, reserve crawl, blocked Self-driving path and cancel, teleport/removal/save-load. |
 | Batteries/recycling | Dirty/clean coproducts, tailings throughput, productivity whitelist, 90% recovery, low-count feed, rewritten vanilla inverses, no chemistry fabrication through wrecks. |
-| AI/endgame | Base/efficient tiers, quality/beacons, blocked outputs, pending bonus, low power, cooling shortfall/removal, two platforms, cargo return, datasets, full 20-minute run, immediate Model extraction. |
+| AI/endgame | Base/efficient tiers, quality/beacons, blocked outputs, pending bonus, terrestrial scrapping versus orbital pause/resume, cooling removal, two platforms, physical payload consumption, Model assembly/return/Nauvis activation, once-only victory, immediate extraction and reload. |
 | Presentation | Native scale/night/remote map; every physical item filterable while locked; overlays and alerts; clipped text; progressive UI; actionability and correct counts. |
 | Persistence/package | Native save/load at each milestone; harmless config change; multiplayer join; clean 1.0.0 archive; deterministic hashes; no secrets/runtime artifacts. |
 
 ## Next Implementation Slice
 
-Continue **Phase 4 design freeze** from the prototype-backed economy/guidance
-baseline. Evaluate targeted final capital and practical core expansion against
-the 2-3-hour major-step target; measure material/build throughput before tuning
-panel output. Fix R15's identical orbital cooling/solar placed art, then review
-the critical asset matrix, all locked-item filters, and Progress at native UI
-scales in an isolated showcase. Publish the frozen spoiler-light campaign
-contract. Do not add another feature branch or start the final campaign yet.
-Phases 1-3 are qualified within their recorded fixture bounds, not as a natural
-campaign or scale/GUI/multiplayer sign-off. Phases 5-6 still precede Luke's final
-fresh acceptance playthrough.
+Continue **Phase 3**, not Phase 4. Implement banked orbital work and the approved
+scale-tier values, then physical Model assembly/return and native Nauvis
+activation. Remove the old controller/capital/uninterrupted-run path, update
+the progressive UI and epilogue, and qualify the new ending through real cargo
+and separate-process reload. The normal-quality rocket-entry fixture is already
+complete; old ground-finale tests do not qualify the replacement ending.
+
+Then complete Phase 4's practical I/O/economy and functional art freeze, Phase 5's
+exact-archive reliability/scaling gates and Phase 6's installation/outside-player
+rehearsal. Only then start Luke's final fresh campaign. Follow the
+[current remaining plan](../ROADMAP.md#remaining-plan-as-of-2026-11-08); no new
+feature branch or broad refactor belongs ahead of these release gates.
 
 The original review changed planning/documentation only. Phase 1 and the Phase 2
 accounting/customer-state/recycling/charging slices record their implemented fixes above; none
