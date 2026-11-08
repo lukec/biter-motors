@@ -101,8 +101,10 @@ assembly, return or ground activation. Those mechanics remain unimplemented.
 
 ## Source And Archive Checks
 
-All processes use private temporary user directories and loopback sockets.
-The live server, desktop client, installed mod and player save are unchanged.
+All test processes use private temporary user directories and loopback sockets.
+No live server/client restart or player-save operation was performed. The local
+client mod is symlinked to this source tree, so it sees the edited files on its
+next load; a running Factorio process does not hot-reload them.
 
 | Check | Source | Exact candidate ZIP |
 | --- | --- | --- |

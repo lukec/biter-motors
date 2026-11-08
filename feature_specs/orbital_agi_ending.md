@@ -6,7 +6,8 @@ Source now has compact hardware, explicit cargo weights, one-radiator cooling
 and research without white science. Orbital interruptions now retain native
 inputs and progress, and the tier costs/yields below are implemented. The old
 10 GW terrestrial finale remains until Model assembly/return/activation replaces
-it. No player save, installed mod or live process was changed. See
+it. No player-save or live-process operation was performed; the source-linked
+local mod will load these changes on a later restart. See
 [entry validation](../docs/orbital-entry-validation.md) and
 [banked-work validation](../docs/orbital-banked-compute-validation.md).
 
