@@ -10399,7 +10399,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.orbital_compute_researched then
     return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", research("bitermotors-orbital-compute") .. " Use the vanilla Rocket Silo and a stationary Nauvis platform. Make the research Tokens on land; orbital output cannot fund its own unlock."
   elseif snapshot.orbital_datacenter_cores == 0 then
-    return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Each 3x3 cluster draws 250 MW and produces physical AI Tokens. Start with one cluster, one radiator and five Solar Wings. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars in the hub requests; return Tokens by cargo pod."
+    return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Start with one 3x3 cluster, one radiator and five Solar Wings. Use small custom minimum payloads in hub requests so this hardware and operating Dollars can launch. Select Orbital Training Dataset output to avoid moving thousands of individual Tokens."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Orbital cooling", "Install one Orbital Radiator per Compute Cluster.", string.format(
       "Cooling online: %d / %d cores. Radiators installed: %d / %d. Undercooled cores pause with their progress and operating Dollar retained.",
@@ -10409,17 +10409,17 @@ local function current_progress_objective(snapshot)
       snapshot.required_orbital_radiator_panels
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Run the first orbital AI batch.", string.format("Supply 1 Dollar and 250 MW power to a cooled core. Space Solar is one option, not a required placement milestone. A normal core produces 10,000 Tokens every %g seconds before further effects. Low power slows/stops work; missing cooling pauses it. Progress and committed inputs are retained; return output by cargo pod.", snapshot.orbital_cycle_seconds)
+    return "Orbital AI", "Compute the first Orbital Training Dataset.", "Supply 5 Dollars and 250 MW to a cooled core for one Dataset in 100 normal seconds. Five Solar Wings provide 300 MW in Nauvis orbit. Return a few Datasets and unpack them into Tokens for research; retain the rest in orbit. Power/cooling interruptions preserve work and committed inputs."
   elseif snapshot.orbital_ai_tokens_generated < 1000000 then
     return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
-      "Orbital output: %d / 1,000,000. The base recipe produces 10,000 Tokens per Dollar.",
+      "Orbital output: %d / 1,000,000 equivalents. Each starting Dataset contains 50,000 equivalents and costs 5 Dollars. Keep the input belt filtered to Dollars only.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.orbital_cluster_researched then
-    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Raise each orbital batch from 10,000 to 50,000 AI Tokens."
+    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Produce one Dataset per Dollar every 20 normal seconds. Return a few Datasets and unpack them for research."
   elseif snapshot.orbital_ai_tokens_generated < 10000000 then
     return "Orbital scale", "Generate ten million cumulative orbital AI Tokens.", string.format(
-      "Orbital output: %d / 10,000,000. Cluster Training produces 50,000 Tokens per Dollar.",
+      "Orbital output: %d / 10,000,000 equivalents. Cluster Training produces one Dataset per Dollar. Keep the final archive in orbit.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.grid_scale_energy_researched then
@@ -11102,7 +11102,7 @@ local function refresh_progress_panel(player)
       color = snapshot.orbital_datacenter_cores > 0
         and snapshot.cooled_orbital_datacenter_cores == snapshot.orbital_datacenter_cores
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
-      tooltip = "Each core draws 250 MW. Low power or insufficient cooling resets the active AI Token batch to zero."
+      tooltip = "Each core draws 250 MW. Low power slows/stops computation; missing cooling pauses it. Native progress and committed inputs are retained."
     }
     compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-orbital-radiator-panel",
@@ -11785,11 +11785,15 @@ local function show_manufacturer_info_panel(player, entity)
         add_station_info_label(panel, "Model assembly: 20,000 Datasets + 1 Rack; one normal minute.")
         add_station_info_label(panel, "Return the finished Model through this platform's hub to a Nauvis Cargo Landing Pad.")
       else
-        add_station_info_label(panel, "Capital burn: 1 Dollar per 30-second cycle")
+        local recipe = entity.get_recipe()
+        local recipe_seconds = recipe and recipe.energy or 30
+        local dollars = recipe and recipe.ingredients[1].amount or 1
+        add_station_info_label(panel, string.format("Capital burn: %g Dollars per %g-second cycle at full speed",
+          dollars, recipe_seconds / entity.crafting_speed))
         add_station_info_label(panel, string.format(
           "AI output: %g Token equivalents/cycle (%g/minute at full power)",
           selected_output,
-          selected_output * entity.crafting_speed * 60 / 30
+          selected_output * entity.crafting_speed * 60 / recipe_seconds
         ))
         if datasets then
           add_station_info_label(panel, string.format("Payload: %g Training Datasets/cycle (50,000 Tokens each)",

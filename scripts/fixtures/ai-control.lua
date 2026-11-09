@@ -59,6 +59,19 @@ local function pure_fixtures()
     equal(track.generated, case[2], "serialized ledger conserves progress")
   end
   for _, case in ipairs({
+    {"bitermotors-orbital-ai-dataset", 5, 150},
+    {"bitermotors-orbital-ai-dataset-cluster", 1, 30}
+  }) do
+    local recipe, track = prototypes.recipe[case[1]], AiAccounting.ensure()
+    equal(recipe.ingredients[1].name, DOLLAR, "compact operating currency")
+    equal(recipe.ingredients[1].amount, case[2], "compact capital conserved")
+    equal(recipe.energy, case[3], "compact compute time conserved")
+    equal(recipe.products[1].name, DATASET, "compact physical payload")
+    equal(recipe.products[1].amount, 1, "one compact Dataset")
+    equal(AiAccounting.record(track, case[1], 1, "normal", false, 0), true, "compact native completion")
+    equal(track.generated, 50000, "compact equivalent conservation")
+  end
+  for _, case in ipairs({
     {"bitermotors-orbital-cluster-training", 1000, 2},
     {"bitermotors-grid-scale-energy", 1500, 2},
     {"bitermotors-hyperscale-training", 2000, 3}
@@ -75,6 +88,8 @@ local function pure_fixtures()
   equal(AiAccounting.record(track, "bitermotors-package-agi-training-dataset", 1, "normal", false, 6),
     false, "packaging is not computation")
   equal(track.generated, 0, "packaging does not mint progress")
+  equal(AiAccounting.record(track, "bitermotors-unpack-agi-training-dataset", 1, "normal", false, 6),
+    false, "unpacking is not computation")
   for _, quality in ipairs({"normal", "rare"}) do
     AiAccounting.record(track, "bitermotors-terrestrial-ai-token", 1, quality, false, 1)
     equal(track.pending_bonus[1][quality], 2, "research bonus retains product quality")
@@ -155,13 +170,18 @@ script.on_init(function()
     for y = -32, 48 do tiles[#tiles + 1] = {name = "landfill", position = {x, y}} end
   end
   land.set_tiles(tiles)
-  for _, x in ipairs({-64, -40, -16, 8, 32, 56}) do power(land, {x, -8}, force, true) end
+  for _, x in ipairs({-64, -40, -16, 8, 32, 56, 80}) do power(land, {x, -8}, force, true) end
   storage.normal = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {-64, 0}, force)
   storage.rare = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {-40, 0}, force, "ordinary", "rare")
   storage.pending = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {-16, 0}, force, "pending")
   storage.removed = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {8, 0}, force, "removed")
   storage.productivity = task(land, DATACENTER, "bitermotors-terrestrial-ai-token", {32, 0}, force, "productivity")
   storage.pack = task(land, "assembling-machine-2", "bitermotors-package-agi-training-dataset", {56, 0}, force, "pack")
+  storage.unpack = make(land, "assembling-machine-2", {80, 0}, force)
+  force.recipes["bitermotors-unpack-agi-training-dataset"].enabled = true
+  storage.unpack.set_recipe("bitermotors-unpack-agi-training-dataset")
+  -- Negative control: changing a supplied payload's format must earn no compute.
+  equal(input(storage.unpack).insert{name = DATASET, count = 1}, 1, "unpack fixture payload")
 
   local orbit = platform(force, "AI accounting A", 7)
   for index, spec in ipairs({
@@ -265,6 +285,7 @@ local function native_step()
       native_generated = storage.events.player, pending_bonus = 2,
       other_force_generated = ledger(game.forces["ai-second-force"]).cumulative_ai_tokens,
       platforms = 2, packaging_datasets = output(storage.pack.machine).get_item_count(DATASET),
+      unpacked_tokens = output(storage.unpack).get_item_count(TOKEN),
       datasets_extracted_by_inserter = storage.payload_chest.get_inventory(defines.inventory.chest).get_item_count(DATASET),
       dataset_pause_preserved = storage.dataset_pause_preserved,
       dataset_solar_power_multiplier = 0,
@@ -292,6 +313,8 @@ local function native_step()
     end
   end
   if not ready then return end
+  equal(output(storage.unpack).get_item_count(TOKEN), 50000, "native Dataset unpacking conserves physical equivalents")
+  equal(storage.unpack.products_finished, 1, "unpacking completes exactly once")
   if not storage.pack_started then
     storage.pack_started = true
     local grid = storage.tasks[9]

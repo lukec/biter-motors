@@ -5,6 +5,14 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Added native-exported 1/4/8/12-cluster platform blueprints, coordinate previews,
+  real-solar rocket/logistics rehearsals, and source-bound remaining-chapter
+  budgets. Supplied ground stock and modeled manufacturing are disclosed.
+- Made compact Dataset output available from the first orbital tier without
+  changing per-equivalent cash, compute time or power. Added lossless ordinary
+  unpacking for research; packaging and unpacking never earn compute again.
+- Updated orbital objectives, technology descriptions and inspector rates for
+  compact output; removed an obsolete orbital-progress-reset warning.
 - Added the offline, skippable post-victory terminal, with three-second thinking,
   native close/Escape handling, independent player/force acknowledgement,
   disconnect/reload recovery and replay from the completed Progress panel.

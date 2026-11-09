@@ -170,7 +170,7 @@ script.on_init(function()
     ORBITAL_CORE, ORBITAL_RADIATOR, SPACE_SOLAR, DOLLAR,
     "bitermotors-agi-training-dataset", "bitermotors-datacenter-rack", AGI_MODEL,
     "space-platform-starter-pack", "space-platform-foundation",
-    "transport-belt", "inserter"
+    "transport-belt", "inserter", "bulk-inserter", "express-transport-belt"
   }) do
     economy_contract.launch_item_weights[name] = prototypes.item[name].weight
   end

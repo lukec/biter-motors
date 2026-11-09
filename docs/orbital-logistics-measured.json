@@ -1,0 +1,2312 @@
+{
+  "schema": 1,
+  "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+  "catalog_freshness_errors": [],
+  "layouts_sha256": "d823b3fade0a3dd5b6c99fb91cffb07acbc6ae50d94bfae5d049eca58dfd3e94",
+  "qualification": "unqualified for campaign pacing; not actual player time",
+  "native_observations": {
+    "status": "native observations supplied; coverage reported per recipe/layout",
+    "runs": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "elapsed_ticks": 73800,
+        "completed_batches": 12,
+        "batches_per_second": 0.00975609756097561,
+        "raw_baseline": false,
+        "midpoint": {
+          "elapsed_ticks": 36360,
+          "completed_batches": 6
+        },
+        "returned_items_per_second": 0.00975609756097561
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "elapsed_ticks": 95100,
+        "completed_batches": 240,
+        "batches_per_second": 0.15141955835962145,
+        "raw_baseline": false,
+        "midpoint": {
+          "elapsed_ticks": 36840,
+          "completed_batches": 120
+        },
+        "returned_items_per_second": 0.15141955835962145
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "elapsed_ticks": 109560,
+        "completed_batches": 480,
+        "batches_per_second": 0.2628696604600219,
+        "raw_baseline": false,
+        "midpoint": {
+          "elapsed_ticks": 37440,
+          "completed_batches": 240
+        },
+        "returned_items_per_second": 0.5257393209200438
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "elapsed_ticks": 116820,
+        "completed_batches": 720,
+        "batches_per_second": 0.3697996918335901,
+        "raw_baseline": false,
+        "midpoint": {
+          "elapsed_ticks": 37860,
+          "completed_batches": 360
+        },
+        "returned_items_per_second": 1.4791987673343605
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "elapsed_ticks": 36000,
+        "completed_batches": 5,
+        "batches_per_second": 0.008333333333333333,
+        "raw_baseline": true,
+        "midpoint": {
+          "elapsed_ticks": 18000,
+          "completed_batches": 5
+        },
+        "returned_items_per_second": 13.02
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "elapsed_ticks": 116820,
+        "completed_batches": 720,
+        "batches_per_second": 0.3697996918335901,
+        "raw_baseline": false,
+        "midpoint": {
+          "elapsed_ticks": 37860,
+          "completed_batches": 360
+        },
+        "returned_items_per_second": 0.7395993836671803
+      }
+    ],
+    "transit": null,
+    "source_bound": true,
+    "launch_comparisons": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "native_fixture_rockets": 5,
+        "minimum_launched_rocket_parts": 250,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 11,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "native_fixture_rockets": 11,
+        "minimum_launched_rocket_parts": 550,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 16,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "native_fixture_rockets": 20,
+        "minimum_launched_rocket_parts": 1000,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 23,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "native_fixture_rockets": 28,
+        "minimum_launched_rocket_parts": 1400,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 32,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "native_fixture_rockets": 5,
+        "minimum_launched_rocket_parts": 250,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 11,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "native_fixture_rockets": 28,
+        "minimum_launched_rocket_parts": 1400,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 32,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      }
+    ],
+    "provenance_status": "source hash recorded by fixture",
+    "uplift_observations": [
+      {
+        "cores": 1,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334
+        ],
+        "rockets": 5,
+        "rocket_parts": 350,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      },
+      {
+        "cores": 4,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334,
+          7.45,
+          7.7,
+          7.583333333333333,
+          7.65,
+          7.483333333333333,
+          7.733333333333333
+        ],
+        "rockets": 11,
+        "rocket_parts": 650,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      },
+      {
+        "cores": 8,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334,
+          7.45,
+          7.7,
+          7.583333333333333,
+          7.65,
+          7.483333333333333,
+          7.733333333333333,
+          7.516666666666667,
+          7.366666666666666,
+          7.683333333333334,
+          7.7,
+          7.433333333333334,
+          7.516666666666667,
+          7.65,
+          7.35,
+          7.416666666666667
+        ],
+        "rockets": 20,
+        "rocket_parts": 1100,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      },
+      {
+        "cores": 12,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334,
+          7.45,
+          7.7,
+          7.583333333333333,
+          7.65,
+          7.483333333333333,
+          7.733333333333333,
+          7.516666666666667,
+          7.366666666666666,
+          7.683333333333334,
+          7.7,
+          7.433333333333334,
+          7.516666666666667,
+          7.65,
+          7.35,
+          7.416666666666667,
+          7.35,
+          7.516666666666667,
+          7.55,
+          7.533333333333333,
+          7.45,
+          7.566666666666666,
+          7.333333333333333,
+          7.65
+        ],
+        "rockets": 28,
+        "rocket_parts": 1500,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      },
+      {
+        "cores": 1,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334
+        ],
+        "rockets": 5,
+        "rocket_parts": 350,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      },
+      {
+        "cores": 12,
+        "delivery_seconds": [
+          0.0,
+          7.6,
+          7.65,
+          7.6,
+          7.383333333333334,
+          7.45,
+          7.7,
+          7.583333333333333,
+          7.65,
+          7.483333333333333,
+          7.733333333333333,
+          7.516666666666667,
+          7.366666666666666,
+          7.683333333333334,
+          7.7,
+          7.433333333333334,
+          7.516666666666667,
+          7.65,
+          7.35,
+          7.416666666666667,
+          7.35,
+          7.516666666666667,
+          7.55,
+          7.533333333333333,
+          7.45,
+          7.566666666666666,
+          7.333333333333333,
+          7.65
+        ],
+        "rockets": 28,
+        "rocket_parts": 1500,
+        "scope": "independent fixture platform; actual mixed/partial cargo loads",
+        "campaign_rocket_count": false
+      }
+    ],
+    "midpoint_observations": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "measured_ticks": 36360,
+        "completions": 6,
+        "produced": 6,
+        "returned": 5
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "measured_ticks": 36840,
+        "completions": 120,
+        "produced": 120,
+        "returned": 109
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "measured_ticks": 37440,
+        "completions": 240,
+        "produced": 480,
+        "returned": 456
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "measured_ticks": 37860,
+        "completions": 360,
+        "produced": 1440,
+        "returned": 1348
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "measured_ticks": 18000,
+        "completions": 5,
+        "produced": 50000,
+        "returned": 3480
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "measured_ticks": 37860,
+        "completions": 360,
+        "produced": 720,
+        "returned": 674
+      }
+    ],
+    "evidence": [
+      "/tmp/bitermotors-platform.0D6Vh7/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.jOpaSs/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.i9aAOx/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.WwpXy7/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.xI8aLk/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.B0GQxr/script-output/bitermotors-platform.jsonl"
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "Modest recurring; ten settlements",
+      "work": {
+        "hyperscale": true,
+        "research": [
+          {
+            "technology": "bitermotors-autonomous-logistics",
+            "cycles": 750,
+            "dollars_per_cycle": 1.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-orbital-compute",
+            "cycles": 1500,
+            "dollars_per_cycle": 1.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-orbital-cluster-training",
+            "cycles": 1000,
+            "dollars_per_cycle": 2.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-grid-scale-energy",
+            "cycles": 1500,
+            "dollars_per_cycle": 2.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-hyperscale-training",
+            "cycles": 2000,
+            "dollars_per_cycle": 3.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          }
+        ],
+        "science": {
+          "automation-science-pack": 6750.0,
+          "logistic-science-pack": 6750.0,
+          "chemical-science-pack": 6750.0,
+          "production-science-pack": 6750.0,
+          "utility-science-pack": 6750.0
+        },
+        "research_dollars": 13250.0,
+        "terrestrial_dollars": 2260.0,
+        "orbital_dollars": 5681.0,
+        "compact_status": "native compact recipes modeled",
+        "missing_compact_recipes": [],
+        "bands": [
+          {
+            "recipe": "bitermotors-orbital-ai-dataset",
+            "target": 1000000,
+            "batches": 20,
+            "dollars": 100.0,
+            "normal_cycle_seconds": 100.0,
+            "one_core_hours": 0.5555555555555556,
+            "raw_equivalent_recipe": "bitermotors-orbital-ai-token",
+            "raw_equivalent_batches": 100,
+            "raw_equivalent_dollars": 100.0,
+            "raw_equivalent_one_core_hours": 0.5555555555555556,
+            "compact_rounding_equivalents": 0.0,
+            "cores": 1
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-cluster",
+            "target": 10000000,
+            "batches": 180,
+            "dollars": 180.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 1.0,
+            "raw_equivalent_recipe": "bitermotors-orbital-ai-token-cluster",
+            "raw_equivalent_batches": 180,
+            "raw_equivalent_dollars": 180.0,
+            "raw_equivalent_one_core_hours": 1.0,
+            "compact_rounding_equivalents": 0.0,
+            "cores": 4
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+            "target": 100000000,
+            "batches": 900,
+            "dollars": 900.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 5.0,
+            "cores": 8
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+            "target": 1000000000,
+            "batches": 4501,
+            "dollars": 4501.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 25.005555555555556,
+            "cores": 12
+          }
+        ],
+        "ending": {
+          "assembly_recipe": "bitermotors-assemble-agi-model",
+          "activation_recipe": "bitermotors-activate-agi-model",
+          "assembly_seconds": 60.0,
+          "activation_seconds": 30.0,
+          "activation_watts": 8000000.0,
+          "assembly_machine": "bitermotors-orbital-datacenter-core",
+          "activation_machine": "bitermotors-terrestrial-datacenter"
+        }
+      },
+      "hardware": {
+        "stages": [
+          {
+            "cores": 1,
+            "payload": {
+              "bulk-inserter": 4,
+              "transport-belt": 8,
+              "express-transport-belt": 21,
+              "bitermotors-orbital-datacenter-core": 1,
+              "bitermotors-high-density-space-solar-panel": 5,
+              "bitermotors-orbital-radiator-panel": 1,
+              "space-platform-foundation": 125,
+              "space-platform-starter-pack": 1,
+              "bitermotors-dollar": 100.0
+            },
+            "rockets": 11,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "space-platform-starter-pack": 1,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 4,
+            "payload": {
+              "bulk-inserter": 6,
+              "transport-belt": 12,
+              "express-transport-belt": 12,
+              "bitermotors-orbital-datacenter-core": 3,
+              "bitermotors-high-density-space-solar-panel": 15,
+              "bitermotors-orbital-radiator-panel": 3,
+              "space-platform-foundation": 252,
+              "bitermotors-dollar": 180.0
+            },
+            "rockets": 13,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 8,
+            "payload": {
+              "bulk-inserter": 8,
+              "transport-belt": 16,
+              "express-transport-belt": 16,
+              "bitermotors-orbital-datacenter-core": 4,
+              "bitermotors-high-density-space-solar-panel": 20,
+              "bitermotors-orbital-radiator-panel": 4,
+              "space-platform-foundation": 336,
+              "bitermotors-dollar": 900.0
+            },
+            "rockets": 14,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 12,
+            "payload": {
+              "bulk-inserter": 8,
+              "transport-belt": 16,
+              "express-transport-belt": 16,
+              "bitermotors-orbital-datacenter-core": 4,
+              "bitermotors-high-density-space-solar-panel": 20,
+              "bitermotors-orbital-radiator-panel": 4,
+              "space-platform-foundation": 336,
+              "bitermotors-dollar": 4501.0,
+              "bitermotors-datacenter-rack": 1.0
+            },
+            "rockets": 15,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-datacenter-rack": 18,
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          }
+        ],
+        "rockets": 53,
+        "manufacturing_roots": {
+          "bulk-inserter": 26,
+          "transport-belt": 52,
+          "express-transport-belt": 65,
+          "bitermotors-orbital-datacenter-core": 12,
+          "bitermotors-high-density-space-solar-panel": 60,
+          "bitermotors-orbital-radiator-panel": 12,
+          "space-platform-foundation": 1049,
+          "space-platform-starter-pack": 1,
+          "bitermotors-datacenter-rack": 1.0,
+          "processing-unit": 2650,
+          "low-density-structure": 2650,
+          "rocket-fuel": 2650,
+          "rocket-silo": 1,
+          "cargo-landing-pad": 1
+        },
+        "silo_assembly_seconds_lower_bound": 7950.0,
+        "launch_policy": "modeled conservative single-item loads; rounded separately each stage",
+        "qualification": "projection for one growing platform; not measured native rocket counts",
+        "silo_bound_scope": "part-crafting lower bound for this projected rocket count, not all packing policies",
+        "return_model_items": 1,
+        "return_requires_rocket": false
+      },
+      "joint_manufacturing_roots": {
+        "bulk-inserter": 26,
+        "transport-belt": 52,
+        "express-transport-belt": 65,
+        "bitermotors-orbital-datacenter-core": 12,
+        "bitermotors-high-density-space-solar-panel": 60,
+        "bitermotors-orbital-radiator-panel": 12,
+        "space-platform-foundation": 1049,
+        "space-platform-starter-pack": 1,
+        "bitermotors-datacenter-rack": 1.0,
+        "processing-unit": 2650,
+        "low-density-structure": 2650,
+        "rocket-fuel": 2650,
+        "rocket-silo": 1,
+        "cargo-landing-pad": 1,
+        "automation-science-pack": 6750.0,
+        "logistic-science-pack": 6750.0,
+        "chemical-science-pack": 6750.0,
+        "production-science-pack": 6750.0,
+        "utility-science-pack": 6750.0,
+        "bitermotors-grid-battery": 500,
+        "bitermotors-sales-office": 1,
+        "bitermotors-bitertaxi-fleet": 120,
+        "bitermotors-bitertaxi-depot": 1
+      },
+      "joint_material_bill": {
+        "supplies": {
+          "bitermotors-dollar": 2600,
+          "bitermotors-lithium-brine": 218000,
+          "bitermotors-nickel-ore": 640,
+          "calcite": 8720,
+          "coal": 58599,
+          "copper-plate": 524583,
+          "electric-engine-unit": 3050,
+          "iron-ore": 124,
+          "iron-plate": 290299,
+          "lubricant": 1300,
+          "petroleum-gas": 1214620,
+          "processing-unit": 11228,
+          "rocket-fuel": 2650,
+          "steel-plate": 158021,
+          "stone": 55390,
+          "stone-brick": 23120,
+          "sulfuric-acid": 421960,
+          "water": 63040
+        },
+        "surplus": {
+          "bitermotors-acidic-tailings": 111800.0,
+          "bitermotors-lithium-carbonate": 4.0,
+          "bitermotors-phosphate": 4.0,
+          "copper-cable": 1.0,
+          "plastic-bar": 1.0,
+          "sulfur": 1.0,
+          "transport-belt": 1.0
+        },
+        "recipe_batches": {
+          "automation-science-pack": 6750,
+          "bitermotors-bitertaxi-depot": 1,
+          "bitermotors-bitertaxi-fleet": 120,
+          "bitermotors-high-density-space-solar-panel": 60,
+          "bitermotors-orbital-datacenter-core": 12,
+          "bitermotors-orbital-radiator-panel": 12,
+          "bitermotors-sales-office": 1,
+          "bulk-inserter": 26,
+          "cargo-landing-pad": 1,
+          "chemical-science-pack": 3375,
+          "express-transport-belt": 65,
+          "logistic-science-pack": 6750,
+          "production-science-pack": 2250,
+          "rocket-silo": 1,
+          "space-platform-starter-pack": 1,
+          "utility-science-pack": 2250,
+          "bitermotors-ev-charging-station-v4": 1,
+          "roboport": 4,
+          "bitermotors-autonomy-computer": 480,
+          "bitermotors-mass-market-ev": 480,
+          "bitermotors-high-energy-battery-pack": 120,
+          "bitermotors-datacenter-rack": 97,
+          "heat-pipe": 240,
+          "assembling-machine-2": 1,
+          "radar": 1,
+          "fast-inserter": 26,
+          "sulfur": 1688,
+          "fast-transport-belt": 65,
+          "electric-furnace": 2250,
+          "productivity-module": 2250,
+          "rail": 33750,
+          "space-platform-foundation": 1109,
+          "flying-robot-frame": 2250,
+          "bitermotors-ev-charging-station-v3": 1,
+          "bitermotors-grid-battery": 504,
+          "bitermotors-high-density-solar-array": 124,
+          "speed-module": 960,
+          "bitermotors-electric-drivetrain": 480,
+          "car": 480,
+          "bitermotors-dry-high-nickel-cell": 80,
+          "assembling-machine-1": 1,
+          "inserter": 6776,
+          "transport-belt": 3434,
+          "iron-stick": 16875,
+          "bitermotors-ev-charging-station-v2": 1,
+          "bitermotors-lfp-battery-pack": 8112,
+          "low-density-structure": 11033,
+          "solar-panel": 124,
+          "engine-unit": 10590,
+          "bitermotors-battery-graphite": 80,
+          "bitermotors-clean-nickel-refining": 64,
+          "bitermotors-ev-charging-station": 1,
+          "bitermotors-dry-lfp-cell": 5408,
+          "iron-gear-wheel": 29110,
+          "pipe": 21280,
+          "accumulator": 2018,
+          "concrete": 124,
+          "substation": 511,
+          "bitermotors-clean-lithium-extraction": 2180,
+          "bitermotors-clean-phosphate-extraction": 2164,
+          "battery": 16530,
+          "advanced-circuit": 30616,
+          "electronic-circuit": 131845,
+          "plastic-bar": 58199,
+          "copper-cable": 274023
+        }
+      },
+      "frontier": {
+        "rows": [
+          {
+            "item": "bitermotors-lithium-brine",
+            "units": 218000,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 21.8
+          },
+          {
+            "item": "bitermotors-nickel-ore",
+            "units": 640,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.64
+          },
+          {
+            "item": "calcite",
+            "units": 8720,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 8.72
+          },
+          {
+            "item": "coal",
+            "units": 58599,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 58.599
+          },
+          {
+            "item": "copper-plate",
+            "units": 524583,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 524.583
+          },
+          {
+            "item": "electric-engine-unit",
+            "units": 3050,
+            "units_per_minute": 100,
+            "minutes_lower_bound": 30.5
+          },
+          {
+            "item": "iron-ore",
+            "units": 124,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.124
+          },
+          {
+            "item": "iron-plate",
+            "units": 290299,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 290.299
+          },
+          {
+            "item": "lubricant",
+            "units": 1300,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 1.3
+          },
+          {
+            "item": "petroleum-gas",
+            "units": 1214620,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 60.731
+          },
+          {
+            "item": "processing-unit",
+            "units": 11228,
+            "units_per_minute": 30,
+            "minutes_lower_bound": 374.26666666666665
+          },
+          {
+            "item": "rocket-fuel",
+            "units": 2650,
+            "units_per_minute": 60,
+            "minutes_lower_bound": 44.166666666666664
+          },
+          {
+            "item": "steel-plate",
+            "units": 158021,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 158.021
+          },
+          {
+            "item": "stone",
+            "units": 55390,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 55.39
+          },
+          {
+            "item": "stone-brick",
+            "units": 23120,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 23.12
+          },
+          {
+            "item": "sulfuric-acid",
+            "units": 421960,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 42.196
+          },
+          {
+            "item": "water",
+            "units": 63040,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 3.152
+          }
+        ],
+        "bottlenecks": [
+          {
+            "item": "copper-plate",
+            "units": 524583,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 524.583
+          },
+          {
+            "item": "processing-unit",
+            "units": 11228,
+            "units_per_minute": 30,
+            "minutes_lower_bound": 374.26666666666665
+          },
+          {
+            "item": "iron-plate",
+            "units": 290299,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 290.299
+          },
+          {
+            "item": "steel-plate",
+            "units": 158021,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 158.021
+          },
+          {
+            "item": "petroleum-gas",
+            "units": 1214620,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 60.731
+          },
+          {
+            "item": "coal",
+            "units": 58599,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 58.599
+          },
+          {
+            "item": "stone",
+            "units": 55390,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 55.39
+          },
+          {
+            "item": "rocket-fuel",
+            "units": 2650,
+            "units_per_minute": 60,
+            "minutes_lower_bound": 44.166666666666664
+          },
+          {
+            "item": "sulfuric-acid",
+            "units": 421960,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 42.196
+          },
+          {
+            "item": "electric-engine-unit",
+            "units": 3050,
+            "units_per_minute": 100,
+            "minutes_lower_bound": 30.5
+          },
+          {
+            "item": "stone-brick",
+            "units": 23120,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 23.12
+          },
+          {
+            "item": "bitermotors-lithium-brine",
+            "units": 218000,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 21.8
+          },
+          {
+            "item": "calcite",
+            "units": 8720,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 8.72
+          },
+          {
+            "item": "water",
+            "units": 63040,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 3.152
+          },
+          {
+            "item": "lubricant",
+            "units": 1300,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 1.3
+          },
+          {
+            "item": "bitermotors-nickel-ore",
+            "units": 640,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.64
+          },
+          {
+            "item": "iron-ore",
+            "units": 124,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.124
+          }
+        ],
+        "unrated_items": [],
+        "known_minutes_lower_bound": 524.583,
+        "all_frontier_rates_supplied": true,
+        "qualification": "assumed rates; parallel frontier lower bound, not construction time"
+      },
+      "frontier_sensitivity": [
+        {
+          "rate_multiplier": 0.5,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 1049.166,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 524583,
+              "units_per_minute": 500.0,
+              "minutes_lower_bound": 1049.166
+            },
+            {
+              "item": "processing-unit",
+              "units": 11228,
+              "units_per_minute": 15.0,
+              "minutes_lower_bound": 748.5333333333333
+            },
+            {
+              "item": "iron-plate",
+              "units": 290299,
+              "units_per_minute": 500.0,
+              "minutes_lower_bound": 580.598
+            }
+          ]
+        },
+        {
+          "rate_multiplier": 1,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 524.583,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 524583,
+              "units_per_minute": 1000,
+              "minutes_lower_bound": 524.583
+            },
+            {
+              "item": "processing-unit",
+              "units": 11228,
+              "units_per_minute": 30,
+              "minutes_lower_bound": 374.26666666666665
+            },
+            {
+              "item": "iron-plate",
+              "units": 290299,
+              "units_per_minute": 1000,
+              "minutes_lower_bound": 290.299
+            }
+          ]
+        },
+        {
+          "rate_multiplier": 2,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 262.2915,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 524583,
+              "units_per_minute": 2000,
+              "minutes_lower_bound": 262.2915
+            },
+            {
+              "item": "processing-unit",
+              "units": 11228,
+              "units_per_minute": 60,
+              "minutes_lower_bound": 187.13333333333333
+            },
+            {
+              "item": "iron-plate",
+              "units": 290299,
+              "units_per_minute": 2000,
+              "minutes_lower_bound": 145.1495
+            }
+          ]
+        }
+      ],
+      "cash": {
+        "research_and_compute": 21191.0,
+        "construction_and_business_stock": 2600,
+        "total_before_recurring_wear": 23791.0,
+        "finite_sales_revenue_ceiling": 10000.0,
+        "finite_funding_gap": 11791.0,
+        "recurring_net_dollars_per_hour": 3560.0,
+        "steady_service_hours_lower_bound": 3.3120786516853933,
+        "hardware_included": true,
+        "finite_market_can_fund_bill": false,
+        "ideal_input_business_simulation": {
+          "business": {
+            "name": "Modest recurring; ten settlements",
+            "settlements": 10,
+            "population": 2000,
+            "remaining_battery_buyers": 500,
+            "battery_offices": 1,
+            "taxi_depots": 1,
+            "allocated_fleet": 120,
+            "starting_dollars": 2000,
+            "science_sets_per_minute": 60,
+            "taxi_sales_gate_met": true,
+            "research_tiers": 3
+          },
+          "status": "complete under model assumptions",
+          "model_hours": 5.691666666666666,
+          "first_orbital_output_minute": 73,
+          "events": [
+            {
+              "minute": 19,
+              "technology": "bitermotors-autonomous-logistics"
+            },
+            {
+              "minute": 20,
+              "technology": "fleet-started"
+            },
+            {
+              "minute": 72,
+              "technology": "bitermotors-orbital-compute"
+            },
+            {
+              "minute": 122,
+              "technology": "bitermotors-orbital-cluster-training"
+            },
+            {
+              "minute": 161,
+              "technology": "bitermotors-grid-scale-energy"
+            },
+            {
+              "minute": 226,
+              "technology": "bitermotors-hyperscale-training"
+            }
+          ],
+          "wallet": 5800.67777777777,
+          "income": {
+            "battery_sales": 10000.0,
+            "taxi_service": 18389.0
+          },
+          "spent": {
+            "terrestrial_compute": 2260.0,
+            "research": 13250.0,
+            "fleet_capital": 2600.0,
+            "fleet_wear": 204.3222222222215,
+            "orbital_compute": 6274.0,
+            "orbital_research_tokens": 4500.0
+          },
+          "cash_spent": 24588.32222222222,
+          "batteries_sold": 500,
+          "fleet_active": true,
+          "active_fleet": 120,
+          "built_depots": 1,
+          "fleet_capex": 2600.0,
+          "net_taxi_dollars_per_hour": 3560.0,
+          "orbital_generated": 1000100000.0,
+          "archive_equivalents": 1000095500.0,
+          "cash_conservation_error": 9.094947017729282e-12
+        },
+        "business_simulation_scope": "unchanged ideal raw-equivalent minute model; not compact batch scheduling or physical shipping",
+        "wear_materials": "not included; native business simulation amortizes wear Dollars only"
+      },
+      "compute": [
+        {
+          "recipe": "bitermotors-orbital-ai-dataset",
+          "cores": 1,
+          "batches": 20,
+          "ideal_seconds": 2000.0,
+          "startup_to_midpoint_projection_seconds": 2020.0,
+          "observed_rate_projection_seconds": 2050.0,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-cluster",
+          "cores": 4,
+          "batches": 180,
+          "ideal_seconds": 900.0,
+          "startup_to_midpoint_projection_seconds": 921.0,
+          "observed_rate_projection_seconds": 1188.75,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+          "cores": 8,
+          "batches": 900,
+          "ideal_seconds": 2250.0,
+          "startup_to_midpoint_projection_seconds": 2340.0,
+          "observed_rate_projection_seconds": 3423.75,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+          "cores": 12,
+          "batches": 4501,
+          "ideal_seconds": 7501.666666666667,
+          "startup_to_midpoint_projection_seconds": 7889.252777777778,
+          "observed_rate_projection_seconds": 12171.454166666666,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        }
+      ],
+      "full_window_scaled_compute_hours": 5.231653935185185,
+      "startup_midpoint_scaled_compute_hours": 3.658403549382716,
+      "transit": {
+        "status": "unqualified: Model-return transit missing; any native uplift samples remain separate"
+      }
+    },
+    {
+      "name": "Finite non-taxi; skip Hyperscale",
+      "work": {
+        "hyperscale": false,
+        "research": [
+          {
+            "technology": "bitermotors-autonomous-logistics",
+            "cycles": 750,
+            "dollars_per_cycle": 1.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-orbital-compute",
+            "cycles": 1500,
+            "dollars_per_cycle": 1.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-orbital-cluster-training",
+            "cycles": 1000,
+            "dollars_per_cycle": 2.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          },
+          {
+            "technology": "bitermotors-grid-scale-energy",
+            "cycles": 1500,
+            "dollars_per_cycle": 2.0,
+            "tokens_per_cycle": 1.0,
+            "science": {
+              "automation-science-pack": 1.0,
+              "logistic-science-pack": 1.0,
+              "chemical-science-pack": 1.0,
+              "production-science-pack": 1.0,
+              "utility-science-pack": 1.0
+            }
+          }
+        ],
+        "science": {
+          "automation-science-pack": 4750.0,
+          "logistic-science-pack": 4750.0,
+          "chemical-science-pack": 4750.0,
+          "production-science-pack": 4750.0,
+          "utility-science-pack": 4750.0
+        },
+        "research_dollars": 7250.0,
+        "terrestrial_dollars": 2260.0,
+        "orbital_dollars": 10181.0,
+        "compact_status": "native compact recipes modeled",
+        "missing_compact_recipes": [],
+        "bands": [
+          {
+            "recipe": "bitermotors-orbital-ai-dataset",
+            "target": 1000000,
+            "batches": 20,
+            "dollars": 100.0,
+            "normal_cycle_seconds": 100.0,
+            "one_core_hours": 0.5555555555555556,
+            "raw_equivalent_recipe": "bitermotors-orbital-ai-token",
+            "raw_equivalent_batches": 100,
+            "raw_equivalent_dollars": 100.0,
+            "raw_equivalent_one_core_hours": 0.5555555555555556,
+            "compact_rounding_equivalents": 0.0,
+            "cores": 1
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-cluster",
+            "target": 10000000,
+            "batches": 180,
+            "dollars": 180.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 1.0,
+            "raw_equivalent_recipe": "bitermotors-orbital-ai-token-cluster",
+            "raw_equivalent_batches": 180,
+            "raw_equivalent_dollars": 180.0,
+            "raw_equivalent_one_core_hours": 1.0,
+            "compact_rounding_equivalents": 0.0,
+            "cores": 4
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+            "target": 100000000,
+            "batches": 900,
+            "dollars": 900.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 5.0,
+            "cores": 8
+          },
+          {
+            "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+            "target": 1000000000,
+            "batches": 9001,
+            "dollars": 9001.0,
+            "normal_cycle_seconds": 20.0,
+            "one_core_hours": 50.00555555555555,
+            "cores": 12
+          }
+        ],
+        "ending": {
+          "assembly_recipe": "bitermotors-assemble-agi-model",
+          "activation_recipe": "bitermotors-activate-agi-model",
+          "assembly_seconds": 60.0,
+          "activation_seconds": 30.0,
+          "activation_watts": 8000000.0,
+          "assembly_machine": "bitermotors-orbital-datacenter-core",
+          "activation_machine": "bitermotors-terrestrial-datacenter"
+        }
+      },
+      "hardware": {
+        "stages": [
+          {
+            "cores": 1,
+            "payload": {
+              "bulk-inserter": 4,
+              "transport-belt": 8,
+              "express-transport-belt": 21,
+              "bitermotors-orbital-datacenter-core": 1,
+              "bitermotors-high-density-space-solar-panel": 5,
+              "bitermotors-orbital-radiator-panel": 1,
+              "space-platform-foundation": 125,
+              "space-platform-starter-pack": 1,
+              "bitermotors-dollar": 100.0
+            },
+            "rockets": 11,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "space-platform-starter-pack": 1,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 4,
+            "payload": {
+              "bulk-inserter": 6,
+              "transport-belt": 12,
+              "express-transport-belt": 12,
+              "bitermotors-orbital-datacenter-core": 3,
+              "bitermotors-high-density-space-solar-panel": 15,
+              "bitermotors-orbital-radiator-panel": 3,
+              "space-platform-foundation": 252,
+              "bitermotors-dollar": 180.0
+            },
+            "rockets": 13,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 8,
+            "payload": {
+              "bulk-inserter": 8,
+              "transport-belt": 16,
+              "express-transport-belt": 16,
+              "bitermotors-orbital-datacenter-core": 4,
+              "bitermotors-high-density-space-solar-panel": 20,
+              "bitermotors-orbital-radiator-panel": 4,
+              "space-platform-foundation": 336,
+              "bitermotors-dollar": 900.0
+            },
+            "rockets": 14,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          },
+          {
+            "cores": 12,
+            "payload": {
+              "bulk-inserter": 8,
+              "transport-belt": 16,
+              "express-transport-belt": 16,
+              "bitermotors-orbital-datacenter-core": 4,
+              "bitermotors-high-density-space-solar-panel": 20,
+              "bitermotors-orbital-radiator-panel": 4,
+              "space-platform-foundation": 336,
+              "bitermotors-dollar": 9001.0,
+              "bitermotors-datacenter-rack": 1.0
+            },
+            "rockets": 15,
+            "blocked_items": [],
+            "capacity_per_rocket": {
+              "bitermotors-datacenter-rack": 18,
+              "bitermotors-dollar": 100000,
+              "bitermotors-high-density-space-solar-panel": 40,
+              "bitermotors-orbital-datacenter-core": 10,
+              "bitermotors-orbital-radiator-panel": 10,
+              "bulk-inserter": 50,
+              "express-transport-belt": 100,
+              "space-platform-foundation": 50,
+              "transport-belt": 100
+            }
+          }
+        ],
+        "rockets": 53,
+        "manufacturing_roots": {
+          "bulk-inserter": 26,
+          "transport-belt": 52,
+          "express-transport-belt": 65,
+          "bitermotors-orbital-datacenter-core": 12,
+          "bitermotors-high-density-space-solar-panel": 60,
+          "bitermotors-orbital-radiator-panel": 12,
+          "space-platform-foundation": 1049,
+          "space-platform-starter-pack": 1,
+          "bitermotors-datacenter-rack": 1.0,
+          "processing-unit": 2650,
+          "low-density-structure": 2650,
+          "rocket-fuel": 2650,
+          "rocket-silo": 1,
+          "cargo-landing-pad": 1
+        },
+        "silo_assembly_seconds_lower_bound": 7950.0,
+        "launch_policy": "modeled conservative single-item loads; rounded separately each stage",
+        "qualification": "projection for one growing platform; not measured native rocket counts",
+        "silo_bound_scope": "part-crafting lower bound for this projected rocket count, not all packing policies",
+        "return_model_items": 1,
+        "return_requires_rocket": false
+      },
+      "joint_manufacturing_roots": {
+        "bulk-inserter": 26,
+        "transport-belt": 52,
+        "express-transport-belt": 65,
+        "bitermotors-orbital-datacenter-core": 12,
+        "bitermotors-high-density-space-solar-panel": 60,
+        "bitermotors-orbital-radiator-panel": 12,
+        "space-platform-foundation": 1049,
+        "space-platform-starter-pack": 1,
+        "bitermotors-datacenter-rack": 1.0,
+        "processing-unit": 2650,
+        "low-density-structure": 2650,
+        "rocket-fuel": 2650,
+        "rocket-silo": 1,
+        "cargo-landing-pad": 1,
+        "automation-science-pack": 4750.0,
+        "logistic-science-pack": 4750.0,
+        "chemical-science-pack": 4750.0,
+        "production-science-pack": 4750.0,
+        "utility-science-pack": 4750.0,
+        "bitermotors-grid-battery": 1000,
+        "bitermotors-sales-office": 1,
+        "bitermotors-bitertaxi-fleet": 0,
+        "bitermotors-bitertaxi-depot": 0
+      },
+      "joint_material_bill": {
+        "supplies": {
+          "bitermotors-lithium-brine": 325500,
+          "bitermotors-nickel-ore": 640,
+          "calcite": 13020,
+          "coal": 43279,
+          "copper-plate": 422387,
+          "electric-engine-unit": 1904,
+          "iron-ore": 122,
+          "iron-plate": 230884,
+          "lubricant": 1300,
+          "petroleum-gas": 893220,
+          "processing-unit": 7858,
+          "rocket-fuel": 2650,
+          "steel-plate": 149271,
+          "stone": 56150,
+          "stone-brick": 16450,
+          "sulfuric-acid": 636520,
+          "water": 47840
+        },
+        "surplus": {
+          "bitermotors-acidic-tailings": 165550.0,
+          "bitermotors-lithium-carbonate": 3.0,
+          "bitermotors-phosphate": 3.0,
+          "copper-cable": 1.0,
+          "plastic-bar": 1.0,
+          "production-science-pack": 2.0,
+          "sulfur": 1.0,
+          "transport-belt": 1.0,
+          "utility-science-pack": 2.0
+        },
+        "recipe_batches": {
+          "automation-science-pack": 4750,
+          "bitermotors-grid-battery": 1000,
+          "bitermotors-high-density-space-solar-panel": 60,
+          "bitermotors-orbital-datacenter-core": 12,
+          "bitermotors-orbital-radiator-panel": 12,
+          "bitermotors-sales-office": 1,
+          "bulk-inserter": 26,
+          "cargo-landing-pad": 1,
+          "chemical-science-pack": 2375,
+          "express-transport-belt": 65,
+          "logistic-science-pack": 4750,
+          "production-science-pack": 1584,
+          "rocket-silo": 1,
+          "space-platform-starter-pack": 1,
+          "utility-science-pack": 1584,
+          "accumulator": 4000,
+          "substation": 1000,
+          "bitermotors-high-density-solar-array": 120,
+          "bitermotors-high-energy-battery-pack": 120,
+          "bitermotors-datacenter-rack": 97,
+          "bitermotors-lfp-battery-pack": 12144,
+          "heat-pipe": 240,
+          "assembling-machine-2": 1,
+          "radar": 1,
+          "fast-inserter": 26,
+          "engine-unit": 4750,
+          "sulfur": 1188,
+          "fast-transport-belt": 65,
+          "electric-furnace": 1584,
+          "productivity-module": 1584,
+          "rail": 23760,
+          "concrete": 122,
+          "space-platform-foundation": 1109,
+          "flying-robot-frame": 1584,
+          "solar-panel": 120,
+          "bitermotors-dry-high-nickel-cell": 80,
+          "low-density-structure": 9027,
+          "bitermotors-dry-lfp-cell": 8096,
+          "assembling-machine-1": 1,
+          "inserter": 4776,
+          "pipe": 9600,
+          "transport-belt": 2434,
+          "advanced-circuit": 20311,
+          "iron-stick": 11880,
+          "battery": 25108,
+          "bitermotors-battery-graphite": 80,
+          "bitermotors-clean-nickel-refining": 64,
+          "bitermotors-clean-lithium-extraction": 3255,
+          "bitermotors-clean-phosphate-extraction": 3239,
+          "iron-gear-wheel": 18090,
+          "electronic-circuit": 100451,
+          "plastic-bar": 42879,
+          "copper-cable": 205389
+        }
+      },
+      "frontier": {
+        "rows": [
+          {
+            "item": "bitermotors-lithium-brine",
+            "units": 325500,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 32.55
+          },
+          {
+            "item": "bitermotors-nickel-ore",
+            "units": 640,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.64
+          },
+          {
+            "item": "calcite",
+            "units": 13020,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 13.02
+          },
+          {
+            "item": "coal",
+            "units": 43279,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 43.279
+          },
+          {
+            "item": "copper-plate",
+            "units": 422387,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 422.387
+          },
+          {
+            "item": "electric-engine-unit",
+            "units": 1904,
+            "units_per_minute": 100,
+            "minutes_lower_bound": 19.04
+          },
+          {
+            "item": "iron-ore",
+            "units": 122,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.122
+          },
+          {
+            "item": "iron-plate",
+            "units": 230884,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 230.884
+          },
+          {
+            "item": "lubricant",
+            "units": 1300,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 1.3
+          },
+          {
+            "item": "petroleum-gas",
+            "units": 893220,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 44.661
+          },
+          {
+            "item": "processing-unit",
+            "units": 7858,
+            "units_per_minute": 30,
+            "minutes_lower_bound": 261.93333333333334
+          },
+          {
+            "item": "rocket-fuel",
+            "units": 2650,
+            "units_per_minute": 60,
+            "minutes_lower_bound": 44.166666666666664
+          },
+          {
+            "item": "steel-plate",
+            "units": 149271,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 149.271
+          },
+          {
+            "item": "stone",
+            "units": 56150,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 56.15
+          },
+          {
+            "item": "stone-brick",
+            "units": 16450,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 16.45
+          },
+          {
+            "item": "sulfuric-acid",
+            "units": 636520,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 63.652
+          },
+          {
+            "item": "water",
+            "units": 47840,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 2.392
+          }
+        ],
+        "bottlenecks": [
+          {
+            "item": "copper-plate",
+            "units": 422387,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 422.387
+          },
+          {
+            "item": "processing-unit",
+            "units": 7858,
+            "units_per_minute": 30,
+            "minutes_lower_bound": 261.93333333333334
+          },
+          {
+            "item": "iron-plate",
+            "units": 230884,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 230.884
+          },
+          {
+            "item": "steel-plate",
+            "units": 149271,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 149.271
+          },
+          {
+            "item": "sulfuric-acid",
+            "units": 636520,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 63.652
+          },
+          {
+            "item": "stone",
+            "units": 56150,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 56.15
+          },
+          {
+            "item": "petroleum-gas",
+            "units": 893220,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 44.661
+          },
+          {
+            "item": "rocket-fuel",
+            "units": 2650,
+            "units_per_minute": 60,
+            "minutes_lower_bound": 44.166666666666664
+          },
+          {
+            "item": "coal",
+            "units": 43279,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 43.279
+          },
+          {
+            "item": "bitermotors-lithium-brine",
+            "units": 325500,
+            "units_per_minute": 10000,
+            "minutes_lower_bound": 32.55
+          },
+          {
+            "item": "electric-engine-unit",
+            "units": 1904,
+            "units_per_minute": 100,
+            "minutes_lower_bound": 19.04
+          },
+          {
+            "item": "stone-brick",
+            "units": 16450,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 16.45
+          },
+          {
+            "item": "calcite",
+            "units": 13020,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 13.02
+          },
+          {
+            "item": "water",
+            "units": 47840,
+            "units_per_minute": 20000,
+            "minutes_lower_bound": 2.392
+          },
+          {
+            "item": "lubricant",
+            "units": 1300,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 1.3
+          },
+          {
+            "item": "bitermotors-nickel-ore",
+            "units": 640,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.64
+          },
+          {
+            "item": "iron-ore",
+            "units": 122,
+            "units_per_minute": 1000,
+            "minutes_lower_bound": 0.122
+          }
+        ],
+        "unrated_items": [],
+        "known_minutes_lower_bound": 422.387,
+        "all_frontier_rates_supplied": true,
+        "qualification": "assumed rates; parallel frontier lower bound, not construction time"
+      },
+      "frontier_sensitivity": [
+        {
+          "rate_multiplier": 0.5,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 844.774,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 422387,
+              "units_per_minute": 500.0,
+              "minutes_lower_bound": 844.774
+            },
+            {
+              "item": "processing-unit",
+              "units": 7858,
+              "units_per_minute": 15.0,
+              "minutes_lower_bound": 523.8666666666667
+            },
+            {
+              "item": "iron-plate",
+              "units": 230884,
+              "units_per_minute": 500.0,
+              "minutes_lower_bound": 461.768
+            }
+          ]
+        },
+        {
+          "rate_multiplier": 1,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 422.387,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 422387,
+              "units_per_minute": 1000,
+              "minutes_lower_bound": 422.387
+            },
+            {
+              "item": "processing-unit",
+              "units": 7858,
+              "units_per_minute": 30,
+              "minutes_lower_bound": 261.93333333333334
+            },
+            {
+              "item": "iron-plate",
+              "units": 230884,
+              "units_per_minute": 1000,
+              "minutes_lower_bound": 230.884
+            }
+          ]
+        },
+        {
+          "rate_multiplier": 2,
+          "qualification": "EXPLICIT ASSUMPTION: synthetic simultaneously sustainable frontier production rates",
+          "all_frontier_rates_supplied": true,
+          "minutes_lower_bound": 211.1935,
+          "top_bottlenecks": [
+            {
+              "item": "copper-plate",
+              "units": 422387,
+              "units_per_minute": 2000,
+              "minutes_lower_bound": 211.1935
+            },
+            {
+              "item": "processing-unit",
+              "units": 7858,
+              "units_per_minute": 60,
+              "minutes_lower_bound": 130.96666666666667
+            },
+            {
+              "item": "iron-plate",
+              "units": 230884,
+              "units_per_minute": 2000,
+              "minutes_lower_bound": 115.442
+            }
+          ]
+        }
+      ],
+      "cash": {
+        "research_and_compute": 19691.0,
+        "construction_and_business_stock": 0,
+        "total_before_recurring_wear": 19691.0,
+        "finite_sales_revenue_ceiling": 20000.0,
+        "finite_funding_gap": 0,
+        "recurring_net_dollars_per_hour": 0.0,
+        "steady_service_hours_lower_bound": null,
+        "hardware_included": true,
+        "finite_market_can_fund_bill": true,
+        "ideal_input_business_simulation": {
+          "business": {
+            "name": "Finite non-taxi; skip Hyperscale",
+            "settlements": 10,
+            "population": 2000,
+            "remaining_battery_buyers": 1000,
+            "battery_offices": 1,
+            "taxi_depots": 0,
+            "allocated_fleet": 0,
+            "starting_dollars": 2000,
+            "science_sets_per_minute": 60,
+            "taxi_sales_gate_met": false,
+            "research_tiers": 2
+          },
+          "status": "complete under model assumptions",
+          "model_hours": 10.258333333333333,
+          "first_orbital_output_minute": 64,
+          "events": [
+            {
+              "minute": 19,
+              "technology": "bitermotors-autonomous-logistics"
+            },
+            {
+              "minute": 63,
+              "technology": "bitermotors-orbital-compute"
+            },
+            {
+              "minute": 117,
+              "technology": "bitermotors-orbital-cluster-training"
+            },
+            {
+              "minute": 224,
+              "technology": "bitermotors-grid-scale-energy"
+            }
+          ],
+          "wallet": 1682.0,
+          "income": {
+            "battery_sales": 19980.0
+          },
+          "spent": {
+            "terrestrial_compute": 2260.0,
+            "research": 7250.0,
+            "orbital_compute": 10788.0,
+            "orbital_research_tokens": 2500.0
+          },
+          "cash_spent": 20298.0,
+          "batteries_sold": 999,
+          "fleet_active": false,
+          "active_fleet": 0,
+          "built_depots": 0,
+          "fleet_capex": 0.0,
+          "net_taxi_dollars_per_hour": 0.0,
+          "orbital_generated": 1000020000.0,
+          "archive_equivalents": 1000017500.0,
+          "cash_conservation_error": 0.0
+        },
+        "business_simulation_scope": "unchanged ideal raw-equivalent minute model; not compact batch scheduling or physical shipping",
+        "wear_materials": "not included; native business simulation amortizes wear Dollars only"
+      },
+      "compute": [
+        {
+          "recipe": "bitermotors-orbital-ai-dataset",
+          "cores": 1,
+          "batches": 20,
+          "ideal_seconds": 2000.0,
+          "startup_to_midpoint_projection_seconds": 2020.0,
+          "observed_rate_projection_seconds": 2050.0,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-cluster",
+          "cores": 4,
+          "batches": 180,
+          "ideal_seconds": 900.0,
+          "startup_to_midpoint_projection_seconds": 921.0,
+          "observed_rate_projection_seconds": 1188.75,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+          "cores": 8,
+          "batches": 900,
+          "ideal_seconds": 2250.0,
+          "startup_to_midpoint_projection_seconds": 2340.0,
+          "observed_rate_projection_seconds": 3423.75,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        },
+        {
+          "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+          "cores": 12,
+          "batches": 9001,
+          "ideal_seconds": 15001.666666666666,
+          "startup_to_midpoint_projection_seconds": 15776.752777777778,
+          "observed_rate_projection_seconds": 24340.204166666666,
+          "status": "finite-window drain extrapolation sensitivity; not steady throughput"
+        }
+      ],
+      "full_window_scaled_compute_hours": 8.611862268518518,
+      "startup_midpoint_scaled_compute_hours": 5.849375771604938,
+      "transit": {
+        "status": "unqualified: Model-return transit missing; any native uplift samples remain separate"
+      }
+    }
+  ],
+  "measurement_summary": {
+    "schema": 1,
+    "status": "native observations supplied; coverage reported per recipe/layout",
+    "evidence": [
+      "/tmp/bitermotors-platform.0D6Vh7/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.jOpaSs/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.i9aAOx/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.WwpXy7/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.xI8aLk/script-output/bitermotors-platform.jsonl",
+      "/tmp/bitermotors-platform.B0GQxr/script-output/bitermotors-platform.jsonl"
+    ],
+    "cases": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 44280,
+        "first_completion_tick": 50590,
+        "last_completion_tick": 116590,
+        "measured_ticks": 73800,
+        "completions": 12,
+        "target_batches": 12,
+        "produced": 12,
+        "returned": 12,
+        "physical_returned": 12,
+        "batch_output": 1,
+        "batch_dollars": 5,
+        "cycle_ticks": 6000,
+        "output_item": "bitermotors-agi-training-dataset",
+        "rockets": 5,
+        "rocket_parts": 350,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": false,
+        "operation_seconds": 1230.0,
+        "completion_span_seconds": 1100.0,
+        "last_completion_from_operation_seconds": 1205.1666666666667,
+        "return_drain_after_last_completion_seconds": 24.833333333333258,
+        "balanced_native_cycle_seconds": 1200.0,
+        "busiest_core_cycle_floor_seconds": 1200.0,
+        "min_core_batches": 12,
+        "max_core_batches": 12,
+        "finite_allocation_imbalance_floor_seconds": 0.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 93360,
+        "first_completion_tick": 94775,
+        "last_completion_tick": 186575,
+        "measured_ticks": 95100,
+        "completions": 240,
+        "target_batches": 240,
+        "produced": 240,
+        "returned": 240,
+        "physical_returned": 240,
+        "batch_output": 1,
+        "batch_dollars": 1,
+        "cycle_ticks": 1200,
+        "output_item": "bitermotors-agi-training-dataset",
+        "rockets": 11,
+        "rocket_parts": 650,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": false,
+        "operation_seconds": 1585.0,
+        "completion_span_seconds": 1530.0,
+        "last_completion_from_operation_seconds": 1553.5833333333333,
+        "return_drain_after_last_completion_seconds": 31.416666666666742,
+        "balanced_native_cycle_seconds": 1200.0,
+        "busiest_core_cycle_floor_seconds": 1540.0,
+        "min_core_batches": 48,
+        "max_core_batches": 77,
+        "finite_allocation_imbalance_floor_seconds": 340.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 167160,
+        "first_completion_tick": 168575,
+        "last_completion_tick": 273175,
+        "measured_ticks": 109560,
+        "completions": 480,
+        "target_batches": 480,
+        "produced": 960,
+        "returned": 960,
+        "physical_returned": 960,
+        "batch_output": 2,
+        "batch_dollars": 1,
+        "cycle_ticks": 1200,
+        "output_item": "bitermotors-agi-training-dataset",
+        "rockets": 20,
+        "rocket_parts": 1100,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": false,
+        "operation_seconds": 1826.0,
+        "completion_span_seconds": 1743.3333333333333,
+        "last_completion_from_operation_seconds": 1766.9166666666667,
+        "return_drain_after_last_completion_seconds": 59.08333333333326,
+        "balanced_native_cycle_seconds": 1200.0,
+        "busiest_core_cycle_floor_seconds": 1740.0,
+        "min_core_batches": 47,
+        "max_core_batches": 87,
+        "finite_allocation_imbalance_floor_seconds": 540.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 232440,
+        "first_completion_tick": 233855,
+        "last_completion_tick": 346455,
+        "measured_ticks": 116820,
+        "completions": 720,
+        "target_batches": 720,
+        "produced": 2880,
+        "returned": 2880,
+        "physical_returned": 2880,
+        "batch_output": 4,
+        "batch_dollars": 1,
+        "cycle_ticks": 1200,
+        "output_item": "bitermotors-agi-training-dataset",
+        "rockets": 28,
+        "rocket_parts": 1500,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": false,
+        "operation_seconds": 1947.0,
+        "completion_span_seconds": 1876.6666666666667,
+        "last_completion_from_operation_seconds": 1900.25,
+        "return_drain_after_last_completion_seconds": 46.75,
+        "balanced_native_cycle_seconds": 1200.0,
+        "busiest_core_cycle_floor_seconds": 1860.0,
+        "min_core_batches": 46,
+        "max_core_batches": 93,
+        "finite_allocation_imbalance_floor_seconds": 660.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 44280,
+        "first_completion_tick": 45695,
+        "last_completion_tick": 50495,
+        "measured_ticks": 36000,
+        "completions": 5,
+        "target_batches": 60,
+        "produced": 50000,
+        "returned": 7812,
+        "physical_returned": 7812,
+        "batch_output": 10000,
+        "batch_dollars": 1,
+        "cycle_ticks": 1200,
+        "output_item": "bitermotors-ai-token",
+        "rockets": 5,
+        "rocket_parts": 350,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": true,
+        "operation_seconds": 600.0,
+        "completion_span_seconds": 80.0,
+        "last_completion_from_operation_seconds": 103.58333333333333,
+        "return_drain_after_last_completion_seconds": 496.4166666666667,
+        "balanced_native_cycle_seconds": 100.0,
+        "busiest_core_cycle_floor_seconds": 100.0,
+        "min_core_batches": 5,
+        "max_core_batches": 5,
+        "finite_allocation_imbalance_floor_seconds": 0.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+        "operation_tick": 232440,
+        "first_completion_tick": 233855,
+        "last_completion_tick": 346455,
+        "measured_ticks": 116820,
+        "completions": 720,
+        "target_batches": 720,
+        "produced": 1440,
+        "returned": 1440,
+        "physical_returned": 1440,
+        "batch_output": 2,
+        "batch_dollars": 1,
+        "cycle_ticks": 1200,
+        "output_item": "bitermotors-agi-training-dataset",
+        "rockets": 28,
+        "rocket_parts": 1500,
+        "low_power_samples": 0,
+        "no_cooling_samples": 0,
+        "raw_baseline": false,
+        "operation_seconds": 1947.0,
+        "completion_span_seconds": 1876.6666666666667,
+        "last_completion_from_operation_seconds": 1900.25,
+        "return_drain_after_last_completion_seconds": 46.75,
+        "balanced_native_cycle_seconds": 1200.0,
+        "busiest_core_cycle_floor_seconds": 1860.0,
+        "min_core_batches": 46,
+        "max_core_batches": 93,
+        "finite_allocation_imbalance_floor_seconds": 660.0,
+        "scope": "finite window; first/last and batch distribution are not a sustained steady-state rate"
+      }
+    ],
+    "launch_comparisons": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "native_fixture_rockets": 5,
+        "minimum_launched_rocket_parts": 250,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 11,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "native_fixture_rockets": 11,
+        "minimum_launched_rocket_parts": 550,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 16,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "native_fixture_rockets": 20,
+        "minimum_launched_rocket_parts": 1000,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 23,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "native_fixture_rockets": 28,
+        "minimum_launched_rocket_parts": 1400,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 32,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "native_fixture_rockets": 5,
+        "minimum_launched_rocket_parts": 250,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 11,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "native_fixture_rockets": 28,
+        "minimum_launched_rocket_parts": 1400,
+        "fixture_prebuilt_buffer_parts": 100,
+        "single_item_same_manifest_projection": 32,
+        "scope": "same finite fixture manifest only; neither is the staged campaign count"
+      }
+    ],
+    "midpoint_observations": [
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-dataset",
+        "measured_ticks": 36360,
+        "completions": 6,
+        "produced": 6,
+        "returned": 5
+      },
+      {
+        "cores": 4,
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "measured_ticks": 36840,
+        "completions": 120,
+        "produced": 120,
+        "returned": 109
+      },
+      {
+        "cores": 8,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "measured_ticks": 37440,
+        "completions": 240,
+        "produced": 480,
+        "returned": 456
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "measured_ticks": 37860,
+        "completions": 360,
+        "produced": 1440,
+        "returned": 1348
+      },
+      {
+        "cores": 1,
+        "recipe": "bitermotors-orbital-ai-token",
+        "measured_ticks": 18000,
+        "completions": 5,
+        "produced": 50000,
+        "returned": 3480
+      },
+      {
+        "cores": 12,
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "measured_ticks": 37860,
+        "completions": 360,
+        "produced": 720,
+        "returned": 674
+      }
+    ],
+    "limits": [
+      "Finite finished hardware, operating Dollars, rocket ingredients, technology and Nauvis power supplied. No platform entities/items, solar multipliers or crafting progress supplied. Not a natural campaign."
+    ],
+    "qualification": "native finite fixture observations; not actual campaign/player time",
+    "source_sha256": "29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1",
+    "layouts_sha256": "d823b3fade0a3dd5b6c99fb91cffb07acbc6ae50d94bfae5d049eca58dfd3e94",
+    "geometry_sha256_by_cores": {
+      "1": "95a1b87107549507fbd2af27167e6cb05e8432a5ee125051e05ce487076cdbe0",
+      "4": "af2371dfdb7fff4737613be03272dd98104be3b770592288842d82300e39b18d",
+      "8": "7a317e47c46332e120b315e30b6aacbeee0bdec14c1afa721da22427a895abeb",
+      "12": "72f94c5546529b994923b68ae34dbc68615b33e9ca3c95d1315c39bf8e86407a"
+    }
+  },
+  "frontier_rate_assumptions": {
+    "bitermotors-lithium-brine": 10000,
+    "bitermotors-nickel-ore": 1000,
+    "calcite": 1000,
+    "coal": 1000,
+    "copper-plate": 1000,
+    "electric-engine-unit": 100,
+    "iron-ore": 1000,
+    "iron-plate": 1000,
+    "lubricant": 1000,
+    "petroleum-gas": 20000,
+    "processing-unit": 30,
+    "rocket-fuel": 60,
+    "steel-plate": 1000,
+    "stone": 1000,
+    "stone-brick": 1000,
+    "sulfuric-acid": 10000,
+    "water": 20000
+  },
+  "limits": [
+    "Scope: Autonomous Logistics through activation; earlier research/factory assumed built.",
+    "Silo, landing pad and business capacity are charged as new; no opening stock credit.",
+    "Business uses finite buyers, native adoption/referral and shared-customer fleet caps.",
+    "Recurring scenario assumes the 5,000 consumer-sales taxi gate already met.",
+    "All frontier demand shares one production allocation; blue circuits counted once.",
+    "Campaign rockets use modeled single-item packing; native mixed-load fixture flights do not replace them.",
+    "No lab capacity, build schedule, wear-material replacement, power infrastructure or movement time modeled.",
+    "Independent lower bounds are not additive and are not a finish-time forecast."
+  ]
+}

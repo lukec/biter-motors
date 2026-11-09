@@ -7,6 +7,8 @@ AiAccounting.recipes = {
   ["bitermotors-orbital-ai-token-cluster"] = {track = "orbital", tokens = 50000},
   ["bitermotors-orbital-ai-token-grid-scale"] = {track = "orbital", tokens = 100000},
   ["bitermotors-orbital-ai-token-hyperscale"] = {track = "orbital", tokens = 200000},
+  ["bitermotors-orbital-ai-dataset"] = {track = "orbital", tokens = 50000},
+  ["bitermotors-orbital-ai-dataset-cluster"] = {track = "orbital", tokens = 50000},
   ["bitermotors-orbital-ai-dataset-grid-scale"] = {track = "orbital", tokens = 100000},
   ["bitermotors-orbital-ai-dataset-hyperscale"] = {track = "orbital", tokens = 200000}
 }

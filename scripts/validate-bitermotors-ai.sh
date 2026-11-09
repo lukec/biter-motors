@@ -102,6 +102,7 @@ assert rows[1]["generated"] == 2_280_126 and rows[1]["native_generated"] == 2_28
 assert rows[1]["other_force_generated"] == 200_000 and rows[1]["pending_bonus"] == 2, rows
 assert rows[1]["native_milestone_unlocked"] is True and rows[1]["platforms"] == 2, rows
 assert rows[1]["datasets_extracted_by_inserter"] == 36 and rows[1]["packaging_datasets"] == 1, rows
+assert rows[1]["unpacked_tokens"] == 50_000, rows
 assert rows[1]["dataset_pause_preserved"] is True and rows[1]["dataset_solar_power_multiplier"] == 0, rows
 assert rows[2]["tick"] > rows[2]["saved_tick"], rows
 assert rows[2]["generated"] == rows[1]["generated"] + 24, rows

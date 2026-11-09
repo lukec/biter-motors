@@ -2178,6 +2178,16 @@ data:extend({
       }
     }
   ),
+  recipe("bitermotors-orbital-ai-dataset", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e[orbital-ai-dataset]",
+    {{type = "item", name = "bitermotors-dollar", amount = 5}},
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 150,
+    {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
+  ),
+  recipe("bitermotors-orbital-ai-dataset-cluster", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e2[orbital-ai-dataset-cluster]",
+    {{type = "item", name = "bitermotors-dollar", amount = 1}},
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 30,
+    {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
+  ),
   recipe("bitermotors-orbital-ai-dataset-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e3[orbital-ai-dataset-grid-scale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
     {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 30,
@@ -2191,6 +2201,11 @@ data:extend({
   recipe("bitermotors-package-agi-training-dataset", {"advanced-crafting"}, "science-pack", "h[agi-training-dataset]",
     {{type = "item", name = "bitermotors-ai-token", amount = 50000}},
     {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 1,
+    {allow_productivity = false, allow_quality = false, auto_recycle = false}
+  ),
+  recipe("bitermotors-unpack-agi-training-dataset", {"advanced-crafting"}, "science-pack", "h2[unpack-agi-training-dataset]",
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}},
+    {{type = "item", name = "bitermotors-ai-token", amount = 50000}}, 1,
     {allow_productivity = false, allow_quality = false, auto_recycle = false}
   ),
   -- Runtime unlocks assembly after 1B earned equivalents and Grid-scale AI
@@ -2394,7 +2409,9 @@ data:extend({
       unlock("bitermotors-orbital-datacenter-core"),
       unlock("bitermotors-orbital-radiator-panel"),
       unlock("bitermotors-high-density-space-solar-panel"),
-      unlock("bitermotors-orbital-ai-token")
+      unlock("bitermotors-orbital-ai-token"),
+      unlock("bitermotors-orbital-ai-dataset"),
+      unlock("bitermotors-unpack-agi-training-dataset")
     },
     1500,
     {
@@ -2412,7 +2429,8 @@ data:extend({
     "__base__/graphics/technology/space-science-pack.png",
     {"bitermotors-orbital-compute"},
     {
-      unlock("bitermotors-orbital-ai-token-cluster")
+      unlock("bitermotors-orbital-ai-token-cluster"),
+      unlock("bitermotors-orbital-ai-dataset-cluster")
     },
     1000,
     {
@@ -2748,9 +2766,12 @@ for _, recipe_name in pairs({
   "bitermotors-orbital-ai-token-cluster",
   "bitermotors-orbital-ai-token-grid-scale",
   "bitermotors-orbital-ai-token-hyperscale",
+  "bitermotors-orbital-ai-dataset",
+  "bitermotors-orbital-ai-dataset-cluster",
   "bitermotors-orbital-ai-dataset-grid-scale",
   "bitermotors-orbital-ai-dataset-hyperscale",
   "bitermotors-package-agi-training-dataset",
+  "bitermotors-unpack-agi-training-dataset",
   "bitermotors-assemble-agi-model",
   "bitermotors-activate-agi-model"
 }) do

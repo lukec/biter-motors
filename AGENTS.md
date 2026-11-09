@@ -67,6 +67,13 @@ changes that policy.
   guards rather than assuming a fixture's incompatible machine cannot craft.
 - Model both rocket and cargo-pod inventory limits. The validated 2.1.20 rocket
   has 20 slots but its ascent pod has 10; weights alone do not define capacity.
+- Platform foundation must be connected and hole-free. Include the native hub
+  in topology/export checks; a sparse footprint union can leave one tile unbuilt.
+- Keep compute input belts Dollar-only and end them at the last pickup. Test
+  finite-stock exhaustion: looping Datasets or dead-end belt stock can conceal
+  a real logistics stall behind a healthy recipe-completion counter.
+- Report full finite-drain and startup/midpoint rates separately. A long belt's
+  cash buffer and uneven end-of-batch drain are not sustained compute throughput.
 - Orbital work banks native progress and committed inputs; never reset/reinsert
   them to emulate a resume. Terrestrial ordinary compute still scraps failures.
 - Solar-panel prototypes require strictly positive production on 2.1.20. A test

@@ -192,6 +192,14 @@ The [economy/guidance evidence](docs/economy-guidance-validation.md) records
 prototype-derived Progress costs, business profit versus recovered capital,
 and three finite-market sensitivities. Prices are unchanged; design freeze,
 native presentation review, and natural campaign qualification remain open.
+The [practical platform guide](docs/orbital-platform-guide.md) includes native
+1/4/8/12-cluster blueprints and [coordinate previews](docs/orbital-layout-preview.html).
+Run `scripts/validate-bitermotors-platform.sh` for an isolated solar-powered
+rocket/compute/cargo/save-reload rehearsal; select its size and recipe through
+the environment variables documented in the [measured budget](docs/orbital-logistics-measured.md).
+The [logistics model](docs/orbital-logistics-budget.md) combines construction,
+research, finite-market cash and shared manufacturing demand without presenting
+an ideal-input clock as proven campaign time.
 To test a package instead of the linked source, set `BITERMOTORS_MOD_ARCHIVE`
 to its absolute ZIP path when running an isolated validator. It must match the
 current checkout's package contents; stale same-version archives are rejected.

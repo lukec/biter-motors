@@ -6,6 +6,8 @@ Version: 0.1.1
     - Turns biter settlements into customers for EVs, Grid Batteries, and Bitertaxi service.
     - Adds terrestrial and orbital AI compute with physical power, cooling, and token logistics.
   Features:
+    - Compact Dataset output is available from the first two orbital tiers, preserving their cash, compute and energy costs.
+    - Unpack Datasets in terrestrial assemblers to supply research without earning duplicate compute progress.
     - Adds five drivable EV products, the battery-electric Cybertrain, and the remote-controlled eSpider.
     - The eSpider includes four Tesla guns, four Battery MK3 units, four exoskeletons, charger support, and limp-home reserve propulsion.
     - Clean battery routes use dedicated refining, extraction, and dry-electrode recipe artwork instead of module badges.

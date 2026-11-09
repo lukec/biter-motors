@@ -34,8 +34,10 @@ cargo return and ground activation. See the [current ending contract and native
 evidence](docs/endgame-validation.md). Phase 3C now implements the progressive
 ending interface and persistent offline terminal; see
 [terminal qualification](docs/terminal-epilogue-validation.md). Isolated native
-qualification is still not a frozen, playtest-ready campaign. **Next: Phase 4's
-practical platform layout and pacing freeze.**
+qualification is still not a frozen, playtest-ready campaign. Phase 4 now has
+[practical platform layouts](docs/orbital-platform-guide.md) and a
+[source-bound logistics budget](docs/orbital-logistics-budget.md). **Next: finish
+the remaining pacing, fresh-seed/prerequisite and functional-art freeze.**
 
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
@@ -82,6 +84,27 @@ recovery, partial shipments, blocked output, immediate extraction/removal,
 quality and force isolation. Do not substitute the old finale fixture.
 
 #### Phase 4: Freeze Pacing And Functional Presentation
+
+**Platform/logistics slice implemented:** native-exported 1/4/8/12-cluster
+blueprints, [coordinate previews](docs/orbital-layout-preview.html), native solar,
+real rocket uplift, physical output delivery and in-flight-work save/reloads.
+The raw-Token baseline confirmed severe extraction backpressure. Entry and
+Cluster Training now also offer compact Datasets at identical cost/time/energy
+per equivalent, with ordinary unpacking for research and no duplicate compute
+credit. See [measurement results](docs/orbital-logistics-measured.md) and the
+[operating guide](docs/orbital-platform-guide.md). Ground stock and technology
+are supplied in these fixtures; they do not prove a natural campaign. Phase 4
+is not complete merely because these isolated layouts work.
+
+**Next pacing decision:** the measured layout samples support a roughly
+3.7-5.2-hour compute-only sensitivity with Hyperscale, or 5.8-8.6 hours without
+it. These are extrapolations, not player-time bounds. The zero-opening-stock
+example at 1,000 copper plates/minute takes about 8.7 modeled hours to supply
+the recurring-business route's joint material bill. Check realistic existing
+stock/production and the cash/material schedule before freezing the 4-6 active
+hour target; do not solve a hypothetical low production rate by blindly boosting
+compute. The large physical Dataset input transfer into Model assembly also
+needs a practical native rehearsal beyond the existing mechanical-ending test.
 
 - Build a practical first-cluster layout and representative 1/4/8/12-cluster
   ramps with appropriate inserters, belts and hub settings. Twelve is a sizing
@@ -261,7 +284,11 @@ the [economy/guidance evidence](docs/economy-guidance-validation.md) records
 native research costs/throughput, optional-route guidance, genuine business
 profit versus recovered capital, and three source-hashed finite-market models.
 The artwork index is repaired with current assets and explicit reuse gaps.
-No balance values changed. **Phase 4 remains open; Phases 5-8 are outstanding**.
+The subsequent practical-platform slice adds early compact Dataset output and
+lossless unpacking without changing per-equivalent cash, compute time or power.
+Its [measured logistics budget](docs/orbital-logistics-measured.md) includes
+concrete hardware, shared manufacturing demand and explicit scope limits.
+**Phase 4 remains open; Phases 5-8 are outstanding**.
 The final playthrough begins only after Phases 1-6. Luke approved the
 50,000-equivalent Dataset on 2026-10-06 and shortened the implemented terrestrial
 finale to 20 minutes the same day. The 2026-10-07 design below supersedes that
@@ -493,7 +520,8 @@ Cumulative orbital output opens three explicit scale projects:
 
 - **1M Tokens: Cluster Training**
   - Costs 2,000 Dollars plus science.
-  - Unlocks 50,000-token orbital batches.
+  - Unlocks 50,000-token orbital batches or one direct Training Dataset per
+    Dollar in 20 normal seconds.
 - **10M Tokens: Grid-scale Energy**
   - Costs 3,000 Dollars plus science.
   - Unlocks 100,000-token batches or two directly computed Training Datasets per
@@ -505,12 +533,15 @@ Cumulative orbital output opens three explicit scale projects:
     per batch. This is an efficiency option, not permission to win.
 
 Both payload forms use the same Dollars, recipe time, power, and cooling as
-their tier. Each Dataset represents 50,000 Token equivalents; 20,000 Datasets
+their tier. Starting Orbital Compute can already group five raw batches into
+one direct Dataset for 5 Dollars in 100 normal seconds. Return a few Datasets
+and unpack them in ordinary assemblers for research; keep the final archive in
+orbit. Each Dataset represents 50,000 Token equivalents; 20,000 Datasets
 embody the billion-equivalent final payload. Datasets stack to 1,000 and weigh
 1 kg each. No downward Dataset shipments are required for the final craft;
 only the resulting 1 kg Model must return to Nauvis.
 Separate native completion ledgers track terrestrial and orbital computation.
-Packaging existing Tokens, recycling, and transfers cannot earn progress again.
+Packaging/unpacking existing payload, recycling, and transfers cannot earn progress again.
 
 ### AGI Victory
 

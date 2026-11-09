@@ -78,5 +78,5 @@ Do not allocate the same blue-circuit production twice. Other materials can bott
 These elapsed ideal-input clocks exclude practical I/O, build time and transport; they cannot qualify campaign pacing.
 Prototype capture does not qualify native Model return, activation, victory persistence or a complete campaign.
 
-Native source SHA-256: `41aa2e052f7c4e65225716b391f661ca915bde261af0ae2320b8a078b5fb953f`.
+Native source SHA-256: `29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1`.
 Model SHA-256: `57ecbc71e45fa07790706ecf66e897d7612b80e7483dcd76edbebc90d637e15c`.

@@ -1,0 +1,19 @@
+{
+  "bitermotors-lithium-brine": 10000,
+  "bitermotors-nickel-ore": 1000,
+  "calcite": 1000,
+  "coal": 1000,
+  "copper-plate": 1000,
+  "electric-engine-unit": 100,
+  "iron-ore": 1000,
+  "iron-plate": 1000,
+  "lubricant": 1000,
+  "petroleum-gas": 20000,
+  "processing-unit": 30,
+  "rocket-fuel": 60,
+  "steel-plate": 1000,
+  "stone": 1000,
+  "stone-brick": 1000,
+  "sulfuric-acid": 10000,
+  "water": 20000
+}
