@@ -1,0 +1,58 @@
+{
+  "scope": "isolated native prototype, not campaign or graphical qualification",
+  "steady_c": 97.005,
+  "burnout_c": 130.075,
+  "seconds_from_110c_checkpoint": 41.75,
+  "seconds_from_nominal_disconnect": 68.75,
+  "native_deaths": 1,
+  "stages": [
+    {
+      "status": "setup_passed",
+      "tick": 0
+    },
+    {
+      "status": "steady_passed",
+      "tick": 108600
+    },
+    {
+      "status": "blocked_output_passed",
+      "tick": 114000
+    },
+    {
+      "status": "brownout_passed",
+      "tick": 121200
+    },
+    {
+      "status": "outage_passed",
+      "tick": 123000
+    },
+    {
+      "status": "repair_started",
+      "tick": 129420
+    },
+    {
+      "status": "repair_passed",
+      "tick": 201420
+    },
+    {
+      "status": "hot_checkpoint",
+      "tick": 203040
+    },
+    {
+      "status": "hot_reload_passed",
+      "tick": 203041
+    },
+    {
+      "status": "burnout_passed",
+      "tick": 205560
+    },
+    {
+      "status": "burned_checkpoint",
+      "tick": 206760
+    },
+    {
+      "status": "reload_passed",
+      "tick": 206761
+    }
+  ]
+}

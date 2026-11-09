@@ -79,6 +79,9 @@ changes that policy.
 - Solar-panel prototypes require strictly positive production on 2.1.20. A test
   may disable platform solar to isolate supplied EEI power, but must disclose
   that limitation and never call it real orbital-generation qualification.
+- Passive thermal interfaces use `at-least` at their floor, not `add 0`:
+  native clamping can turn the latter into continuous free heat. Prove idle
+  behavior, energy conservation, real burnout and hot-buffer reloads.
 - GUI/join events cannot be raised synthetically, and LuaGameScript has no
   create_player API. Use purpose-created native players for GUI persistence
   tests; distinguish public-callback tests from real clicks, joins and reconnects.

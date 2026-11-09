@@ -762,8 +762,17 @@ These are candidates only after the release gates above:
 - Hyperscale terrestrial datacenters with escalating capital costs and
   settlement opposition.
 - Solar-roof modules for compatible factories.
-- Orbital heat-network simulation if it is clearer and more robust than the
-  current explicit radiator-capacity contract.
+- **Physical orbital thermals: isolated prototype implemented.** The opt-in
+  [thermal laboratory](docs/orbital-thermal-prototype.md) uses native heat
+  conduits, finite radiators, a 97 C operating target and destructive burnout
+  at 130 C. It does not replace the campaign's radiator-capacity rule yet.
+  Source and experimental-ZIP tests cover native solar, work-dependent heat,
+  energy conservation, blocked output, brownouts, outage, conduit repair and
+  hot/burned save-reloads. Before adopting it, qualify shared networks and
+  arrays, production idle/effect/quality behavior, component lifecycle and
+  graphical alerts; redo the 1/4/8/12 layouts, uplift and budgets. The installed
+  engine was 2.1.24 for this experiment; that is not a requalification of the
+  full campaign or the earlier 2.1.20 release baseline.
 - Alternative post-victory scorecards for autonomous abundance or sustained
   compute civilization.
 - [x] **Fast electric eSpider:** clones the native SpiderVehicle and all eight

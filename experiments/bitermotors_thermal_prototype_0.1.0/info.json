@@ -1,0 +1,8 @@
+{
+  "name": "bitermotors_thermal_prototype",
+  "version": "0.1.0",
+  "title": "Biter Motors: Experimental Orbital Thermals",
+  "author": "Luke Closs",
+  "factorio_version": "2.1",
+  "dependencies": ["base >= 2.1.20", "space-age >= 2.1.20", "bitermotors >= 0.1.1"]
+}

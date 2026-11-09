@@ -5,6 +5,10 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Prototyped physical orbital heat transport in a separate, opt-in experimental
+  add-on: 97 C normal operation, finite radiators, repairable thermal headroom
+  and real destruction at 130 C. Native source/experimental-ZIP tests and
+  measured charts do not change the current campaign cooling contract.
 - Added native-exported 1/4/8/12-cluster platform blueprints, coordinate previews,
   real-solar rocket/logistics rehearsals, and source-bound remaining-chapter
   budgets. Supplied ground stock and modeled manufacturing are disclosed.
