@@ -52,7 +52,8 @@ class EconomySimulationTests(unittest.TestCase):
         native = economy.EconomyCatalog.load()
         self.assertEqual(bool(native.freshness_errors()), native.data["source_sha256"] != catalog_module.source_fingerprint())
         self.assertEqual(self.catalog.data["capture"]["source_sha256"], self.catalog.data["source_sha256"])
-        self.assertEqual("2.1.20", self.catalog.data["factorio_version"])
+        self.assertEqual(self.catalog.runtime["factorio_version"], self.catalog.data["factorio_version"])
+        self.assertRegex(self.catalog.data["factorio_version"], r"^2\.1\.\d+$")
         self.assertFalse(any(name.startswith("bitermotors-smoke-") for name in self.catalog.data["recipes"]))
 
     def test_native_catalog_requires_new_contract_before_reporting(self):

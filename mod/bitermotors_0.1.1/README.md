@@ -91,10 +91,10 @@ Vanilla rockets, cargo pods, and platforms remain the logistics layer.
 Orbital AI Infrastructure unlocks:
 
 - A 3x3 Orbital Compute Cluster drawing 250 MW.
-- Orbital Radiators, with one required per cluster on the same platform.
+- Orbital Heat Pipes and Radiators. Physically connect each cluster to a radiator.
 - 20 MW Space Solar Wings, producing 60 MW continuously in Nauvis orbit.
 
-Start with one cluster, one radiator and five wings (300 MW generation).
+Start with one cluster, one radiator, a short heat-pipe run and five wings (300 MW generation).
 In the platform hub's requests, set custom minimum payloads to one cluster,
 one radiator, five wings and 100 Dollars; small shipments otherwise wait for
 full rockets. Also lower the minima for small foundation/belt/inserter shipments.
@@ -107,9 +107,14 @@ Tokens every 20 seconds before further effects. Cumulative orbital output unlock
 projects at 1M, 10M, and 100M Tokens. Research costs 2,000, 3,000 and 6,000 Dollars
 plus science, raising batches to 50,000, 100,000 and 200,000 Tokens. Grid-scale
 and hyperscale recipes can instead produce two or four 50,000-equivalent
-Datasets per Dollar. Low power slows/stops native work; insufficient cooling
-pauses the cluster with a yellow status. Both preserve native progress and
-committed inputs. Ordinary terrestrial AI still scraps its batch on low power.
+Datasets per Dollar. Low power slows/stops native work and preserves progress
+and committed inputs. Cooling is physical: heat flows through connected Orbital
+Heat Pipes into finite-capacity Radiators. Shared networks are supported. A
+normal short loop runs near 97 C. At 105 C map alerts warn of overheating;
+120 C is critical and 130 C destroys the core and its committed payload. The
+thermal buffer gives roughly 2-3 minutes from normal full-load operation after
+cooling is cut, not random failures or mandatory maintenance. Idle/brownout
+cores produce less heat. Ordinary terrestrial AI still scraps its batch on low power.
 Tokens must return to Nauvis by cargo pod. Make the Tokens needed to research
 Autonomous Logistics and Orbital AI Infrastructure on land before unlocking
 orbital production. Bitertaxi service is an optional recurring-profit route,
@@ -121,8 +126,8 @@ Tandem Solar Arrays, and from 100 MJ Grid Batteries to 1 GJ Grid Battery Arrays.
 After one billion earned AI Token equivalents and Grid-scale Energy
 research, assemble 20,000 physical AGI Training Datasets and one Datacenter Rack
 into one AGI Model in an existing orbital cluster. Hyperscale research is
-optional. Assembly takes one minute at normal cluster speed; power and cooling
-interruptions retain committed work. Native terrestrial and orbital computation
+optional. Assembly takes one minute at normal cluster speed; power
+interruptions retain committed work, but burnout destroys the payload. Native terrestrial and orbital computation
 both count toward the earned total; packaging existing Tokens does not.
 
 Return the actual Model by native cargo pod to Nauvis, then select Activate AGI

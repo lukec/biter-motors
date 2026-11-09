@@ -77,6 +77,15 @@ function Gui.render(player, panel, agi)
     bar.style.width, bar.style.height, bar.style.color = body, 12, colors[view.color]
   end
   content.add{type = "line"}
+  local thermal = agi.thermal
+  if not agi.completed and thermal and thermal.cores > 0 then
+    local hot = (thermal.warning_cores or 0) + (thermal.critical_cores or 0)
+    metric(content, "bitermotors_orbital_heat", "item/bitermotors-orbital-radiator-panel", "Orbital heat",
+      hot > 0 and string.format("%d overheating; %.1f C", hot, thermal.hottest_c)
+        or string.format("%.1f C hottest", thermal.hottest_c), body,
+      thermal.critical_cores > 0 and "bad" or hot > 0 and "warning" or "good",
+      "Core -> Orbital Heat Pipes -> Radiator. Aim near 97 C. Warning at 105 C, critical at 120 C, destruction at 130 C. Map alerts locate overheating cores; stop their power or repair cooling before burnout.")
+  end
   metric(content, "bitermotors_earned_compute", "item/bitermotors-ai-token", "Earned compute",
     grouped(agi.completed and agi.victory and agi.victory.cumulative_ai_tokens or agi.cumulative_ai_tokens)
       .. " / " .. grouped(agi.required_ai_tokens), body,

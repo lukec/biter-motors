@@ -1,5 +1,10 @@
 # Banked Orbital Compute And Scale Tiers
 
+Historical qualification of the pre-thermal cooling quota. The current mod
+replaces automatic cooling pauses with [physical heat networks and burnout](orbital-thermal-hardening.md).
+The retained native power-work and terrestrial scrap policies still apply.
+The cooling runner now tests those policies without an invisible radiator quota.
+
 Date: **2026-11-08**. Mod: **Biter Motors 0.1.1**.
 Engine: **Factorio 2.1.20, build 87512, mac-arm64, Steam, Space Age**.
 This is the completed banked-work/tier sub-slice of Phase 3, not the replacement

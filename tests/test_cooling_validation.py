@@ -16,7 +16,7 @@ FIXTURE = ROOT / "scripts/fixtures/cooling-control.lua"
 def valid_rows():
     return [
         dict(status="cooling_policy_passed", tick=240, assertions=30, work_policy="banked",
-             platforms=2, zero_vs_one=True, capacity_scope="surface+force", before_first_craft_paused=True,
+             platforms=2, zero_vs_one=True, capacity_scope="physical-heat-networks", before_first_craft_paused=False,
              supplied_power_fixture=True, solar_power_multiplier=0),
         dict(status="cooling_checkpoint", tick=4000, assertions=100, saved_tick=4000,
              saved_file="bitermotors-cooling-failure.zip", failure="native_total_power",
@@ -75,7 +75,7 @@ class CoolingValidationTests(unittest.TestCase):
 
     def test_new_contract_and_conservation_reject_corruption(self):
         corruptions = {
-            0: dict(work_policy="reset", zero_vs_one=1, before_first_craft_paused=False),
+            0: dict(work_policy="reset", zero_vs_one=1, before_first_craft_paused=True),
             1: dict(power_limited="true", paused_for_cooling=True, progress=0,
                     replacement_dollars=1, dollars_remaining=1, generated=0, products=1,
                     full_rate=float("inf"), half_rate=0.0005, base_output=0,
@@ -139,8 +139,8 @@ class CoolingValidationTests(unittest.TestCase):
 
     def test_fixture_requires_native_banked_and_terrestrial_evidence(self):
         for marker in (
-            "missing cooling pauses before first craft", "platform isolation", "same-surface force isolation",
-            "one radiator cools exactly one core", "cooling pause preserves positive progress",
+            "missing cooling does not script-pause a cold core", "physical cooling replaces quota allocation",
+            "cooling loss generates heat, not a script hold", "disconnected cooling allows positive native progress",
             "blocked_output", "full_output", "power is not a script hold",
             "half-power gives slower positive native progress without cancellation",
             "full outage holds identical positive progress", "same positive progress survives separate-process reload",

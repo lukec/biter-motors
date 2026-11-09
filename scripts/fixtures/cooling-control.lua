@@ -61,7 +61,7 @@ local function platform(force, name)
   local value = force.create_space_platform{name = name, planet = "nauvis",
     starter_pack = "space-platform-starter-pack"}
   check(value.apply_starter_pack(true) ~= nil, "native starter hub applied")
-  -- Isolate supplied EEI power: radiator solar trickle must not mask a full outage.
+  -- Isolate supplied EEI power; orbital radiators are heat sinks, not generators.
   value.surface.solar_power_multiplier = 0
   local tiles = {}
   for x = -64, 64 do
@@ -123,29 +123,29 @@ local function advance()
     if elapsed < 120 then return end
     local own, other = ledger(force).cooling, ledger(storage.other_force).cooling
     equal(own.cores, 3, "player cores span two platforms")
-    equal(own.cooled_cores, 0, "zero radiators cool zero cores")
+    equal(own.radiators, 0, "no radiators installed initially")
     equal(other.cores, 1, "second force counted independently")
     for _, machine in ipairs({first, storage.second, storage.other_core, storage.cross_force_core}) do
       local row = core_status(machine)
-      check(row.paused_for_cooling and machine.disabled_by_script, "missing cooling pauses before first craft")
+      check(not row.paused_for_cooling and not machine.disabled_by_script,
+        "missing cooling does not script-pause a cold core")
       equal(machine.crafting_progress, 0, "unstarted core has no progress")
     end
     equal(input(first).insert{name = DOLLAR, count = 1}, 1, "supply exactly one original orbital Dollar")
     change_stage("unstarted_hold")
   elseif storage.stage == "unstarted_hold" then
     if elapsed < 120 then return end
-    equal(count(input(first), DOLLAR), 1, "uncooled unstarted batch leaves Dollar uncommitted")
+    original_committed(first)
+    check(first.crafting_progress > 0, "unconnected core starts native work and heat")
     no_earnings(first)
-    storage.panel = make(storage.surface, RADIATOR, {-56, 32}, force)
+    storage.panel = make(storage.surface, RADIATOR, {-36, 12}, force)
+    for x = -34, -32 do make(storage.surface, "bitermotors-orbital-heat-pipe", {x, 12}, force) end
     change_stage("allocation")
   elseif storage.stage == "allocation" then
     if elapsed < 120 then return end
-    equal(ledger(force).cooling.cooled_cores, 1, "one radiator cools exactly one core")
-    check(core_status(first).cooled, "oldest unit-number core wins deterministic capacity")
-    check(not core_status(storage.second).cooled, "newer core waits for capacity")
-    check(not core_status(storage.other_core).cooled, "platform isolation")
-    check(not core_status(storage.cross_force_core).cooled, "same-surface force isolation")
-    equal(ledger(storage.other_force).cooling.cooled_cores, 0, "force cooling isolation")
+    equal(ledger(force).cooling.policy, "physical-heat-networks", "physical cooling replaces quota allocation")
+    equal(ledger(force).cooling.radiators, 1, "one physically connected radiator installed")
+    equal(ledger(storage.other_force).cooling.radiators, 0, "separate force counts its own hardware")
     local transient = core(storage.surface, force, {0, -12})
     equal(ledger(force).cooling.cores, 4, "new core is registered for cooling demand")
     transient.destroy{raise_destroy = true}
@@ -155,22 +155,21 @@ local function advance()
     storage.before_cooling = first.crafting_progress
     storage.panel.destroy{raise_destroy = true}
     report("cooling_policy_passed", {platforms = 2, zero_vs_one = true,
-      capacity_scope = "surface+force", before_first_craft_paused = true, work_policy = "banked",
+      capacity_scope = "physical-heat-networks", before_first_craft_paused = false, work_policy = "banked",
       supplied_power_fixture = true, solar_power_multiplier = 0})
     change_stage("cooling_pause")
   elseif storage.stage == "cooling_pause" then
     local row = core_status(first)
-    if not row.paused_for_cooling then return end
-    check(first.disabled_by_script, "cooling uses a script pause")
+    check(not row.paused_for_cooling and not first.disabled_by_script, "cooling loss generates heat, not a script hold")
     check(first.crafting_progress >= storage.before_cooling, "cooling never cancels active progress")
     storage.paused_progress = first.crafting_progress
     change_stage("cooling_hold")
   elseif storage.stage == "cooling_hold" then
     if elapsed < 120 then return end
-    equal(first.crafting_progress, storage.paused_progress, "cooling pause preserves positive progress")
+    check(first.crafting_progress > storage.paused_progress, "disconnected cooling allows positive native progress")
     original_committed(first)
     no_earnings(first)
-    storage.panel = make(storage.surface, RADIATOR, {-56, 32}, force)
+    storage.panel = make(storage.surface, RADIATOR, {-36, 12}, force)
     change_stage("cooling_resume")
   elseif storage.stage == "cooling_resume" then
     if core_status(first).paused_for_cooling or first.crafting_progress <= storage.paused_progress then return end
@@ -195,7 +194,8 @@ local function advance()
     -- The rare batch is the sole active load during measured power trials.
     storage.second.destroy{raise_destroy = true}
     storage.second = core(storage.surface, force, {20, 12}, "rare")
-    storage.rare_panel = make(storage.surface, RADIATOR, {40, 32}, force)
+    storage.rare_panel = make(storage.surface, RADIATOR, {26, 12}, force)
+    for x = 22, 24 do make(storage.surface, "bitermotors-orbital-heat-pipe", {x, 12}, force) end
     equal(input(storage.second).insert{name = DOLLAR, quality = "rare", count = 1}, 1,
       "supply exactly one original rare Dollar, never replacement inputs")
     change_stage("full_rate_start")

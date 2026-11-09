@@ -167,7 +167,7 @@ script.on_init(function()
   local economy_contract = remote.call("bitermotors", "economy_contract")
   economy_contract.launch_item_weights = {}
   for _, name in ipairs({
-    ORBITAL_CORE, ORBITAL_RADIATOR, SPACE_SOLAR, DOLLAR,
+    ORBITAL_CORE, ORBITAL_RADIATOR, "bitermotors-orbital-heat-pipe", SPACE_SOLAR, DOLLAR,
     "bitermotors-agi-training-dataset", "bitermotors-datacenter-rack", AGI_MODEL,
     "space-platform-starter-pack", "space-platform-foundation",
     "transport-belt", "inserter", "bulk-inserter", "express-transport-belt"
@@ -230,7 +230,11 @@ script.on_init(function()
       if input then input.insert{name = DOLLAR, count = 20} end
       storage.orbital_core_unit_number = orbital_core.unit_number
     end
-    local radiator_positions = {{-12, 18}}
+    local radiator_positions = {{6, 12}}
+    for x = 2, 4 do
+      orbital_surface.create_entity{name = "bitermotors-orbital-heat-pipe", position = {x, 12},
+        force = force, raise_built = true}
+    end
     storage.orbital_radiator_positions = radiator_positions
     storage.orbital_surface_index = orbital_surface.index
     storage.orbital_platform_created = platform_hub ~= nil and orbital_core ~= nil
@@ -1542,7 +1546,7 @@ from pathlib import Path
 control = Path(sys.argv[1]).read_text()
 required_markers = {
     "ORBITAL_RADIATORS_PER_CORE = 1": "one-radiator orbital cooling rule",
-    "orbital_core_has_cooling": "orbital cooling assignment",
+    "OrbitalThermals.update()": "physical orbital thermal simulation",
     "entity.crafting_progress = 0": "ordinary terrestrial run reset on service loss",
     '"bitermotors-terrestrial-ai-token"': "scrapping is recipe-specific, not Model activation",
     "defines.entity_status.low_power": "low-power handling",
@@ -2025,7 +2029,7 @@ if orbital_core["energy_usage"] != "250MW" or orbital_core["selection_box"] != [
     raise SystemExit(f"Orbital Datacenter Core power or footprint mismatch: {orbital_core}")
 if orbital_core.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit(f"Orbital Datacenter Core must be space-only: {orbital_core.get('surface_conditions')}")
-radiator = data["solar-panel"]["bitermotors-orbital-radiator-panel"]
+radiator = data["heat-interface"]["bitermotors-orbital-radiator-panel"]
 if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital Radiator Panel must be space-only")
 for name, cycles, dollars in (
@@ -2054,8 +2058,9 @@ for name, weight in {
 }.items():
     if data["item"][name].get("weight") != weight:
         raise SystemExit(f"Orbital entry cargo weight mismatch: {name}")
-for name in ("bitermotors-orbital-radiator-panel", "bitermotors-high-density-space-solar-panel"):
-    if data["solar-panel"][name]["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
+for prototype_type, name in (("heat-interface", "bitermotors-orbital-radiator-panel"),
+                             ("solar-panel", "bitermotors-high-density-space-solar-panel")):
+    if data[prototype_type][name]["selection_box"] != [[-1.5, -1.5], [1.5, 1.5]]:
         raise SystemExit(f"Orbital entry hardware must have a 3x3 footprint: {name}")
 for name, ingredients in {
     "bitermotors-orbital-datacenter-core": {
@@ -2901,9 +2906,11 @@ undercooled_endgame = orbital_undercooled.get("endgame") or {}
 undercooled_cores = undercooled_endgame.get("cores") or []
 if (undercooled_endgame.get("cooling") or {}).get("radiators") != 0:
     raise SystemExit(f"orbital cooling smoke did not begin without radiators: {orbital_undercooled}")
-if (len(undercooled_cores) != 1 or not undercooled_cores[0].get("paused_for_cooling")
+if (len(undercooled_cores) != 1 or undercooled_cores[0].get("paused_for_cooling")
+        or undercooled_cores[0].get("disabled_by_script")
+        or undercooled_cores[0].get("temperature_c", 0) < 15
         or undercooled_cores[0].get("work_policy") != "banked"):
-    raise SystemExit(f"undercooled orbital batch did not pause: {orbital_undercooled}")
+    raise SystemExit(f"unconnected orbital core must heat rather than script-pause: {orbital_undercooled}")
 if orbital_operating is None or not orbital_operating.get("first_radiator_created"):
     raise SystemExit(f"first orbital radiator was not installed: {orbital_operating}")
 operating_endgame = orbital_operating.get("endgame") or {}

@@ -123,6 +123,12 @@ end
 
 local function task(surface, name, recipe, position, force, kind, quality)
   local machine = make(surface, name, position, force)
+  if name == CORE then
+    make(surface, "bitermotors-orbital-radiator-panel", {position[1] + 6, position[2]}, force)
+    for dx = 2, 4 do
+      make(surface, "bitermotors-orbital-heat-pipe", {position[1] + dx, position[2]}, force)
+    end
+  end
   force.recipes[recipe].enabled = true
   machine.set_recipe(recipe, quality or "normal")
   local row = {machine = machine, kind = kind or "ordinary", recipe = recipe,
@@ -146,10 +152,6 @@ local function platform(force, name, count)
   end
   surface.set_tiles(tiles, false, false, false, true)
   local source = power(surface, {-48, -32}, force)
-  for index = 1, count * 8 do
-    make(surface, "bitermotors-orbital-radiator-panel",
-      {-54 + ((index - 1) % 18) * 6, 32 + math.floor((index - 1) / 18) * 6}, force)
-  end
   return surface, source
 end
 
@@ -198,7 +200,7 @@ script.on_init(function()
   local second = game.create_force("ai-second-force")
   second.technologies["bitermotors-orbital-compute"].researched = true
   local orbit_b, source_b = platform(second, "AI accounting B", 1)
-  -- Isolate the outage from the radiator's native 1 kW solar production.
+  -- Isolate supplied power; radiators no longer generate electricity.
   orbit_b.solar_power_multiplier = 0
   storage.dataset_power = source_b
   storage.other = task(orbit_b, CORE, "bitermotors-orbital-ai-dataset-hyperscale", {0, 12}, second)

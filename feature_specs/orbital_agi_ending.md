@@ -1,10 +1,11 @@
 # Orbital AGI Ending
 
-Design date: 2026-10-07. Updated: 2026-11-08.
+Design date: 2026-10-07. Updated: 2026-11-09.
 Status: **orbital entry, banked work, scale tiers, physical Model finale and terminal implemented**.
-Source now has compact hardware, explicit cargo weights, one-radiator cooling
-and research without white science. Orbital interruptions now retain native
-inputs and progress, and the tier costs/yields below are implemented. The Model
+Source now has compact hardware, explicit cargo weights, physical heat-pipe cooling
+and research without white science. Orbital power interruptions retain native
+inputs and progress; cooling faults accumulate heat and can destroy a core.
+The tier costs/yields below are implemented. The Model
 now assembles in orbit, returns by native cargo pod and activates on Nauvis.
 The old controller/capital finale has been removed. The ending interface and
 offline terminal are implemented; see [terminal validation](../docs/terminal-epilogue-validation.md)
@@ -55,7 +56,8 @@ captured from the engine rather than supplied as proposal overrides.
 | --- | --- | --- | --- |
 | Orbital Compute Cluster | 3x3 | 250 MW, current 1.5 crafting speed | 8 Datacenter Racks + 40 LDS + 12 LFP Battery Packs |
 | Space Solar Wing | 3x3 | 20 MW nominal; 60 MW in Nauvis orbit | 2 HD Panels + 10 blue circuits + 5 LDS + 2 High-energy Packs |
-| Orbital Radiator | 3x3 | Cools one 250 MW cluster | Keep current recipe: 20 heat pipes + 100 copper plates + 10 electric engines + 10 LDS |
+| Orbital Radiator | 3x3 | Rejects up to 300 MW from a connected heat network | 20 Orbital Heat Pipes + 100 copper plates + 10 electric engines + 10 LDS |
+| Orbital Heat Pipe | 1x1 | Native heat transport, 20 MJ per C | 20 copper plates + 10 steel plates |
 
 Five wings and one radiator per normal cluster provide 300 MW generation for
 250 MW compute and a 5:1 solar/radiator footprint ratio. This is inspired by the
@@ -66,7 +68,13 @@ redundant blue circuits already contained in its racks.
 
 Solar generation stays continuous in Nauvis orbit. A platform can nevertheless
 be overloaded; its entire electric network must support the working machines.
-Cooling capacity is local to that platform and force, with bounded allocation.
+Cooling is physical native heat conduction, not force/platform-wide allocation.
+Short correctly sized networks settle near 97 C. A normal core stores 1.2 GJ
+per C, giving roughly 2-3 minutes of full-load headroom from normal operation
+after disconnection. Map alerts and visible warnings start at 105 C, escalate
+at 120 C, and burnout at 130 C kills the core and its committed payload. Shared
+networks, spare radiators and deliberate power isolation are valid designs.
+Idle and brownout loads produce less heat; a correct network runs indefinitely.
 Do not add coolant mining, radiators that need consumable fluids, communication
 currencies, engines, travel, other planets or combat fleets to this v1 path.
 
@@ -138,10 +146,11 @@ using the delivered Model. Approximately 30 normal seconds at its ordinary
 power draw is sufficient. The Model can remain displayed or be returned as its
 output. Producing the orbital Model is not victory until ground activation.
 
-Orbital low power slows/pauses normal native crafting. Insufficient cooling
-disables/pause-holds the affected cluster. Neither cancels its committed inputs,
-resets progress or loses previous completed work. Removing/deleting the machine
-still has normal Factorio consequences. Keep the terrestrial ordinary-run
+Orbital low power slows/pauses normal native crafting without canceling its
+committed inputs or resetting progress. Insufficient cooling does not halt work:
+the core heats toward destructive burnout. Previously completed work remains
+earned, but destruction loses the machine and committed payload. Removing/deleting
+the machine still has normal Factorio consequences. Keep the terrestrial ordinary-run
 scrapping behavior; this change removes the special finale contract and the
 orbital scrapping policy, not every power consequence in the game.
 

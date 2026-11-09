@@ -3502,9 +3502,9 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('local budget = math.min(32, #queue.units)', control)
         self.assertIn('while processed < budget', control)
         orbital_branch = monitor[monitor.index('if entity.name == ORBITAL_DATACENTER_CORE_NAME then'):
-                                 monitor.index('      if failure then')]
-        self.assertIn('orbital_core_has_cooling(entity)', orbital_branch)
-        self.assertIn('orbital-cooling-paused', orbital_branch)
+                                 monitor.index('\n      if failure then')]
+        self.assertIn('disconnected cooling causes heat, not a script hold', orbital_branch)
+        self.assertNotIn('orbital-cooling-paused', orbital_branch)
         self.assertIn('goto continue', orbital_branch)
         self.assertNotIn('crafting_progress =', orbital_branch)
         self.assertNotIn('power_failed', orbital_branch)
@@ -3513,7 +3513,8 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn('rebuild_bitermotors_compute_machines()', control)
         self.assertIn('function endgame_status(force)', control)
         self.assertIn('power_limited = entity.status == defines.entity_status.no_power', control)
-        self.assertIn('paused_for_cooling = failure and failure.cooling == true', control)
+        self.assertIn('paused_for_cooling = false', control)
+        self.assertIn('OrbitalThermals.update()', control)
         self.assertIn('work_policy = "banked"', control)
 
     def test_customer_ev_owners_physically_commute_to_chargers(self):

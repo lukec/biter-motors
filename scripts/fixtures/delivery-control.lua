@@ -240,7 +240,9 @@ function M.run(options)
     for i = 1, 40 do
       local x, y = -64 + ((i - 1) % 10) * 12, -32 + math.floor((i - 1) / 10) * 10
       local core = make(surface, CORE, {x, y})
-      make(surface, "bitermotors-orbital-radiator-panel", {x, 24 + math.floor((i - 1) / 10) * 10})
+      local radiator = make(surface, "bitermotors-orbital-radiator-panel", {x + 6, y})
+      for dx = 2, 4 do make(surface, "bitermotors-orbital-heat-pipe", {x + dx, y}) end
+      if i == 1 then storage.radiator = radiator end
       recipe(core, COMPUTE)
       equal(input(core).insert{name = "bitermotors-dollar", count = 125, quality = payload_quality},
         125, "supplied physical operating Dollars")
@@ -507,8 +509,9 @@ function M.run(options)
       equal(count(payload, DATASET), 20000, "entire physical 20k payload extracted from earned outputs")
       -- Leave exactly one radiator on this platform for the assembly test.
       local radiators = storage.platform.surface.find_entities_filtered{name = "bitermotors-orbital-radiator-panel"}
-      for i = 2, #radiators do radiators[i].destroy{raise_destroy = true} end
-      storage.radiator = radiators[1]
+      for _, radiator in ipairs(radiators) do
+        if radiator ~= storage.radiator then radiator.destroy{raise_destroy = true} end
+      end
       recipe(storage.assembler, ASSEMBLE)
       storage.assembler.disabled_by_script = true
       equal(storage.assembler.crafting_speed, 1.5, "normal native assembly speed")

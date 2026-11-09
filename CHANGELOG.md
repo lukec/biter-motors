@@ -5,10 +5,16 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
-- Prototyped physical orbital heat transport in a separate, opt-in experimental
-  add-on: 97 C normal operation, finite radiators, repairable thermal headroom
-  and real destruction at 130 C. Native source/experimental-ZIP tests and
-  measured charts do not change the current campaign cooling contract.
+- Integrated physical orbital heat transport into the main mod. Clusters connect
+  to finite Radiators through Orbital Heat Pipes, with shared networks, a roughly
+  97 C operating point and a 2-3 minute nominal disconnection buffer. Warning at
+  105 C, critical at 120 C, and destructive burnout at 130 C replace the invisible
+  platform-wide quota and automatic cooling pause. Map alerts, machine warnings,
+  inspector temperatures and late Progress heat status make failures actionable.
+  Native work-dependent heat includes idle draw; brownouts and blocked outputs
+  reduce heat. Hot/rebuilt/cloned buffers retain temperature and native lifecycle
+  cleanup removes hidden components. See the thermal hardening report for exact
+  test scope and benchmark limits; the original opt-in prototype is historical.
 - Added native-exported 1/4/8/12-cluster platform blueprints, coordinate previews,
   real-solar rocket/logistics rehearsals, and source-bound remaining-chapter
   budgets. Supplied ground stock and modeled manufacturing are disclosed.
@@ -36,9 +42,10 @@ development namespace migration.
   finale fee and required final research/white science. Hyperscale is optional.
   Updated progressive guidance, inspectors, prototype captures and economy
   reports. Practical platform/pacing and campaign/release freeze remain next.
-- Banked orbital work across power/cooling interruptions: native power shortage
-  slows/stops crafting, while missing cooling pauses with a yellow status.
-  Progress and committed inputs survive recovery and reload; ordinary terrestrial
+- Banked orbital work across power interruptions: native power shortage
+  slows/stops crafting without a scripted reset. Physical cooling faults now
+  heat toward destructive burnout rather than pausing. Progress and committed
+  inputs survive power recovery and reload; ordinary terrestrial
   AI still scraps failed batches. Core status and soak probes distinguish these
   policies instead of reporting orbital resets.
 - Rebalanced orbital scale research to 2,000/3,000/6,000 normal Dollars and

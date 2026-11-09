@@ -980,6 +980,9 @@ data:extend({
   item("bitermotors-orbital-radiator-panel", orbital_radiator_panel_icon, "energy", "c[orbital-radiator-panel]", 10, {
     place_result = "bitermotors-orbital-radiator-panel", weight = 100000
   }),
+  item("bitermotors-orbital-heat-pipe", icon64("__base__/graphics/icons/heat-pipe.png"), "energy", "c[orbital-heat-pipe]", 50, {
+    place_result = "bitermotors-orbital-heat-pipe", flags = {"always-show"}, weight = 1000
+  }),
   item("bitermotors-high-density-space-solar-panel", high_density_space_solar_panel_icon, "energy", "d[high-density-space-solar-panel]", 10, {
     place_result = "bitermotors-high-density-space-solar-panel", weight = 25000
   })
@@ -1447,14 +1450,46 @@ orbital_datacenter_core.surface_conditions = {
   }
 }
 
+local function orbital_heat_buffer(capacity, size)
+  local offset = (size - 1) / 2
+  return {
+    max_temperature = 500, default_temperature = 15, min_working_temperature = 15,
+    specific_heat = capacity, max_transfer = "5GW", min_temperature_gradient = 0.01,
+    connections = {
+      {position = {0, -offset}, direction = defines.direction.north},
+      {position = {offset, 0}, direction = defines.direction.east},
+      {position = {0, offset}, direction = defines.direction.south},
+      {position = {-offset, 0}, direction = defines.direction.west}
+    }
+  }
+end
+
+local orbital_core_heat_buffer = {
+  type = "heat-interface", name = "bitermotors-orbital-heat-buffer", hidden = true,
+  flags = {"not-on-map", "not-blueprintable", "not-deconstructable", "not-selectable-in-game"},
+  collision_mask = {layers = {}}, collision_box = {{-1.4, -1.4}, {1.4, 1.4}},
+  selection_box = {{-1.5, -1.5}, {1.5, 1.5}}, gui_mode = "none", heating_radius = 0,
+  heat_buffer = orbital_heat_buffer("1200MJ", 3)
+}
+
 local orbital_radiator_panel = copied_energy_entity(
-  "solar-panel",
-  "solar-panel",
+  "heat-interface",
+  "heat-interface",
   "bitermotors-orbital-radiator-panel",
   orbital_radiator_panel_icon,
   "bitermotors-orbital-radiator-panel"
 )
-orbital_radiator_panel.production = "1kW"
+orbital_radiator_panel.hidden = false
+orbital_radiator_panel.flags = {"placeable-player", "player-creation"}
+orbital_radiator_panel.max_health = data.raw["solar-panel"]["solar-panel"].max_health
+orbital_radiator_panel.collision_box = {{-1.4, -1.4}, {1.4, 1.4}}
+orbital_radiator_panel.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
+orbital_radiator_panel.gui_mode = "none"
+orbital_radiator_panel.heating_radius = 0
+orbital_radiator_panel.heat_buffer = orbital_heat_buffer("100MJ", 3)
+-- Preserve the existing radiator's real entity sprite and shadow, not its icon.
+orbital_radiator_panel.picture = table.deepcopy(data.raw["solar-panel"]["solar-panel"].picture)
+orbital_radiator_panel.resistances = table.deepcopy(data.raw["solar-panel"]["solar-panel"].resistances)
 orbital_radiator_panel.surface_conditions = {
   {
     property = "gravity",
@@ -1462,6 +1497,15 @@ orbital_radiator_panel.surface_conditions = {
     max = 0
   }
 }
+
+local orbital_heat_pipe = table.deepcopy(data.raw["heat-pipe"]["heat-pipe"])
+orbital_heat_pipe.name = "bitermotors-orbital-heat-pipe"
+orbital_heat_pipe.minable = {mining_time = 0.1, result = orbital_heat_pipe.name}
+orbital_heat_pipe.fast_replaceable_group = orbital_heat_pipe.name
+orbital_heat_pipe.next_upgrade = nil
+orbital_heat_pipe.heat_buffer = orbital_heat_buffer("20MJ", 1)
+orbital_heat_pipe.heat_buffer.minimum_glow_temperature = 90
+orbital_heat_pipe.heating_radius = 0
 
 local high_density_space_solar_panel = copied_energy_entity(
   "solar-panel",
@@ -1587,7 +1631,9 @@ data:extend({
   cybertrain_charging_stop,
   cybertrain_charging_power,
   orbital_datacenter_core,
+  orbital_core_heat_buffer,
   orbital_radiator_panel,
+  orbital_heat_pipe,
   high_density_space_solar_panel,
   espider,
   electric_vehicles[1],
@@ -2051,12 +2097,20 @@ data:extend({
   ),
   recipe("bitermotors-orbital-radiator-panel", {"advanced-crafting"}, "energy", "c[orbital-radiator-panel]",
     {
-      {type = "item", name = "heat-pipe", amount = 20},
+      {type = "item", name = "bitermotors-orbital-heat-pipe", amount = 20},
       {type = "item", name = "copper-plate", amount = 100},
       {type = "item", name = "electric-engine-unit", amount = 10},
       {type = "item", name = "low-density-structure", amount = 10}
     },
     {{type = "item", name = "bitermotors-orbital-radiator-panel", amount = 1}}, 20
+  ),
+  recipe("bitermotors-orbital-heat-pipe", {"crafting"}, "energy", "c[orbital-heat-pipe]",
+    {
+      {type = "item", name = "copper-plate", amount = 20},
+      {type = "item", name = "steel-plate", amount = 10}
+    },
+    {{type = "item", name = "bitermotors-orbital-heat-pipe", amount = 1}}, 1,
+    {allow_productivity = false}
   ),
   recipe("bitermotors-high-density-space-solar-panel", {"advanced-crafting"}, "energy", "d[high-density-space-solar-panel]",
     {
@@ -2408,6 +2462,7 @@ data:extend({
     {
       unlock("bitermotors-orbital-datacenter-core"),
       unlock("bitermotors-orbital-radiator-panel"),
+      unlock("bitermotors-orbital-heat-pipe"),
       unlock("bitermotors-high-density-space-solar-panel"),
       unlock("bitermotors-orbital-ai-token"),
       unlock("bitermotors-orbital-ai-dataset"),

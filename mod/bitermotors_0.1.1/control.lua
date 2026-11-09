@@ -21,6 +21,7 @@ ProgressGuidance = require("runtime.progress_guidance")
 TerminalEpilogue = require("runtime.terminal_epilogue")
 EndgamePresentation = require("runtime.endgame_presentation")
 EndgameGui = require("runtime.endgame_gui")
+OrbitalThermals = require("runtime.orbital_thermals")
 
 local STATION_NAMES = {
   "bitermotors-ev-charging-station",
@@ -1093,95 +1094,40 @@ function agi_completion_state()
   return storage.bitermotors_agi_completion
 end
 
-function orbital_radiator_panels()
-  storage.bitermotors_orbital_radiator_panels =
-    storage.bitermotors_orbital_radiator_panels or {}
-  return storage.bitermotors_orbital_radiator_panels
-end
-
-function mark_orbital_cooling_dirty()
-  storage.bitermotors_orbital_cooling_dirty = true
-end
-
 function track_orbital_radiator_panel(entity)
   if entity and entity.valid and entity.name == ORBITAL_RADIATOR_PANEL_NAME
     and entity.unit_number then
-    orbital_radiator_panels()[entity.unit_number] = entity
-    mark_orbital_cooling_dirty()
+    OrbitalThermals.register(entity)
   end
-end
-
-function refresh_orbital_cooling_assignments()
-  local radiator_counts = {}
-  for unit_number, radiator in pairs(orbital_radiator_panels()) do
-    if not radiator or not radiator.valid then
-      orbital_radiator_panels()[unit_number] = nil
-    else
-      local key = tostring(radiator.surface.index) .. ":" .. tostring(radiator.force.index)
-      radiator_counts[key] = (radiator_counts[key] or 0) + 1
-    end
-  end
-
-  local cores_by_group = {}
-  for _, entity in pairs(bitermotors_compute_machines()) do
-    if entity and entity.valid and entity.name == ORBITAL_DATACENTER_CORE_NAME then
-      local key = tostring(entity.surface.index) .. ":" .. tostring(entity.force.index)
-      cores_by_group[key] = cores_by_group[key] or {}
-      cores_by_group[key][#cores_by_group[key] + 1] = entity.unit_number
-    end
-  end
-
-  local assignments = {}
-  for key, unit_numbers in pairs(cores_by_group) do
-    table.sort(unit_numbers)
-    local cooled_count = math.floor((radiator_counts[key] or 0) / ORBITAL_RADIATORS_PER_CORE)
-    for index, unit_number in ipairs(unit_numbers) do
-      assignments[unit_number] = index <= cooled_count
-    end
-  end
-  storage.bitermotors_orbital_cooling_assignments = assignments
-  storage.bitermotors_orbital_cooling_dirty = false
-  return assignments
 end
 
 function orbital_core_has_cooling(entity)
   if not entity or not entity.valid or entity.name ~= ORBITAL_DATACENTER_CORE_NAME then
     return true
   end
-  if storage.bitermotors_orbital_cooling_dirty
-    or not storage.bitermotors_orbital_cooling_assignments then
-    refresh_orbital_cooling_assignments()
-  end
-  return storage.bitermotors_orbital_cooling_assignments[entity.unit_number] == true
+  local thermal = OrbitalThermals.core_status(entity)
+  return thermal and thermal.state == "normal" or false
 end
 
 function orbital_cooling_status(force)
-  if storage.bitermotors_orbital_cooling_dirty
-    or not storage.bitermotors_orbital_cooling_assignments then
-    refresh_orbital_cooling_assignments()
-  end
+  local thermal = OrbitalThermals.status(force)
   local cores = 0
   local cooled_cores = 0
-  for unit_number, entity in pairs(bitermotors_compute_machines()) do
-    if entity and entity.valid and entity.name == ORBITAL_DATACENTER_CORE_NAME
-      and (not force or entity.force == force) then
-      cores = cores + 1
-      if storage.bitermotors_orbital_cooling_assignments[unit_number] then
-        cooled_cores = cooled_cores + 1
-      end
-    end
-  end
-  local radiators = 0
-  for _, entity in pairs(orbital_radiator_panels()) do
-    if entity and entity.valid and (not force or entity.force == force) then
-      radiators = radiators + 1
-    end
+  local hottest, warning, critical = 0, 0, 0
+  for _, row in ipairs(thermal.cores) do
+    cores = cores + 1
+    hottest = math.max(hottest, row.temperature)
+    if row.state == "normal" then cooled_cores = cooled_cores + 1
+    elseif row.state == "warning" then warning = warning + 1
+    else critical = critical + 1 end
   end
   return {
     cores = cores,
     cooled_cores = cooled_cores,
-    radiators = radiators,
-    required_radiators = cores * ORBITAL_RADIATORS_PER_CORE
+    radiators = #thermal.radiators,
+    required_radiators = cores * ORBITAL_RADIATORS_PER_CORE,
+    hottest_c = hottest, warning_cores = warning, critical_cores = critical,
+    policy = "physical-heat-networks", burnouts = thermal.burnouts
   }
 end
 
@@ -1193,7 +1139,7 @@ function track_bitermotors_compute_machine(entity)
       PowerQueue.track(queue, entity.unit_number)
     end
     if entity.name == ORBITAL_DATACENTER_CORE_NAME then
-      mark_orbital_cooling_dirty()
+      OrbitalThermals.register(entity)
     end
   end
 end
@@ -1202,7 +1148,6 @@ function rebuild_bitermotors_compute_machines()
   storage.bitermotors_compute_machines = {}
   storage.bitermotors_compute_power_failures = storage.bitermotors_compute_power_failures or {}
   storage.bitermotors_compute_queue = {units = {}, index = 1, members = {}}
-  storage.bitermotors_orbital_radiator_panels = {}
   local names = {}
   for name in pairs(BITERMOTORS_COMPUTE_RECIPES) do names[#names + 1] = name end
   for _, surface in pairs(game.surfaces) do
@@ -1218,7 +1163,7 @@ function rebuild_bitermotors_compute_machines()
       bitermotors_compute_power_failures()[unit_number] = nil
     end
   end
-  refresh_orbital_cooling_assignments()
+  OrbitalThermals.rebuild()
 end
 
 local function reset_compute_queue_progress(queue)
@@ -1235,19 +1180,9 @@ local function reset_compute_queue_progress(queue)
     else
       local failure = bitermotors_compute_power_failures()[unit_number]
       if entity.name == ORBITAL_DATACENTER_CORE_NAME then
-        -- Orbital inputs/progress stay native; only missing cooling needs a script hold.
-        if not orbital_core_has_cooling(entity) then
-          if not failure then
-            entity.custom_status = {
-              diode = defines.entity_status_diode.yellow,
-              label = {"bitermotors-status.orbital-cooling-paused"}
-            }
-            bitermotors_compute_power_failures()[unit_number] = {cooling = true}
-          end
-          if not entity.disabled_by_script then entity.disabled_by_script = true end
-        elseif failure then
+        -- Work is banked during power loss; disconnected cooling causes heat, not a script hold.
+        if failure then
           entity.disabled_by_script = false
-          entity.custom_status = nil
           bitermotors_compute_power_failures()[unit_number] = nil
         end
         goto continue
@@ -1445,6 +1380,7 @@ function flush_ai_machine_bonus(machine, track)
 end
 
 function record_ai_compute_completion(event)
+  OrbitalThermals.completed(event)
   local recipe = AiAccounting.recipes[event.recipe]
   local machine = event.entity
   if not recipe or not machine or not machine.valid or not machine.unit_number
@@ -8533,6 +8469,7 @@ function agi_training_status(force)
     assembly_seconds = 60,
     activation_seconds = 30,
     activation_power_watts = 8000000,
+    thermal = orbital_cooling_status(force),
     victory = storage.bitermotors_agi_victory and storage.bitermotors_agi_victory[force.name],
     completed = victory_forces()[force.name] == true
   }
@@ -8550,6 +8487,7 @@ function endgame_status(force)
       and entity.name == ORBITAL_DATACENTER_CORE_NAME then
       local recipe = entity.get_recipe()
       local failure = failures[unit_number]
+      local thermal = OrbitalThermals.core_status(entity)
       local power_fraction = entity.electric_buffer_size > 0
         and entity.energy / entity.electric_buffer_size or 1
       cores[#cores + 1] = {
@@ -8564,7 +8502,9 @@ function endgame_status(force)
         disabled_by_script = entity.disabled_by_script == true,
         power_limited = entity.status == defines.entity_status.no_power
           or entity.status == defines.entity_status.low_power,
-        paused_for_cooling = failure and failure.cooling == true or false,
+        paused_for_cooling = false,
+        temperature_c = thermal and thermal.temperature,
+        thermal_state = thermal and thermal.state,
         work_policy = "banked"
       }
     end
@@ -8614,6 +8554,7 @@ local function trigger_victory(force, datacenter, quality)
 end
 
 function record_agi_model_completion(event)
+  OrbitalThermals.completed(event)
   local machine = event.entity
   if event.bonus or not machine or not machine.valid
     or cumulative_ai_tokens_generated(machine.force) < AGI_TOKEN_GATE
@@ -10273,6 +10214,9 @@ local function progress_snapshot(force)
     cooled_orbital_datacenter_cores = orbital_cooling.cooled_cores,
     orbital_radiator_panels = orbital_cooling.radiators,
     required_orbital_radiator_panels = orbital_cooling.required_radiators,
+    orbital_hottest_c = orbital_cooling.hottest_c,
+    orbital_warning_cores = orbital_cooling.warning_cores,
+    orbital_critical_cores = orbital_cooling.critical_cores,
     high_density_space_solar_panels = count_entities(force, HIGH_DENSITY_SPACE_SOLAR_PANEL_NAME),
     ai_tokens_produced = cumulative_ai_tokens_generated(force),
     agi_token_gate = agi.required_ai_tokens,
@@ -10399,17 +10343,15 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.orbital_compute_researched then
     return "Orbital AI", "Establish Nauvis orbit and research Orbital AI Infrastructure.", research("bitermotors-orbital-compute") .. " Use the vanilla Rocket Silo and a stationary Nauvis platform. Make the research Tokens on land; orbital output cannot fund its own unlock."
   elseif snapshot.orbital_datacenter_cores == 0 then
-    return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Start with one 3x3 cluster, one radiator and five Solar Wings. Use small custom minimum payloads in hub requests so this hardware and operating Dollars can launch. Select Orbital Training Dataset output to avoid moving thousands of individual Tokens."
+    return "Orbital AI", "Launch and place an Orbital Compute Cluster.", "Start with one 3x3 cluster, one radiator, Orbital Heat Pipes and five Solar Wings. Connect the core to the radiator physically. Use small custom minimum payloads in hub requests so hardware and operating Dollars can launch. Select Orbital Training Dataset output."
   elseif snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
-    return "Orbital cooling", "Install one Orbital Radiator per Compute Cluster.", string.format(
-      "Cooling online: %d / %d cores. Radiators installed: %d / %d. Undercooled cores pause with their progress and operating Dollar retained.",
-      snapshot.cooled_orbital_datacenter_cores,
-      snapshot.orbital_datacenter_cores,
-      snapshot.orbital_radiator_panels,
-      snapshot.required_orbital_radiator_panels
+    return "Orbital cooling", "Repair the overheating core's heat path.", string.format(
+      "%d overheating cores; hottest %.1f C. Connect Orbital Heat Pipes to enough Radiators. Warning: 105 C; critical: 120 C; destruction: 130 C. Cooling loss never pauses compute automatically.",
+      snapshot.orbital_datacenter_cores - snapshot.cooled_orbital_datacenter_cores,
+      snapshot.orbital_hottest_c
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Compute the first Orbital Training Dataset.", "Supply 5 Dollars and 250 MW to a cooled core for one Dataset in 100 normal seconds. Five Solar Wings provide 300 MW in Nauvis orbit. Return a few Datasets and unpack them into Tokens for research; retain the rest in orbit. Power/cooling interruptions preserve work and committed inputs."
+    return "Orbital AI", "Compute the first Orbital Training Dataset.", "Supply 5 Dollars and 250 MW plus idle draw for one Dataset in 100 normal seconds. Five Solar Wings provide 300 MW in Nauvis orbit. Return a few Datasets for research; retain the rest. Power loss banks work; cooling loss can destroy the core at 130 C."
   elseif snapshot.orbital_ai_tokens_generated < 1000000 then
     return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 1,000,000 equivalents. Each starting Dataset contains 50,000 equivalents and costs 5 Dollars. Keep the input belt filtered to Dollars only.",
@@ -10434,7 +10376,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Token equivalents.", "Terrestrial compute can begin the climb, but orbital compute provides endgame scale. Each computed Training Dataset counts as 50,000 Tokens. Spent output still counts; repackaging does not count again."
   elseif snapshot.agi_models_assembled == 0 then
-    return "Model assembly", "Assemble an AGI Model in orbit.", "Feed 20,000 physical Training Datasets and one Datacenter Rack into an Orbital Compute Cluster. Select Assemble AGI Model; a normal cluster takes one minute. Low power or missing cooling pauses work without losing the committed payload."
+    return "Model assembly", "Assemble an AGI Model in orbit.", "Feed 20,000 physical Training Datasets and one Datacenter Rack into an Orbital Compute Cluster. Select Assemble AGI Model; a normal cluster takes one minute. Low power banks work; keep the heat path intact because burnout destroys the committed payload."
   elseif snapshot.agi_models_returned == 0 then
     return "Model return", "Return the AGI Model to Nauvis.", "Move the Model into its platform hub and request it at a Nauvis Cargo Landing Pad. Native cargo delivery unlocks activation; possessing an injected Model does not."
   elseif not snapshot.victory then
@@ -10526,7 +10468,7 @@ function progress_health(snapshot)
   elseif snapshot.orbital_compute_researched
     and snapshot.cooled_orbital_datacenter_cores < snapshot.orbital_datacenter_cores then
     return "Cooling alert", string.format(
-      "%d orbital cores lack radiator capacity.",
+      "%d orbital cores are overheating. Repair their heat paths before 130 C.",
       snapshot.orbital_datacenter_cores - snapshot.cooled_orbital_datacenter_cores
     ), BITERMOTORS_STATE_COLORS.bad
   elseif snapshot.powered_stations > 0 and snapshot.first_sale_complete then
@@ -11095,26 +11037,26 @@ local function refresh_progress_panel(player)
       sprite = "item/bitermotors-orbital-datacenter-core",
       label = "Orbital compute",
       value = string.format(
-        "%d / %d cores cooled",
+        "%d / %d cores safe",
         snapshot.cooled_orbital_datacenter_cores,
         snapshot.orbital_datacenter_cores
       ),
       color = snapshot.orbital_datacenter_cores > 0
         and snapshot.cooled_orbital_datacenter_cores == snapshot.orbital_datacenter_cores
         and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
-      tooltip = "Each core draws 250 MW. Low power slows/stops computation; missing cooling pauses it. Native progress and committed inputs are retained."
+      tooltip = "Each active core draws 250 MW plus idle drain. Low power slows/stops computation and banks progress. Heat Pipes must physically connect it to Radiators; at 130 C the core and its committed payload are destroyed."
     }
     compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-orbital-radiator-panel",
       label = "Orbital cooling",
       value = string.format(
-        "%d / %d panels",
-        snapshot.orbital_radiator_panels,
-        snapshot.required_orbital_radiator_panels
+        "%.1f C hottest",
+        snapshot.orbital_hottest_c
       ),
-      color = snapshot.orbital_radiator_panels >= snapshot.required_orbital_radiator_panels
-        and BITERMOTORS_STATE_COLORS.good or BITERMOTORS_STATE_COLORS.bad,
-      tooltip = "One Orbital Radiator provides cooling capacity for one Compute Cluster on the same platform."
+      color = snapshot.orbital_critical_cores > 0 and BITERMOTORS_STATE_COLORS.bad
+        or snapshot.orbital_warning_cores > 0 and BITERMOTORS_STATE_COLORS.warning
+        or BITERMOTORS_STATE_COLORS.good,
+      tooltip = "Aim near 97 C with one connected Radiator per normal core. Shared networks are allowed. Warning at 105 C; critical at 120 C; destruction at 130 C. A cold, disconnected core is not proof of a working cooling loop."
     }
     compute_rows[#compute_rows + 1] = {
       sprite = "item/bitermotors-ai-token",
@@ -11270,7 +11212,7 @@ local function entity_status_text(entity)
     return "Waiting for mobile buyers"
   end
   if entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
-    return "Cooling offline"
+    return "Overheating"
   end
   local status = entity.status
   if status == defines.entity_status.working then
@@ -11301,6 +11243,13 @@ BITERMOTORS_STATE_COLORS = {
 }
 
 function entity_status_presentation(entity)
+  if entity.name == ORBITAL_DATACENTER_CORE_NAME then
+    local thermal = OrbitalThermals.core_status(entity)
+    if thermal and thermal.state ~= "normal" then
+      return thermal.state == "critical" and "Critical heat" or "Overheating",
+        thermal.state == "critical" and BITERMOTORS_STATE_COLORS.bad or BITERMOTORS_STATE_COLORS.warning
+    end
+  end
   if entity.name == BITERTAXI_DEPOT_NAME then
     local snapshot = bitertaxi_depot_snapshot(entity)
     if not snapshot.grid_connected then
@@ -11776,7 +11725,7 @@ local function show_manufacturer_info_panel(player, entity)
       end
     elseif entity.name == ORBITAL_DATACENTER_CORE_NAME then
       local status = ai_efficiency_track_status(entity.force, "orbital")
-      local cooling = orbital_cooling_status(entity.force)
+      local thermal = OrbitalThermals.core_status(entity)
       local selected_recipe = current_recipe_name(entity)
       local compute_recipe = AiAccounting.recipes[selected_recipe]
       local selected_output = compute_recipe and compute_recipe.tokens or status.tokens_per_cycle
@@ -11807,13 +11756,14 @@ local function show_manufacturer_info_panel(player, entity)
           status.next_threshold
         )
         or string.format("Orbital scale: %d cumulative Tokens; all scale milestones available", status.generated))
-      add_station_info_label(panel, string.format(
-        "Cooling: %d / %d cores online; %d / %d Radiator Panels",
-        cooling.cooled_cores,
-        cooling.cores,
-        cooling.radiators,
-        cooling.required_radiators
-      ))
+      if thermal then
+        local color = thermal.state == "critical" and BITERMOTORS_STATE_COLORS.bad
+          or thermal.state == "warning" and BITERMOTORS_STATE_COLORS.warning or BITERMOTORS_STATE_COLORS.good
+        add_station_info_label(panel, string.format("Core: %.1f C | Waste heat: %.1f MW",
+          thermal.temperature, thermal.watts / 1000000), color)
+      end
+      add_station_info_label(panel, "Heat path: Core -> Orbital Heat Pipes -> Radiator. Aim near 97 C.")
+      add_station_info_label(panel, "105 C warning | 120 C critical | 130 C destroys core and committed inputs.")
       add_station_info_label(panel, datasets
         and "Payload: retain 20,000 physical Datasets in orbit for Model assembly."
         or "Logistics: return AI Tokens for science; retain the final Dataset payload in orbit.")
@@ -11874,7 +11824,7 @@ local function show_manufacturer_info_panel(player, entity)
   local missing_name, current, required = recipe_missing_item(entity, recipe)
   local next_step
   if entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
-    next_step = "Paused: install one Orbital Radiator per Compute Cluster. Progress and committed inputs are retained."
+    next_step = "Overheating: repair the Heat Pipes or add connected Radiators. Stop power or input to prevent destruction at 130 C."
   elseif entity.name == ORBITAL_DATACENTER_CORE_NAME
     and (entity.status == defines.entity_status.no_power or entity.status == defines.entity_status.low_power) then
     next_step = "Power limited: restore the 250 MW supply. Native work slows/stops without losing progress or committed inputs."
@@ -12725,7 +12675,8 @@ for _, event_name in pairs({
   defines.events.on_built_entity,
   defines.events.on_robot_built_entity,
   defines.events.script_raised_built,
-  defines.events.script_raised_revive
+  defines.events.script_raised_revive,
+  defines.events.on_space_platform_built_entity
 }) do
   if event_name then
 	    script.on_event(event_name, function(event)
@@ -12817,13 +12768,15 @@ for _, event_name in pairs({
   defines.events.on_player_mined_entity,
   defines.events.on_robot_mined_entity,
   defines.events.on_entity_died,
-  defines.events.script_raised_destroy
+  defines.events.script_raised_destroy,
+  defines.events.on_space_platform_mined_entity
 }) do
   if event_name then
 	    script.on_event(event_name, function(event)
 	      local entity = event.entity
 	      if not entity or not entity.valid then return end
 	      local unit_number = entity.unit_number
+	      OrbitalThermals.remove(entity)
 	      invalidate_station_power_pole_cache_near(entity)
 	      local removed_customer_settlement =
 	        BITER_SETTLEMENT_NAMES[entity.name] or false
@@ -12866,12 +12819,6 @@ for _, event_name in pairs({
 		        bitermotors_compute_machines()[unit_number] = nil
 		        bitermotors_compute_power_failures()[unit_number] = nil
 		        bitermotors_compute_queue().members[unit_number] = nil
-		        if orbital_radiator_panels()[unit_number] then
-		          orbital_radiator_panels()[unit_number] = nil
-		          mark_orbital_cooling_dirty()
-	        elseif entity.name == ORBITAL_DATACENTER_CORE_NAME then
-	          mark_orbital_cooling_dirty()
-	        end
 	      end
       if removed_customer_settlement then
         for _, force in pairs(game.forces) do
@@ -12913,6 +12860,7 @@ for _, event_name in pairs({
 end
 
 script.on_event(defines.events.on_object_destroyed, function(event)
+  OrbitalThermals.destroyed(event)
   local state = agi_completion_state()
   local pod_id = state.registrations[event.registration_number]
   if pod_id then AgiCompletion.forget_pod(state, pod_id) end
@@ -12920,6 +12868,12 @@ script.on_event(defines.events.on_object_destroyed, function(event)
     and customer_unit_registry()[event.useful_id] then
     unregister_customer_unit_number(event.useful_id)
   end
+end)
+
+script.on_event(defines.events.on_entity_cloned, function(event)
+  OrbitalThermals.cloned(event)
+  track_bitermotors_compute_machine(event.destination)
+  track_orbital_radiator_panel(event.destination)
 end)
 
 script.on_event(defines.events.on_surface_deleted, function(event)
@@ -13028,6 +12982,7 @@ function process_bitermotors_sales_office_buyer_chunk()
 end
 
 script.on_nth_tick(15, function()
+  OrbitalThermals.update()
   TerminalEpilogue.update()
   if game.tick % 60 == 0 then
     for player_index in pairs(storage.bitermotors_endgame_progress_players or {}) do
@@ -13097,6 +13052,9 @@ script.on_nth_tick(600, function()
 end)
 
 remote.add_interface("bitermotors", {
+  thermal_status = function(force_name)
+    return OrbitalThermals.status(force_name and game.forces[force_name] or nil)
+  end,
   internal_namespace_status = function()
     return NamespaceMigration.audit(storage)
   end,
@@ -13744,6 +13702,7 @@ remote.add_interface("bitermotors", {
       consumer_sales_gates = EV_SALES_GATES,
       charger_tiers = STATION_CONFIGS,
       radiators_per_core = ORBITAL_RADIATORS_PER_CORE,
+      orbital_thermals = OrbitalThermals.policy.contract(),
       compute_progress_policy = {terrestrial = "scrap", orbital = "banked", activation = "banked"},
       agi_assembly_recipe = AGI_ASSEMBLY_RECIPE_NAME,
       agi_activation_recipe = AGI_ACTIVATION_RECIPE_NAME,

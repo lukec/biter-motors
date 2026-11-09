@@ -20,10 +20,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 SCALE = 22
 MARGIN = 54
-COLORS = {"hub": "#d7dae0", "core": "#dc754c", "radiator": "#51b8ac",
+COLORS = {"hub": "#d7dae0", "core": "#dc754c", "radiator": "#51b8ac", "heat-pipe": "#f27b55",
           "solar": "#668bdc", "belt": "#d4b34f", "inserter": "#e1a1ce",
           "input": "#f0ce63", "output": "#a0d5aa", "other": "#a0a8b1"}
-LABELS = {"hub": "Hub", "core": "Compute core", "radiator": "Radiator",
+LABELS = {"hub": "Hub", "core": "Compute core", "radiator": "Radiator", "heat-pipe": "Heat pipe",
           "solar": "Solar", "belt": "Belt / direction", "inserter": "Inserter / facing",
           "input": "Input belt", "output": "Output belt",
           "other": "Other / unknown"}
@@ -38,6 +38,8 @@ def kind(name):
         return "core"
     if "radiator" in name:
         return "radiator"
+    if "heat-pipe" in name:
+        return "heat-pipe"
     if "solar" in name:
         return "solar"
     if "belt" in name or "loader" in name:
@@ -299,6 +301,7 @@ def write_previews(layouts, output):
                           'Manifest counts are reported as supplied, not inferred from the drawing.</p>'
                           '<h2>Build Reference</h2><p>Gold belts carry inputs from the hub to core input arms; '
                           'green belts return core outputs to the hub. Blue panels are solar; teal panels are radiators. '
+                          'Orange heat pipes physically connect each core to its radiator. '
                           'The native blueprint includes starter context omitted from the canonical construction manifest. '
                           'Blueprint links refer to the matching native export, not a reconstructed blueprint.</p>'
                           '<p><a href="orbital-platform-guide.md">Operating guide: supply, provider and landing-pad settings, '

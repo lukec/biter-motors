@@ -76,6 +76,14 @@ def complete_evidence(cores=1, *, raw=False, batch_dollars=5, cycle_ticks=6000):
 
 
 class OrbitalPlatformValidationTests(unittest.TestCase):
+    def test_pre_starter_planned_foundation_is_not_mistaken_for_shipped_additions(self):
+        rows = complete_evidence()
+        rows[0]["layout"]["manifest"][checker.FOUNDATION] = len(rows[0]["layout"]["tiles"])
+        checker.check_rows(rows)
+        rows[0]["layout"]["manifest"][checker.FOUNDATION] += 1
+        with self.assertRaisesRegex(ValueError, "layout manifest mismatch"):
+            checker.check_rows(rows)
+
     def test_all_native_scale_cases_and_raw_baseline(self):
         for cores in (1, 4, 8, 12):
             with self.subTest(cores=cores):

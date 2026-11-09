@@ -30,7 +30,7 @@ def exact(row, **expected):
         assert type(row.get(key)) is type(value) and row[key] == value, (key, row)
 
 exact(policy, work_policy="banked", platforms=2, zero_vs_one=True,
-      capacity_scope="surface+force", before_first_craft_paused=True,
+      capacity_scope="physical-heat-networks", before_first_craft_paused=False,
       supplied_power_fixture=True, solar_power_multiplier=0)
 exact(checkpoint, work_policy="banked", failure="native_total_power", saved_file=save.name,
       power_limited=True, paused_for_cooling=False, generated=10000, products=0, output=0,

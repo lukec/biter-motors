@@ -207,9 +207,10 @@ The [current validation baseline](docs/validation-baseline.md) distinguishes
 engine smoke evidence from the remaining campaign/release gates.
 The release soak harness and terrestrial/orbital acceptance profiles are
 documented in [docs/soak-testing.md](docs/soak-testing.md).
-An opt-in [orbital thermal prototype](docs/orbital-thermal-prototype.html)
-tests physical heat pipes and destructive overheating in a disposable laboratory.
-It is separate from the shipped mod and is not installed by the normal installer.
+Orbital compute now uses [physical heat networks](docs/orbital-thermal-hardening.md):
+connect clusters to radiators, watch temperature, and prevent destructive overheating.
+The earlier [prototype measurements](docs/orbital-thermal-prototype.html) remain
+an explicitly historical laboratory, not the current balance values.
 
 ## Build A Release Archive
 

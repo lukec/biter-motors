@@ -32,7 +32,7 @@ local MACHINE_STATES = {
   working = {"Working", "good"},
   no_power = {"Paused: no power", "warning"},
   low_power = {"Power limited", "warning"},
-  cooling = {"Paused: cooling", "warning"},
+  cooling = {"Overheating", "warning"},
   full_output = {"Output full", "warning"}
 }
 
@@ -86,7 +86,7 @@ local function machine_description(machine, activation, rebuilding)
   elseif state == "low_power" then
     view.detail = view.detail .. "Increase available power. "
   elseif state == "cooling" then
-    view.detail = view.detail .. "Restore radiator capacity to resume. "
+    view.detail = view.detail .. "Repair the heat path or stop power: 130 C destroys the core and committed payload. "
   elseif state == "full_output" then
     view.detail = view.detail .. "Remove the Model from the output so crafting can finish. "
   end

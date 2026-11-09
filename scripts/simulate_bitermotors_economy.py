@@ -103,7 +103,8 @@ def campaign_plan(catalog: EconomyCatalog, *, cores: int = 8,
     construction = sum(count * catalog.item_dollars(item) for item, count in (
         (P + "biterfactory-v2", 1), (TERRESTRIAL, 1),
         (P + "datacenter-rack", catalog.ingredient(ASSEMBLE, P + "datacenter-rack")), (CORE, cores),
-        (P + "high-density-space-solar-panel", space_panels), (P + "orbital-radiator-panel", radiators)))
+        (P + "high-density-space-solar-panel", space_panels), (P + "orbital-radiator-panel", radiators),
+        (P + "orbital-heat-pipe", cores * 2)))
     terra_retry = retry_batches(terra_batches, failed_fraction)
     retries = terra_retry * catalog.ingredient(terra_recipe, DOLLAR)
     terra_dollars = terra_batches * catalog.ingredient(terra_recipe, DOLLAR)

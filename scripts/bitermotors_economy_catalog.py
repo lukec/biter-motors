@@ -25,7 +25,7 @@ REQUIRED_TECHNOLOGIES = (
     "bitermotors-orbital-cluster-training", "bitermotors-grid-scale-energy",
 )
 OPTIONAL_TECHNOLOGIES = ("bitermotors-hyperscale-training",)
-ENTITY_TYPES = ("assembling-machine", "solar-panel", "accumulator", "container")
+ENTITY_TYPES = ("assembling-machine", "solar-panel", "accumulator", "container", "heat-interface", "heat-pipe")
 RECIPE_FIELDS = ("ingredients", "results", "energy_required", "categories", "category",
                  "allow_productivity", "allow_quality", "maximum_productivity", "raise_on_crafted",
                  "surface_conditions")
@@ -115,7 +115,7 @@ def extract(raw: dict, runtime: dict) -> dict:
             if name.startswith("bitermotors-") or name in ("assembling-machine-2", "assembling-machine-3"):
                 entities[name] = {key: value for key, value in prototype.items() if key in (
                     "type", "crafting_speed", "energy_usage", "production", "energy_source",
-                    "effect_receiver", "inventory_size", "selection_box")}
+                    "effect_receiver", "inventory_size", "selection_box", "heat_buffer")}
     items = {name: {key: value for key, value in item.items() if key in ("stack_size", "weight")}
              for kind in ("item", "item-with-entity-data", "tool", "space-platform-starter-pack")
              for name, item in raw.get(kind, {}).items()

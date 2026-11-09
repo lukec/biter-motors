@@ -288,7 +288,7 @@
       },
       "direction": 0,
       "role": "core",
-      "recipe": "bitermotors-orbital-ai-dataset"
+      "recipe": "bitermotors-orbital-ai-dataset-hyperscale"
     },
     {
       "name": "bulk-inserter",
@@ -354,10 +354,28 @@
       "role": "solar"
     },
     {
+      "name": "bitermotors-orbital-heat-pipe",
+      "position": {
+        "x": -1.5,
+        "y": 10.5
+      },
+      "direction": 0,
+      "role": "heat-pipe"
+    },
+    {
+      "name": "bitermotors-orbital-heat-pipe",
+      "position": {
+        "x": -0.5,
+        "y": 10.5
+      },
+      "direction": 0,
+      "role": "heat-pipe"
+    },
+    {
       "name": "bitermotors-orbital-radiator-panel",
       "position": {
-        "x": -3.5,
-        "y": 32.5
+        "x": 1.5,
+        "y": 10.5
       },
       "direction": 0,
       "role": "radiator"
@@ -472,13 +490,6 @@
     {
       "name": "space-platform-foundation",
       "position": {
-        "x": -4,
-        "y": 4
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
         "x": -9,
         "y": 5
       }
@@ -682,6 +693,27 @@
     {
       "name": "space-platform-foundation",
       "position": {
+        "x": 0,
+        "y": 9
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 1,
+        "y": 9
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 2,
+        "y": 9
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
         "x": -9,
         "y": 10
       }
@@ -731,6 +763,41 @@
     {
       "name": "space-platform-foundation",
       "position": {
+        "x": -2,
+        "y": 10
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": -1,
+        "y": 10
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 0,
+        "y": 10
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 1,
+        "y": 10
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 2,
+        "y": 10
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
         "x": -9,
         "y": 11
       }
@@ -774,6 +841,27 @@
       "name": "space-platform-foundation",
       "position": {
         "x": -3,
+        "y": 11
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 0,
+        "y": 11
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 1,
+        "y": 11
+      }
+    },
+    {
+      "name": "space-platform-foundation",
+      "position": {
+        "x": 2,
         "y": 11
       }
     },
@@ -1203,69 +1291,6 @@
         "x": -3,
         "y": 30
       }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -5,
-        "y": 31
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -4,
-        "y": 31
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -3,
-        "y": 31
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -5,
-        "y": 32
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -4,
-        "y": 32
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -3,
-        "y": 32
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -5,
-        "y": 33
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -4,
-        "y": 33
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -3,
-        "y": 33
-      }
     }
   ],
   "manifest": {
@@ -1274,8 +1299,9 @@
     "express-transport-belt": 21,
     "bitermotors-orbital-datacenter-core": 1,
     "bitermotors-high-density-space-solar-panel": 5,
+    "bitermotors-orbital-heat-pipe": 2,
     "bitermotors-orbital-radiator-panel": 1,
-    "space-platform-foundation": 125,
+    "space-platform-foundation": 127,
     "bitermotors-dollar": 60
   }
 }

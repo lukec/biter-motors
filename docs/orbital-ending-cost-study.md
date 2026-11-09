@@ -24,9 +24,9 @@ Starter manufacture consumes 60 foundations but creates 100 placed tiles.
 The 100-extra-tiles-per-cluster envelope is not a tested platform blueprint.
 Native Rack mass: **54,166 g**; Model mass: **1,000 g**.
 Rocket lift limit: **1,000,000 g**; both rocket and cargo-pod inventory limits apply.
-First cluster: 9 launches.
-Fully batched twelve-cluster payload, including final Rack: 36 launches.
-Staged ramp: 50 launches.
+First cluster: 10 launches.
+Fully batched twelve-cluster payload, including final Rack: 37 launches.
+Staged ramp: 54 launches.
 
 ## Factory Supply Frontier
 
@@ -37,15 +37,15 @@ Joint co-products are credited once; no machine productivity is assumed.
 | bitermotors-lithium-brine | 5,500 | 5,500 |
 | bitermotors-nickel-ore | 640 | 640 |
 | calcite | 220 | 220 |
-| coal | 10,953 | 49,203 |
-| copper-plate | 108,044 | 432,044 |
+| coal | 11,453 | 49,703 |
+| copper-plate | 112,524 | 436,524 |
 | electric-engine-unit | 320 | 2,570 |
 | iron-ore | 120 | 120 |
 | iron-plate | 5,400 | 187,650 |
-| petroleum-gas | 211,060 | 1,026,700 |
-| processing-unit | 4,540 | 9,040 |
-| rocket-fuel | 2,500 | 2,500 |
-| steel-plate | 38,551 | 117,301 |
+| petroleum-gas | 221,060 | 1,036,700 |
+| processing-unit | 4,740 | 9,240 |
+| rocket-fuel | 2,700 | 2,700 |
+| steel-plate | 39,191 | 117,941 |
 | stone | 390 | 34,140 |
 | stone-brick | 600 | 23,100 |
 | sulfuric-acid | 45,160 | 135,160 |
@@ -70,13 +70,13 @@ No limitless new nests, repeated EV generations or mature free fleet are assumed
 
 | Spare blue circuits/min | Hardware floor | Hardware + science floor |
 | --- | ---: | ---: | ---: |
-| 20 | 3.78h | 7.53h |
-| 60 | 1.26h | 2.51h |
-| 120 | 0.63h | 1.26h |
+| 20 | 3.95h | 7.70h |
+| 60 | 1.32h | 2.57h |
+| 120 | 0.66h | 1.28h |
 
 Do not allocate the same blue-circuit production twice. Other materials can bottleneck first.
 These elapsed ideal-input clocks exclude practical I/O, build time and transport; they cannot qualify campaign pacing.
 Prototype capture does not qualify native Model return, activation, victory persistence or a complete campaign.
 
-Native source SHA-256: `29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1`.
-Model SHA-256: `57ecbc71e45fa07790706ecf66e897d7612b80e7483dcd76edbebc90d637e15c`.
+Native source SHA-256: `4c1a3bf4fc8fe9161bf03b147fd804643793c2c9be72dce48455043986d57ceb`.
+Model SHA-256: `798a8e8fb27be37c205e08b01498276f4e49680a2abcc13e2b776efcbd658d3f`.

@@ -1,6 +1,6 @@
 # Biter Motors Economy Freeze Model
 
-Captured engine: **2.1.20**; mod **0.1.1**.
+Captured engine: **2.1.24**; mod **0.1.1**.
 
 Native Model assembly and ground activation; Hyperscale is optional.
 **Default cash budget skips Hyperscale.** It includes the listed terrestrial EV/energy research, initial Biterfactory V2/datacenter construction, and the AI route through Model activation; it is not a full crash-landing budget.
@@ -42,4 +42,4 @@ Funding and compute can overlap; their sum is not a campaign clock. New nests/gr
 Phase 4 remains open: practical I/O, shared blue-circuit capacity and active player time need evidence.
 No balance values are changed by this simulator. Prototype capture is not native ending or campaign qualification.
 
-Native source SHA-256: `29679894ed82a30bf57272d08dd3d934aad5fc4ad0a4d5fb5c1bcf9d03d0a4d1`.
+Native source SHA-256: `4c1a3bf4fc8fe9161bf03b147fd804643793c2c9be72dce48455043986d57ceb`.

@@ -248,8 +248,13 @@ end
 local function export_blueprint()
   local inv = game.create_inventory(2)
   inv[1].set_stack{name = "blueprint"}
+  local left, top, right, bottom = -5, -5, 5, 5
+  for _, tile in ipairs(storage.layout.tiles) do
+    left, top = math.min(left, tile.position.x - 1), math.min(top, tile.position.y - 1)
+    right, bottom = math.max(right, tile.position.x + 2), math.max(bottom, tile.position.y + 2)
+  end
   inv[1].create_blueprint{surface = storage.platform.surface, force = "player",
-    area = {{-11, -5}, {4 * config.cores + 2, 35}}, include_entities = true, always_include_tiles = true}
+    area = {{left, top}, {right, bottom}}, include_entities = true, always_include_tiles = true}
   inv[1].label = "Biter Motors orbital compute - " .. config.cores .. " cluster(s)"
   check(inv[1].is_blueprint_setup(), "native blueprint export")
   local encoded = inv[1].export_stack()

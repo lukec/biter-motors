@@ -17,6 +17,7 @@ from simulate_bitermotors_economy import CORE, ORBITAL_RECIPES, TERRESTRIAL, cam
 P = "bitermotors-"
 SOLAR = P + "high-density-space-solar-panel"
 RADIATOR = P + "orbital-radiator-panel"
+HEAT_PIPE = P + "orbital-heat-pipe"
 MODEL = P + "agi-model"
 RESEARCH = (P + "autonomous-logistics", P + "orbital-compute",
             P + "orbital-cluster-training", P + "grid-scale-energy", P + "hyperscale-training")
@@ -42,14 +43,16 @@ class ModelPlan:
     phase_cores: tuple[int, ...] = (1, 4, 8, 12)
     solar_panels_per_core: int = 5
     tiles_per_core: int = 100
+    heat_pipes_per_core: int = 2
 
     def validate(self):
         if len(self.phase_cores) != 4 or any(value <= 0 or int(value) != value for value in self.phase_cores):
             raise ValueError("four positive integer compute phases required")
         if sorted(self.phase_cores) != list(self.phase_cores):
             raise ValueError("core ramp must not decrease")
-        if self.solar_panels_per_core <= 0 or self.tiles_per_core <= 0:
-            raise ValueError("layout quantities must be positive")
+        if any(isinstance(value, bool) or value <= 0 or int(value) != value
+               for value in (self.solar_panels_per_core, self.tiles_per_core, self.heat_pipes_per_core)):
+            raise ValueError("layout quantities must be positive integers")
 
 
 @dataclass(frozen=True)
@@ -158,6 +161,7 @@ def hardware_plan(catalog: EconomyCatalog, plan: ModelPlan, *, cores: int = 12,
         payload = {"space-platform-starter-pack": 1, "space-platform-foundation": count * plan.tiles_per_core,
                    CORE: count, SOLAR: count * plan.solar_panels_per_core,
                    RADIATOR: count * catalog.runtime["radiators_per_core"],
+                   HEAT_PIPE: count * plan.heat_pipes_per_core,
                    "transport-belt": count * 12, "inserter": count * 4, DOLLAR: coins}
         if include_final_model and index == 0:
             payload[P + "datacenter-rack"] = catalog.ingredient(ASSEMBLE, P + "datacenter-rack")
@@ -192,6 +196,7 @@ def staged_uplifts(catalog: EconomyCatalog, plan: ModelPlan, budget: dict) -> di
         added = cores - previous
         payload = {CORE: added, SOLAR: added * plan.solar_panels_per_core,
                    RADIATOR: added * catalog.runtime["radiators_per_core"],
+                   HEAT_PIPE: added * plan.heat_pipes_per_core,
                    "space-platform-foundation": added * plan.tiles_per_core,
                    "transport-belt": added * 12, "inserter": added * 4,
                    DOLLAR: budget["bands"][index]["batches"] * catalog.ingredient(ORBITAL_RECIPES[index], DOLLAR)}

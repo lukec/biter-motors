@@ -82,6 +82,10 @@ changes that policy.
 - Passive thermal interfaces use `at-least` at their floor, not `add 0`:
   native clamping can turn the latter into continuous free heat. Prove idle
   behavior, energy conservation, real burnout and hot-buffer reloads.
+- Orbital cooling is a physical heat network, never a platform-wide radiator
+  quota or automatic script pause. Keep thermal work bounded and preserve heat
+  through reconciliation. A destroyed platform object can become invalid before
+  the next callback; cache its surface index and do not dereference it afterward.
 - GUI/join events cannot be raised synthetically, and LuaGameScript has no
   create_player API. Use purpose-created native players for GUI persistence
   tests; distinguish public-callback tests from real clicks, joins and reconnects.

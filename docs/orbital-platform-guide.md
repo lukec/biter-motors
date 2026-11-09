@@ -2,7 +2,10 @@
 
 Development reference with endgame spoilers. The [layout index](orbital-layout-preview.html)
 shows coordinate schematics, not gameplay screenshots. The blueprints are native
-Factorio 2.1.20 exports; no entity coordinates were reconstructed into a blueprint.
+Factorio 2.1.24 exports, rebuilt for physical cooling; no entity coordinates
+were reconstructed into a blueprint. The current 1/4/8/12 native rehearsals used
+the Hyperscale compact recipe to qualify logistics, not the full research ladder
+or campaign pacing. Earlier quota-era measurements remain historical evidence.
 
 ## Start Small, Extend The Same Platform
 
@@ -12,6 +15,13 @@ the four-, eight-, and twelve-cluster versions over the same hub. Their original
 equipment stays in place. Twelve clusters is a reference layout, not a win gate.
 
 Each cluster has one compute core, one radiator and five orbital solar wings.
+The current layouts also include a short physical Orbital Heat Pipe connection.
+Heat only flows through connected ports; a radiator elsewhere provides no quota.
+Aim near 97 C. Warnings begin at 105 C and escalate at 120 C; at 130 C the core
+and its committed batch are destroyed. From normal full-load operation, a cut
+heat path gives roughly 2-3 minutes to repair it or stop power. A sound network
+needs no periodic maintenance. The [thermal report](orbital-thermal-hardening.md)
+separates current physical-cooling evidence from the earlier quota-based tests.
 At Nauvis's native 300% orbital sunlight, those wings generate 300 MW against
 250 MW of rated compute plus its native drain and inserters. There is no orbital
 accumulator, supplied power interface, solar multiplier, or cooling bypass.

@@ -98,14 +98,15 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_first_and_full_layout_preserve_starter_foundation_distinction(self):
         first = model.hardware_plan(self.catalog, self.proposal, cores=1, operating_dollars=100)
         full = model.hardware_plan(self.catalog, self.proposal, operating_dollars=5681)
-        self.assertEqual((9, 35), (first["rockets"], full["rockets"]))
+        self.assertEqual((10, 36), (first["rockets"], full["rockets"]))
+        self.assertEqual(24, full["payload"][model.HEAT_PIPE])
         self.assertEqual(1200, full["payload"]["space-platform-foundation"])
         self.assertEqual(1300, full["placed_foundation_tiles"])
         candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         bill = model.supply_bill(candidate, full["manufacturing_roots"])
         self.assertEqual(1260, bill["recipe_batches"]["space-platform-foundation"])
-        self.assertEqual(1750, full["launch_ingredients"]["rocket-fuel"])
-        self.assertEqual(87.5, full["assembly_only_silo_minutes"])
+        self.assertEqual(1800, full["launch_ingredients"]["rocket-fuel"])
+        self.assertEqual(90, full["assembly_only_silo_minutes"])
         self.assertNotIn(model.P + "datacenter-rack", first["manufacturing_roots"])
         final = model.hardware_plan(self.catalog, self.proposal, include_final_model=True)
         self.assertEqual(1, final["manufacturing_roots"][model.P + "datacenter-rack"])
@@ -113,7 +114,7 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_each_platform_has_its_own_starter_and_payload_rounding(self):
         one = model.hardware_plan(self.catalog, self.proposal, platforms=1, operating_dollars=5681)
         three = model.hardware_plan(self.catalog, self.proposal, platforms=3, operating_dollars=5681)
-        self.assertEqual(45, three["rockets"])
+        self.assertEqual(48, three["rockets"])
         self.assertEqual([4, 4, 4], [row["cores"] for row in three["per_platform"]])
         self.assertEqual(3, three["payload"]["space-platform-starter-pack"])
         self.assertEqual(5681, three["payload"][model.DOLLAR])
@@ -122,8 +123,8 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_staged_automation_costs_more_than_fully_batched_payloads(self):
         budget = model.compute_budget(self.catalog, self.proposal)
         staged = model.staged_uplifts(self.catalog, self.proposal, budget)
-        self.assertEqual(50, staged["rockets"])
-        self.assertEqual(14, staged["extra_launches_above_batched"])
+        self.assertEqual(54, staged["rockets"])
+        self.assertEqual(17, staged["extra_launches_above_batched"])
         self.assertEqual(12, sum(row["payload"][model.CORE] for row in staged["stages"]))
 
     def test_native_power_ratio_accounts_for_nauvis_multiplier(self):
@@ -157,8 +158,8 @@ class OrbitalEndingTests(unittest.TestCase):
         result = model.analysis(self.catalog)
         hardware = result["hardware_supplies"]
         full = result["hardware_and_science_supplies"]
-        self.assertEqual(4540, hardware["supplies"]["processing-unit"])
-        self.assertEqual(9040, full["supplies"]["processing-unit"])
+        self.assertEqual(4740, hardware["supplies"]["processing-unit"])
+        self.assertEqual(9240, full["supplies"]["processing-unit"])
         self.assertNotIn(model.DOLLAR, hardware["supplies"])
         self.assertGreater(full["supplies"]["copper-plate"], hardware["supplies"]["copper-plate"])
         self.assertGreater(hardware["surplus"][model.P + "acidic-tailings"], 0)

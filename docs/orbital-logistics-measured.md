@@ -1,5 +1,10 @@
 # Orbital Logistics Budget
 
+Historical quota-era measurements. Physical cooling now has updated native
+blueprints and separate [hardening evidence](orbital-thermal-hardening.md).
+The source/archive hashes below identify this earlier run, not the current mod;
+do not reuse these timings as a fresh post-thermal campaign pacing qualification.
+
 ## Final Evidence
 
 - Engine: Factorio 2.1.20, build 87512, macOS arm64.

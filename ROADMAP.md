@@ -17,7 +17,7 @@ published as a beta or v1. It requires a finishable campaign, release soak
 evidence, and an exact-archive rehearsal. Optional art polish and a trailer must
 not delay a proven ending.
 
-### Remaining Plan As Of 2026-11-08
+### Remaining Plan As Of 2026-11-09
 
 **Two milestones: a frozen, finishable private playtest candidate; then public
 v1.0 after Luke completes it.** Do not start that acceptance campaign while the
@@ -39,6 +39,15 @@ qualification is still not a frozen, playtest-ready campaign. Phase 4 now has
 [source-bound logistics budget](docs/orbital-logistics-budget.md). **Next: finish
 the remaining pacing, fresh-seed/prerequisite and functional-art freeze.**
 
+**Physical cooling update:** the approved thermal hardening slice is integrated
+on Factorio 2.1.24: native shared heat networks, a 2-3 minute nominal buffer,
+105/120 C map alerts and destructive 130 C burnout replace the quota/pause rule.
+Updated native 1/4/8/12 blueprints include heat pipes and real cargo rehearsals;
+the physical ending and offline terminal remain intact. See the
+[thermal evidence and limits](docs/orbital-thermal-hardening.md). This is not a
+new full-campaign or simultaneous-multiplayer qualification. Final graphical
+readability, pacing and fresh-seed checks still gate the acceptance playthrough.
+
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
 artifacts, tests and remaining gaps here; completion means its exit gate passes,
@@ -48,8 +57,10 @@ not just that the code exists.
 
 Build in three consecutive slices:
 
-1. **Banked compute and scale tiers.** Orbital low power or missing cooling
-   pauses/slows work without losing committed inputs or progress. Keep ordinary
+1. **Banked compute and scale tiers.** Orbital low power
+   pauses/slows work without losing committed inputs or progress. The later
+   thermal slice supersedes automatic cooling holds with physical heat and
+   destructive burnout. Keep ordinary
    terrestrial run-scrapping. Apply the approved research/yield changes: the
    three scale projects cost 2,000/3,000/6,000 Dollars and unlock
    50,000/100,000/200,000 equivalents per normal 20-second batch. Match direct
@@ -493,7 +504,10 @@ platforms.
   - Produces 10,000 physical AI Tokens per batch.
 - **Orbital Radiator**
   - Space-only cooling infrastructure.
-  - One radiator cools one cluster on the same platform and force.
+  - Physically connect to cores with Orbital Heat Pipes; shared networks work.
+  - One radiator per normal core is a baseline, not an invisible allocation rule.
+  - Aim near 97 C. Alerts at 105/120 C; 130 C destroys the core and committed work.
+  - A nominal full-load core has roughly 2-3 minutes after cooling is cut.
 - **Space Solar Wing**
   - Space-only 20 MW nominal solar panel; 60 MW continuously in Nauvis orbit.
   - Five wings generate 300 MW for one 250 MW cluster.
@@ -762,17 +776,14 @@ These are candidates only after the release gates above:
 - Hyperscale terrestrial datacenters with escalating capital costs and
   settlement opposition.
 - Solar-roof modules for compatible factories.
-- **Physical orbital thermals: isolated prototype implemented.** The opt-in
-  [thermal laboratory](docs/orbital-thermal-prototype.md) uses native heat
-  conduits, finite radiators, a 97 C operating target and destructive burnout
-  at 130 C. It does not replace the campaign's radiator-capacity rule yet.
-  Source and experimental-ZIP tests cover native solar, work-dependent heat,
-  energy conservation, blocked output, brownouts, outage, conduit repair and
-  hot/burned save-reloads. Before adopting it, qualify shared networks and
-  arrays, production idle/effect/quality behavior, component lifecycle and
-  graphical alerts; redo the 1/4/8/12 layouts, uplift and budgets. The installed
-  engine was 2.1.24 for this experiment; that is not a requalification of the
-  full campaign or the earlier 2.1.20 release baseline.
+- [x] **Physical orbital thermals integrated.** Native heat plumbing replaces
+  platform-wide radiator quotas. Work-dependent waste heat, finite radiation,
+  a 2-3 minute nominal failure buffer, 105/120 C map warnings and 130 C burnout
+  are part of the main mod. See [hardening evidence](docs/orbital-thermal-hardening.md)
+  for shared networks, larger arrays, lifecycle, performance and separate-process
+  reloads. The earlier [opt-in laboratory](docs/orbital-thermal-prototype.md) is
+  historical. A final graphical readability check and natural campaign remain
+  release acceptance work; headless physics cannot qualify those.
 - Alternative post-victory scorecards for autonomous abundance or sustained
   compute civilization.
 - [x] **Fast electric eSpider:** clones the native SpiderVehicle and all eight

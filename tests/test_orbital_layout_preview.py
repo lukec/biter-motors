@@ -1,4 +1,5 @@
 import copy
+from collections import Counter
 import base64
 import csv
 import io
@@ -73,10 +74,8 @@ class OrbitalLayoutPreviewTests(unittest.TestCase):
 
     def canonical_layouts(self):
         lua = shutil.which("lua5.2") or shutil.which("lua")
-        if not LuaRuntime:
-            if not lua or subprocess.run([lua, "-e", "print(_VERSION)"], text=True,
-                                         capture_output=True, check=True).stdout.strip() != "Lua 5.2":
-                self.skipTest("Lua 5.2 or lupa.lua52 required for Factorio coordinate-key semantics")
+        if not LuaRuntime and not lua:
+            self.skipTest("Lua or lupa.lua52 required")
         fixture = ROOT / "scripts/fixtures/orbital-layout.lua"
         if not fixture.exists():
             self.skipTest("canonical fixture not supplied yet")
@@ -128,6 +127,101 @@ end
             self.assertEqual(5 * count, sum(e.get("role") == "solar" for e in layout["entities"]))
             preview.validate_layout(layout)
             self.assertGreater(preview.render_layout(layout).height, 0)
+
+    def assert_footprints_and_manifest(self, layout):
+        solid = {(tile['position']['x'], tile['position']['y']) for tile in layout['tiles']}
+        solid |= {(x, y) for x in range(-4, 5) for y in range(-4, 5)}
+        occupied = {}
+        sizes = {'core': 3, 'radiator': 3, 'solar': 3}
+        for entity in layout['entities']:
+            size = sizes.get(entity.get('role'), 1)
+            x, y = entity['position']['x'], entity['position']['y']
+            left, top = x - size / 2, y - size / 2
+            self.assertEqual((int(left), int(top)), (left, top), 'off-grid footprint')
+            for dx in range(size):
+                for dy in range(size):
+                    point = left + dx, top + dy
+                    self.assertNotIn(point, occupied, 'overlapping entity footprints')
+                    occupied[point] = entity['name']
+                    self.assertIn(point, solid, 'entity missing foundation')
+        manifest = dict(Counter(entity['name'] for entity in layout['entities']))
+        manifest['space-platform-foundation'] = len(layout['tiles'])
+        self.assertEqual(manifest, layout['manifest'])
+        self.assertEqual(len(layout['tiles']), len({(t['position']['x'], t['position']['y'])
+                                                   for t in layout['tiles']}), 'duplicate foundation')
+
+    def assert_thermal_routes(self, layout):
+        # Native center-edge ports: two opposite ports must be exactly one tile
+        # apart and face each other, not merely touch somewhere along an edge.
+        sizes = {'bitermotors-orbital-datacenter-core': 3,
+                 'bitermotors-orbital-radiator-panel': 3,
+                 'bitermotors-orbital-heat-pipe': 1}
+        thermal = [entity for entity in layout['entities'] if entity['name'] in sizes]
+        ports, graph = {}, {i: set() for i in range(len(thermal))}
+        for i, entity in enumerate(thermal):
+            offset = (sizes[entity['name']] - 1) / 2
+            x, y = entity['position']['x'], entity['position']['y']
+            for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+                key = x + dx * offset, y + dy * offset, dx, dy
+                self.assertNotIn(key, ports, 'overlapping native heat ports')
+                ports[key] = i
+        for (x, y, dx, dy), i in ports.items():
+            neighbor = ports.get((x + dx, y + dy, -dx, -dy))
+            if neighbor is not None:
+                graph[i].add(neighbor)
+        seen_routes = set()
+        for i, entity in enumerate(thermal):
+            if entity['name'] != 'bitermotors-orbital-datacenter-core':
+                continue
+            visited, pending = {i}, [i]
+            while pending:
+                for neighbor in graph[pending.pop()] - visited:
+                    visited.add(neighbor)
+                    pending.append(neighbor)
+            self.assertTrue(any(thermal[n]['name'] == 'bitermotors-orbital-radiator-panel'
+                                for n in visited), 'core lacks native heat route to radiator')
+            self.assertTrue(any(thermal[n]['name'] == 'bitermotors-orbital-heat-pipe'
+                                for n in visited), 'route lacks physical orbital pipe')
+            seen_routes |= visited
+        self.assertEqual(set(graph), seen_routes, 'orphan radiator or heat pipe')
+
+    def test_canonical_physical_thermal_routes_and_no_footprint_overlaps(self):
+        for count, layout in self.canonical_layouts().items():
+            with self.subTest(cores=count):
+                self.assert_footprints_and_manifest(layout)
+                self.assert_thermal_routes(layout)
+                self.assertEqual(2 * count, layout['manifest']['bitermotors-orbital-heat-pipe'])
+                self.assertEqual(count, layout['manifest']['bitermotors-orbital-radiator-panel'])
+
+    def test_thermal_checks_reject_broken_pipe_and_off_center_radiator(self):
+        layout = self.canonical_layouts()[1]
+        broken = copy.deepcopy(layout)
+        pipe = next(e for e in broken['entities'] if e.get('role') == 'heat-pipe')
+        broken['entities'].remove(pipe)
+        with self.assertRaisesRegex(AssertionError, 'lacks native heat route'):
+            self.assert_thermal_routes(broken)
+        offset = copy.deepcopy(layout)
+        radiator = next(e for e in offset['entities'] if e.get('role') == 'radiator')
+        radiator['position']['y'] += 1
+        with self.assertRaisesRegex(AssertionError, 'lacks native heat route'):
+            self.assert_thermal_routes(offset)
+
+    def test_footprint_check_rejects_noncenter_overlap(self):
+        layout = self.canonical_layouts()[1]
+        pipe = next(e for e in layout['entities'] if e.get('role') == 'heat-pipe')
+        pipe['position']['x'] -= 1
+        with self.assertRaisesRegex(AssertionError, 'overlapping entity footprints'):
+            self.assert_footprints_and_manifest(layout)
+
+    def test_thermal_bays_remain_present_during_cumulative_ramp(self):
+        previous_entities, previous_tiles = set(), set()
+        for layout in self.canonical_layouts().values():
+            entities = {(e['name'], e['position']['x'], e['position']['y'], e['direction'])
+                        for e in layout['entities']}
+            tiles = {(t['position']['x'], t['position']['y']) for t in layout['tiles']}
+            self.assertTrue(previous_entities <= entities, 'ramp removes retained hardware')
+            self.assertTrue(previous_tiles <= tiles, 'ramp removes retained foundation')
+            previous_entities, previous_tiles = entities, tiles
 
     def assert_foundation_structure(self, layout):
         tiles = {(tile["position"]["x"], tile["position"]["y"]) for tile in layout["tiles"]}
@@ -220,6 +314,7 @@ end
             with self.subTest(cores=layout["cores"]):
                 self.assert_foundation_structure(layout)
                 self.assert_belt_structure(layout)
+                self.assert_thermal_routes(layout)
 
     def test_published_blueprints_match_documented_exports(self):
         for count in (1, 4, 8, 12):
@@ -230,6 +325,7 @@ end
                 self.assertEqual(len(layout["entities"]), reviewed["blueprint_review"]["matched_entities"])
                 self.assertEqual(1, reviewed["blueprint_review"]["added_hubs"])
                 self.assert_foundation_structure(reviewed)
+                self.assert_thermal_routes(reviewed)
 
     def test_structural_checks_reject_holes_disconnections_and_dollar_dead_leg(self):
         layout = self.canonical_layouts()[1]

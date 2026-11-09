@@ -196,6 +196,10 @@ def check_rows(logrows, expected_source_sha256=None, *, catalog=None):
                     "layout entities do not match manifest")
             require(len(layout["tiles"]) >= manifest[FOUNDATION], "foundation exceeds layout tiles")
             expected = hardware if row is setup else {item: count for item, count in manifest.items() if item != STARTER}
+            if row is setup and FOUNDATION in layout["manifest"]:
+                # Pre-starter geometry can state planned tiles; actual shipped additions
+                # are measured after native starter placement and checked separately.
+                expected = {**expected, FOUNDATION: len(layout["tiles"])}
             require(counts(layout["manifest"], "layout manifest") == expected, "layout manifest mismatch")
         numeric(starter["starter_tick"], "starter tick", integer=True, positive=True)
         require(starter["starter_tick"] <= starter["tick"] and starter["starter_tick"] > setup["tick"],

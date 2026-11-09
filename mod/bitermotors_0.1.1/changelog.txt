@@ -6,6 +6,10 @@ Version: 0.1.1
     - Turns biter settlements into customers for EVs, Grid Batteries, and Bitertaxi service.
     - Adds terrestrial and orbital AI compute with physical power, cooling, and token logistics.
   Features:
+    - Orbital Heat Pipes physically connect compute cores to shared Radiators. Normal loops operate near 97 C.
+    - Overheating creates map alerts at 105 C and critical warnings at 120 C; 130 C destroys the core and committed payload.
+    - A finite core buffer gives roughly 2-3 minutes from normal full-load operation after cooling is disconnected.
+    - Core inspectors and both Progress views show thermal health; native power interruptions still retain orbital work.
     - Compact Dataset output is available from the first two orbital tiers, preserving their cash, compute and energy costs.
     - Unpack Datasets in terrestrial assemblers to supply research without earning duplicate compute progress.
     - Adds five drivable EV products, the battery-electric Cybertrain, and the remote-controlled eSpider.
@@ -18,7 +22,7 @@ Version: 0.1.1
     - Rehomes late Tesla weapon damage upgrades onto the Biter Motors AI Token economy.
   Info:
     - Requires Factorio and Space Age 2.1.20; updates hidden battery fuel items for the current prototype schema.
-    - Source and packaged smoke tests pass on 2.1.20; full campaign and release qualification remain pending.
+    - Current source and packaged smoke tests pass on 2.1.24; full campaign and release qualification remain pending.
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
   Bugfixes:

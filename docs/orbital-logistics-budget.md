@@ -1,261 +1,100 @@
 # Orbital Logistics Budget
 
-Numerical results: [measured report](orbital-logistics-measured.md),
-[modeled budget JSON](orbital-logistics-measured.json), and
-[compact native summary](orbital-platform-measurements.json).
-[Synthetic frontier rates](orbital-frontier-example.json) cover every non-Dollar
-joint frontier item and are not measured campaign production.
+unqualified for campaign pacing; not actual player time
 
-## Status And Scope
+Native observations: unqualified: native measurements missing
 
-`scripts/model_orbital_logistics.py` is a pure budgeting/report layer over the
-existing native economy catalog, research, recipe expansion and business model.
-It changes no gameplay, Lua, prototypes or existing models. **Campaign pacing is
-unqualified.** No native throughput or transit measurement is invented here.
-Synthetic test layout counts and measurements are arithmetic fixtures only.
+Measured = finite native fixture windows, not a steady plateau. Midpoint and full/drain extrapolations below are sensitivities, not bounds or actual campaign time.
 
-The chapter starts before Autonomous Logistics, after earlier EV and terrestrial
-research/factory construction. It includes the remaining five research projects
-(four without optional Hyperscale), terrestrial research Tokens, orbital compute,
-the physical Model Rack, platform hardware, staged rockets, one new silo and one
-new landing pad. Earlier vanilla technology and existing ground manufacturing and
-power infrastructure are assumed available, not costed as new construction.
+Campaign rockets/materials are modeled with conservative separate-item loads, not native mixed-load counts.
 
-The script can run without layout or measurement inputs. Without layouts,
-hardware/rocket costs are absent, material and cash totals are **partial**, and
-finite-market funding sufficiency is `null`. Without measurements, throughput
-projections and transit are explicitly unqualified. An ideal prototype clock is
-not measured/native throughput and is never actual player time.
+| Scenario | Projected Rockets | Joint blue circuits | Cash before wear | Finite funding gap |
+| --- | ---: | ---: | ---: | ---: |
+| Modest recurring; ten settlements | 62 | 11678 | 23791 | 11791 |
+| Finite non-taxi; skip Hyperscale | 62 | 8308 | 19691 | 0 |
 
-## Commands
+## Modest recurring; ten settlements
 
-```sh
-python3 scripts/model_orbital_logistics.py
-python3 scripts/model_orbital_logistics.py --layouts /tmp/layouts.json --json
-python3 scripts/model_orbital_logistics.py \
-  --layouts /tmp/layouts.json --measurements /tmp/measurements.json \
-  --frontier-rates /tmp/frontier-rates.json --json --output /tmp/budget.json
-python3 scripts/model_orbital_logistics.py \
-  --layouts /tmp/orbital-layout-1.json --layouts /tmp/orbital-layout-4.json \
-  --layouts /tmp/orbital-layout-8.json --layouts /tmp/orbital-layout-12.json \
-  --measurements /tmp/raw-case/bitermotors-platform.jsonl \
-  --measurements /tmp/dataset-case/bitermotors-platform.jsonl --json
-python3 -m unittest tests.test_orbital_logistics_model
-python3 -m unittest tests.test_orbital_platform_validation
-python3 scripts/check_orbital_platform.py /tmp/native-case/bitermotors-platform.jsonl \
-  --catalog docs/economy-prototypes.json --expected-source-sha256 '<native-source-sha256>'
-```
+Finite sales revenue ceiling (Dollars): 10,000.00
+Steady service funding-only lower bound (hours): 3.31
+Frontier known lower bound (minutes): 536.94; unrated items: 0
+Transit: unqualified: Model-return transit missing; any native uplift samples remain separate
 
-`--catalog` selects a captured economy catalog. The CLI refuses a stale catalog
-source hash. The pure `analyze(catalog, manifest=None, measurements=None,
-frontier_rates=None)` function returns freshness errors rather than reading or
-writing files itself. Its output is deterministic for the same inputs/source.
+| Recipe | Cores | Ideal min | Startup-midpoint projection min | Full-drain projection min |
+| --- | ---: | ---: | ---: | ---: |
+| orbital-ai-dataset | 1 | 33.33 | unqualified | unqualified |
+| orbital-ai-dataset-cluster | 4 | 15.00 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 8 | 37.50 | unqualified | unqualified |
+| orbital-ai-dataset-hyperscale | 12 | 125.03 | unqualified | unqualified |
 
-## Layout Interface
+Compute-only extrapolations: startup-midpoint unqualified hours; finite-drain unqualified hours. Not player time.
 
-Layout schema 1 is a cumulative, retained platform hardware manifest:
+## Finite non-taxi; skip Hyperscale
 
-```json
-{
-  "schema": 1,
-  "stages": [
-    {"cores": 1, "payload": {}},
-    {"cores": 4, "payload": {}},
-    {"cores": 8, "payload": {}},
-    {"cores": 12, "payload": {}}
-  ]
-}
-```
+Finite sales revenue ceiling (Dollars): 20,000.00
+Steady service funding-only lower bound (hours): unqualified
+Frontier known lower bound (minutes): 434.75; unrated items: 0
+Transit: unqualified: Model-return transit missing; any native uplift samples remain separate
 
-The empty mappings above are structural placeholders, not valid layouts. Replace
-each with concrete item/count totals from the layout fixture. Every stage must
-include its exact cumulative core count, one starter pack, shipped foundation,
-solar and radiators. Include all physical I/O hardware: belts, inserters and any
-other construction cargo. Counts must be nonnegative integers and cannot decrease.
-This interface describes one growing platform, not four independently started
-platforms. Native foundation supplied by the starter is not shipped foundation.
+| Recipe | Cores | Ideal min | Startup-midpoint projection min | Full-drain projection min |
+| --- | ---: | ---: | ---: | ---: |
+| orbital-ai-dataset | 1 | 33.33 | unqualified | unqualified |
+| orbital-ai-dataset-cluster | 4 | 15.00 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 8 | 37.50 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 12 | 250.03 | unqualified | unqualified |
 
-Alternatively, repeat `--layouts` for the four canonical exports written by
-`platform-control.lua`, or provide a collection accepted by
-`render_orbital_layout.read_layouts`. The CLI reuses that reader and validator,
-sorts by core count, strips fixture operating Dollars and adds the one native
-starter pack omitted from each exported `layout.manifest`. Exported foundation
-is already the actual `foundation_added`, not a guessed tile count. Geometry
-hashes exclude recipe/role metadata so raw and Dataset rehearsals of the same
-physical layout can be reconciled.
+Compute-only extrapolations: startup-midpoint unqualified hours; finite-drain unqualified hours. Not player time.
 
-Exclude fixture-injected inventories, supplied EEIs, operating Dollars and the
-final Model Rack from `payload`. The budget adds staged operating Dollars and one
-final Rack itself. Unknown cargo needs native item weights/stack sizes in the
-catalog; it is not silently assigned a mass or ignored. Concrete hardware counts
-do not alone qualify power sufficiency, actual tile occupancy or working I/O.
+## Explicit Manufacturing Assumption
 
-The layer differences adjacent manifests, projects conservative single-item rocket
-loads separately per stage, and obeys both mass and the smaller native
-rocket/ascent-pod inventory limit. It charges rocket-part ingredients once for
-every modeled uplift. Model descent is not another manufactured rocket.
+Synthetic simultaneously sustainable units/minute; zero opening material stock. Not native campaign production. Each joint frontier item is shown; blue circuits are one shared allocation, and advanced circuits are already expanded, not another frontier bottleneck.
 
-**Packing is a modeling policy, not a statement of observed native behavior.**
-The fixture may uplift mixed cargo and partial loads. Its measured rockets belong
-to an independently started platform with finite fixture operating Dollars, not
-the budget's cumulative campaign ramp. `native_observations.launch_comparisons`
-keeps actual fixture flights beside a single-item projection for exactly that
-fixture manifest. Neither replaces the campaign count in `hardware.rockets`.
-Do not sum independent 1/4/8/12 fixture launches to cost a growing platform, or
-subtract mixed-packing differences as if they proved campaign rocket savings.
+| Frontier | Assumed units/min | Recurring demand | Finite demand |
+| --- | ---: | ---: | ---: |
+| bitermotors-lithium-brine | 10,000.00 | 218,000.00 | 325,500.00 |
+| bitermotors-nickel-ore | 1,000.00 | 640.00 | 640.00 |
+| calcite | 1,000.00 | 8,720.00 | 13,020.00 |
+| coal | 1,000.00 | 59,724.00 | 44,404.00 |
+| copper-plate | 1,000.00 | 536,943.00 | 434,747.00 |
+| electric-engine-unit | 100.00 | 3,050.00 | 1,904.00 |
+| iron-ore | 1,000.00 | 124.00 | 122.00 |
+| iron-plate | 1,000.00 | 292,114.00 | 232,699.00 |
+| lubricant | 1,000.00 | 2,400.00 | 2,400.00 |
+| petroleum-gas | 20,000.00 | 1,237,120.00 | 915,720.00 |
+| processing-unit | 30.00 | 11,678.00 | 8,308.00 |
+| rocket-fuel | 60.00 | 3,100.00 | 3,100.00 |
+| steel-plate | 1,000.00 | 164,921.00 | 156,171.00 |
+| stone | 1,000.00 | 55,390.00 | 56,150.00 |
+| stone-brick | 1,000.00 | 23,120.00 | 16,450.00 |
+| sulfuric-acid | 10,000.00 | 421,960.00 | 636,520.00 |
+| water | 20,000.00 | 63,040.00 | 47,840.00 |
 
-Rocket-part material costs and silo timing in the budget use its projected
-single-item count throughout. The silo part-crafting lower bound is conditional
-on that policy, not a universal lower bound over possible cargo packing. A
-serialized transit projection likewise uses that modeled count and an explicit
-per-flight delay assumption; real fixture delays stay separately observed.
+| Scenario / Rate multiplier | Shared material lower bound min (hours) | Top bottlenecks: demand / rate |
+| --- | ---: | --- |
+| Modest recurring; ten settlements / 0.5x | 1,073.89 (17.90) | copper-plate: 536943 / 500; processing-unit: 11678 / 15; iron-plate: 292114 / 500 |
+| Modest recurring; ten settlements / 1x | 536.94 (8.95) | copper-plate: 536943 / 1000; processing-unit: 11678 / 30; iron-plate: 292114 / 1000 |
+| Modest recurring; ten settlements / 2x | 268.47 (4.47) | copper-plate: 536943 / 2000; processing-unit: 11678 / 60; iron-plate: 292114 / 2000 |
+| Finite non-taxi; skip Hyperscale / 0.5x | 869.49 (14.49) | copper-plate: 434747 / 500; processing-unit: 8308 / 15; iron-plate: 232699 / 500 |
+| Finite non-taxi; skip Hyperscale / 1x | 434.75 (7.25) | copper-plate: 434747 / 1000; processing-unit: 8308 / 30; iron-plate: 232699 / 1000 |
+| Finite non-taxi; skip Hyperscale / 2x | 217.37 (3.62) | copper-plate: 434747 / 2000; processing-unit: 8308 / 60; iron-plate: 232699 / 2000 |
 
-Both cases cost the complete 12-core hardware manifest. The non-taxi case uses
-Grid-scale/8 from 10M to 100M and Grid-scale/12 afterward; this splits the same
-required native work and Dollars, not extra research or a free fourth recipe.
-Its unchanged old minute business simulation remains an ideal 8-core sensitivity
-and is not used for the physical compute projection. Early raw-equivalent bands
-are converted to native compact Dataset batches; their time, cash and equivalent
-work are preserved, while batch granularity and physical shipping differ.
+## Verdict
 
-## Measurement Interface
+The 4-6 active-hour goal is not qualified. The finite-window compute sensitivities exclude construction, manufacturing and cash/cargo scheduling; the synthetic 1x material profile can exceed six simulated hours on its own. Startup-to-midpoint is less pessimistic but not a sustained measurement. Do not add max-parallel material bounds to cash or compute clocks as proven wall time; there is no free-grind or actual-player-time claim.
 
-Schema 1 accepts normalized native fixture observations:
+Remaining bottleneck: shared manufacturing and financing/construction logistics, with finite Dollar distribution/tail uncertainty. These measurements do not establish an intrinsically slow native core cycle or prove cargo is the sole overhead.
 
-```json
-{
-  "schema": 1,
-  "source_sha256": "catalog source_sha256",
-  "layouts_sha256": "fingerprint(manifest)",
-  "evidence": "path or identifier of native fixture report",
-  "runs": [],
-  "transit": null
-}
-```
+Modest business: ten settlements, 2,000 population, 500 finite battery buyers, one office/depot and 120 fleet; taxi sales gate assumed met. Finite alternative: 1,000 battery buyers, no taxi, no Hyperscale. Opening wallet 2,000 Dollars each; all remaining sales stock is charged. Finite revenue is a ceiling, not immediate cash. No funding gap does not prove finishability. The finite route uses Grid-scale/8 from 10M to 100M, then Grid-scale/12 through the gate, with no extra research or compute Dollars. The unchanged raw-equivalent minute business simulation remains at 8 cores in that case and is not used for these compute projections or compact batch/ship scheduling.
 
-Each `runs` entry contains `cores` (1/4/8/12), `recipe` (exact native orbital
-recipe name), `elapsed_ticks` (positive advancing game ticks), and
-`completed_batches` (nonnegative native recipe completions, not output stack
-counts). `fingerprint(manifest)` hashes sorted compact JSON, including metadata.
-Do not hash pretty-printed file bytes. The source hash must match the catalog and
-the layout hash must match the exact input manifest. Duplicate recipe/layout
-samples and impossible native batch rates are rejected. All measurements in unit
-tests are synthetic; passing tests does not produce qualification evidence.
+Native spare prebuilt rocket parts are reported in JSON and not charged as minimum launch ingredients. Independent fresh-platform mixed flights do not replace the modeled staged single-item campaign count.
 
-Rates use 60 game ticks per simulated second, not benchmark wall time. Each sample
-applies only to its exact recipe/layout pair; missing pairs stay unqualified.
-A zero-completion sample does not fall back to ideal throughput. A projected band
-duration uses native sample rate but remains a **modeled projection**, not measured
-end-to-end chapter duration. A source/layout match is provenance checking, not
-independent verification that a fixture ran correctly.
+Scope: Autonomous Logistics through activation; earlier research/factory assumed built.
+Silo, landing pad and business capacity are charged as new; no opening stock credit.
+Business uses finite buyers, native adoption/referral and shared-customer fleet caps.
+Recurring scenario assumes the 5,000 consumer-sales taxi gate already met.
+All frontier demand shares one production allocation; blue circuits counted once.
+Campaign rockets use modeled single-item packing; native mixed-load fixture flights do not replace them.
+No lab capacity, build schedule, wear-material replacement, power infrastructure or movement time modeled.
+Independent lower bounds are not additive and are not a finish-time forecast.
 
-Optional `transit` contains `uplift_seconds_per_rocket` and
-`model_return_seconds`, both nonnegative simulated seconds measured separately
-from rocket-part assembly. The report multiplies uplift delay by rocket count
-under an explicitly serialized, identical-flight assumption. It does not invent
-an additional ascent delay when native delivery occurs in the same tick, nor
-schedule rocket manufacturing/flight overlaps. Omit `transit` when unmeasured.
-
-The CLI also accepts repeated `--measurements` paths to complete native
-`bitermotors-platform.jsonl` reports. It reuses
-`check_orbital_platform.read_report` and `validation_support.check_report` to reject
-failed, truncated or incomplete reports and reconcile all eight lifecycle rows.
-The CLI supplies the native catalog for independent cargo mass/stack-slot
-recomputation. It selects exactly one
-`measured_passed` row per report, checks the concrete manifest and exported
-geometry (when available), and maps `measured_ticks` and `completions` directly.
-The sample interval is `tick - operation_tick`, including I/O drain and fixture
-checkpoint/reload simulation ticks, not just first-to-last completion time.
-
-Full measured rows remain in the in-memory `native_observations.fixture_rows`, including
-native production, physical returns, per-core counts, shipments, built entities,
-solar, cooling/power samples and explicit fixture limits. Native fixture
-assertions and the parent validator remain responsible for mechanical
-qualification; the budget adapter does not replace engine execution. Serialized
-reports omit raw fixture snapshots. `--summary-json` writes small native counters,
-source/geometry identities, and first/last completion and midpoint observations.
-Full-window/drain and startup-to-midpoint extrapolations are both finite-window
-sensitivities, not steady plateaus, confidence intervals or actual campaign time.
-
-`uplift_observations` preserves each shipment's actual delivery delay and the
-reported rocket/part counts. Same-tick delivery remains zero. These samples do
-not manufacture a Model-return delay or automatically become an average
-serialized-flight assumption. An explicit normalized `transit` remains required
-for the full transit projection described above.
-
-The raw-Token `raw_baseline` case deliberately has less returned output than
-produced output. Its rates and physical backlog are preserved, but it is **not**
-used for practical compute-duration projections. Dataset samples apply only to
-their exact recipe/core pair; Hyperscale Dataset throughput is not silently
-relabelled as Cluster Token throughput.
-
-If a fixture does not record a mod source hash, its reports are accepted
-as source-unbound observations and explicitly marked **unqualified source
-provenance**, rather than assigned the current catalog hash as if it were
-measured. Source-unbound samples do not produce native-rate duration projections.
-If the fixture records `row.source_sha256` on its measured row, that hash is
-preserved and must match the catalog. Hashes recorded elsewhere in the same
-report must agree, and multiple native reports must agree on source provenance.
-Native output amounts, Dollar ingredients and cycle ticks are checked against
-the catalog when the fixture supplies its batch contract. Native observations
-may be supplied while campaign pacing remains unqualified.
-
-New compact orbital recipe variants can be observed when present in the catalog
-with the native orbital crafting category and Token/Dataset output. They retain
-their exact recipe identity; they are not automatically substituted into the
-campaign plan or used to qualify a different recipe's throughput. Unknown or
-non-orbital variants are rejected. A zero-completion sample stays unqualified.
-
-## Joint Material And Cash Accounting
-
-The budget expands hardware, launch ingredients, all selected research science,
-finite battery-sales stock, sales offices, fleet and depots **together** through
-the existing `supply_bill` graph. Native clean chemistry routes and co-product
-crediting are reused. Science is not treated as free merely because the old
-business model accepted a science-sets/minute input.
-
-`joint_material_bill.supplies` is the one manufacturing frontier. Processing units
-(blue circuits) remain a frontier input, so hardware, rockets, science and business
-stock all draw from one shared blue-circuit allocation. Do not add the old model's
-hardware bill or science bill to this joint bill again. Material Dollars plus
-research/compute Dollars form `total_before_recurring_wear`; fleet capital from
-the old cash simulation is not charged a second time.
-
-`--frontier-rates` accepts an item-to-sustained-units/minute JSON mapping. These
-are explicit **assumptions**, not native throughput evidence. Demand/rate yields
-per-item lower bounds; the maximum known bound identifies a frontier bottleneck.
-Unrated items remain listed. Zero, negative and nonfinite rates are rejected.
-Rates must describe simultaneously sustainable outputs, not mutually exclusive
-peak rates sharing upstream inputs. Even complete frontier rates do not qualify
-assembly, build, lab or cargo schedules.
-
-## Business Comparison And Limits
-
-- Modest recurring: ten settlements, 2,000 population, 500 remaining battery
-  buyers, one office, one depot, 120 allocated fleet, 2,000 opening Dollars.
-  The native 5,000 consumer-sales taxi gate is explicitly assumed already met;
-  ten settlements alone do not establish eligibility.
-- Finite non-taxi: ten settlements, 2,000 population, 1,000 remaining battery
-  buyers, one office, no depot/fleet, 2,000 opening Dollars; skips Hyperscale but
-  retains required Grid-scale research. Buyers and revenue never replenish.
-- Both reuse native adoption/referral rules and current fleet/customer capacity
-  policy. The business simulation remains an ideal-input sensitivity: available
-  hardware and its science rate are not qualified factory capacities.
-- The joint bill conservatively buys all remaining battery-sales inventory and
-  the specified business capacity. No opening hardware/material inventory is
-  credited. Finite revenue is a ceiling, not immediate available cash.
-- `finite_funding_gap` compares that ceiling and opening wallet with the bill.
-  A gap proves those finite sales cannot fund it under the assumptions; no gap
-  does not prove timely financing or successful construction.
-- `steady_service_hours_lower_bound` divides the gap by the existing native-policy
-  net taxi rate. It assumes immediate full-fleet service and does not replace the
-  separate ideal-input minute simulation, which models incremental fleet startup.
-- Native business wear is amortized in Dollars. Replacement fleet manufacturing
-  materials, infrastructure power, lab capacity, construction, travel, optional
-  purchases, terrestrial failed runs and uncertain cargo behavior are not included.
-  Do not call the result a complete resource or elapsed-time forecast.
-
-Independent manufacturing, compute, cash, silo and transit clocks must not simply
-be added: real overlap and prerequisite dependencies need a separate schedule.
-Neither the roadmap's 4-6 active-hour goal nor an actual player's time is qualified
-by this report. No gameplay tuning is performed or recommended from missing data.
+Native catalog source SHA-256: `4c1a3bf4fc8fe9161bf03b147fd804643793c2c9be72dce48455043986d57ceb`.
