@@ -11,10 +11,11 @@ if [[ ${BITERMOTORS_SEED+x} ]]; then
   seed_settings="$(python3 "$repo_root/scripts/fresh_world_support.py" "$BITERMOTORS_SEED")"
 fi
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/bitermotors-battery-resources.XXXXXX")"
-seed_args=()
+# Keep the array nonempty for macOS Bash 3.2 with nounset enabled.
+create_args=(--create)
 if [[ -n "$seed_settings" ]]; then
   printf '%s\n' "$seed_settings" > "$tmp/map-gen-settings.json"
-  seed_args=(--map-gen-settings "$tmp/map-gen-settings.json")
+  create_args=(--map-gen-settings "$tmp/map-gen-settings.json" --create)
 fi
 mods="$tmp/mods"
 helper="$mods/bitermotors_battery_resource_test_0.1.1"
@@ -85,7 +86,7 @@ script.on_init(function()
 end)
 EOF
 
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" "${seed_args[@]}" --create "$save" >"$tmp/create.log" 2>&1
+"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" "${create_args[@]}" "$save" >"$tmp/create.log" 2>&1
 
 bitermotors_check_log "$tmp/create.log" --expect-marker Goodbye
 

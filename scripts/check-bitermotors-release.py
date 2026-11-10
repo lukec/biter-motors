@@ -4,15 +4,18 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import runpy
+import stat
 import zipfile
 from pathlib import Path
 
 
 FORBIDDEN_NAMESPACES = ("factoryx", "frontier")
 TEXT_SUFFIXES = {".cfg", ".html", ".json", ".lua", ".md", ".sh", ".txt"}
-REQUIRED_ARTIFACTS = {"LICENSE", "ASSET-LICENSE.md", "ATTRIBUTION.md", "CHANGELOG.md"}
+REQUIRED_ARTIFACTS = {"LICENSE", "ASSET-LICENSE.md", "ATTRIBUTION.md", "CHANGELOG.md",
+                      "MEDIA-PROVENANCE.md", "PACKAGE-CONTENTS.json"}
 EXPECTED_HOMEPAGE = "https://github.com/lukec/biter-motors"
 
 
@@ -27,6 +30,21 @@ def inspect_archive(archive_path: Path) -> None:
         names = archive.namelist()
         if not names:
             fail("archive is empty")
+        if len(names) != len(set(names)):
+            fail("archive contains duplicate entries")
+        package = runpy.run_path(str(Path(__file__).with_name("package-bitermotors.py")))
+        for entry in archive.infolist():
+            name = entry.filename
+            if ("\\" in name or name.startswith("/") or
+                    any(part in {"", ".", ".."} for part in name.split("/"))):
+                fail(f"unsafe archive path: {name}")
+            mode = entry.external_attr >> 16
+            if stat.S_IFMT(mode) not in {0, stat.S_IFREG}:
+                fail(f"non-regular archive entry: {name}")
+            relative = name.split("/", 1)[-1]
+            if relative not in REQUIRED_ARTIFACTS and not package["APPROVED_PATHS"].fullmatch(relative):
+                fail(f"unapproved archive path: {name}")
+            package["validate_content"](name, archive.read(entry))
         roots = {name.split("/", 1)[0] for name in names}
         if len(roots) != 1:
             fail(f"archive must have one root directory, found {sorted(roots)}")
@@ -51,6 +69,11 @@ def inspect_archive(archive_path: Path) -> None:
         for artifact in REQUIRED_ARTIFACTS:
             if f"{root}/{artifact}" not in names:
                 fail(f"archive is missing {artifact}")
+        inventory = json.loads(archive.read(f"{root}/PACKAGE-CONTENTS.json"))
+        actual = {name.split("/", 1)[1]: hashlib.sha256(archive.read(name)).hexdigest()
+                  for name in names if name != f"{root}/PACKAGE-CONTENTS.json"}
+        if inventory != actual:
+            fail("archive content checksums do not match PACKAGE-CONTENTS.json")
         changelog_name = f"{root}/changelog.txt"
         if changelog_name not in names:
             fail("archive is missing Factorio changelog.txt")

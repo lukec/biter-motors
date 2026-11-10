@@ -482,6 +482,13 @@ engine version, real tick span, workload progress, and trustworthy percentiles.
 
 ### R14: Packaging, Versioning, And Media Rights Need Closure [P2]
 
+**Resolved 2026-11-10:** approved tracked packaging, archive integrity/path checks,
+explicit package redistribution permission, recorded owner confirmation and
+reproducible replacement audio are implemented. The exact ZIP passed native
+smoke, fresh-world/resource and ending save/reload tests. See the
+[packaging/provenance gate](packaging-provenance-review.md). Evidence below is
+the original finding, not the current implementation.
+
 **Evidence:** `scripts/package-bitermotors.py:47` packages filesystem contents
 using a short exclusion list, not an approved tracked-file manifest. A local
 ignored credential, log, save, or symlink under the mod directory could ship.
@@ -845,7 +852,8 @@ supported population architecture or a prerequisite for 60 UPS.
 
 ### Phase 6: Release-Candidate Rehearsal
 
-- [ ] Close package/provenance/version issues from R14.
+- [x] Close package/provenance/version issues from R14; see the 2026-11-10
+  [exact-archive review](packaging-provenance-review.md).
 - [ ] Make the candidate from a clean commit; retain archive SHA-256 and manifest.
 - [ ] Clean-install that exact archive with only declared dependencies; create,
       save, reload, and join both single-player and multiplayer worlds.

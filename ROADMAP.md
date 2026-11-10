@@ -176,10 +176,13 @@ numerical balance changes should be necessary during Luke's campaign.
 
 #### Phase 5: Qualify Reliability And Scale On The Exact Archive
 
-- Close R14's packaging gap first: use approved tracked inputs, reject secrets,
-  saves/runtime files and external symlinks, derive versions/paths from the
-  manifest, and finish shipped image/audio provenance and redistribution notes.
-- Build a deterministic candidate ZIP and record its hash. Run broad smoke and
+- [x] Close R14's packaging/provenance gap: approved tracked inputs, rejected
+  unexpected files/credential patterns/symlinks, manifest-derived versions,
+  explicit unmodified-package permission, owner-confirmed image origins and
+  reproducibly synthesized audio. The [packaging review](docs/packaging-provenance-review.md)
+  records the exact candidate hash, deterministic clean-export build and native
+  smoke, fresh-world/resource and ending save/reload results (2026-11-10).
+- Carry that deterministic candidate ZIP forward. Run broad smoke and
   relevant native regressions against source and that exact archive, including
   the new ending, new-world start, persistence and two-force behavior.
 - Run the existing **four simulated-hour terrestrial** and **one simulated-hour
@@ -249,8 +252,8 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 5's exact-archive packaging/provenance
-gate and candidate soaks, then multiplayer and clean-install qualification.
+**Immediate next implementation:** Phase 5's exact-archive reliability soaks and
+scale benchmarks, then multiplayer and clean-install qualification.
 The ending, epilogue, functional presentation and practical
 pacing are implemented. No original player save or live process was changed;
 the development mod symlink loads this source on a later restart, not hot-reload.

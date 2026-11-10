@@ -25,7 +25,7 @@ jobs:
           package_root="$(basename "$archive" .zip)"
           python scripts/check-bitermotors-release.py \
             "$archive" \
-            --source "mod/$package_root"
+            --source "mod/$package_root" --require-source-match
       - name: Check whitespace
         run: |
           empty_tree="$(git hash-object -t tree /dev/null)"

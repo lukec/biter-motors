@@ -224,9 +224,16 @@ python3 scripts/check-bitermotors-release.py \
 ```
 
 The archive contains one Factorio-compatible root directory,
-`bitermotors_0.1.1/`, plus the source and asset licensing documents. The
-packager excludes development and runtime output. GitHub Actions runs the
-same release-contract checks without requiring a Factorio binary.
+`bitermotors_0.1.1/`, including licensing, a self-contained media provenance
+record, and `PACKAGE-CONTENTS.json` with SHA-256 hashes of every other entry.
+The packager requires Git-tracked, approved runtime paths and rejects unexpected
+files (including ignored files), credentials matching its checks, and symlinks.
+Stage intentionally added release inputs before building; do not put local
+output or secrets under the mod directory. The manifest supplies the version
+and source path. Two builds with the same Python/zlib toolchain produce identical
+bytes; the inventory is an integrity check, not a signature or an authorship proof.
+GitHub Actions runs these static release-contract checks without a licensed
+Factorio binary. Native engine qualification is a separate local release gate.
 
 ## Project Notes
 

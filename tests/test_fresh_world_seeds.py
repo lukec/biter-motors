@@ -49,6 +49,24 @@ class FreshWorldSeeds(unittest.TestCase):
             self.assertIn("decimal uint32", result.stderr)
             self.assertNotIn("does-not-exist", result.stderr)
 
+    def test_default_and_seeded_args_reach_engine_under_system_bash_nounset(self):
+        for script in ("fresh-start", "battery-resources"):
+            for seed in (None, "1092026"):
+                env = {**os.environ, "FACTORIO_BINARY": "/usr/bin/true"}
+                env.pop("BITERMOTORS_MOD_ARCHIVE", None)
+                env.pop("BITERMOTORS_SEED", None)
+                if seed is not None:
+                    env["BITERMOTORS_SEED"] = seed
+                result = subprocess.run(
+                    ["/bin/bash", str(ROOT / f"scripts/validate-bitermotors-{script}.sh")],
+                    env=env, capture_output=True, text=True)
+                with self.subTest(script=script, seed=seed):
+                    # true produces no engine log: reaching that validation proves
+                    # the command expanded, without needing a licensed game here.
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("empty engine log", result.stderr)
+                    self.assertNotIn("unbound variable", result.stderr)
+
     def test_complete_report_passes(self):
         SUPPORT.check_resources(valid_report(), 1092026)
 

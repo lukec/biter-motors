@@ -5,6 +5,11 @@
 This is the first Biter Motors alpha release candidate line after the private
 development namespace migration.
 
+- Release packaging now accepts only approved tracked runtime files, rejects
+  symlinks, unexpected files and credential patterns, and includes per-file
+  checksums and media provenance. Complete unmodified package redistribution
+  is explicitly permitted. Replaced undocumented EV sound files with original,
+  reproducibly synthesized motor and reverse-warning audio.
 - Integrated physical orbital heat transport into the main mod. Clusters connect
   to finite Radiators through Orbital Heat Pipes, with shared networks, a roughly
   97 C operating point and a 2-3 minute nominal disconnection buffer. Warning at
