@@ -105,11 +105,11 @@ class EconomySimulationTests(unittest.TestCase):
         plan = economy.campaign_plan(self.catalog)
         tokens = sum(self.catalog.research(name, economy.TOKEN) for name in (
             "bitermotors-autonomous-logistics", "bitermotors-orbital-compute"))
-        self.assertEqual(2250, tokens)
+        self.assertEqual(1750, tokens)
         self.assertEqual(tokens, plan["terrestrial_research_tokens"])
-        self.assertEqual(113, plan["terrestrial_batches"])
-        self.assertEqual(2260, plan["terrestrial_operating_dollars"])
-        self.assertEqual(56.5, plan["terrestrial_active_minutes"])
+        self.assertEqual(88, plan["terrestrial_batches"])
+        self.assertEqual(1760, plan["terrestrial_operating_dollars"])
+        self.assertEqual(44, plan["terrestrial_active_minutes"])
         catalog = self.altered()
         catalog.data["technologies"]["bitermotors-orbital-compute"]["unit"]["count"] += 100
         changed = economy.campaign_plan(catalog)
@@ -130,7 +130,7 @@ class EconomySimulationTests(unittest.TestCase):
     def test_physical_payload_accounts_for_tokens_spent_by_labs(self):
         plan = economy.campaign_plan(self.catalog)
         self.assertEqual([100, 180, 9901], [band["batches"] for band in plan["bands"]])
-        self.assertEqual(2500, plan["orbital_research_tokens"])
+        self.assertEqual(1500, plan["orbital_research_tokens"])
         self.assertEqual(199, plan["early_datasets_packaged"])
         self.assertEqual(20001, plan["physical_datasets"] + plan["early_datasets_packaged"])
         self.assertGreaterEqual(plan["orbital_generated_equivalents"], self.catalog.runtime["agi_token_gate"])
@@ -235,8 +235,8 @@ class EconomySimulationTests(unittest.TestCase):
     def test_failed_compute_adds_ordinary_cost_not_final_capital(self):
         base = economy.campaign_plan(self.catalog)
         retry = economy.campaign_plan(self.catalog, failed_fraction=0.1)
-        self.assertEqual(260, retry["ordinary_ai_retry_dollars"])
-        self.assertEqual(260, retry["terrestrial_ai_retry_dollars"])
+        self.assertEqual(200, retry["ordinary_ai_retry_dollars"])
+        self.assertEqual(200, retry["terrestrial_ai_retry_dollars"])
         self.assertEqual(0, retry["orbital_ai_retry_dollars"])
         self.assertNotIn("final_capital_dollars", retry)
         self.assertEqual(base["direct_dollars"] + retry["ordinary_ai_retry_dollars"], retry["direct_dollars"])

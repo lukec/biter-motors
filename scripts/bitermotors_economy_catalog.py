@@ -102,12 +102,12 @@ def extract(raw: dict, runtime: dict) -> dict:
     }
     technologies = {
         name: {key: value for key, value in technology.items()
-               if key in ("unit", "prerequisites", "effects")}
+               if key in ("unit", "prerequisites", "effects", "research_trigger")}
         for name, technology in raw["technology"].items()
         if name in REQUIRED_TECHNOLOGIES + OPTIONAL_TECHNOLOGIES or name in (
             "bitermotors-high-density-solar-productivity", "bitermotors-grid-battery-productivity",
             "bitermotors-megatruck-engineering", "bitermotors-battery-material-recovery",
-            "bitermotors-cybertrain-logistics", "foundry", "logistic-system")
+            "bitermotors-cybertrain-logistics", "foundry", "logistic-system", "rocket-silo", "space-platform")
     }
     entities = {}
     for kind in ENTITY_TYPES:
@@ -143,6 +143,7 @@ def extract(raw: dict, runtime: dict) -> dict:
                                    raw["cargo-pod"]["cargo-pod"]["inventory_size"]),
             "rocket_inventory_slots": raw["rocket-silo-rocket"]["rocket-silo-rocket"]["inventory_size"],
             "cargo_inventory_slots": raw["cargo-pod"]["cargo-pod"]["inventory_size"],
+            "starter_initial_items": raw["space-platform-starter-pack"]["space-platform-starter-pack"].get("initial_items", []),
             "item_weights_grams": runtime["launch_item_weights"],
         },
         "assumptions": {"solar_average_fraction": 0.7, "storage_seconds_per_peak_watt": 70,

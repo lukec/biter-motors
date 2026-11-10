@@ -2692,7 +2692,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-capital-scaling": 600,
             "bitermotors-terrestrial-ai": 750,
             "bitermotors-autonomous-logistics": 750,
-            "bitermotors-orbital-compute": 1500,
+            "bitermotors-orbital-compute": 1000,
         }
         technology_offsets = sorted(
             (data.index(f'tech("{name}"'), name, count)

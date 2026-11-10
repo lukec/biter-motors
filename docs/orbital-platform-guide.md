@@ -4,8 +4,10 @@ Development reference with endgame spoilers. The [layout index](orbital-layout-p
 shows coordinate schematics, not gameplay screenshots. The blueprints are native
 Factorio 2.1.24 exports, rebuilt for physical cooling; no entity coordinates
 were reconstructed into a blueprint. The current 1/4/8/12 native rehearsals used
-the Hyperscale compact recipe to qualify logistics, not the full research ladder
-or campaign pacing. Earlier quota-era measurements remain historical evidence.
+the Hyperscale compact recipe to qualify each layout. The separate
+[full normal-logistics rehearsal](endgame-pacing.md) qualifies the research ladder,
+staged construction and 20,000-Dataset Model input. It is not a natural campaign.
+Earlier quota-era measurements remain historical evidence.
 
 ## Start Small, Extend The Same Platform
 
@@ -27,7 +29,7 @@ At Nauvis's native 300% orbital sunlight, those wings generate 300 MW against
 accumulator, supplied power interface, solar multiplier, or cooling bypass.
 
 Keep the input belt filtered to **Dollars only**. Finished Datasets must never
-recirculate onto that belt. Input arms use a hand size of one; output arms use
+recirculate onto that belt during compute. Input arms use a hand size of one; output arms use
 native bulk capacity. No modules or higher-quality equipment are necessary.
 Bulk inserters and express belts are ordinary terrestrial technology; the
 fixture supplies research and is not a technology-prerequisite qualification.
@@ -48,6 +50,14 @@ The blueprint hub contains finite **test** requests for its construction bill
 and operating Dollars. Review those requests before building, and set a sensible
 ongoing Dollar buffer. Requests copied from a larger blueprint are cumulative;
 they are not a second bill for equipment already built.
+
+Do not maintain an exact-target refill after every coin. The full rehearsal
+used stable lower/upper windows of 50-200 Dollars initially, 125-500 at Cluster,
+then 250-1,000 at Grid/Hyperscale, with minimum deliveries 100/250/500/500.
+Keep the ground research budget on Nauvis. Construct the next cluster stage
+while its scale research runs; do not wait to build all twelve before starting
+the first core. The native starter also supplies ten loose foundations besides
+its 100 placed tiles; the build/launch checks account for those explicitly.
 
 For normal play, **keep most Datasets in orbit**: turn off the hub's automatic
 trash of unrequested items and do not request all Datasets at the ground pad.
@@ -76,17 +86,29 @@ efficiency upgrade. Raw Token recipes remain available for smaller requirements.
 ## Assemble And Return The Model
 
 After the earned-compute gate and Grid-scale research, retain 20,000 Datasets
-and ship one Datacenter Rack. Switch one core to Model assembly. Change the hub
-input filter and **that core's** input filter to Datasets and the Rack; stop
-feeding Dollars to it. Increase that input arm's hand size for the large Dataset
-load. Moving 20,000 physical items is not part of the quoted one-minute craft.
+and ship one Datacenter Rack. Stop Dollar imports and input, let committed
+compute finish, and drain the operating belt back into the hub. Switch one
+existing core to Model assembly. Feed Datasets and the Rack through full-hand
+bulk inserters, not the one-Dollar operating hand. Moving 20,000 physical items
+is not part of the quoted one-minute craft.
+
+The native-exported [Model assembly overlay](../blueprints/orbital-model-assembly.txt)
+adds a second hub feeder, a second first-core input, and a far-end return loop.
+Apply it only when ready for assembly; it selects that first core's Model recipe
+and changes its feed filters. Its input bus is now payload-only, not a compute
+Dollar bus. Allow Datasets, the Rack and residual Dollars through the return
+loop and hub intake: items missed while an arm turns must not become stranded
+at the far end. The full native transfer took about **21 minutes**, not an hour
+and not an instant inventory move. The [coordinate reference](orbital-assembly-layout.png)
+shows the additional I/O without inventing in-game coordinates.
 
 Stop the other cores when the archive is sufficient rather than burning surplus
 capital. The output belt already accepts the Model. Request that Model at the
 Nauvis Cargo Landing Pad, let the native pod deliver it, then activate it in an
 existing terrestrial datacenter. The model-return/activation chain has separate
-[native ending qualification](endgame-validation.md). This layout slice does
-not additionally qualify the large assembly-input transfer described above.
+[native ending qualification](endgame-validation.md). The
+[practical pacing rehearsal](endgame-pacing.md) additionally qualifies the whole
+large input transfer, separate-process mid-load reload and continued freeplay.
 
 ## Evidence Limits
 

@@ -11,7 +11,7 @@
       "role": "hub-input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -3.5,
         "y": 5.5
@@ -20,7 +20,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -3.5,
         "y": 6.5
@@ -29,7 +29,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -4.5,
         "y": 6.5
@@ -38,7 +38,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -5.5,
         "y": 6.5
@@ -47,7 +47,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -6.5,
         "y": 6.5
@@ -56,7 +56,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -6.5,
         "y": 7.5
@@ -65,7 +65,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -5.5,
         "y": 7.5
@@ -74,7 +74,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -4.5,
         "y": 7.5
@@ -413,13 +413,6 @@
     {
       "name": "space-platform-foundation",
       "position": {
-        "x": -5,
-        "y": 2
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
         "x": -9,
         "y": 3
       }
@@ -448,13 +441,6 @@
     {
       "name": "space-platform-foundation",
       "position": {
-        "x": -5,
-        "y": 3
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
         "x": -9,
         "y": 4
       }
@@ -477,13 +463,6 @@
       "name": "space-platform-foundation",
       "position": {
         "x": -6,
-        "y": 4
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -5,
         "y": 4
       }
     },
@@ -1295,8 +1274,7 @@
   ],
   "manifest": {
     "bulk-inserter": 4,
-    "transport-belt": 8,
-    "express-transport-belt": 21,
+    "express-transport-belt": 29,
     "bitermotors-orbital-datacenter-core": 1,
     "bitermotors-high-density-space-solar-panel": 5,
     "bitermotors-orbital-heat-pipe": 2,

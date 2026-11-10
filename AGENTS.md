@@ -74,6 +74,15 @@ changes that policy.
   a real logistics stall behind a healthy recipe-completion counter.
 - Report full finite-drain and startup/midpoint rates separately. A long belt's
   cash buffer and uneven end-of-batch drain are not sustained compute throughput.
+- Rehearse large final inputs with real belts and full-hand inserters, not Lua
+  inventory transfers. Account for items that pass the selected pickup and for
+  finite research/chest buffers; a lifetime output counter is not a loaded batch.
+- Sample campaign stock and production from a disposable copy before balancing.
+  Gross output is not spare capacity, and wallet growth is not gross profit.
+  Do not count the same stocked intermediate and its ingredients twice.
+- Do not assume data-stage helpers exist at runtime. In particular, runtime
+  code must not depend on an incidental `table.deepcopy` global; execute quality
+  and researched-upgrade branches in regression tests, not only normal defaults.
 - Orbital work banks native progress and committed inputs; never reset/reinsert
   them to emulate a resume. Terrestrial ordinary compute still scraps failures.
 - Solar-panel prototypes require strictly positive production on 2.1.20. A test

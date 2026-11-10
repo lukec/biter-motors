@@ -8,7 +8,7 @@ function M.make(count, recipe)
   local function tile_key(x, y) return string.format("%d:%d", x, y) end
   local function tile(x, y)
     -- The starter already supplies this solid region; manifest only additions.
-    if x >= -4 and x <= 4 and y >= -4 and y <= 4 then return end
+    if x >= -5 and x <= 4 and y >= -5 and y <= 4 then return end
     local key = tile_key(x, y)
     if not foundation[key] then
       foundation[key] = true
@@ -32,13 +32,13 @@ function M.make(count, recipe)
   -- Coordinates use native 2.1 cardinal directions: N=0, E=4, S=8, W=12.
   local function belt(x, y, direction) entity("express-transport-belt", x, y, direction, "output") end
   entity("bulk-inserter", -3.5, 4.5, 0, "hub-input")
-  entity("transport-belt", -3.5, 5.5, 8, "input")
-  entity("transport-belt", -3.5, 6.5, 12, "input")
-  for x = -4.5, -5.5, -1 do entity("transport-belt", x, 6.5, 12, "input") end
-  entity("transport-belt", -6.5, 6.5, 8, "input")
+  entity("express-transport-belt", -3.5, 5.5, 8, "input")
+  entity("express-transport-belt", -3.5, 6.5, 12, "input")
+  for x = -4.5, -5.5, -1 do entity("express-transport-belt", x, 6.5, 12, "input") end
+  entity("express-transport-belt", -6.5, 6.5, 8, "input")
   local stride = 9
   local last = -3.5 + (count - 1) * stride
-  for x = -6.5, last - 1, 1 do entity("transport-belt", x, 7.5, 4, "input") end
+  for x = -6.5, last - 1, 1 do entity("express-transport-belt", x, 7.5, 4, "input") end
   for x = last + 1, -7.5, -1 do belt(x, 13.5, 12) end
   belt(-8.5, 13.5, 0)
   for y = 12.5, 3.5, -1 do belt(-8.5, y, 0) end
@@ -61,7 +61,7 @@ function M.make(count, recipe)
   -- union (including the solid starter hub), retaining open solar-column gaps.
   local solid = {}
   for key in pairs(foundation) do solid[key] = true end
-  for x = -4, 4 do for y = -4, 4 do solid[tile_key(x, y)] = true end end
+  for x = -5, 4 do for y = -5, 4 do solid[tile_key(x, y)] = true end end
   local outside, queue, cursor = {}, {{-11, -6}}, 1
   outside["-11:-6"] = true
   while cursor <= #queue do

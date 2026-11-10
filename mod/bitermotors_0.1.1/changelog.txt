@@ -26,6 +26,9 @@ Version: 0.1.1
     - Reduces recurring charger and customer-market update spikes in large terrestrial saves.
     - This is alpha software. Balance, artwork, progression, and compatibility may change.
   Bugfixes:
+    - Charger capacity upgrades and quality no longer call an unavailable runtime deepcopy helper.
+    - Orbital research is paced for an established terrestrial factory: Infrastructure 1000 cycles, Cluster 600, Grid 900, and optional Hyperscale 1200.
+    - Cluster and Grid research use one Dollar per cycle; Hyperscale uses two. The billion-token goal and physical 20,000-Dataset Model are unchanged.
     - Progress reads actual research costs and normal orbital machine throughput instead of stale investment estimates.
     - Optional Foundry, Megatruck, charger placement, and Bitertaxi branches no longer block guidance toward orbital AI.
     - The Foundry unlock is described as a deployment milestone, not proof of available grid power.

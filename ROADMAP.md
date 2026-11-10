@@ -36,8 +36,11 @@ ending interface and persistent offline terminal; see
 [terminal qualification](docs/terminal-epilogue-validation.md). Isolated native
 qualification is still not a frozen, playtest-ready campaign. Phase 4 now has
 [practical platform layouts](docs/orbital-platform-guide.md) and a
-[source-bound logistics budget](docs/orbital-logistics-budget.md). **Next: finish
-the remaining pacing, fresh-seed/prerequisite and functional-art freeze.**
+[source-bound logistics budget](docs/orbital-logistics-budget.md). **The normal
+logistics/pacing slice is now qualified:** both ending routes consume the real
+20,000-Dataset payload through belts and survive mid-load and victory reloads.
+See the [save-based pacing freeze](docs/endgame-pacing.md). **Next: fresh-seed/
+prerequisite and functional-art checks**, then the remaining release qualification.
 
 **Physical cooling update:** the approved thermal hardening slice is integrated
 on Factorio 2.1.24: native shared heat networks, a 2-3 minute nominal buffer,
@@ -46,7 +49,9 @@ Updated native 1/4/8/12 blueprints include heat pipes and real cargo rehearsals;
 the physical ending and offline terminal remain intact. See the
 [thermal evidence and limits](docs/orbital-thermal-hardening.md). This is not a
 new full-campaign or simultaneous-multiplayer qualification. Final graphical
-readability, pacing and fresh-seed checks still gate the acceptance playthrough.
+readability and fresh-seed checks still gate the acceptance playthrough. The
+subsequent pacing archive has its own exact source/hash evidence; earlier
+thermal evidence is not silently relabelled as a new archive qualification.
 
 The remaining phases preserve the original review's numbering: **3 through 8**.
 Complete them consecutively. Each implementation slice updates its actual
@@ -62,7 +67,8 @@ Build in three consecutive slices:
    thermal slice supersedes automatic cooling holds with physical heat and
    destructive burnout. Keep ordinary
    terrestrial run-scrapping. Apply the approved research/yield changes: the
-   three scale projects cost 2,000/3,000/6,000 Dollars and unlock
+   three scale projects now cost 600/900/2,400 Dollars after the Phase 4 pacing
+   freeze and unlock
    50,000/100,000/200,000 equivalents per normal 20-second batch. Match direct
    Dataset yields to their Token variants and preserve native earned accounting.
    **Implemented:** [banked-compute validation](docs/orbital-banked-compute-validation.md).
@@ -107,29 +113,36 @@ credit. See [measurement results](docs/orbital-logistics-measured.md) and the
 are supplied in these fixtures; they do not prove a natural campaign. Phase 4
 is not complete merely because these isolated layouts work.
 
-**Next pacing decision:** the measured layout samples support a roughly
-3.7-5.2-hour compute-only sensitivity with Hyperscale, or 5.8-8.6 hours without
-it. These are extrapolations, not player-time bounds. The zero-opening-stock
-example at 1,000 copper plates/minute takes about 8.7 modeled hours to supply
-the recurring-business route's joint material bill. Check realistic existing
-stock/production and the cash/material schedule before freezing the 4-6 active
-hour target; do not solve a hypothetical low production rate by blindly boosting
-compute. The large physical Dataset input transfer into Model assembly also
-needs a practical native rehearsal beyond the existing mechanical-ending test.
+**Pacing/logistics freeze completed:** a ten-minute stock/production sample and
+one-hour unassisted copy of Luke's established save inform the joint budget.
+The exact candidate's native Hyper/Grid routes take **5 h 18 min / 7 h 7 min**
+after the orbital unlock, including **21-minute physical Dataset loading**, real
+1/4/8/12 staged uplift/research, Model return, activation and separate-process
+reloads. Hyperscale is recommended for the shorter ending; Grid-only remains
+possible. Research prices are 1,000/600/900/1,200 cycles and
+1,000/600/900/2,400 Dollars. Compute yields, physical cooling and the billion/
+20,000-Dataset gates are unchanged.
 
-- Build a practical first-cluster layout and representative 1/4/8/12-cluster
-  ramps with appropriate inserters, belts and hub settings. Twelve is a sizing
-  reference, not a victory gate. The basic uplift fixture's roughly 73-minute
-  raw-Token extraction/return is not acceptable evidence of practical I/O.
-- Recompute real research, construction, cash, power, battery-material, rocket
-  and science demands from the final prototypes. Include manufacturing and
-  cargo delays, and do not allocate the same blue-circuit production twice.
-  Check a modest market of roughly ten settlements and an alternative to
-  mandatory Bitertaxi expansion; avoid requiring limitless new nests or AFK cash.
-- Aim for a major upgrade every 2-3 active hours and roughly 4-6 active hours
-  for the orbital chapter. These are targets to qualify, not observed campaign
-  times. The earlier 5.7-hour ideal-input model already excludes construction
-  and delivery, so it cannot establish the target. Tune before the campaign.
+From the sampled stage, the measured-cost reference needs about **11,228 Dollars**
+before its 4,535 usable starting cash, and 5,157 additional blue circuits with
+normal recipes and stock credit. Existing rocket fuel already covers the
+recommended route. The finite already-eligible battery market covers the
+project cash gap before other spending. Ground entry research adds roughly
+32 modeled minutes at the rehearsal's 31.5-cycle/minute cap, supporting the
+frozen **roughly 4-6 focused active-hour target**, not a measured human campaign.
+The [evidence and limits](docs/endgame-pacing.md) separate supplied finished
+ground hardware/science from real orbital work, and avoid adding overlapping
+manufacturing, income, research and compute clocks. No new nest expansion or
+mandatory taxi capex is imposed by this remaining-project budget.
+
+Express input buses, maximum-hand payload arms, an assembly return loop and
+batched Dollar request windows fix practical loading stalls and tiny-rocket
+waste. A new native assembly overlay is available. The longer campaign sample
+also found and verified a fix for charger upgrades calling a missing runtime
+helper. Keep these numbers and mechanics stable through acceptance testing;
+log small balance corrections rather than reopening the ending design.
+
+**Remaining Phase 4 work:**
 - Audit fresh starts on at least five seeds, resource access, and every critical
   technology's ingredients, manufacturing machine and science prerequisites.
   No removed-planet material, hidden unlock or optional vehicle/quality branch
@@ -220,12 +233,11 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 3C's ending feedback and skippable
-terminal epilogue, followed by the Phase 4 practical platform/pacing freeze.
-Orbital Model assembly, native return and Nauvis activation have replaced the
-controller/capital finale. No player save or live process was changed by this
-implementation; the development mod symlink will load this source on a later
-restart, not hot-reload it into the running world.
+**Immediate next implementation:** Phase 4's five-seed/fresh-world prerequisite
+audit and functional in-game art/readability pass, followed by candidate soaks,
+multiplayer and clean-install qualification. The ending, epilogue and practical
+pacing are implemented. No original player save or live process was changed;
+the development mod symlink loads this source on a later restart, not hot-reload.
 
 ### Current Review And Consecutive Plan
 
@@ -311,19 +323,22 @@ chemistry, or future feature branch belongs in this release sequence.
 The [orbital AGI ending spec](feature_specs/orbital_agi_ending.md) and
 [cost study](docs/orbital-ending-cost-study.md) define the next implementation
 slices. **Orbital entry, banked compute, scale tiers and the physical Model
-finale are implemented.** The terminal scene and campaign freeze remain next.
+finale are implemented.** The terminal scene and save-based pacing freeze are
+also complete; the remaining Phase 4 onboarding/presentation gates come next.
 
 - Reuse ordinary rockets and the existing terrestrial supply chains. Approximately
   twelve compact compute clusters are a balancing reference, not a count gate.
 - Assemble one billion physical training equivalents into an orbital AGI Model,
   return it to Nauvis, and activate it in an existing datacenter. Remove the
   special terrestrial controller, final capital package and required white science.
-- Orbital power/cooling shortages pause work rather than erase it. Ordinary
-  terrestrial training still scraps a failed run. Victory remains persistent;
-  the spec contains a short offline post-victory terminal scene.
-- The proposed ideal AI/research bill is about 21,200 Dollars. Modest recurring
-  income reaches the model's completion in about 5.7 hours, excluding manufacture,
-  exploration, building and cargo delays. A 4-6 active-hour chapter is unproven.
+- Orbital power shortages bank work. Physical cooling failure keeps computing
+  until destructive burnout; no automatic cooling pause remains. Ordinary
+  terrestrial training still scraps a failed run. Victory and the implemented
+  offline terminal remain persistent.
+- The save-based remaining bill is about 11,228 Dollars under measured native
+  logistics, including entry research. The recommended route takes 5 h 18 min
+  after that unlock in a supplied-ground-stock rehearsal. Manufacturing and
+  actual human campaign time remain separately bounded, not silently qualified.
 - The 2026-10-07 capture exposed an unlaunchable 1.2-tonne core and 250-kg
   Dollars. The 2026-10-08 entry slice replaces these with explicit 100-kg
   clusters and 10-g Dollars, plus 25-kg wings, 100-kg radiators and a 1-kg Model.
@@ -331,13 +346,14 @@ finale are implemented.** The terminal scene and campaign freeze remain next.
   returns 10,000 Tokens and survives reload on source and the exact ZIP.
   It also captures the tighter ten-slot cargo-pod inventory. Basic Token
   extraction is slow; upgraded I/O belongs in final blueprint/pacing qualification.
-- A staged 1/4/8/12-cluster build needs 49 modeled separate-item launches before
-  extra cash top-ups, about 4,500 blue circuits for hardware/launches and another
-  4,500 for remaining research. It must use spare production, not double-count stock.
+- The full native staged route uses 45 mixed-load launches with Hyperscale,
+  or 51 with Grid only. The joint save-based bill includes final assembly I/O,
+  unused buffered rocket parts and research in a single blue-circuit allocation.
 
-First-cluster rocket uplift and banked compute/scale tiers are implemented and
-tested. Proceed with Model assembly, return and activation; finish native UI/epilogue and functional
-satellite art; requalify source/exact ZIP, soaks and RC installation. The
+First-cluster uplift, banked compute, physical cooling, Model assembly/return,
+activation, terminal and practical logistics are implemented and tested. Finish
+fresh-world prerequisites and functional art/readability, then qualification
+soaks, multiplayer and RC installation. The
 current private save and live processes remain unchanged by this cost study.
 
 Every development day should close at least one public-release gap:

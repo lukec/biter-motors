@@ -127,10 +127,14 @@ end
             self.assertEqual(5 * count, sum(e.get("role") == "solar" for e in layout["entities"]))
             preview.validate_layout(layout)
             self.assertGreater(preview.render_layout(layout).height, 0)
+            self.assertTrue(all(not (-5 <= t["position"]["x"] <= 4 and -5 <= t["position"]["y"] <= 4)
+                                for t in layout["tiles"]), "do not bill the native 10x10 starter twice")
+            self.assertTrue(all(e["name"] == "express-transport-belt" for e in layout["entities"]
+                                if e.get("role") == "input"), "large final inputs need the tested express bus")
 
     def assert_footprints_and_manifest(self, layout):
         solid = {(tile['position']['x'], tile['position']['y']) for tile in layout['tiles']}
-        solid |= {(x, y) for x in range(-4, 5) for y in range(-4, 5)}
+        solid |= {(x, y) for x in range(-5, 5) for y in range(-5, 5)}
         occupied = {}
         sizes = {'core': 3, 'radiator': 3, 'solar': 3}
         for entity in layout['entities']:
@@ -228,7 +232,7 @@ end
         self.assertTrue(all(x == int(x) and y == int(y) for x, y in tiles))
         # The canonical fixture explicitly treats the starter hub as this solid
         # 9x9 region; it is context, not hardware added to its layout manifest.
-        solid = tiles | {(x, y) for x in range(-4, 5) for y in range(-4, 5)}
+        solid = tiles | {(x, y) for x in range(-5, 5) for y in range(-5, 5)}
         neighbors = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
         def flood(start, allowed):

@@ -103,18 +103,19 @@ wait for ten clusters or forty panels. Avoid special scripted cargo delivery.
 
 ### Research And Throughput
 
-The first two research costs remain 750 Dollars for Autonomy and 1,500 for
-Orbital Infrastructure. They consume 2,250 physical terrestrial Tokens, costing
-2,260 operating Dollars and 56.5 active minutes at normal base efficiency.
+The first two research costs are 750 Dollars for Autonomy and 1,000 for
+Orbital Infrastructure. They consume 1,750 physical terrestrial Tokens, costing
+1,760 operating Dollars and 44 active minutes at normal base efficiency when
+starting without stored Tokens.
 Do not require Bitertaxi sales or fleet construction to unlock orbit; recurring
 service is one effective financing strategy, not the only route.
 
 | Milestone | Research cycles | Dollars/cycle | Total Dollars | Unlocked normal batch |
 | --- | ---: | ---: | ---: | ---: |
-| Initial orbit | Existing 1,500 | 1 | 1,500 | 10,000 Tokens / 20s |
-| 1M orbital equivalents | 1,000 | 2 | 2,000 | 50,000 Tokens / 20s |
-| 10M orbital equivalents | 1,500 | 2 | 3,000 | 100,000 equivalents / 20s |
-| 100M orbital equivalents | 2,000 | 3 | 6,000 | 200,000 equivalents / 20s |
+| Initial orbit | 1,000 | 1 | 1,000 | 10,000 Tokens / 20s |
+| 1M orbital equivalents | 600 | 1 | 600 | 50,000 Tokens / 20s |
+| 10M orbital equivalents | 900 | 1 | 900 | 100,000 equivalents / 20s |
+| 100M orbital equivalents | 1,200 | 2 | 2,400 | 200,000 equivalents / 20s |
 
 Keep appropriate red/green/blue/purple/yellow science and AI inputs. Remove
 white science, rather than adding another alternative space-science recipe.
@@ -216,31 +217,21 @@ Keep the ending out of the public README's marketing copy.
 
 ## Cost And Pacing Findings
 
-- Ideal remaining AI/research cash is 21,191 Dollars; the original 2026-10-07
-  comparison was 132,326 under the removed costs/ending. The refreshed study
-  uses the implemented Model recipes and native timing. Prior terrestrial factories,
-  research and optional fleet capital are not funded again for free.
-- The first cluster uses nine automatic separate-item launches with partial
-  minimum requests, including starter, foundation, belts/inserters and cash.
-- Twelve clusters fit a paper 1,300-tile single-platform envelope. Batched
-  uplifts need 36 rockets; a 1/4/8/12 staged ramp needs 50 before extra top-ups,
-  including the final Rack. The staged bill contains 4,540 blue circuits, 2,500 rocket fuel and substantial
-  steel/copper. The physical recipe and blueprint work must still be tested.
-- At 60 effective science sets/minute and 2,000 starting Dollars, partially
-  utilized taxi cases finish the ideal-input cash/compute model in about 5.7 h,
-  paying for fleets after Autonomy unlocks. More income mostly builds a larger
-  cash buffer; it cannot eliminate compute/science work.
-- A finite 1,000-battery market can finish in about 10.3 h by skipping
-  Hyperscale. With no remaining income, 2,000 Dollars alone cannot finish.
-  These closed cases exclude new population/nest growth and new EV generations.
-- Hardware alone needs about 3.7/1.2/0.6 h at 20/60/120 spare blue circuits/min.
-  Science adds 4,500 more blue circuits. Do not allocate the same production to
-  both loads or describe elapsed modeled time as active player time.
+The [2026-11-09 pacing freeze](../docs/endgame-pacing.md) supersedes the earlier
+research prices and synthetic zero-stock forecasts. It uses a read-only copy of
+Luke's established factory, native observations, a stock-aware joint material
+bill, and an independent supplied-ground-stock physical logistics rehearsal.
+The target is roughly 4-6 focused active hours from established terrestrial AI,
+not from crash landing. It remains a target for the acceptance campaign, not a
+claim of measured player time.
 
-The 4-6-hour playable chapter is still a target, not achieved evidence. The
-current model is already near that ceiling without build/cargo delays. Prove a
-compact first-cluster blueprint and representative manufacturing throughput
-before freezing yields or promising the final campaign duration.
+The [generated cost study](../docs/orbital-ending-cost-study.md) starts before
+Autonomy with no stored Tokens; the [save budget](../docs/endgame-save-budget.json)
+credits completed research and usable stock. These scopes must not be confused.
+The one-platform 1/4/8/12 blueprints have native geometry and launch evidence;
+the large final Dataset transfer uses ordinary express belts and bulk inserters.
+Research, manufacturing, business cash and compute overlap; blue circuits are
+one shared allocation, not free capacity for each task separately.
 
 ## Consecutive Implementation Slices
 

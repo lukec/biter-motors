@@ -2468,7 +2468,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-dataset"),
       unlock("bitermotors-unpack-agi-training-dataset")
     },
-    1500,
+    1000,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2487,7 +2487,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-token-cluster"),
       unlock("bitermotors-orbital-ai-dataset-cluster")
     },
-    1000,
+    600,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2495,7 +2495,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 2}
+      {"bitermotors-dollar", 1}
     },
     60,
     {enabled = false}
@@ -2510,7 +2510,7 @@ data:extend({
       unlock("bitermotors-tandem-solar-array"),
       unlock("bitermotors-grid-battery-array")
     },
-    1500,
+    900,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2518,7 +2518,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 2}
+      {"bitermotors-dollar", 1}
     },
     60,
     {enabled = false}
@@ -2530,7 +2530,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-token-hyperscale"),
       unlock("bitermotors-orbital-ai-dataset-hyperscale")
     },
-    2000,
+    1200,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2538,7 +2538,7 @@ data:extend({
       {"production-science-pack", 1},
       {"utility-science-pack", 1},
       {"bitermotors-ai-token", 1},
-      {"bitermotors-dollar", 3}
+      {"bitermotors-dollar", 2}
     },
     60,
     {enabled = false}

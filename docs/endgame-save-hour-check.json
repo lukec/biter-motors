@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "scope": "read-only economic observation in an advancing disposable campaign copy",
+  "minutes": 60,
+  "factorio_version": "2.1.24",
+  "source_sha256": "00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85",
+  "archive_sha256": "4eaae45e45dfaa5e96328b7f93fa4327c4aa6e318db9a6e0b6abf5d50e1cc050",
+  "original_save_sha256": "14eaf838a8da7f974997657a8778b0a5d1d73b7b817648d65d50ef19bfac212c",
+  "raw_sample_sha256": "7ab58fc9c11fff14d80b91840f51ee680ca6491a86cc4eb0e0cc356a2d56c9e4",
+  "original_save_unchanged": true,
+  "opening_usable_dollars": 4535,
+  "closing_usable_dollars": 9528,
+  "wallet_increase_per_minute": 83.21666666666667,
+  "produced_per_minute": {
+    "bitermotors-dollar": 155.45,
+    "processing-unit": 103.95,
+    "low-density-structure": 51.516666666666666,
+    "production-science-pack": 22.95,
+    "rocket-fuel": 0.2
+  },
+  "consumed_per_minute": {
+    "bitermotors-dollar": 69.63333333333334,
+    "processing-unit": 76.71666666666667,
+    "low-density-structure": 33.2,
+    "production-science-pack": 23.233333333333334
+  },
+  "battery_research_levels": [0, 1],
+  "customer_ev_fleet": [1770, 3599],
+  "closing_research": null,
+  "closing_science_production_last_ten_minutes": 0,
+  "native_mean_update_ms": 2.265,
+  "limits": [
+    "No supplied items, power, research, compute, external automation or player actions.",
+    "Current-mod configuration reconciliation ran on the old save; this is not an untouched historical customer census.",
+    "The original research queue ran out and science was output-blocked by the end; gross production is not simultaneously sustainable spare capacity.",
+    "Wallet growth includes normal business, changing demand and existing spending; it is not guaranteed future income.",
+    "This is a one-hour headless observation, not full-campaign, graphical or large-population release qualification."
+  ]
+}

@@ -14,14 +14,14 @@ Recovered capital is not new business profit and cannot fund purchases twice.
 
 | Sink | Dollars |
 | --- | ---: |
-| Required research (including terrestrial EV/energy) | 9,500 |
+| Required research (including terrestrial EV/energy) | 5,500 |
 | Initial factories and ending hardware | 260 |
-| Terrestrial research compute | 2,260 |
+| Terrestrial research compute | 1,760 |
 | Orbital compute and replacement payload | 10,181 |
 | Terrestrial failure allowance | 0 |
-| **Direct cash total (no Hyperscale)** | 22,201 |
+| **Direct cash total (no Hyperscale)** | 17,701 |
 
-Required science: automation (red), logistic (green) and chemical (blue), **7,000 each**; production (purple) and utility (yellow), **6,100 each**; **no space (white)**. No existing science stock or research productivity is credited.
+Required science: automation (red), logistic (green) and chemical (blue), **5,500 each**; production (purple) and utility (yellow), **4,600 each**; **no space (white)**. No existing science stock or research productivity is credited.
 
 Native assembly: **60s** in the normal orbital cluster; ground activation: **30s at 8 MW**.
 The 1B earned gate and physical 20,000-Dataset payload are separate; research Tokens are replaced.
@@ -32,9 +32,9 @@ Hardware uplift is excluded; see the orbital ending cost study for material fron
 
 | Case | Finite profit ceiling | Taxi fleet | Funding hours |
 | --- | ---: | ---: | ---: |
-| Restricted market | 24,000 | 0 | 3.35 |
-| Typical expansion | 48,000 | 400 | 0.7 |
-| Taxi / energy heavy | 96,000 | 800 | 0.35 |
+| Restricted market | 24,000 | 0 | 1.7 |
+| Typical expansion | 48,000 | 400 | 0.5333333333333333 |
+| Taxi / energy heavy | 96,000 | 800 | 0.26666666666666666 |
 
 Finite battery adoption and unique living customers cap demand; overlapping depots cannot duplicate service.
 EV cash is already earned at this checkpoint; fleets/depots are paid, not free.
@@ -42,4 +42,4 @@ Funding and compute can overlap; their sum is not a campaign clock. New nests/gr
 Phase 4 remains open: practical I/O, shared blue-circuit capacity and active player time need evidence.
 No balance values are changed by this simulator. Prototype capture is not native ending or campaign qualification.
 
-Native source SHA-256: `4c1a3bf4fc8fe9161bf03b147fd804643793c2c9be72dce48455043986d57ceb`.
+Native source SHA-256: `00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85`.

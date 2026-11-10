@@ -11,7 +11,7 @@
       "role": "hub-input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -3.5,
         "y": 5.5
@@ -20,7 +20,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -3.5,
         "y": 6.5
@@ -29,7 +29,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -4.5,
         "y": 6.5
@@ -38,7 +38,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -5.5,
         "y": 6.5
@@ -47,7 +47,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -6.5,
         "y": 6.5
@@ -56,7 +56,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -6.5,
         "y": 7.5
@@ -65,7 +65,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -5.5,
         "y": 7.5
@@ -74,7 +74,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -4.5,
         "y": 7.5
@@ -83,7 +83,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -3.5,
         "y": 7.5
@@ -92,7 +92,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -2.5,
         "y": 7.5
@@ -101,7 +101,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -1.5,
         "y": 7.5
@@ -110,7 +110,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": -0.5,
         "y": 7.5
@@ -119,7 +119,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 0.5,
         "y": 7.5
@@ -128,7 +128,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 1.5,
         "y": 7.5
@@ -137,7 +137,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 2.5,
         "y": 7.5
@@ -146,7 +146,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 3.5,
         "y": 7.5
@@ -155,7 +155,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 4.5,
         "y": 7.5
@@ -164,7 +164,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 5.5,
         "y": 7.5
@@ -173,7 +173,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 6.5,
         "y": 7.5
@@ -182,7 +182,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 7.5,
         "y": 7.5
@@ -191,7 +191,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 8.5,
         "y": 7.5
@@ -200,7 +200,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 9.5,
         "y": 7.5
@@ -209,7 +209,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 10.5,
         "y": 7.5
@@ -218,7 +218,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 11.5,
         "y": 7.5
@@ -227,7 +227,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 12.5,
         "y": 7.5
@@ -236,7 +236,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 13.5,
         "y": 7.5
@@ -245,7 +245,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 14.5,
         "y": 7.5
@@ -254,7 +254,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 15.5,
         "y": 7.5
@@ -263,7 +263,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 16.5,
         "y": 7.5
@@ -272,7 +272,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 17.5,
         "y": 7.5
@@ -281,7 +281,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 18.5,
         "y": 7.5
@@ -290,7 +290,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 19.5,
         "y": 7.5
@@ -299,7 +299,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 20.5,
         "y": 7.5
@@ -308,7 +308,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 21.5,
         "y": 7.5
@@ -317,7 +317,7 @@
       "role": "input"
     },
     {
-      "name": "transport-belt",
+      "name": "express-transport-belt",
       "position": {
         "x": 22.5,
         "y": 7.5
@@ -1199,13 +1199,6 @@
     {
       "name": "space-platform-foundation",
       "position": {
-        "x": -5,
-        "y": 2
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
         "x": -9,
         "y": 3
       }
@@ -1234,13 +1227,6 @@
     {
       "name": "space-platform-foundation",
       "position": {
-        "x": -5,
-        "y": 3
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
         "x": -9,
         "y": 4
       }
@@ -1263,13 +1249,6 @@
       "name": "space-platform-foundation",
       "position": {
         "x": -6,
-        "y": 4
-      }
-    },
-    {
-      "name": "space-platform-foundation",
-      "position": {
-        "x": -5,
         "y": 4
       }
     },
@@ -4391,8 +4370,7 @@
   ],
   "manifest": {
     "bulk-inserter": 10,
-    "transport-belt": 35,
-    "express-transport-belt": 48,
+    "express-transport-belt": 83,
     "bitermotors-orbital-datacenter-core": 4,
     "bitermotors-high-density-space-solar-panel": 20,
     "bitermotors-orbital-heat-pipe": 8,

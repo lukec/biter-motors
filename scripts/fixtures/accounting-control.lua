@@ -195,7 +195,7 @@ local function native_stage()
   if storage.stage == "produce99" and manufactured == 99 then
     equal(progress.research_costs["bitermotors-autonomous-logistics"].ingredients[DOLLAR], 750,
       "guidance reads the actual native autonomy research cost")
-    equal(progress.research_costs["bitermotors-orbital-compute"].ingredients["bitermotors-ai-token"], 1500,
+    equal(progress.research_costs["bitermotors-orbital-compute"].ingredients["bitermotors-ai-token"], 1000,
       "guidance reads the actual native pre-orbital Token cost")
     equal(progress.orbital_cycle_seconds, 20, "normal orbital core runs at native speed 1.5")
     equal(progress.roadsters_sold, 0, "unsold production does not imply Roadster sales")

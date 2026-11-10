@@ -59,7 +59,7 @@ class OrbitalEndingTests(unittest.TestCase):
             self.assertNotIn("space-science-pack", dict(native["unit"]["ingredients"]))
 
     def test_native_scale_tiers_match_approved_efficiency_and_research(self):
-        for technology, dollars in zip(model.RESEARCH[2:], (2000, 3000, 6000)):
+        for technology, dollars in zip(model.RESEARCH[2:], (600, 900, 2400)):
             self.assertEqual(dollars, self.catalog.research(technology))
         for recipe, tokens in zip(model.ORBITAL_RECIPES, (10000, 50000, 100000, 200000)):
             equivalents = self.catalog.output(recipe, model.TOKEN) + 50000 * self.catalog.output(recipe, model.DATASET)
@@ -84,6 +84,8 @@ class OrbitalEndingTests(unittest.TestCase):
         self.assertEqual(10, self.catalog.data["launch"]["cargo_inventory_slots"])
         self.assertEqual(50, self.catalog.data["launch"]["parts_per_rocket"])
         self.assertIn("space-platform-starter-pack", self.catalog.data["items"])
+        self.assertEqual(10, sum(row["amount"] for row in self.catalog.data["launch"]["starter_initial_items"]
+                                 if row["name"] == "space-platform-foundation"))
 
     def test_shipments_round_per_item_and_obey_both_constraints(self):
         candidate = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
@@ -138,10 +140,10 @@ class OrbitalEndingTests(unittest.TestCase):
 
     def test_budget_counts_physical_archive_and_science_only_once(self):
         budget = model.compute_budget(self.catalog, self.proposal)
-        self.assertEqual(2260, budget["terrestrial_dollars"])
-        self.assertEqual(13250, budget["research_dollars"])
+        self.assertEqual(1760, budget["terrestrial_dollars"])
+        self.assertEqual(5650, budget["research_dollars"])
         self.assertEqual(5681, budget["orbital_dollars"])
-        self.assertEqual(4500, budget["orbital_research_tokens"])
+        self.assertEqual(2700, budget["orbital_research_tokens"])
         self.assertGreaterEqual(budget["generated_equivalents"] - budget["orbital_research_tokens"], 1e9)
         self.assertNotIn("space-science-pack", budget["research_science"])
 
@@ -159,7 +161,7 @@ class OrbitalEndingTests(unittest.TestCase):
         hardware = result["hardware_supplies"]
         full = result["hardware_and_science_supplies"]
         self.assertEqual(4740, hardware["supplies"]["processing-unit"])
-        self.assertEqual(9240, full["supplies"]["processing-unit"])
+        self.assertEqual(7708, full["supplies"]["processing-unit"])
         self.assertNotIn(model.DOLLAR, hardware["supplies"])
         self.assertGreater(full["supplies"]["copper-plate"], hardware["supplies"]["copper-plate"])
         self.assertGreater(hardware["surplus"][model.P + "acidic-tailings"], 0)
@@ -174,6 +176,18 @@ class OrbitalEndingTests(unittest.TestCase):
         bill = model.supply_bill(altered, {a: 4, b: 1})
         self.assertEqual(1, bill["recipe_batches"][recipe])
         self.assertEqual({"stone": 10}, bill["supplies"])
+
+    def test_opening_stock_is_credited_before_expansion_without_double_spending(self):
+        item = model.P + "datacenter-rack"
+        bill = model.supply_bill(self.catalog, {item: 2, "processing-unit": 10},
+                                 opening_stock={item: 1, "processing-unit": 15})
+        self.assertEqual(1, bill["recipe_batches"][item])
+        self.assertEqual(5, bill["supplies"]["processing-unit"])
+        self.assertEqual({item: 1, "processing-unit": 15}, bill["stock_credited"])
+        self.assertNotIn(item, bill["supplies"])
+        for value in (-1, float("nan"), float("inf"), True):
+            with self.assertRaisesRegex(ValueError, "invalid opening stock"):
+                model.supply_bill(self.catalog, {item: 1}, opening_stock={item: value})
 
     def test_missing_cyclic_stochastic_and_negative_materials_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "missing material route"):

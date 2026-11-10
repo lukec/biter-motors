@@ -1,0 +1,7 @@
+{
+  "tiers": [
+    {"recipe": "bitermotors-orbital-ai-dataset"},
+    {"recipe": "bitermotors-orbital-ai-dataset-cluster", "technology": "bitermotors-orbital-cluster-training"},
+    {"recipe": "bitermotors-orbital-ai-dataset-grid-scale", "technology": "bitermotors-grid-scale-energy"}
+  ]
+}

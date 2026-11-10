@@ -72,9 +72,9 @@ local function pure_fixtures()
     equal(track.generated, 50000, "compact equivalent conservation")
   end
   for _, case in ipairs({
-    {"bitermotors-orbital-cluster-training", 1000, 2},
-    {"bitermotors-grid-scale-energy", 1500, 2},
-    {"bitermotors-hyperscale-training", 2000, 3}
+    {"bitermotors-orbital-cluster-training", 600, 1},
+    {"bitermotors-grid-scale-energy", 900, 1},
+    {"bitermotors-hyperscale-training", 1200, 2}
   }) do
     local technology = prototypes.technology[case[1]]
     equal(technology.research_unit_count, case[2], "scale research cycle count")

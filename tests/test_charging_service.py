@@ -2,15 +2,60 @@
 
 import copy
 import json
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 MOD = ROOT / "mod/bitermotors_0.1.1"
+LUA = shutil.which("lua5.2") or shutil.which("lua")
+try:
+    from lupa.lua52 import LuaRuntime
+except ImportError:
+    LuaRuntime = None
 
 
 class ChargingServiceTest(unittest.TestCase):
+    @unittest.skipUnless(LuaRuntime or LUA, "Requires Lua or optional lupa.lua52")
+    def test_capacity_upgrades_execute_without_data_stage_helpers_and_do_not_mutate_base(self):
+        control = (MOD / "control.lua").read_text()
+        configs = control[control.index("local STATION_CONFIGS ="):
+                          control.index("function clear_table")]
+        function = control[control.index("local function station_config("):
+                           control.index("local function is_station(")]
+        source = configs + "\n" + """
+table.deepcopy = nil
+local level = 0
+local function continuous_improvement_level() return level end
+local LONG_RANGE_BATTERY_TECH_NAME = 'battery'
+""" + function + """
+assert(station_config(nil) == nil)
+assert(station_config{valid=false} == nil)
+assert(station_config{valid=true,name='unknown'} == nil)
+for name, base in pairs(STATION_CONFIGS) do
+  local original = base.evs_per_stall
+  for _, q in ipairs{0,1,2,3,5} do
+    for _, b in ipairs{0,1,4} do
+      level = b
+      local config = station_config{valid=true,name=name,quality={level=q},force={}}
+      assert(config.evs_per_stall == math.floor(original*(1+q*0.1)*(1+b*0.05)+0.5))
+      assert(base.evs_per_stall == original)
+      for key, value in pairs(base) do
+        assert(type(value) ~= 'table', 'station configs must remain flat for this copy')
+        if key ~= 'evs_per_stall' then assert(config[key] == value) end
+      end
+    end
+  end
+end
+"""
+        if LuaRuntime:
+            LuaRuntime().execute(source)
+        else:
+            result = subprocess.run([LUA, "-"], input=source, text=True, capture_output=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+
     def test_bulk_allocation_checks_both_reachability_and_competing_demand(self):
         allocator = (MOD / "runtime/charger_allocator.lua").read_text()
         self.assertIn("#candidate_pairs == 1 and pair.assignment.demanding_settlements == 1", allocator)

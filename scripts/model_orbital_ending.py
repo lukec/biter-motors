@@ -216,10 +216,15 @@ def staged_uplifts(catalog: EconomyCatalog, plan: ModelPlan, budget: dict) -> di
                 include_final_model=True)["rockets"]}
 
 
-def supply_bill(catalog: EconomyCatalog, roots: dict[str, float]) -> dict:
+def supply_bill(catalog: EconomyCatalog, roots: dict[str, float], *,
+                opening_stock: dict[str, float] | None = None) -> dict:
     """Expand selected manufacturing routes jointly, crediting their co-products once."""
     if any(count < 0 or not math.isfinite(count) for count in roots.values()):
         raise ValueError("invalid manufacturing demand")
+    stock = Counter(opening_stock or {})
+    if any(isinstance(count, bool) or count < 0 or not math.isfinite(count)
+           for count in stock.values()):
+        raise ValueError("invalid opening stock")
     recipes = catalog.data["manufacturing_recipes"] | catalog.data["recipes"]
     frontier = FRONTIER | frozenset(catalog.data["mined_items"])
     graph, item_routes = {}, {}
@@ -249,11 +254,19 @@ def supply_bill(catalog: EconomyCatalog, roots: dict[str, float]) -> dict:
             visit(item)
     incoming = Counter(child for children in graph.values() for child in children)
     queue = deque(sorted(route for route in graph if not incoming[route]))
-    demand, batches = Counter(roots), {}
+    demand, batches, credited = Counter(roots), {}, Counter()
+    def credit(item):
+        used = min(max(0, demand[item]), stock[item])
+        demand[item] -= used
+        stock[item] -= used
+        credited[item] += used
+
     while queue:
         route = queue.popleft()
         recipe = recipes[route]
         outputs = {entry["name"]: amount(recipe["results"], entry["name"]) for entry in recipe["results"]}
+        for item in outputs:
+            credit(item)
         runs = max((math.ceil(max(0, demand[item]) / outputs[item])
                     for item, item_route in item_routes.items() if item_route == route), default=0)
         batches[route] = runs
@@ -267,12 +280,16 @@ def supply_bill(catalog: EconomyCatalog, roots: dict[str, float]) -> dict:
                 queue.append(child)
     if len(batches) != len(graph):
         raise ValueError("cyclic manufacturing graph")
+    for item in frontier:
+        credit(item)
     unresolved = {item: value for item, value in demand.items() if value > 0 and item not in frontier}
     if unresolved:
         raise ValueError("unresolved material demand: " + str(unresolved))
     return {"supplies": {item: count for item, count in sorted(demand.items()) if count > 0},
             "surplus": {item: -count for item, count in sorted(demand.items()) if count < 0},
-            "recipe_batches": batches}
+            "recipe_batches": batches,
+            **({"stock_credited": {item: count for item, count in sorted(credited.items()) if count}}
+               if opening_stock is not None else {})}
 
 
 def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, horizon_minutes=1440) -> dict:

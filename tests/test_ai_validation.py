@@ -116,9 +116,9 @@ class AiValidationRunnerTests(unittest.TestCase):
             "ledger descriptor matches native physical outputs",
             'prototypes.recipe[case[1]].energy, 30',
             'prototypes.recipe[case[1]].ingredients[1].amount, 1',
-            '{"bitermotors-orbital-cluster-training", 1000, 2}',
-            '{"bitermotors-grid-scale-energy", 1500, 2}',
-            '{"bitermotors-hyperscale-training", 2000, 3}',
+            '{"bitermotors-orbital-cluster-training", 600, 1}',
+            '{"bitermotors-grid-scale-energy", 900, 1}',
+            '{"bitermotors-hyperscale-training", 1200, 2}',
             'technology.research_unit_count', 'technology.research_unit_ingredients',
             '"scale research Dollars per cycle"',
         ):

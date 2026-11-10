@@ -1,0 +1,1957 @@
+{
+  "business": {
+    "grid_battery_adoption": {
+      "adoption_percent": 13.6,
+      "eligible": 630,
+      "in_transit": 1,
+      "installed": 182,
+      "population": 1343,
+      "reserved": 1,
+      "returning_home": 0,
+      "settlements": 151,
+      "to_office": 1,
+      "waiting": 447,
+      "waiting_product": 1
+    },
+    "taxi_dollars_per_minute": 22
+  },
+  "closing_dollars": 5002,
+  "entities": {
+    "accumulator": {
+      "normal": 1540
+    },
+    "active-provider-chest": {
+      "normal": 7
+    },
+    "arithmetic-combinator": {
+      "normal": 70
+    },
+    "artillery-projectile": {
+      "normal": 1
+    },
+    "artillery-turret": {
+      "normal": 4
+    },
+    "assembling-machine-3": {
+      "normal": 677
+    },
+    "big-electric-pole": {
+      "normal": 2884
+    },
+    "big-mining-drill": {
+      "normal": 258
+    },
+    "bitermotors-biterfactory-v2": {
+      "normal": 20
+    },
+    "bitermotors-bitertaxi-depot": {
+      "normal": 1
+    },
+    "bitermotors-bitertaxi-depot-power": {
+      "normal": 1
+    },
+    "bitermotors-ev-charging-power-sink": {
+      "normal": 163
+    },
+    "bitermotors-ev-charging-station": {
+      "normal": 114
+    },
+    "bitermotors-ev-charging-station-v2": {
+      "normal": 30
+    },
+    "bitermotors-ev-charging-station-v3": {
+      "normal": 12
+    },
+    "bitermotors-ev-charging-v2-power-sink": {
+      "normal": 193
+    },
+    "bitermotors-ev-charging-v3-power-sink": {
+      "normal": 120
+    },
+    "bitermotors-grid-battery": {
+      "legendary": 24,
+      "normal": 2965
+    },
+    "bitermotors-high-density-solar-array": {
+      "legendary": 54,
+      "normal": 7065
+    },
+    "bitermotors-mass-market-ev": {
+      "normal": 1
+    },
+    "bitermotors-megatruck": {
+      "normal": 2
+    },
+    "bitermotors-premium-ev": {
+      "normal": 9
+    },
+    "bitermotors-prototype-roadster": {
+      "normal": 2
+    },
+    "bitermotors-sales-office": {
+      "normal": 20
+    },
+    "bitermotors-terrestrial-datacenter": {
+      "normal": 1
+    },
+    "boiler": {
+      "normal": 150
+    },
+    "buffer-chest": {
+      "normal": 17
+    },
+    "bulk-inserter": {
+      "normal": 604
+    },
+    "car": {
+      "normal": 6
+    },
+    "cargo-wagon": {
+      "normal": 32
+    },
+    "centrifuge": {
+      "normal": 11
+    },
+    "chemical-plant": {
+      "normal": 121
+    },
+    "constant-combinator": {
+      "normal": 399
+    },
+    "construction-robot": {
+      "legendary": 2,
+      "normal": 127
+    },
+    "curved-rail-a": {
+      "normal": 224
+    },
+    "curved-rail-b": {
+      "normal": 224
+    },
+    "decider-combinator": {
+      "normal": 11
+    },
+    "display-panel": {
+      "normal": 66
+    },
+    "electric-furnace": {
+      "legendary": 10,
+      "normal": 320
+    },
+    "electric-mining-drill": {
+      "legendary": 4
+    },
+    "entity-ghost": {
+      "normal": 3800
+    },
+    "express-splitter": {
+      "normal": 19
+    },
+    "express-transport-belt": {
+      "normal": 614
+    },
+    "express-underground-belt": {
+      "normal": 45
+    },
+    "fast-inserter": {
+      "normal": 2162
+    },
+    "fast-splitter": {
+      "normal": 428
+    },
+    "fast-transport-belt": {
+      "normal": 16249
+    },
+    "fast-underground-belt": {
+      "normal": 1913
+    },
+    "fluid-wagon": {
+      "normal": 9
+    },
+    "foundry": {
+      "normal": 102
+    },
+    "gate": {
+      "normal": 195
+    },
+    "gun-turret": {
+      "normal": 558
+    },
+    "inserter": {
+      "normal": 614
+    },
+    "iron-chest": {
+      "normal": 6
+    },
+    "item-request-proxy": {
+      "normal": 74
+    },
+    "lab": {
+      "normal": 52
+    },
+    "laser-turret": {
+      "normal": 1678
+    },
+    "locomotive": {
+      "normal": 10
+    },
+    "logistic-robot": {
+      "normal": 538
+    },
+    "long-handed-inserter": {
+      "normal": 723
+    },
+    "medium-electric-pole": {
+      "normal": 4338
+    },
+    "offshore-pump": {
+      "normal": 2
+    },
+    "oil-refinery": {
+      "normal": 16
+    },
+    "passive-provider-chest": {
+      "legendary": 14,
+      "normal": 178
+    },
+    "pipe": {
+      "normal": 1369
+    },
+    "pipe-to-ground": {
+      "normal": 1468
+    },
+    "pump": {
+      "normal": 53
+    },
+    "pumpjack": {
+      "normal": 48
+    },
+    "radar": {
+      "normal": 31
+    },
+    "rail-chain-signal": {
+      "normal": 70
+    },
+    "rail-signal": {
+      "normal": 276
+    },
+    "recycler": {
+      "normal": 2
+    },
+    "requester-chest": {
+      "normal": 120
+    },
+    "roboport": {
+      "legendary": 20,
+      "normal": 729
+    },
+    "small-electric-pole": {
+      "normal": 733
+    },
+    "small-lamp": {
+      "normal": 285
+    },
+    "solar-panel": {
+      "normal": 1848
+    },
+    "splitter": {
+      "normal": 110
+    },
+    "stack-inserter": {
+      "normal": 346
+    },
+    "steam-engine": {
+      "normal": 300
+    },
+    "steel-chest": {
+      "normal": 186
+    },
+    "stone-wall": {
+      "normal": 2674
+    },
+    "storage-chest": {
+      "legendary": 49,
+      "normal": 107
+    },
+    "storage-tank": {
+      "normal": 52
+    },
+    "straight-rail": {
+      "normal": 4676
+    },
+    "substation": {
+      "legendary": 7,
+      "normal": 485
+    },
+    "tank": {
+      "normal": 3
+    },
+    "tile-ghost": {
+      "normal": 4935
+    },
+    "train-stop": {
+      "normal": 12
+    },
+    "transport-belt": {
+      "normal": 6068
+    },
+    "underground-belt": {
+      "normal": 644
+    }
+  },
+  "factorio_version": "2.1.24",
+  "force_modifiers": {
+    "bulk_inserter_capacity_bonus": 9,
+    "laboratory_productivity_bonus": 0,
+    "laboratory_speed_modifier": 2.5
+  },
+  "limits": [
+    "No supplied resources or research. Current mod configuration reconciliation may change old-save behavior. Inventory excludes belts, robots in flight and committed craft inputs; outputs and uncommitted inputs are separate categories.",
+    "No external automation, player expansion or research selection during sampling.",
+    "Only normal quality stock credited, including extractable machine outputs and lab science; arbitrary machine inputs, belts and flying bots excluded.",
+    "Historical/gross output and a ten-minute wallet trend are observations, not sustainable spare capacity or guaranteed income."
+  ],
+  "mod_version": "0.1.1",
+  "opening_stock": {
+    "accumulator": 107,
+    "active-provider-chest": 58,
+    "advanced-circuit": 9466,
+    "arithmetic-combinator": 301,
+    "artillery-shell": 177,
+    "artillery-turret": 22,
+    "assembling-machine-1": 28,
+    "assembling-machine-2": 212,
+    "assembling-machine-3": 260,
+    "automation-science-pack": 169,
+    "barrel": 34,
+    "battery": 13456,
+    "battery-equipment": 32,
+    "battery-mk2-equipment": 9,
+    "beacon": 10,
+    "big-electric-pole": 107,
+    "big-mining-drill": 68,
+    "bitermotors-ai-token": 2272,
+    "bitermotors-autonomy-computer": 54,
+    "bitermotors-battery-graphite": 206,
+    "bitermotors-biterfactory-building": 3,
+    "bitermotors-biterfactory-module": 4,
+    "bitermotors-biterfactory-v2": 2,
+    "bitermotors-bitertaxi-depot": 2,
+    "bitermotors-bitertaxi-fleet": 44,
+    "bitermotors-cybertrain": 2,
+    "bitermotors-cybertrain-charging-stop": 2,
+    "bitermotors-damaged-high-energy-battery-pack": 32,
+    "bitermotors-datacenter-rack": 56,
+    "bitermotors-dollar": 4535,
+    "bitermotors-electric-drive-charge": 1,
+    "bitermotors-electric-drivetrain": 121,
+    "bitermotors-ev-charging-station": 73,
+    "bitermotors-ev-charging-station-v2": 11,
+    "bitermotors-ev-charging-station-v3": 2,
+    "bitermotors-ev-charging-station-v4": 4,
+    "bitermotors-ev-reservation": 58520,
+    "bitermotors-grid-battery": 50,
+    "bitermotors-high-density-solar-array": 975,
+    "bitermotors-high-energy-battery-pack": 156,
+    "bitermotors-high-nickel-cell": 235,
+    "bitermotors-lfp-battery-pack": 37,
+    "bitermotors-lfp-cell": 806,
+    "bitermotors-lithium-carbonate": 242,
+    "bitermotors-mass-market-ev": 14,
+    "bitermotors-megatruck": 52,
+    "bitermotors-nickel-ore": 97106,
+    "bitermotors-nickel-sulfate": 114,
+    "bitermotors-phosphate": 393,
+    "bitermotors-premium-ev": 41,
+    "bitermotors-prototype-roadster": 2,
+    "bitermotors-sales-office": 44,
+    "bitermotors-structural-casting": 13,
+    "bitermotors-terrestrial-datacenter": 2,
+    "blueprint": 1,
+    "boiler": 204,
+    "buffer-chest": 56,
+    "bulk-inserter": 190,
+    "burner-mining-drill": 1,
+    "calcite": 154,
+    "car": 3,
+    "cargo-landing-pad": 1,
+    "cargo-wagon": 10,
+    "centrifuge": 2,
+    "chemical-plant": 72,
+    "chemical-science-pack": 162,
+    "cliff-explosives": 684,
+    "coal": 25147,
+    "concrete": 2876,
+    "constant-combinator": 56,
+    "construction-robot": 1708,
+    "copper-cable": 3286,
+    "copper-ore": 122835,
+    "copper-plate": 6002,
+    "decider-combinator": 93,
+    "deconstruction-planner": 1,
+    "display-panel": 63,
+    "efficiency-module": 37,
+    "electric-engine-unit": 301,
+    "electric-furnace": 128,
+    "electric-mining-drill": 108,
+    "electronic-circuit": 1598,
+    "engine-unit": 241,
+    "explosive-cannon-shell": 433,
+    "explosive-rocket": 5435,
+    "explosives": 301,
+    "express-splitter": 153,
+    "express-transport-belt": 376,
+    "express-underground-belt": 101,
+    "fast-inserter": 801,
+    "fast-splitter": 135,
+    "fast-transport-belt": 1298,
+    "fast-underground-belt": 327,
+    "firearm-magazine": 3252,
+    "fluid-wagon": 69,
+    "flying-robot-frame": 70,
+    "foundry": 10,
+    "gate": 853,
+    "grenade": 532,
+    "gun-turret": 100,
+    "heat-exchanger": 48,
+    "heat-pipe": 100,
+    "inserter": 216,
+    "iron-chest": 10,
+    "iron-gear-wheel": 1062,
+    "iron-ore": 174633,
+    "iron-plate": 8887,
+    "iron-stick": 75,
+    "landfill": 13,
+    "laser-turret": 615,
+    "locomotive": 7,
+    "logistic-robot": 16,
+    "logistic-science-pack": 173,
+    "long-handed-inserter": 151,
+    "low-density-structure": 939,
+    "medium-electric-pole": 151,
+    "military-science-pack": 42,
+    "night-vision-equipment": 1,
+    "oil-refinery": 40,
+    "passive-provider-chest": 105,
+    "personal-roboport-equipment": 27,
+    "personal-roboport-mk2-equipment": 18,
+    "piercing-rounds-magazine": 4356,
+    "pipe": 3801,
+    "pipe-to-ground": 154,
+    "pistol": 3,
+    "plastic-bar": 541,
+    "power-armor": 1,
+    "processing-unit": 693,
+    "production-science-pack": 322,
+    "productivity-module": 267,
+    "productivity-module-2": 15,
+    "programmable-speaker": 29,
+    "pump": 178,
+    "pumpjack": 40,
+    "quality-module": 56,
+    "radar": 108,
+    "rail": 1175,
+    "rail-chain-signal": 311,
+    "rail-signal": 97,
+    "raw-fish": 625,
+    "recycler": 25,
+    "refined-concrete": 4998,
+    "repair-pack": 403,
+    "requester-chest": 195,
+    "roboport": 64,
+    "rocket": 780,
+    "rocket-fuel": 2525,
+    "rocket-launcher": 3,
+    "selector-combinator": 50,
+    "small-electric-pole": 2461,
+    "small-lamp": 549,
+    "solar-panel": 334,
+    "solid-fuel": 18549,
+    "speed-module": 880,
+    "speed-module-2": 33,
+    "splitter": 50,
+    "spoilage": 485,
+    "stack-inserter": 256,
+    "steam-engine": 44,
+    "steam-turbine": 84,
+    "steel-chest": 56,
+    "steel-furnace": 347,
+    "steel-plate": 3719,
+    "stone": 11909,
+    "stone-brick": 15241,
+    "stone-furnace": 5,
+    "stone-wall": 4124,
+    "storage-chest": 120,
+    "storage-tank": 50,
+    "substation": 346,
+    "sulfur": 417,
+    "tank": 3,
+    "train-stop": 13,
+    "transport-belt": 1169,
+    "underground-belt": 250,
+    "upgrade-planner": 3,
+    "uranium-238": 11622,
+    "uranium-ore": 23629,
+    "utility-science-pack": 295,
+    "wood": 47253
+  },
+  "play_hours": 32.895208333333336,
+  "rates_per_minute": {
+    "accumulator": {
+      "historical_hour_produced": 27.276157407407407,
+      "historical_ten_minute_produced": 44.27083333333334,
+      "observed_consumed": 64.4,
+      "observed_produced": 53.2
+    },
+    "active-provider-chest": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "advanced-circuit": {
+      "historical_hour_produced": 616.3099537037036,
+      "historical_ten_minute_produced": 615.6583333333333,
+      "observed_consumed": 527.7,
+      "observed_produced": 607.7
+    },
+    "arithmetic-combinator": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "artillery-shell": {
+      "historical_hour_produced": 0.7999999999999999,
+      "historical_ten_minute_produced": 0.19999999999999998,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.1
+    },
+    "artillery-turret": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "assembling-machine-1": {
+      "historical_hour_produced": 1.0833333333333333,
+      "historical_ten_minute_produced": 3.1999999999999997,
+      "observed_consumed": 2.0,
+      "observed_produced": 2.0
+    },
+    "assembling-machine-2": {
+      "historical_hour_produced": 1.1166666666666667,
+      "historical_ten_minute_produced": 3.1999999999999997,
+      "observed_consumed": 2.5,
+      "observed_produced": 2.0
+    },
+    "assembling-machine-3": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "automation-science-pack": {
+      "historical_hour_produced": 47.9,
+      "historical_ten_minute_produced": 95.44166666666666,
+      "observed_consumed": 32.0,
+      "observed_produced": 31.4
+    },
+    "barrel": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "battery": {
+      "historical_hour_produced": 204.0908564814815,
+      "historical_ten_minute_produced": 287.9375,
+      "observed_consumed": 285.4,
+      "observed_produced": 290.0
+    },
+    "battery-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "battery-mk2-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "beacon": {
+      "historical_hour_produced": 0.06666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "belt-immunity-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "big-electric-pole": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "big-mining-drill": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-acidic-tailings": {
+      "historical_hour_produced": 903.064236111111,
+      "historical_ten_minute_produced": 1667.5,
+      "observed_consumed": 1690.0,
+      "observed_produced": 1702.5
+    },
+    "bitermotors-ai-token": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-autonomy-computer": {
+      "historical_hour_produced": 0.6166666666666667,
+      "historical_ten_minute_produced": 1.2000000000000002,
+      "observed_consumed": 12.8,
+      "observed_produced": 11.3
+    },
+    "bitermotors-battery-graphite": {
+      "historical_hour_produced": 12.166666666666666,
+      "historical_ten_minute_produced": 11,
+      "observed_consumed": 8.6,
+      "observed_produced": 8.4
+    },
+    "bitermotors-biterfactory-building": {
+      "historical_hour_produced": 0.06666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-biterfactory-module": {
+      "historical_hour_produced": 0.5166666666666666,
+      "historical_ten_minute_produced": 0.7000000000000001,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.6
+    },
+    "bitermotors-biterfactory-v2": {
+      "historical_hour_produced": 0.06666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-bitertaxi-depot": {
+      "historical_hour_produced": 0.016666666666666666,
+      "historical_ten_minute_produced": 0.09999999999999998,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-bitertaxi-fleet": {
+      "historical_hour_produced": 0.5,
+      "historical_ten_minute_produced": 1.5,
+      "observed_consumed": 0,
+      "observed_produced": 8.0
+    },
+    "bitermotors-cobalt-concentrate": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-cybertrain": {
+      "historical_hour_produced": 0.03333333333333333,
+      "historical_ten_minute_produced": 0.19999999999999998,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-cybertrain-charging-stop": {
+      "historical_hour_produced": 0.03333333333333333,
+      "historical_ten_minute_produced": 0.19999999999999998,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-datacenter-rack": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-dollar": {
+      "historical_hour_produced": 59.927199074074075,
+      "historical_ten_minute_produced": 87.39999999999999,
+      "observed_consumed": 69.0,
+      "observed_produced": 128.3
+    },
+    "bitermotors-electric-drive-charge": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0
+    },
+    "bitermotors-electric-drivetrain": {
+      "historical_hour_produced": 19.546412037037037,
+      "historical_ten_minute_produced": 21.370833333333334,
+      "observed_consumed": 16.3,
+      "observed_produced": 22.3
+    },
+    "bitermotors-ev-charging-station": {
+      "historical_hour_produced": 0.26666666666666666,
+      "historical_ten_minute_produced": 0.39999999999999997,
+      "observed_consumed": 0.2,
+      "observed_produced": 0.2
+    },
+    "bitermotors-ev-charging-station-v2": {
+      "historical_hour_produced": 0.26666666666666666,
+      "historical_ten_minute_produced": 0.30000000000000004,
+      "observed_consumed": 0.1,
+      "observed_produced": 0.2
+    },
+    "bitermotors-ev-charging-station-v3": {
+      "historical_hour_produced": 0.21666666666666665,
+      "historical_ten_minute_produced": 0.5,
+      "observed_consumed": 0.4,
+      "observed_produced": 0.1
+    },
+    "bitermotors-ev-charging-station-v4": {
+      "historical_hour_produced": 0.13333333333333333,
+      "historical_ten_minute_produced": 0.5,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.5
+    },
+    "bitermotors-ev-reservation": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 36.5,
+      "observed_produced": 0
+    },
+    "bitermotors-grid-battery": {
+      "historical_hour_produced": 23.033333333333335,
+      "historical_ten_minute_produced": 56.41250000000001,
+      "observed_consumed": 4.5,
+      "observed_produced": 40.0
+    },
+    "bitermotors-high-density-solar-array": {
+      "historical_hour_produced": 7.270833333333334,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 1.6,
+      "observed_produced": 1.6
+    },
+    "bitermotors-high-energy-battery-pack": {
+      "historical_hour_produced": 26.74641203703704,
+      "historical_ten_minute_produced": 23.041666666666664,
+      "observed_consumed": 0.0,
+      "observed_produced": 18.9
+    },
+    "bitermotors-high-nickel-cell": {
+      "historical_hour_produced": 107.3,
+      "historical_ten_minute_produced": 93,
+      "observed_consumed": 74.8,
+      "observed_produced": 76.8
+    },
+    "bitermotors-lfp-battery-pack": {
+      "historical_hour_produced": 162.50925925925924,
+      "historical_ten_minute_produced": 366.92500000000007,
+      "observed_consumed": 257.2,
+      "observed_produced": 258.9
+    },
+    "bitermotors-lfp-cell": {
+      "historical_hour_produced": 600.1277777777777,
+      "historical_ten_minute_produced": 1431.75,
+      "observed_consumed": 942.0,
+      "observed_produced": 969.0
+    },
+    "bitermotors-lithium-brine": {
+      "historical_hour_produced": 1211.2994897727613,
+      "historical_ten_minute_produced": 2412.2516496658322,
+      "observed_consumed": 2540.0,
+      "observed_produced": 2547.270684480667
+    },
+    "bitermotors-lithium-carbonate": {
+      "historical_hour_produced": 67.71412037037037,
+      "historical_ten_minute_produced": 135.5,
+      "observed_consumed": 133.5,
+      "observed_produced": 142.5
+    },
+    "bitermotors-mass-market-ev": {
+      "historical_hour_produced": 32.0474537037037,
+      "historical_ten_minute_produced": 39.641666666666666,
+      "observed_consumed": 42.9,
+      "observed_produced": 40.6
+    },
+    "bitermotors-megatruck": {
+      "historical_hour_produced": 9.399999999999999,
+      "historical_ten_minute_produced": 5.1,
+      "observed_consumed": 6.4,
+      "observed_produced": 0.0
+    },
+    "bitermotors-nickel-ore": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 32.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-nickel-sulfate": {
+      "historical_hour_produced": 23.833333333333332,
+      "historical_ten_minute_produced": 20.499999999999996,
+      "observed_consumed": 17.2,
+      "observed_produced": 18.0
+    },
+    "bitermotors-phosphate": {
+      "historical_hour_produced": 65.23206018518519,
+      "historical_ten_minute_produced": 157,
+      "observed_consumed": 129.2,
+      "observed_produced": 162.0
+    },
+    "bitermotors-premium-ev": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-prototype-roadster": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-sales-office": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-structural-casting": {
+      "historical_hour_produced": 0.06666666666666667,
+      "historical_ten_minute_produced": 0.09999999999999998,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-terrestrial-datacenter": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bitermotors-wrecked-ev": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 2.1,
+      "observed_produced": 2.3
+    },
+    "boiler": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "buffer-chest": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "bulk-inserter": {
+      "historical_hour_produced": 9.55,
+      "historical_ten_minute_produced": 0.6000000000000001,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "calcite": {
+      "historical_hour_produced": 151.6792824074074,
+      "historical_ten_minute_produced": 156.75416666666666,
+      "observed_consumed": 220.1,
+      "observed_produced": 256.4
+    },
+    "car": {
+      "historical_hour_produced": 16.435648148148147,
+      "historical_ten_minute_produced": 17.070833333333333,
+      "observed_consumed": 16.3,
+      "observed_produced": 16.1
+    },
+    "cargo-landing-pad": {
+      "historical_hour_produced": 0.016666666666666666,
+      "historical_ten_minute_produced": 0.09999999999999998,
+      "observed_consumed": 0,
+      "observed_produced": 0.1
+    },
+    "cargo-wagon": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "centrifuge": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "chemical-plant": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "chemical-science-pack": {
+      "historical_hour_produced": 57.692824074074075,
+      "historical_ten_minute_produced": 91.88333333333334,
+      "observed_consumed": 31.8,
+      "observed_produced": 46.4
+    },
+    "cliff-explosives": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "coal": {
+      "historical_hour_produced": 3255.658912037037,
+      "historical_ten_minute_produced": 4766.770833333332,
+      "observed_consumed": 3578.1,
+      "observed_produced": 3663.9
+    },
+    "concrete": {
+      "historical_hour_produced": 221.16666666666669,
+      "historical_ten_minute_produced": 348,
+      "observed_consumed": 110.0,
+      "observed_produced": 291.0
+    },
+    "constant-combinator": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "construction-robot": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "copper-cable": {
+      "historical_hour_produced": 7776.598611111113,
+      "historical_ten_minute_produced": 6912.358333333332,
+      "observed_consumed": 6352.7,
+      "observed_produced": 6273.4
+    },
+    "copper-ore": {
+      "historical_hour_produced": 2652.7471064814818,
+      "historical_ten_minute_produced": 2543.7916666666665,
+      "observed_consumed": 2457.4,
+      "observed_produced": 2544.0
+    },
+    "copper-plate": {
+      "historical_hour_produced": 4095.0040509259256,
+      "historical_ten_minute_produced": 3961.758333333334,
+      "observed_consumed": 3666.6,
+      "observed_produced": 3714.4
+    },
+    "crude-oil": {
+      "historical_hour_produced": 19034.656815562863,
+      "historical_ten_minute_produced": 18505.683710455894,
+      "observed_consumed": 22370.0,
+      "observed_produced": 18186.689736700057
+    },
+    "decider-combinator": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "discharge-defense-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "display-panel": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "efficiency-module": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "electric-engine-unit": {
+      "historical_hour_produced": 52.02002314814814,
+      "historical_ten_minute_produced": 70.24166666666667,
+      "observed_consumed": 27.7,
+      "observed_produced": 61.0
+    },
+    "electric-furnace": {
+      "historical_hour_produced": 22.547453703703706,
+      "historical_ten_minute_produced": 40.912499999999994,
+      "observed_consumed": 15.0,
+      "observed_produced": 14.6
+    },
+    "electric-mining-drill": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "electronic-circuit": {
+      "historical_hour_produced": 3939.1979166666665,
+      "historical_ten_minute_produced": 3725.6583333333333,
+      "observed_consumed": 3103.2,
+      "observed_produced": 3078.1
+    },
+    "energy-shield-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "engine-unit": {
+      "historical_hour_produced": 231.5028935185185,
+      "historical_ten_minute_produced": 285.90833333333336,
+      "observed_consumed": 229.1,
+      "observed_produced": 227.7
+    },
+    "exoskeleton-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "explosive-cannon-shell": {
+      "historical_hour_produced": 3.2833333333333337,
+      "historical_ten_minute_produced": 1.1,
+      "observed_consumed": 0.4,
+      "observed_produced": 0.0
+    },
+    "explosive-rocket": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "explosives": {
+      "historical_hour_produced": 12.9,
+      "historical_ten_minute_produced": 3.1999999999999997,
+      "observed_consumed": 0.8,
+      "observed_produced": 0.8
+    },
+    "express-splitter": {
+      "historical_hour_produced": 1.1666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "express-transport-belt": {
+      "historical_hour_produced": 7.492824074074074,
+      "historical_ten_minute_produced": 5.8,
+      "observed_consumed": 0,
+      "observed_produced": 7.3
+    },
+    "express-underground-belt": {
+      "historical_hour_produced": 0.9333333333333333,
+      "historical_ten_minute_produced": 0.6000000000000001,
+      "observed_consumed": 0,
+      "observed_produced": 1.0
+    },
+    "fast-inserter": {
+      "historical_hour_produced": 9.533333333333333,
+      "historical_ten_minute_produced": 0.6000000000000001,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "fast-splitter": {
+      "historical_hour_produced": 0.9333333333333333,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "fast-transport-belt": {
+      "historical_hour_produced": 6.616666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 7.3,
+      "observed_produced": 0.0
+    },
+    "fast-underground-belt": {
+      "historical_hour_produced": 0.7999999999999999,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 1.0,
+      "observed_produced": 0.0
+    },
+    "firearm-magazine": {
+      "historical_hour_produced": 137.33773148148148,
+      "historical_ten_minute_produced": 147.7125,
+      "observed_consumed": 149.8,
+      "observed_produced": 150.0
+    },
+    "fluid-wagon": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "flying-robot-frame": {
+      "historical_hour_produced": 12.101041666666669,
+      "historical_ten_minute_produced": 31.8,
+      "observed_consumed": 9.7,
+      "observed_produced": 9.7
+    },
+    "foundry": {
+      "historical_hour_produced": 0.4166666666666667,
+      "historical_ten_minute_produced": 0.6000000000000001,
+      "observed_consumed": 0,
+      "observed_produced": 0.6
+    },
+    "gate": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "grenade": {
+      "historical_hour_produced": 6.683333333333334,
+      "historical_ten_minute_produced": 20.941666666666666,
+      "observed_consumed": 14.6,
+      "observed_produced": 14.6
+    },
+    "gun-turret": {
+      "historical_hour_produced": 0.55,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "heat-exchanger": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "heat-pipe": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "heavy-oil": {
+      "historical_hour_produced": 5184.675925925926,
+      "historical_ten_minute_produced": 5638.125,
+      "observed_consumed": 5596.0,
+      "observed_produced": 5592.5
+    },
+    "inserter": {
+      "historical_hour_produced": 53.1,
+      "historical_ten_minute_produced": 87.15416666666667,
+      "observed_consumed": 27.4,
+      "observed_produced": 27.6
+    },
+    "iron-chest": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "iron-gear-wheel": {
+      "historical_hour_produced": 676.8055555555557,
+      "historical_ten_minute_produced": 595.0708333333332,
+      "observed_consumed": 404.2,
+      "observed_produced": 415.4
+    },
+    "iron-ore": {
+      "historical_hour_produced": 7813.903703703704,
+      "historical_ten_minute_produced": 8647.3125,
+      "observed_consumed": 6798.8,
+      "observed_produced": 7320.7
+    },
+    "iron-plate": {
+      "historical_hour_produced": 7895.2641203703715,
+      "historical_ten_minute_produced": 8049.020833333333,
+      "observed_consumed": 6542.4,
+      "observed_produced": 6656.1
+    },
+    "iron-stick": {
+      "historical_hour_produced": 202.54675925925923,
+      "historical_ten_minute_produced": 186.87499999999997,
+      "observed_consumed": 26.4,
+      "observed_produced": 26.4
+    },
+    "lab": {
+      "historical_hour_produced": 1.2333333333333334,
+      "historical_ten_minute_produced": 2.9,
+      "observed_consumed": 2.5,
+      "observed_produced": 2.3
+    },
+    "landfill": {
+      "historical_hour_produced": 37.80104166666666,
+      "historical_ten_minute_produced": 26.6,
+      "observed_consumed": 0,
+      "observed_produced": 26.5
+    },
+    "laser-turret": {
+      "historical_hour_produced": 2.513078703703704,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "light-oil": {
+      "historical_hour_produced": 12501.1875,
+      "historical_ten_minute_produced": 13598.125,
+      "observed_consumed": 13499.0,
+      "observed_produced": 13489.5
+    },
+    "locomotive": {
+      "historical_hour_produced": 0.04999999999999999,
+      "historical_ten_minute_produced": 0.09999999999999998,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "logistic-robot": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "logistic-science-pack": {
+      "historical_hour_produced": 47.909490740740736,
+      "historical_ten_minute_produced": 97.94166666666666,
+      "observed_consumed": 32.0,
+      "observed_produced": 31.6
+    },
+    "long-handed-inserter": {
+      "historical_hour_produced": 0.4666666666666667,
+      "historical_ten_minute_produced": 1,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "low-density-structure": {
+      "historical_hour_produced": 66.5605324074074,
+      "historical_ten_minute_produced": 77.24166666666666,
+      "observed_consumed": 30.3,
+      "observed_produced": 76.1
+    },
+    "lubricant": {
+      "historical_hour_produced": 1074.3287037037037,
+      "historical_ten_minute_produced": 1164.8333333333333,
+      "observed_consumed": 1082.5,
+      "observed_produced": 1153.0
+    },
+    "medium-electric-pole": {
+      "historical_hour_produced": 1.6666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "military-science-pack": {
+      "historical_hour_produced": 14.000000000000002,
+      "historical_ten_minute_produced": 45.34166666666667,
+      "observed_consumed": 31.8,
+      "observed_produced": 31.6
+    },
+    "molten-copper": {
+      "historical_hour_produced": 14554.108796296297,
+      "historical_ten_minute_produced": 14300,
+      "observed_consumed": 13516.0,
+      "observed_produced": 13600.0
+    },
+    "molten-iron": {
+      "historical_hour_produced": 52286.80555555556,
+      "historical_ten_minute_produced": 71362.5,
+      "observed_consumed": 52624.0,
+      "observed_produced": 53150.0
+    },
+    "night-vision-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "offshore-pump": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "oil-refinery": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "passive-provider-chest": {
+      "historical_hour_produced": 0.08333333333333331,
+      "historical_ten_minute_produced": 0.5,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "personal-laser-defense-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "personal-roboport-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "personal-roboport-mk2-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "petroleum-gas": {
+      "historical_hour_produced": 19730.34259259259,
+      "historical_ten_minute_produced": 21481.708333333332,
+      "observed_consumed": 21276.0,
+      "observed_produced": 21271.5
+    },
+    "piercing-rounds-magazine": {
+      "historical_hour_produced": 137.09490740740742,
+      "historical_ten_minute_produced": 147.08333333333334,
+      "observed_consumed": 29.7,
+      "observed_produced": 149.8
+    },
+    "pipe": {
+      "historical_hour_produced": 325.58854166666663,
+      "historical_ten_minute_produced": 424.0041666666667,
+      "observed_consumed": 311.0,
+      "observed_produced": 310.5
+    },
+    "pipe-to-ground": {
+      "historical_hour_produced": 1.2666666666666666,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "plastic-bar": {
+      "historical_hour_produced": 1456.8974537037036,
+      "historical_ten_minute_produced": 1484.6833333333334,
+      "observed_consumed": 1474.8,
+      "observed_produced": 1470.6
+    },
+    "power-armor": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "processing-unit": {
+      "historical_hour_produced": 74.52233796296296,
+      "historical_ten_minute_produced": 54.270833333333336,
+      "observed_consumed": 53.6,
+      "observed_produced": 52.7
+    },
+    "production-science-pack": {
+      "historical_hour_produced": 26.61770833333333,
+      "historical_ten_minute_produced": 30.8125,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "productivity-module": {
+      "historical_hour_produced": 20.50462962962963,
+      "historical_ten_minute_produced": 38.64166666666667,
+      "observed_consumed": 2.4,
+      "observed_produced": 22.8
+    },
+    "productivity-module-2": {
+      "historical_hour_produced": 3.3666666666666667,
+      "historical_ten_minute_produced": 5.000000000000001,
+      "observed_consumed": 0,
+      "observed_produced": 0.6
+    },
+    "programmable-speaker": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "pump": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "pumpjack": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "quality-module": {
+      "historical_hour_produced": 0.06666666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "radar": {
+      "historical_hour_produced": 0.7999999999999999,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.1,
+      "observed_produced": 0.0
+    },
+    "rail": {
+      "historical_hour_produced": 233.64583333333331,
+      "historical_ten_minute_produced": 183.54166666666666,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "rail-chain-signal": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "rail-signal": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "recycler": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "refined-concrete": {
+      "historical_hour_produced": 97.66666666666669,
+      "historical_ten_minute_produced": 110,
+      "observed_consumed": 145.0,
+      "observed_produced": 31.0
+    },
+    "repair-pack": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.2,
+      "observed_produced": 0.0
+    },
+    "requester-chest": {
+      "historical_hour_produced": 0.16666666666666666,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "roboport": {
+      "historical_hour_produced": 0.7166666666666667,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.4
+    },
+    "rocket": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "rocket-fuel": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.1,
+      "observed_produced": 0.0
+    },
+    "rocket-launcher": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "science": {
+      "historical_hour_produced": 52.05000000000001,
+      "historical_ten_minute_produced": 87.325,
+      "observed_consumed": 0,
+      "observed_produced": 34.3
+    },
+    "selector-combinator": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "small-electric-pole": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "small-lamp": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "solar-panel": {
+      "historical_hour_produced": 5.816435185185186,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.8,
+      "observed_produced": 1.2
+    },
+    "solar-panel-equipment": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "solid-fuel": {
+      "historical_hour_produced": 1.8999999999999997,
+      "historical_ten_minute_produced": 1.2000000000000002,
+      "observed_consumed": 1.6,
+      "observed_produced": 1.4
+    },
+    "space-platform-foundation": {
+      "historical_hour_produced": 0.4166666666666667,
+      "historical_ten_minute_produced": 2.5000000000000004,
+      "observed_consumed": 6.0,
+      "observed_produced": 7.5
+    },
+    "space-platform-starter-pack": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.1
+    },
+    "speed-module": {
+      "historical_hour_produced": 8.889236111111112,
+      "historical_ten_minute_produced": 6,
+      "observed_consumed": 9.0,
+      "observed_produced": 15.8
+    },
+    "speed-module-2": {
+      "historical_hour_produced": 5.466666666666666,
+      "historical_ten_minute_produced": 9.870833333333332,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "splitter": {
+      "historical_hour_produced": 0.9333333333333333,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "stack-inserter": {
+      "historical_hour_produced": 8.15,
+      "historical_ten_minute_produced": 0.7999999999999999,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "steam": {
+      "historical_hour_produced": 329711.0397360484,
+      "historical_ten_minute_produced": 512659.0292942046,
+      "observed_consumed": 370261.2339448929,
+      "observed_produced": 370298.7337946892
+    },
+    "steam-engine": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "steam-turbine": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "steel-chest": {
+      "historical_hour_produced": 0.25,
+      "historical_ten_minute_produced": 0.7000000000000001,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "steel-furnace": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "steel-plate": {
+      "historical_hour_produced": 2099.22025462963,
+      "historical_ten_minute_produced": 2993.4208333333336,
+      "observed_consumed": 1962.4,
+      "observed_produced": 2287.7
+    },
+    "stone": {
+      "historical_hour_produced": 2671.5033564814817,
+      "historical_ten_minute_produced": 2886.4125000000004,
+      "observed_consumed": 2679.4,
+      "observed_produced": 2678.1
+    },
+    "stone-brick": {
+      "historical_hour_produced": 289.3208333333333,
+      "historical_ten_minute_produced": 583.3583333333332,
+      "observed_consumed": 436.5,
+      "observed_produced": 582.9
+    },
+    "stone-furnace": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "stone-wall": {
+      "historical_hour_produced": 10.666666666666666,
+      "historical_ten_minute_produced": 29.2,
+      "observed_consumed": 29.2,
+      "observed_produced": 29.1
+    },
+    "storage-chest": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "storage-tank": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "submachine-gun": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "substation": {
+      "historical_hour_produced": 14.642824074074076,
+      "historical_ten_minute_produced": 11.3,
+      "observed_consumed": 17.0,
+      "observed_produced": 15.1
+    },
+    "sulfur": {
+      "historical_hour_produced": 509.312037037037,
+      "historical_ten_minute_produced": 651.9833333333332,
+      "observed_consumed": 651.6,
+      "observed_produced": 650.8
+    },
+    "sulfuric-acid": {
+      "historical_hour_produced": 4989.976851851852,
+      "historical_ten_minute_produced": 6927.083333333333,
+      "observed_consumed": 7076.0,
+      "observed_produced": 7020.0
+    },
+    "tank": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0,
+      "observed_produced": 0.0
+    },
+    "train-stop": {
+      "historical_hour_produced": 0.04999999999999999,
+      "historical_ten_minute_produced": 0.19999999999999998,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "transport-belt": {
+      "historical_hour_produced": 60.4,
+      "historical_ten_minute_produced": 97.28333333333333,
+      "observed_consumed": 36.6,
+      "observed_produced": 37.6
+    },
+    "underground-belt": {
+      "historical_hour_produced": 0.7999999999999999,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0.0
+    },
+    "uranium-235": {
+      "historical_hour_produced": 0.4464120370370369,
+      "historical_ten_minute_produced": 0.30000000000000004,
+      "observed_consumed": 0,
+      "observed_produced": 0.5
+    },
+    "uranium-238": {
+      "historical_hour_produced": 53.71539351851852,
+      "historical_ten_minute_produced": 71.71249999999999,
+      "observed_consumed": 0,
+      "observed_produced": 71.5
+    },
+    "uranium-ore": {
+      "historical_hour_produced": 468.9665509259259,
+      "historical_ten_minute_produced": 566.7333333333332,
+      "observed_consumed": 720.0,
+      "observed_produced": 563.8
+    },
+    "utility-science-pack": {
+      "historical_hour_produced": 34.86770833333334,
+      "historical_ten_minute_produced": 105.72500000000001,
+      "observed_consumed": 31.5,
+      "observed_produced": 33.0
+    },
+    "water": {
+      "historical_hour_produced": 78498.7398097886,
+      "historical_ten_minute_produced": 105817.98283793131,
+      "observed_consumed": 89566.86053615808,
+      "observed_produced": 90040.64852882623
+    },
+    "wood": {
+      "historical_hour_produced": 0,
+      "historical_ten_minute_produced": 0,
+      "observed_consumed": 0.0,
+      "observed_produced": 0
+    }
+  },
+  "sample_minutes": 10.0,
+  "schema": 1,
+  "scope": "isolated-copy-current-mod-sample",
+  "source": {
+    "bytes": 15611091,
+    "name": "Biter-Motors-recovered-after-worm-fix-20260806.zip",
+    "sample_mod_archive_sha256": "883216ccfc032c5d0c5a783a04ed1012d3be146490e475b439f5634cddec151a",
+    "sample_mod_source_sha256": "6cd3f7110bca38d32d0988704d29605674c7f8276ae0b89998a75922b4ed6939",
+    "sample_sha256": "8da154c65d3c35c096667f103ead19d6eb05022fa84468d08be2b680a62c9ae0",
+    "sha256": "14eaf838a8da7f974997657a8778b0a5d1d73b7b817648d65d50ef19bfac212c"
+  },
+  "technologies": {
+    "advanced-asteroid-processing": false,
+    "advanced-circuit": true,
+    "advanced-combinators": true,
+    "advanced-material-processing": true,
+    "advanced-material-processing-2": true,
+    "advanced-oil-processing": true,
+    "artillery": true,
+    "asteroid-productivity": false,
+    "atomic-bomb": false,
+    "automated-rail-transportation": true,
+    "automation": true,
+    "automation-2": true,
+    "automation-3": true,
+    "automation-science-pack": true,
+    "automobilism": true,
+    "battery": true,
+    "battery-equipment": true,
+    "battery-mk2-equipment": true,
+    "battery-mk3-equipment": false,
+    "belt-immunity-equipment": true,
+    "big-mining-drill": true,
+    "bitermotors-advanced-battery-chemistry": true,
+    "bitermotors-autonomous-logistics": true,
+    "bitermotors-battery-material-recovery": true,
+    "bitermotors-capital-scaling": true,
+    "bitermotors-customer-referral-program": false,
+    "bitermotors-cybertrain-logistics": true,
+    "bitermotors-energy-products": true,
+    "bitermotors-espider-engineering": false,
+    "bitermotors-ev-charging-network": true,
+    "bitermotors-grid-battery-productivity": false,
+    "bitermotors-grid-scale-energy": false,
+    "bitermotors-high-density-solar-productivity": false,
+    "bitermotors-hyperscale-training": false,
+    "bitermotors-industrial-supply-chain": true,
+    "bitermotors-long-range-battery": false,
+    "bitermotors-megatruck-engineering": true,
+    "bitermotors-orbital-cluster-training": false,
+    "bitermotors-orbital-compute": false,
+    "bitermotors-premium-audio-systems": false,
+    "bitermotors-premium-ev-program": true,
+    "bitermotors-rapid-charging-power-electronics": false,
+    "bitermotors-sales-office": true,
+    "bitermotors-terrestrial-ai": true,
+    "bitermotors-terrestrial-ai-efficiency-1": false,
+    "bitermotors-terrestrial-ai-efficiency-2": false,
+    "bitermotors-terrestrial-ai-efficiency-3": false,
+    "bitermotors-terrestrial-ai-efficiency-4": false,
+    "bitermotors-terrestrial-ai-efficiency-5": false,
+    "bitermotors-terrestrial-ai-efficiency-6": false,
+    "braking-force-1": true,
+    "braking-force-2": true,
+    "braking-force-3": true,
+    "braking-force-4": true,
+    "braking-force-5": true,
+    "braking-force-6": false,
+    "braking-force-7": false,
+    "bulk-inserter": true,
+    "chemical-science-pack": true,
+    "circuit-network": true,
+    "cliff-explosives": true,
+    "coal-liquefaction": true,
+    "concrete": true,
+    "construction-robotics": true,
+    "defender": true,
+    "destroyer": true,
+    "discharge-defense-equipment": true,
+    "distractor": true,
+    "effect-transmission": true,
+    "efficiency-module": true,
+    "efficiency-module-2": true,
+    "efficiency-module-3": false,
+    "electric-energy-accumulators": true,
+    "electric-energy-distribution-1": true,
+    "electric-energy-distribution-2": true,
+    "electric-engine": true,
+    "electric-mining-drill": true,
+    "electric-weapons-damage-1": true,
+    "electric-weapons-damage-2": false,
+    "electric-weapons-damage-3": false,
+    "electric-weapons-damage-4": false,
+    "electronics": true,
+    "elevated-rail": true,
+    "energy-shield-equipment": true,
+    "energy-shield-mk2-equipment": true,
+    "engine": true,
+    "epic-quality": false,
+    "exoskeleton-equipment": true,
+    "explosive-rocketry": true,
+    "explosives": true,
+    "fast-inserter": true,
+    "fission-reactor-equipment": true,
+    "flamethrower": true,
+    "flammables": true,
+    "fluid-handling": true,
+    "fluid-wagon": true,
+    "follower-robot-count-1": true,
+    "follower-robot-count-2": true,
+    "follower-robot-count-3": true,
+    "follower-robot-count-4": false,
+    "follower-robot-count-5": false,
+    "foundry": true,
+    "gate": true,
+    "gun-turret": true,
+    "heavy-armor": true,
+    "inserter-capacity-bonus-1": true,
+    "inserter-capacity-bonus-2": true,
+    "inserter-capacity-bonus-3": true,
+    "inserter-capacity-bonus-4": true,
+    "inserter-capacity-bonus-5": true,
+    "inserter-capacity-bonus-6": true,
+    "inserter-capacity-bonus-7": false,
+    "kovarex-enrichment-process": false,
+    "lamp": true,
+    "land-mine": true,
+    "landfill": true,
+    "landing-pad-unloading-bay": false,
+    "laser": true,
+    "laser-shooting-speed-1": true,
+    "laser-shooting-speed-2": true,
+    "laser-shooting-speed-3": true,
+    "laser-shooting-speed-4": true,
+    "laser-shooting-speed-5": true,
+    "laser-shooting-speed-6": true,
+    "laser-shooting-speed-7": true,
+    "laser-turret": true,
+    "laser-weapons-damage-1": true,
+    "laser-weapons-damage-2": true,
+    "laser-weapons-damage-3": true,
+    "laser-weapons-damage-4": true,
+    "laser-weapons-damage-5": true,
+    "laser-weapons-damage-6": true,
+    "laser-weapons-damage-7": false,
+    "legendary-quality": false,
+    "logistic-robotics": true,
+    "logistic-science-pack": true,
+    "logistic-system": true,
+    "logistics": true,
+    "logistics-2": true,
+    "logistics-3": true,
+    "low-density-structure": true,
+    "lubricant": true,
+    "military": true,
+    "military-2": true,
+    "military-3": true,
+    "military-4": true,
+    "military-science-pack": true,
+    "mining-productivity-1": true,
+    "mining-productivity-2": true,
+    "mining-productivity-3": false,
+    "modular-armor": true,
+    "modules": true,
+    "night-vision-equipment": true,
+    "nuclear-fuel-reprocessing": true,
+    "nuclear-power": true,
+    "oil-gathering": true,
+    "oil-processing": true,
+    "personal-laser-defense-equipment": true,
+    "personal-roboport-equipment": true,
+    "personal-roboport-mk2-equipment": true,
+    "physical-projectile-damage-1": true,
+    "physical-projectile-damage-2": true,
+    "physical-projectile-damage-3": true,
+    "physical-projectile-damage-4": true,
+    "physical-projectile-damage-5": true,
+    "physical-projectile-damage-6": false,
+    "physical-projectile-damage-7": false,
+    "plastics": true,
+    "power-armor": true,
+    "power-armor-mk2": true,
+    "processing-unit": true,
+    "production-science-pack": true,
+    "productivity-module": true,
+    "productivity-module-2": true,
+    "productivity-module-3": true,
+    "quality-module": true,
+    "quality-module-2": true,
+    "quality-module-3": false,
+    "radar": true,
+    "railway": true,
+    "recycling": true,
+    "refined-flammables-1": true,
+    "refined-flammables-2": true,
+    "refined-flammables-3": true,
+    "refined-flammables-4": true,
+    "refined-flammables-5": false,
+    "refined-flammables-6": false,
+    "repair-pack": true,
+    "research-speed-1": true,
+    "research-speed-2": true,
+    "research-speed-3": true,
+    "research-speed-4": true,
+    "research-speed-5": true,
+    "research-speed-6": true,
+    "robotics": true,
+    "rocket-fuel": true,
+    "rocket-silo": true,
+    "rocketry": true,
+    "solar-energy": true,
+    "solar-panel-equipment": true,
+    "space-platform": false,
+    "space-science-pack": false,
+    "speed-module": true,
+    "speed-module-2": true,
+    "speed-module-3": false,
+    "stack-inserter": true,
+    "steam-power": true,
+    "steel-axe": true,
+    "steel-plate-productivity": false,
+    "steel-processing": true,
+    "stone-wall": true,
+    "stronger-explosives-1": true,
+    "stronger-explosives-2": true,
+    "stronger-explosives-3": true,
+    "stronger-explosives-4": true,
+    "stronger-explosives-5": false,
+    "stronger-explosives-6": false,
+    "sulfur-processing": true,
+    "tank": true,
+    "tesla-weapons": true,
+    "toolbelt": true,
+    "transport-belt-capacity-1": false,
+    "transport-belt-capacity-2": false,
+    "uranium-ammo": true,
+    "uranium-mining": true,
+    "uranium-processing": true,
+    "utility-science-pack": true,
+    "weapon-shooting-speed-1": true,
+    "weapon-shooting-speed-2": true,
+    "weapon-shooting-speed-3": true,
+    "weapon-shooting-speed-4": true,
+    "weapon-shooting-speed-5": true,
+    "weapon-shooting-speed-6": false,
+    "worker-robots-speed-1": true,
+    "worker-robots-speed-2": true,
+    "worker-robots-speed-3": true,
+    "worker-robots-speed-4": true,
+    "worker-robots-speed-5": true,
+    "worker-robots-speed-6": false,
+    "worker-robots-storage-1": true,
+    "worker-robots-storage-2": true,
+    "worker-robots-storage-3": false
+  },
+  "wallet_change_per_minute": 46.7
+}

@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "scope": "qualified finite-ground-stock native physical ending",
+  "source_sha256": "00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85",
+  "config": {
+    "bulk_inserter_capacity_bonus": 9,
+    "cash_buffers": [
+      200,
+      500,
+      1000,
+      1000
+    ],
+    "cores": 12,
+    "lab_speed_modifier": 2.5,
+    "lab_supply_reserve": 40,
+    "labs": 9,
+    "max_ticks": 4000000,
+    "ramp": [
+      1,
+      4,
+      8,
+      12
+    ],
+    "robots": 100,
+    "rocket_budget": 160,
+    "source_sha256": "00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85",
+    "speed": 100,
+    "tiers": [
+      {
+        "recipe": "bitermotors-orbital-ai-dataset"
+      },
+      {
+        "recipe": "bitermotors-orbital-ai-dataset-cluster",
+        "technology": "bitermotors-orbital-cluster-training"
+      },
+      {
+        "recipe": "bitermotors-orbital-ai-dataset-grid-scale",
+        "technology": "bitermotors-grid-scale-energy"
+      },
+      {
+        "recipe": "bitermotors-orbital-ai-dataset-hyperscale",
+        "technology": "bitermotors-hyperscale-training"
+      }
+    ]
+  },
+  "report_sha256": "0b349df2ac6c661c9db1f7d81dcc0b15efc294bd4f9c4810f11318fa0c1090b2",
+  "harness_sha256": {
+    "scripts/fixtures/practical-ending-control.lua": "58617c282bb13fcdfa9faa39bb6608fcb6529daf0a935b3b7b607477f1afe36e",
+    "scripts/fixtures/orbital-layout.lua": "b1305fcf98ff9b27333bd53ef1b46c49eecf7fd47e7019f50b98357d54b8503b",
+    "scripts/validate-bitermotors-practical-ending.sh": "b656cda2c336e3525a14d0b5b1e4ff065019277264d2cf85afed10fb5d64b409",
+    "scripts/check_practical_ending.py": "6828da79cbc40b0f87d6d0512b0719e35352a9b6baeb9bb8d8ccf77bda08fa27"
+  },
+  "limits": "Finite finished ground hardware, science, Dollars, rocket ingredients and ground EEI supplied at init; baseline research through Orbital Compute. Native 1/4/8/12 staged uplift overlaps compute; larger groups wait for physical hardware. Lab count/speed cap approximates science throughput, not science manufacturing. Not business cash generation, a natural campaign, GUI or multiplayer qualification.",
+  "total_minutes_including_freeplay": 318.48333333333335,
+  "phase_minutes": {
+    "starter": 3.8666666666666667,
+    "construction": 10.258333333333333,
+    "compute": 279.5469444444444,
+    "finish_compute": 0.2866666666666667,
+    "drain": 0.8080555555555555,
+    "loading": 21.125,
+    "assembly": 0.9927777777777778,
+    "return": 0.3988888888888889,
+    "activation": 0.5194444444444445,
+    "victory": 0.013888888888888888
+  },
+  "milestones": [
+    {
+      "status": "setup",
+      "tick": 0,
+      "input_datasets": 0,
+      "earned": 0
+    },
+    {
+      "status": "starter_delivered",
+      "tick": 13920,
+      "input_datasets": 0,
+      "earned": 0
+    },
+    {
+      "status": "built",
+      "tick": 50850,
+      "input_datasets": 0,
+      "earned": 0
+    },
+    {
+      "status": "payload_retained",
+      "tick": 1061160,
+      "input_datasets": 0,
+      "earned": 1000350000
+    },
+    {
+      "status": "loading_checkpoint",
+      "tick": 1064970,
+      "input_datasets": 1009,
+      "earned": 1000350000
+    },
+    {
+      "status": "loading_reload",
+      "tick": 1065000,
+      "input_datasets": 1009,
+      "earned": 1000350000
+    },
+    {
+      "status": "assembly_started",
+      "tick": 1137210,
+      "input_datasets": 1,
+      "earned": 1000350000
+    },
+    {
+      "status": "model_returned",
+      "tick": 1142220,
+      "input_datasets": 6,
+      "earned": 1000350000
+    },
+    {
+      "status": "victory_checkpoint",
+      "tick": 1144110,
+      "input_datasets": 6,
+      "earned": 1000350000
+    },
+    {
+      "status": "victory_reload",
+      "tick": 1144140,
+      "input_datasets": 6,
+      "earned": 1000350000
+    },
+    {
+      "status": "complete",
+      "tick": 1146540,
+      "input_datasets": 6,
+      "earned": 1000350000
+    }
+  ],
+  "research": [
+    {
+      "name": "bitermotors-orbital-cluster-training",
+      "tick": 239691,
+      "started_tick": 171120,
+      "by_script": false
+    },
+    {
+      "name": "bitermotors-grid-scale-energy",
+      "tick": 398717,
+      "started_tick": 295860,
+      "by_script": false
+    },
+    {
+      "name": "bitermotors-hyperscale-training",
+      "tick": 647502,
+      "started_tick": 510360,
+      "by_script": false
+    }
+  ],
+  "ramp": [
+    {
+      "cores": 1,
+      "tick": 50880,
+      "tier": 1,
+      "earned": 0
+    },
+    {
+      "cores": 4,
+      "tick": 245280,
+      "tier": 2,
+      "earned": 1650000
+    },
+    {
+      "cores": 8,
+      "tick": 398730,
+      "tier": 3,
+      "earned": 26150000
+    },
+    {
+      "cores": 12,
+      "tick": 647520,
+      "tier": 4,
+      "earned": 182150000
+    }
+  ],
+  "manifest": {
+    "bulk-inserter": 29,
+    "express-transport-belt": 248,
+    "bitermotors-orbital-datacenter-core": 12,
+    "bitermotors-high-density-space-solar-panel": 60,
+    "bitermotors-orbital-heat-pipe": 24,
+    "bitermotors-orbital-radiator-panel": 12,
+    "space-platform-foundation": 1380
+  },
+  "rockets": 45,
+  "native_rocket_parts": 2350,
+  "rocket_ingredients_consumed": {
+    "processing-unit": 2350,
+    "low-density-structure": 2350,
+    "rocket-fuel": 2350
+  },
+  "compute_dollars_native": 6320,
+  "recipe_change_discarded_dollars": 2,
+  "operating_dollars_used": 6322,
+  "research_dollars_consumed": 3906,
+  "max_temperature_c": 96.19454078536033,
+  "burnouts": 0,
+  "low_power_samples": 0,
+  "full_output_samples": 0,
+  "native_assemblies": 1,
+  "native_activations": 1,
+  "models_returned": 1,
+  "victory": {
+    "tick": 1144090,
+    "source": "native-model-activation",
+    "assembly_seconds": 60,
+    "activation_seconds": 30,
+    "model_quality": "normal",
+    "cumulative_ai_tokens": 1000350000,
+    "surface": "nauvis",
+    "position": {
+      "x": -20,
+      "y": 17
+    }
+  },
+  "starter_prototype_items": {
+    "space-platform-foundation": 10
+  },
+  "starter_prototype_tiles": 100,
+  "foundation_required_tiles": 1380,
+  "freeplay_ticks": 2400,
+  "archive_sha256": "4eaae45e45dfaa5e96328b7f93fa4327c4aa6e318db9a6e0b6abf5d50e1cc050"
+}

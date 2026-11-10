@@ -648,7 +648,8 @@ local function station_config(station)
   if quality_level <= 0 and battery_level <= 0 then
     return base
   end
-  local config = table.deepcopy(base)
+  local config = {}
+  for key, value in pairs(base) do config[key] = value end
   config.evs_per_stall = math.floor(
     base.evs_per_stall * (1 + quality_level * 0.1) * (1 + battery_level * 0.05) + 0.5
   )
@@ -8211,7 +8212,7 @@ local RESEARCH_COMPLETION_MESSAGES = {
   ["bitermotors-energy-products"] = "[Biter Motors] Energy Products researched. Upgrade conventional solar fields with High-density Solar Panels and build Grid Batteries for mass-market power demand.",
   ["bitermotors-terrestrial-ai"] = "[Biter Motors] Terrestrial AI researched. Build 4 Datacenter Racks, then construct an 8 MW Terrestrial Datacenter. Its base cycle consumes 20 Dollars to produce 20 AI Tokens in 30 seconds. Make the Tokens for Autonomous Logistics and Orbital AI Infrastructure on land; check their research ingredients.",
   ["bitermotors-autonomous-logistics"] = "[Biter Motors] Autonomous Logistics researched. The toolbar now has Route and Summon controls for Premium, Mass-market, Megatruck, and Bitertaxi EVs. Bitertaxi production still requires 5,000 total consumer EV sales.",
-  ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Start with one Compute Cluster, one Radiator and five Solar Wings on a stationary Nauvis platform. Set custom minimum payloads to 1 cluster, 1 radiator, 5 wings and 100 Dollars; otherwise automatic rockets wait for full loads. Return the physical AI Tokens to Nauvis.",
+  ["bitermotors-orbital-compute"] = "[Biter Motors] Orbital AI Infrastructure researched. Start with one Compute Cluster, one Radiator, Orbital Heat Pipes and five Solar Wings on a stationary Nauvis platform. Select Orbital Training Dataset output. Use small minimum deliveries and a 200-Dollar operating buffer; keep research money on Nauvis. Return one Dataset and unpack it for science; retain the rest in orbit.",
   ["bitermotors-orbital-cluster-training"] = "[Biter Motors] Cluster Training researched. Each cooled orbital core can now produce 50,000 AI Tokens per Dollar.",
   ["bitermotors-grid-scale-energy"] = "[Biter Motors] Grid-scale Energy researched. Upgrade HD panels into 3 MW Tandem Solar Arrays and Grid Batteries into 1 GJ Grid Battery Arrays; orbital batches now yield 100,000 Tokens or two Datasets per Dollar.",
   ["bitermotors-hyperscale-training"] = "[Biter Motors] Hyperscale Training researched. Each cooled orbital core can now produce 200,000 AI Tokens or four Datasets per Dollar. Bank 20,000 Datasets for orbital Model assembly; one billion earned equivalents unlocks it."
@@ -10376,7 +10377,7 @@ local function current_progress_objective(snapshot)
   elseif not snapshot.agi_training_unlocked then
     return "AGI scale", "Generate one billion cumulative AI Token equivalents.", "Terrestrial compute can begin the climb, but orbital compute provides endgame scale. Each computed Training Dataset counts as 50,000 Tokens. Spent output still counts; repackaging does not count again."
   elseif snapshot.agi_models_assembled == 0 then
-    return "Model assembly", "Assemble an AGI Model in orbit.", "Feed 20,000 physical Training Datasets and one Datacenter Rack into an Orbital Compute Cluster. Select Assemble AGI Model; a normal cluster takes one minute. Low power banks work; keep the heat path intact because burnout destroys the committed payload."
+    return "Model assembly", "Assemble an AGI Model in orbit.", "Stop Dollar input and drain the belt back to the hub. Feed 20,000 physical Training Datasets and one Datacenter Rack with an express belt and full-hand bulk inserters. Select Assemble AGI Model: loading takes time, then a normal cluster crafts for one minute. Keep the heat path intact; burnout destroys the payload."
   elseif snapshot.agi_models_returned == 0 then
     return "Model return", "Return the AGI Model to Nauvis.", "Move the Model into its platform hub and request it at a Nauvis Cargo Landing Pad. Native cargo delivery unlocks activation; possessing an injected Model does not."
   elseif not snapshot.victory then

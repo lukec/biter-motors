@@ -1708,10 +1708,10 @@ expected_research = {
     "bitermotors-capital-scaling": (600, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-terrestrial-ai": (750, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-autonomous-logistics": (750, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-compute": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-cluster-training": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-grid-scale-energy": (1500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-hyperscale-training": (2000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-compute": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-cluster-training": (600, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-grid-scale-energy": (900, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-hyperscale-training": (1200, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -1722,9 +1722,9 @@ for technology_name, (count, time, ingredients) in expected_research.items():
             f"ingredients={sorted(actual_ingredients)}"
         )
 for technology_name, expected_dollars_per_cycle in {
-    "bitermotors-orbital-cluster-training": 2,
-    "bitermotors-grid-scale-energy": 2,
-    "bitermotors-hyperscale-training": 3,
+    "bitermotors-orbital-cluster-training": 1,
+    "bitermotors-grid-scale-energy": 1,
+    "bitermotors-hyperscale-training": 2,
 }.items():
     ingredients = {
         row[0]: row[1] for row in data["technology"][technology_name]["unit"]["ingredients"]
@@ -2033,9 +2033,9 @@ radiator = data["heat-interface"]["bitermotors-orbital-radiator-panel"]
 if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital Radiator Panel must be space-only")
 for name, cycles, dollars in (
-    ("bitermotors-orbital-cluster-training", 1000, 2),
-    ("bitermotors-grid-scale-energy", 1500, 2),
-    ("bitermotors-hyperscale-training", 2000, 3),
+    ("bitermotors-orbital-cluster-training", 600, 1),
+    ("bitermotors-grid-scale-energy", 900, 1),
+    ("bitermotors-hyperscale-training", 1200, 2),
 ):
     unit = data["technology"][name]["unit"]
     ingredients = dict(unit["ingredients"])
