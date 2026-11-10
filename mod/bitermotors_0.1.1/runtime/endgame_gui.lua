@@ -98,8 +98,9 @@ function Gui.render(player, panel, agi)
       "20,000 physical Datasets and one Rack. A native completion survives output extraction and machine removal.")
   end
   if view.payload_value then
-    text(content, "bitermotors_ending_payload", view.payload_value, body,
+    local payload = text(content, "bitermotors_ending_payload", view.payload_value, body,
       (view.stage_key == "assembly" and agi.assembly or agi.activation).committed and "good" or "warning")
+    payload.tooltip = view.payload_tooltip
   end
   if agi.models_assembled > 0 then
     metric(content, "bitermotors_return_milestone", "item/bitermotors-agi-model", "Cargo return",

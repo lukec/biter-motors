@@ -7315,6 +7315,10 @@ local function add_station_info_label(parent, caption, color)
     caption = caption,
     single_line = false
   }
+  if parent.name == "bitermotors_manufacturer_content" then
+    label.style.single_line = false
+    label.style.maximal_width = 328
+  end
   if color then label.style.font_color = color end
   return label
 end
@@ -10106,6 +10110,10 @@ local function progress_snapshot(force)
   local advanced_battery_chemistry_available = sync_advanced_battery_chemistry_gate(force, false)
   local foundry_gate = sync_foundry_power_gate(force, false)
   local logistic_system = force.technologies and force.technologies[LOGISTIC_SYSTEM_TECH_NAME]
+  local logistic_system_ready = logistic_system and logistic_system.enabled or false
+  for _, prerequisite in pairs(logistic_system and logistic_system.prerequisites or {}) do
+    if not prerequisite.researched then logistic_system_ready = false end
+  end
   local research_costs = {}
   for _, name in ipairs(ProgressGuidance.technologies) do
     research_costs[name] = ProgressGuidance.research_cost(force.technologies[name])
@@ -10132,7 +10140,7 @@ local function progress_snapshot(force)
     charging_network_researched = researched(force, "bitermotors-ev-charging-network"),
     mass_market_researched = researched(force, "bitermotors-capital-scaling"),
     energy_products_researched = researched(force, "bitermotors-energy-products"),
-    logistic_system_available = logistic_system and logistic_system.enabled or false,
+    logistic_system_available = logistic_system_ready,
     logistic_system_researched = logistic_system and logistic_system.researched or false,
     terrestrial_ai_researched = researched(force, "bitermotors-terrestrial-ai"),
     autonomous_logistics_researched = researched(force, "bitermotors-autonomous-logistics"),
@@ -11187,6 +11195,7 @@ local function open_progress_panel(player)
     tooltip = "Close"
   }
   refresh_progress_panel(player)
+  panel.force_auto_center()
   storage.bitermotors_progress_refresh_ticks = storage.bitermotors_progress_refresh_ticks or {}
   storage.bitermotors_progress_refresh_ticks[player.index] = game.tick
 end
@@ -11322,14 +11331,6 @@ function entity_status_presentation(entity)
   return entity_status_text(entity), BITERMOTORS_STATE_COLORS.neutral
 end
 
-local function add_item_inventory_row(parent, item_name, current, required)
-  local row = parent.add{type = "flow", direction = "horizontal"}
-  row.add{type = "sprite", sprite = "item/" .. item_name}
-  local prototype = prototypes.item[item_name]
-  local name = prototype and prototype.localised_name or item_name
-  row.add{type = "label", caption = {"", name, ": ", current, " / ", required}}
-end
-
 local function recipe_missing_item(entity, recipe)
   local inventory_id = crafter_input_inventory_id()
   local inventory = inventory_id and entity.get_inventory(inventory_id)
@@ -11364,6 +11365,11 @@ local function show_manufacturer_info_panel(player, entity)
     anchor = bitermotors_relative_anchor(entity)
   }
   panel.style.width = 380
+  panel = panel.add{type = "scroll-pane", name = "bitermotors_manufacturer_content", direction = "vertical"}
+  panel.style.width = 356
+  panel.style.maximal_height = math.max(160, math.min(780,
+    math.floor(player.display_resolution.height / math.max(0.5, player.display_scale or 1)) - 150))
+  panel.horizontal_scroll_policy = "never"
   local state_text, state_color = entity_status_presentation(entity)
   local state_row = panel.add{type = "flow", direction = "horizontal"}
   state_row.add{type = "label", caption = "State: "}
@@ -11734,14 +11740,14 @@ local function show_manufacturer_info_panel(player, entity)
       if selected_recipe == AGI_ASSEMBLY_RECIPE_NAME then
         add_station_info_label(panel, "Model assembly: 20,000 Datasets + 1 Rack; one normal minute.")
         add_station_info_label(panel, "Return the finished Model through this platform's hub to a Nauvis Cargo Landing Pad.")
-      else
+      elseif compute_recipe then
         local recipe = entity.get_recipe()
-        local recipe_seconds = recipe and recipe.energy or 30
-        local dollars = recipe and recipe.ingredients[1].amount or 1
-        add_station_info_label(panel, string.format("Capital burn: %g Dollars per %g-second cycle at full speed",
+        local recipe_seconds = recipe.energy
+        local dollars = recipe.ingredients[1].amount
+        add_station_info_label(panel, string.format("Capital burn: %g Dollars per %.2f-second cycle at current crafting speed",
           dollars, recipe_seconds / entity.crafting_speed))
         add_station_info_label(panel, string.format(
-          "AI output: %g Token equivalents/cycle (%g/minute at full power)",
+          "AI output: %g Token equivalents/cycle (%g/minute at current speed and full power)",
           selected_output,
           selected_output * entity.crafting_speed * 60 / recipe_seconds
         ))
@@ -11765,9 +11771,11 @@ local function show_manufacturer_info_panel(player, entity)
       end
       add_station_info_label(panel, "Heat path: Core -> Orbital Heat Pipes -> Radiator. Aim near 97 C.")
       add_station_info_label(panel, "105 C warning | 120 C critical | 130 C destroys core and committed inputs.")
-      add_station_info_label(panel, datasets
-        and "Payload: retain 20,000 physical Datasets in orbit for Model assembly."
-        or "Logistics: return AI Tokens for science; retain the final Dataset payload in orbit.")
+      if agi_training_status(entity.force).unlocked then
+        add_station_info_label(panel, "Payload: retain 20,000 physical Datasets and one Rack in orbit for Model assembly.")
+      else
+        add_station_info_label(panel, "Logistics: return AI Tokens for science, or return Datasets and unpack them on Nauvis.")
+      end
     end
   end
 
@@ -11787,9 +11795,6 @@ local function show_manufacturer_info_panel(player, entity)
     return
   end
 
-  add_station_info_label(panel, {"", "Recipe: ", recipe.localised_name})
-  add_station_info_label(panel, string.format("Cycle progress: %d%%", math.floor((entity.crafting_progress or 0) * 100)))
-  local input_inventory = entity.get_inventory(crafter_input_inventory_id())
   local final_recipe = recipe.name == AGI_ASSEMBLY_RECIPE_NAME or recipe.name == AGI_ACTIVATION_RECIPE_NAME
   if final_recipe then
     local machine = agi_machine_presentation(entity, recipe.name == AGI_ACTIVATION_RECIPE_NAME)
@@ -11802,26 +11807,6 @@ local function show_manufacturer_info_panel(player, entity)
       add_station_info_label(panel, "Payload committed: inputs and progress are retained through interruptions.", BITERMOTORS_STATE_COLORS.good)
     end
   end
-  if not final_recipe or (entity.crafting_progress or 0) == 0 then
-    add_section_heading(panel, "Inputs")
-    for _, ingredient in pairs(recipe.ingredients) do
-      if ingredient.type == "item" then
-        local current = input_inventory and input_inventory.get_item_count(ingredient.name) or 0
-        add_item_inventory_row(panel, ingredient.name, current, ingredient.amount)
-      end
-    end
-  end
-
-  add_section_heading(panel, "Outputs")
-  local output_inventory = entity.get_inventory(crafter_output_inventory_id())
-  for _, product in pairs(recipe.products) do
-    if product.type == "item" then
-      local amount = product.amount or product.amount_min or 1
-      local current = output_inventory and output_inventory.get_item_count(product.name) or 0
-      add_item_inventory_row(panel, product.name, current, amount)
-    end
-  end
-
   local missing_name, current, required = recipe_missing_item(entity, recipe)
   local next_step
   if entity.name == ORBITAL_DATACENTER_CORE_NAME and not orbital_core_has_cooling(entity) then
@@ -11861,6 +11846,8 @@ local function show_manufacturer_info_panel(player, entity)
     else
       next_step = "Waiting for a prospect."
     end
+  elseif final_recipe and (entity.crafting_progress or 0) > 0 then
+    next_step = "Payload committed: keep power available and clear the output; do not reload inputs."
   elseif missing_name then
     local item = prototypes.item[missing_name]
     local display_name = item and item.localised_name or missing_name
@@ -13740,6 +13727,7 @@ remote.add_interface("bitermotors", {
     end
     if player.gui.screen[PROGRESS_PANEL_NAME] then
       refresh_progress_panel(player)
+      player.gui.screen[PROGRESS_PANEL_NAME].force_auto_center()
     else
       open_progress_panel(player)
     end

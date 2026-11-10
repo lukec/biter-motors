@@ -349,7 +349,7 @@
         3,
         3
       ],
-      "scale": 0.18,
+      "scale": 0.2,
       "icon_dimensions": [
         256,
         256
@@ -359,8 +359,8 @@
         512
       ],
       "preview_dimensions": [
-        92,
-        92
+        102,
+        102
       ],
       "status": "bitmap"
     },
@@ -369,40 +369,52 @@
       "prototype_id": "bitermotors-orbital-radiator-panel",
       "name": "Orbital Radiator",
       "kind": "entity",
-      "source_path": "base-art",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/orbital-radiator-panel/orbital-radiator-panel.png",
       "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/orbital-radiator-panel.png",
       "footprint_tiles": [
         3,
         3
       ],
-      "scale": 1.0,
+      "scale": 0.2,
       "icon_dimensions": [
         256,
         256
       ],
-      "source_dimensions": null,
-      "preview_dimensions": null,
-      "status": "inherited-placeholder"
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        102,
+        102
+      ],
+      "status": "bitmap"
     },
     {
       "review_id": "entity:bitermotors-high-density-space-solar-panel",
       "prototype_id": "bitermotors-high-density-space-solar-panel",
       "name": "Space Solar Wing",
       "kind": "entity",
-      "source_path": "base-art",
+      "source_path": "../../mod/bitermotors_0.1.1/graphics/entity/high-density-space-solar-panel/high-density-space-solar-panel.png",
       "icon_path": "../../mod/bitermotors_0.1.1/graphics/icons/high-density-space-solar-panel.png",
       "footprint_tiles": [
         3,
         3
       ],
-      "scale": 1.0,
+      "scale": 0.2,
       "icon_dimensions": [
         256,
         256
       ],
-      "source_dimensions": null,
-      "preview_dimensions": null,
-      "status": "inherited-placeholder"
+      "source_dimensions": [
+        512,
+        512
+      ],
+      "preview_dimensions": [
+        102,
+        102
+      ],
+      "status": "bitmap"
     },
     {
       "review_id": "vehicle:bitermotors-prototype-roadster",

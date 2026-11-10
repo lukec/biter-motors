@@ -21,6 +21,11 @@ ISOLATED_VALIDATORS = (
 
 
 class ValidationScriptContracts(unittest.TestCase):
+    def test_gui_profit_assertion_uses_business_ledger_not_total_currency_inflow(self):
+        script = self.read_script("validate-bitermotors-gui.sh")
+        self.assertIn('get("operating_profit_dollars")', script)
+        self.assertNotIn('represented_profit = f"${diagnostics_total', script)
+
     def read_script(self, name):
         return (SCRIPTS / name).read_text()
 

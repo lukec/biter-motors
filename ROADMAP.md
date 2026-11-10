@@ -40,8 +40,8 @@ qualification is still not a frozen, playtest-ready campaign. Phase 4 now has
 logistics/pacing slice is now qualified:** both ending routes consume the real
 20,000-Dataset payload through belts and survive mid-load and victory reloads.
 See the [save-based pacing freeze](docs/endgame-pacing.md). **Three-seed and
-mandatory dependency audits are complete. Next: functional-art checks**, then
-the remaining release qualification.
+mandatory dependency and functional-art/UI audits are complete. Next: exact
+archive release qualification**, then clean-install acceptance.
 
 **Physical cooling update:** the approved thermal hardening slice is integrated
 on Factorio 2.1.24: native shared heat networks, a 2-3 minute nominal buffer,
@@ -162,10 +162,11 @@ log small balance corrections rather than reopening the ending design.
   machines and removed-planet dependencies. No production blocker found; no
   balance or unlock changes were needed. See the
   [dependency evidence and limits](docs/progression-dependency-audit.md).
-- Give the cluster, radiator and solar wing clear platform-appropriate art with
-  distinct silhouettes and correct footprints. Check existing critical assets,
-  locked-item filters, tier/readability cues and native UI at two scales,
-  day/night and remote view. Fix functional confusion, not every aesthetic flaw.
+- **Functional art/UI pass complete:** distinct axis-aligned orbital cluster,
+  radiator and solar sprites/icons; native near/far and night renders; wrapped
+  inspectors, correct committed-payload guidance, progressive reveal and centered
+  Progress frames. Native smoke, progressed-save panels and both physical ending
+  routes pass. See [screenshots, provenance and limits](docs/functional-readability.md).
 - Freeze the spoiler-light campaign contract, default start, supported engine,
   prototype identifiers and core recipes. Move unrelated ideas to post-v1.
 
@@ -248,9 +249,9 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 4's functional in-game art/readability
-pass, followed by candidate soaks,
-multiplayer and clean-install qualification. The ending, epilogue and practical
+**Immediate next implementation:** Phase 5's exact-archive packaging/provenance
+gate and candidate soaks, then multiplayer and clean-install qualification.
+The ending, epilogue, functional presentation and practical
 pacing are implemented. No original player save or live process was changed;
 the development mod symlink loads this source on a later restart, not hot-reload.
 

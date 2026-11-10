@@ -102,6 +102,10 @@ changes that policy.
   create_player API. Use purpose-created native players for GUI persistence
   tests; distinguish public-callback tests from real clicks, joins and reconnects.
   A one-player fixture does not qualify simultaneous multiplayer presentation.
+- Native label wrapping requires `label.style.single_line = false`; setting a
+  creation field alone can silently leave ellipses. Recenter a newly populated
+  screen frame with `force_auto_center()`. GUI screenshots must use the player's
+  actual display resolution or off-screen captures can create false clipping.
 
 ## Verification
 

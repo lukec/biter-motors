@@ -24,6 +24,11 @@ Biter Motors licenses. Users must obtain and use the game under Wube's terms.
 
 ## Development tools
 
+The three compact orbital entity rasters and matching icons were generated
+with OpenAI's built-in image-generation tool on 2026-11-10, then normalized
+with Pillow. See [orbital art provenance](docs/orbital-art-provenance.md) for
+requests, retained sources, alpha/crop mappings, and the asset-license boundary.
+
 The repository uses Python's standard library and Pillow for development-time
 art checks. Those tools are not bundled into the Factorio mod archive and keep
 their own licenses.

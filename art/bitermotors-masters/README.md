@@ -41,6 +41,11 @@ resolution. The mod consumes derived 512 px entity sprites and 256 px icons.
 
 ## Deterministic Derivatives
 
+The compact orbital compute, radiator, and space-solar masters were generated
+with native transparent alpha, not extracted from chroma-key backgrounds.
+Their requests, source paths, dates, derivative mappings, and licensing are in
+[`docs/orbital-art-provenance.md`](../../docs/orbital-art-provenance.md).
+
 Run:
 
 ```bash

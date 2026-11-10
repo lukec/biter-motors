@@ -27,9 +27,9 @@ ENTITY_ASSETS = [
     ("bitermotors-grid-battery", "Grid Battery", "grid-battery/grid-battery.png", "grid-battery.png", 2, 0.14, "bitmap"),
     ("bitermotors-grid-battery-array", "Grid Battery Array", "grid-battery/grid-battery.png", "grid-battery.png", 2, 0.14, "inherited-placeholder"),
     ("bitermotors-terrestrial-datacenter", "Terrestrial Datacenter", "terrestrial-datacenter/terrestrial-datacenter.png", "terrestrial-datacenter.png", 6, 0.36, "bitmap"),
-    ("bitermotors-orbital-datacenter-core", "Orbital Compute Cluster", "orbital-datacenter-core/orbital-datacenter-core.png", "orbital-datacenter-core.png", 3, 0.18, "bitmap"),
-    ("bitermotors-orbital-radiator-panel", "Orbital Radiator", None, "orbital-radiator-panel.png", 3, 1.0, "inherited-placeholder"),
-    ("bitermotors-high-density-space-solar-panel", "Space Solar Wing", None, "high-density-space-solar-panel.png", 3, 1.0, "inherited-placeholder"),
+    ("bitermotors-orbital-datacenter-core", "Orbital Compute Cluster", "orbital-datacenter-core/orbital-datacenter-core.png", "orbital-datacenter-core.png", 3, 0.2, "bitmap"),
+    ("bitermotors-orbital-radiator-panel", "Orbital Radiator", "orbital-radiator-panel/orbital-radiator-panel.png", "orbital-radiator-panel.png", 3, 0.2, "bitmap"),
+    ("bitermotors-high-density-space-solar-panel", "Space Solar Wing", "high-density-space-solar-panel/high-density-space-solar-panel.png", "high-density-space-solar-panel.png", 3, 0.2, "bitmap"),
 ]
 
 ANIMATIONS = [

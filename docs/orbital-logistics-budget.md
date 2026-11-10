@@ -91,4 +91,4 @@ Campaign rockets use modeled single-item packing; native mixed-load fixture flig
 No lab capacity, build schedule, wear-material replacement, power infrastructure or movement time modeled.
 Independent lower bounds are not additive and are not a finish-time forecast.
 
-Native catalog source SHA-256: `1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb`.
+Native catalog source SHA-256: `fba062bcbde0c52bf155cc2ff881f666113faef33f38733eb4a56aa9c2429bf3`.

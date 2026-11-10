@@ -121,7 +121,9 @@ defending it, finding resources or correcting unrelated bottlenecks.
 ## Qualified Native Route
 
 Both cases passed on the exact **0.1.1** archive, SHA-256
-`59075b924fdc72dc8193e3342989b9daa9c87f013d034361c094aa66af3ea8c0`.
+`f0bb344d843b54aec3aeb55fd5400933a8eebcc5431ffa89429c4bd4b2b1349d`.
+The 2026-11-10 [readability pass](functional-readability.md) reran both routes
+on this presentation-updated archive; measured pacing and costs are unchanged.
 Compact source, fixture, runner, checker and report identities are retained in
 the [Hyperscale](endgame-practical-hyperscale.json) and
 [Grid-only](endgame-practical-grid.json) records. Raw logs and saves remain local.
@@ -166,10 +168,12 @@ runtime prototype. Extra floor must equal rocket-delivered plus those ten,
 minus hub leftovers. Parallel labs' small committed-pack overrun is bounded
 per lab/technology and counted as actual expenditure, not silently refunded.
 
-The shorter archive also passes the full-mod smoke, native AI accounting,
+The preceding shorter-pacing archive also passed the full-mod smoke, native AI accounting,
 production accounting, power-interruption recovery and the 20-phase thermal
 hardening suite, including warmed 12/128-core arrays and separate-process
-reloads. Faster recipes exposed two timing assumptions in test fixtures: progress
+reloads. These thermal/accounting results remain historical qualification, not
+a new run of those suites on the readability archive. Faster recipes exposed
+two timing assumptions in test fixtures: progress
 probes now scale with batch duration, and packaging waits for unrelated physical
 bonus delivery before asserting no new compute. Neither repair supplies fresh
 inputs or bypasses retained native progress. A regression preserves at least

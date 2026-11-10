@@ -15,6 +15,26 @@ LUA = shutil.which("lua") or shutil.which("lua5.4") or shutil.which("luajit")
 
 
 class EndgamePresentationContractTest(unittest.TestCase):
+    def test_inspector_guards_and_layout(self):
+        control = (ROOT / "mod/bitermotors_0.1.1/control.lua").read_text()
+        inspector = control.split("local function show_manufacturer_info_panel(player, entity)", 1)[1]
+        inspector = inspector.split("local function is_customer_settlement_entity", 1)[0]
+        self.assertIn('name = "bitermotors_manufacturer_content"', inspector)
+        self.assertIn('label.style.single_line = false', control)
+        self.assertIn('if not prerequisite.researched then logistic_system_ready = false end', control)
+        self.assertIn('panel.style.maximal_height = math.max(160, math.min(780,', inspector)
+        self.assertIn('panel.horizontal_scroll_policy = "never"', inspector)
+        self.assertIn('elseif compute_recipe then', inspector)
+        self.assertNotIn('recipe and recipe.energy or 30', inspector)
+        self.assertIn('%.2f-second cycle at current crafting speed', inspector)
+        self.assertIn('if agi_training_status(entity.force).unlocked then', inspector)
+        committed = inspector.index('elseif final_recipe and (entity.crafting_progress or 0) > 0 then')
+        missing = inspector.index('elseif missing_name then')
+        self.assertLess(committed, missing)
+        self.assertIn('do not reload inputs.', inspector[committed:missing])
+        locale = (ROOT / "mod/bitermotors_0.1.1/locale/en/bitermotors.cfg").read_text()
+        self.assertIn('bitermotors-orbital-ai-dataset-grid-scale=Grid-scale Training Datasets', locale)
+
     def test_module_is_bounded_and_independent(self):
         source = MODULE.read_text()
         for dependency in ("game.", "storage.", "script.", "rendering.", "require(",
@@ -59,6 +79,69 @@ class EndgamePresentationCasesTest(unittest.TestCase):
         assert(lost.objective:find('Rebuild the lost', 1, true))
         assert(P.describe{models_assembled=1}.stage_key == 'assembly')
         assert(P.describe{models_activated=1}.stage_key ~= 'complete')
+        """)
+
+    def test_gui_payload_tooltips_and_narrow_metrics(self):
+        self.lua("""
+        package.loaded['runtime.endgame_presentation'] = P
+        package.loaded['runtime.terminal_epilogue'] = {open_button='terminal'}
+        helpers = {table_to_json=function() return 'fixture' end}
+        local G = dofile(""" + repr(str(MODULE.with_name("endgame_gui.lua"))) + """)
+        local function element(spec)
+          local e = {style={}, tags={}, caption=spec and spec.caption}
+          e.add = function(child)
+            local c = element(child)
+            if child.name then e[child.name] = c end
+            return c
+          end
+          e.clear = function() end
+          return e
+        end
+        for _, state in ipairs{'needs_inputs', 'working'} do
+          local panel = element()
+          local agi = {unlocked=true, models_assembled=0, models_returned=0,
+            required_ai_tokens=1000000000, cumulative_ai_tokens=1000000000,
+            assembly={state=state, committed=state=='working', progress=0.5,
+              datasets=123, racks=1}}
+          G.render({force={index=1}, display_scale=1.5,
+            display_resolution={width=640,height=480}}, panel, agi)
+          local content = panel.bitermotors_progress_content
+          local payload = content.bitermotors_ending_payload
+          assert(payload.tooltip == P.describe(agi).payload_tooltip)
+          assert(payload.style.maximal_width == panel.style.width - 56)
+          local row = content.bitermotors_earned_compute
+          assert(row.bitermotors_earned_compute_value.style.width > 0)
+          assert(content.horizontal_scroll_policy == 'never')
+          assert(content.style.maximal_height == 170)
+        end
+        """)
+
+    def test_inspector_rates_follow_recipe_and_crafting_speed(self):
+        control = (ROOT / "mod/bitermotors_0.1.1/control.lua").read_text()
+        block = control.split('elseif compute_recipe then', 1)[1]
+        block = block.split('      add_station_info_label(panel, status.next_threshold', 1)[0]
+        self.lua("""
+        local function inspect(seconds, speed, dollars, output, compact)
+          local lines = {}
+          local panel = {}
+          local entity = {crafting_speed=speed,
+            get_recipe=function() return {energy=seconds, ingredients={{amount=dollars}}} end}
+          local selected_output, datasets = output, compact
+          local AiAccounting = {dataset_tokens=50000}
+          local function add_station_info_label(_, line) lines[#lines+1] = line end
+          if true then
+        """ + block + """
+          return lines
+        end
+        local entry = inspect(50, 1.5, 5, 50000, true)
+        assert(entry[1]:find('5 Dollars per 33.33-second cycle', 1, true))
+        local grid = inspect(10, 1.5, 1, 100000, true)
+        assert(grid[1]:find('1 Dollars per 6.67-second cycle', 1, true))
+        assert(grid[2]:find('900000/minute', 1, true))
+        assert(grid[3]:find('2 Training Datasets/cycle', 1, true))
+        local faster = inspect(10, 3, 1, 100000, false)
+        assert(faster[1]:find('3.33-second cycle', 1, true))
+        assert(#faster == 2)
         """)
 
     def test_compute_gate_hides_model_and_separates_physical_stock(self):

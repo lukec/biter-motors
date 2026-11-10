@@ -998,7 +998,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("tint = {r = 0.18, g = 0.48, b = 0.24, a = 0.16}", data)
         self.assertNotIn("tint = {r = 0.25, g = 0.85, b = 1.0, a = 0.35}", data)
         self.assertIn('generated_entity_animation("terrestrial-datacenter", 0.36, {', data)
-        self.assertIn('generated_entity_animation("orbital-datacenter-core", 0.18)', data)
+        self.assertIn('generated_entity_animation("orbital-datacenter-core", 0.2)', data)
         self.assertIn('orbital_radiator_panel_icon = generated_icon("orbital-radiator-panel")', data)
         self.assertIn('high_density_space_solar_panel_icon = generated_icon("high-density-space-solar-panel")', data)
         for slug in [
@@ -1432,8 +1432,10 @@ class BiterMotorsModTest(unittest.TestCase):
         data = (MOD / "data.lua").read_text()
         orbital_entity = data.index('local orbital_datacenter_core = copied_assembler(')
         orbital_recipe = data.index('recipe("bitermotors-orbital-ai-token"')
-        self.assertIn('property = "gravity"', data[orbital_entity:orbital_entity + 800])
-        self.assertIn('property = "gravity"', data[orbital_recipe:orbital_recipe + 1200])
+        entity_end = data.index('local function orbital_heat_buffer(', orbital_entity)
+        recipe_end = data.index('recipe("bitermotors-orbital-ai-token-cluster"', orbital_recipe)
+        self.assertIn('property = "gravity"', data[orbital_entity:entity_end])
+        self.assertIn('property = "gravity"', data[orbital_recipe:recipe_end])
 
     def test_bitermotors_recipes_use_factorio_2_1_categories_field(self):
         data = (MOD / "data.lua").read_text()
@@ -2288,9 +2290,14 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertIn("is_bitermotors_manufacturer", control)
         self.assertIn("entity_status_text", control)
         self.assertIn("recipe_missing_item", control)
-        self.assertIn("add_item_inventory_row", control)
+        self.assertNotIn("add_item_inventory_row", control)
         self.assertIn("add_bitermotors_metric_table", control)
-        self.assertIn("Cycle progress", control)
+        inspector = control.split("local function show_manufacturer_info_panel(player, entity)", 1)[1]
+        inspector = inspector.split("local function is_customer_settlement_entity", 1)[0]
+        for duplicate in ('"Recipe: "', '"Cycle progress:', 'add_section_heading(panel, "Inputs")',
+                          'add_section_heading(panel, "Outputs")'):
+            self.assertNotIn(duplicate, inspector)
+        self.assertIn('"Payload committed: inputs and progress are retained through interruptions."', inspector)
         self.assertIn("Blocked: restore electric power", control)
         self.assertIn("Blocked: remove finished products", control)
         self.assertIn('"Blocked: deliver "', control)

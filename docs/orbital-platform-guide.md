@@ -74,10 +74,10 @@ final-archive operating policy.
 
 | Research | Compact output | Dollars | Normal core time |
 | --- | ---: | ---: | ---: |
-| Orbital Compute | 1 Dataset | 5 | 100 s |
-| Cluster Training | 1 Dataset | 1 | 20 s |
-| Grid-scale Energy | 2 Datasets | 1 | 20 s |
-| Hyperscale Training, optional | 4 Datasets | 1 | 20 s |
+| Orbital Compute | 1 Dataset | 5 | 33.33 s |
+| Cluster Training | 1 Dataset | 1 | 6.67 s |
+| Grid-scale Energy | 2 Datasets | 1 | 6.67 s |
+| Hyperscale Training, optional | 4 Datasets | 1 | 6.67 s |
 
 These are the same cash, time and power per equivalent as the raw Token recipes.
 The first compact batch groups five original batches; it does not give a free

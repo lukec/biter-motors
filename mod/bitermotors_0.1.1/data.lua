@@ -1441,7 +1441,8 @@ orbital_datacenter_core.module_slots = 0
 orbital_datacenter_core.allowed_effects = {"consumption", "speed", "pollution", "quality"}
 orbital_datacenter_core.collision_box = {{-1.4, -1.4}, {1.4, 1.4}}
 orbital_datacenter_core.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
-orbital_datacenter_core.graphics_set = generated_entity_animation("orbital-datacenter-core", 0.18)
+-- 480 px visible raster width at scale 0.2 matches the 96 px / 3 tile base.
+orbital_datacenter_core.graphics_set = generated_entity_animation("orbital-datacenter-core", 0.2)
 orbital_datacenter_core.surface_conditions = {
   {
     property = "gravity",
@@ -1487,8 +1488,7 @@ orbital_radiator_panel.selection_box = {{-1.5, -1.5}, {1.5, 1.5}}
 orbital_radiator_panel.gui_mode = "none"
 orbital_radiator_panel.heating_radius = 0
 orbital_radiator_panel.heat_buffer = orbital_heat_buffer("100MJ", 3)
--- Preserve the existing radiator's real entity sprite and shadow, not its icon.
-orbital_radiator_panel.picture = table.deepcopy(data.raw["solar-panel"]["solar-panel"].picture)
+orbital_radiator_panel.picture = generated_entity_picture("orbital-radiator-panel", nil, 0.2)
 orbital_radiator_panel.resistances = table.deepcopy(data.raw["solar-panel"]["solar-panel"].resistances)
 orbital_radiator_panel.surface_conditions = {
   {
@@ -1516,6 +1516,7 @@ local high_density_space_solar_panel = copied_energy_entity(
 )
 high_density_space_solar_panel.max_health = 500
 high_density_space_solar_panel.production = "20MW"
+high_density_space_solar_panel.picture = generated_entity_picture("high-density-space-solar-panel", nil, 0.2)
 high_density_space_solar_panel.surface_conditions = {
   {
     property = "gravity",

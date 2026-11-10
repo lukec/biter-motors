@@ -64,6 +64,33 @@ STATIC_ENTITY_SOURCES = {
     },
 }
 
+ORBITAL_ENTITY_SLUGS = (
+    "orbital-datacenter-core",
+    "orbital-radiator-panel",
+    "high-density-space-solar-panel",
+)
+
+
+def build_orbital_entity_art() -> None:
+    """Keep the generated alpha; normalize visible width to 96 px at scale 0.2."""
+    for slug in ORBITAL_ENTITY_SLUGS:
+        with Image.open(MASTER_DIR / f"{slug}.png") as source:
+            subject = source.convert("RGBA")
+        bbox = alpha_bbox(subject)
+        if not bbox:
+            raise ValueError(f"Empty orbital master: {slug}")
+        subject = subject.crop(bbox)
+        height = round(subject.height * 480 / subject.width)
+        if height > 496:
+            raise ValueError(f"Orbital master too tall for 512 px contract: {slug}")
+        subject = subject.resize((480, height), Image.Resampling.LANCZOS)
+        entity = Image.new("RGBA", (512, 512))
+        entity.alpha_composite(subject, (16, (512 - height) // 2))
+        directory = MOD_GRAPHICS / "entity" / slug
+        directory.mkdir(parents=True, exist_ok=True)
+        entity.save(directory / f"{slug}.png", optimize=True)
+        normalized_icon(entity, 218).save(ICON_DIR / f"{slug}.png", optimize=True)
+
 
 def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, int] | None:
     alpha = image.getchannel("A").point(lambda value: 255 if value > threshold else 0)
@@ -697,6 +724,7 @@ def main() -> int:
     build_energy_product_art()
     build_static_entity_art()
     derive_and_normalize_icons()
+    build_orbital_entity_art()
     build_sales_office_showroom_vehicles()
     build_sales_office_showroom_animations()
     build_animations()

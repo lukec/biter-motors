@@ -73,20 +73,21 @@ class ArtQaTests(unittest.TestCase):
                 self.assertEqual(record["preview_dimensions"],
                                  [round(width * record["scale"]), round(height * record["scale"])])
 
-    def test_orbital_identical_reuse_is_explicit_and_pending(self):
+    def test_orbital_devices_have_dedicated_bitmaps(self):
         records = {r["prototype_id"]: r for r in self.records()}
         radiator = records["bitermotors-orbital-radiator-panel"]
         solar = records["bitermotors-high-density-space-solar-panel"]
-        self.assertEqual(radiator["source_path"], "base-art")
-        self.assertEqual(solar["source_path"], "base-art")
-        self.assertEqual(radiator["status"], "inherited-placeholder")
-        self.assertEqual(solar["status"], "inherited-placeholder")
+        self.assertNotEqual(radiator["source_path"], "base-art")
+        self.assertNotEqual(solar["source_path"], "base-art")
+        self.assertNotEqual(radiator["source_path"], solar["source_path"])
+        self.assertEqual(radiator["status"], "bitmap")
+        self.assertEqual(solar["status"], "bitmap")
 
     def test_orbital_entry_preview_matches_current_compact_footprints(self):
         records = {r["prototype_id"]: r for r in self.records()}
         for name in ("orbital-datacenter-core", "orbital-radiator-panel", "high-density-space-solar-panel"):
             self.assertEqual([3, 3], records[f"bitermotors-{name}"]["footprint_tiles"])
-        self.assertEqual(0.18, records["bitermotors-orbital-datacenter-core"]["scale"])
+            self.assertEqual(0.2, records[f"bitermotors-{name}"]["scale"])
 
     def test_animation_sheet_dimensions_are_real_and_guarded(self):
         for name, filename, frame_width, frame_height, _ in ART_QA.ANIMATIONS:

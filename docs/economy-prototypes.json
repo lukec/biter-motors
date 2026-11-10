@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source_sha256": "1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb",
+  "source_sha256": "fba062bcbde0c52bf155cc2ff881f666113faef33f38733eb4a56aa9c2429bf3",
   "factorio_version": "2.1.24",
   "mod_version": "0.1.1",
   "recipes": {
@@ -540,5 +540,5 @@
   "nauvis_orbit_solar_multiplier": 3.0,
   "launch": {"capacity_grams": 1000000, "cargo_inventory_slots": 10, "inventory_slots": 10, "item_weights_grams": {"bitermotors-agi-model": 1000, "bitermotors-agi-training-dataset": 1000, "bitermotors-datacenter-rack": 54166, "bitermotors-dollar": 10, "bitermotors-high-density-space-solar-panel": 25000, "bitermotors-orbital-datacenter-core": 100000, "bitermotors-orbital-heat-pipe": 1000, "bitermotors-orbital-radiator-panel": 100000, "bulk-inserter": 20000, "express-transport-belt": 10000, "inserter": 20000, "space-platform-foundation": 20000, "space-platform-starter-pack": 1000000, "transport-belt": 10000}, "parts_per_rocket": 50, "rocket_inventory_slots": 20, "silo_crafting_speed": 1, "starter_initial_items": [{"amount": 10, "name": "space-platform-foundation", "quality_max": "normal", "quality_min": "normal", "type": "item"}]},
   "assumptions": {"modules": "none", "quality": "normal", "research_productivity": 0, "solar_average_fraction": 0.7, "storage_seconds_per_peak_watt": 70},
-  "capture": {"dump_sha256": "f874322ec1c36876f85cbeddb797cf728b54df9e9f10cad1426b406c06922d4c", "runtime_sha256": "ea328dd4a44659256039f2deba722d851a0a48eca53c90ca321b578a263d947d", "source_sha256": "1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb"}
+  "capture": {"dump_sha256": "42bb3ae517d53504718b5fd1ea41c8b24ac50032c41bbea8450f027d228effe5", "runtime_sha256": "ea328dd4a44659256039f2deba722d851a0a48eca53c90ca321b578a263d947d", "source_sha256": "fba062bcbde0c52bf155cc2ff881f666113faef33f38733eb4a56aa9c2429bf3"}
 }

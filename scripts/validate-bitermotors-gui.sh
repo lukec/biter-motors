@@ -419,7 +419,10 @@ if not integrity.get("ok") or integrity.get("disabled_recipes"):
 diagnostics_total = checked.get("dollar_diagnostics", {}).get("total")
 if checked.get("progress_dollars") != diagnostics_total:
     raise SystemExit(f"Biter Motors progress snapshot Dollar count mismatch: {checked}")
-represented_profit = f"${diagnostics_total * 10000:,} ({diagnostics_total} $)"
+profit = checked.get("progress_status", {}).get("snapshot", {}).get("operating_profit_dollars")
+if type(profit) is not int or profit < 0:
+    raise SystemExit("Native business profit ledger missing from GUI snapshot")
+represented_profit = f"${profit * 10000:,} ({profit} $)"
 if checked.get("progress_dollars_caption") != represented_profit:
     raise SystemExit(f"Biter Motors progress panel Dollar caption mismatch: {checked}")
 if checked.get("solar_productivity_caption") not in (None, "Level 0"):

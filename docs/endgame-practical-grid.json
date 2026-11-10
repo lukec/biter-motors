@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "qualified finite-ground-stock native physical ending",
-  "source_sha256": "1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb",
+  "source_sha256": "fba062bcbde0c52bf155cc2ff881f666113faef33f38733eb4a56aa9c2429bf3",
   "config": {
     "bulk_inserter_capacity_bonus": 9,
     "cash_buffers": [
@@ -23,7 +23,7 @@
     ],
     "robots": 100,
     "rocket_budget": 160,
-    "source_sha256": "1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb",
+    "source_sha256": "fba062bcbde0c52bf155cc2ff881f666113faef33f38733eb4a56aa9c2429bf3",
     "speed": 100,
     "tiers": [
       {
@@ -39,7 +39,7 @@
       }
     ]
   },
-  "report_sha256": "a3850463d7d87ec97bee0bd8cfb1ed3a9439fbe6c87a0a0657c061acaf665208",
+  "report_sha256": "0916f683c07898f3ffab380b8df2c83fb475698b9716a3e08354e87fcf99c75f",
   "harness_sha256": {
     "scripts/fixtures/practical-ending-control.lua": "58617c282bb13fcdfa9faa39bb6608fcb6529daf0a935b3b7b607477f1afe36e",
     "scripts/fixtures/orbital-layout.lua": "b1305fcf98ff9b27333bd53ef1b46c49eecf7fd47e7019f50b98357d54b8503b",
@@ -213,5 +213,5 @@
   "starter_prototype_tiles": 100,
   "foundation_required_tiles": 1380,
   "freeplay_ticks": 2400,
-  "archive_sha256": "59075b924fdc72dc8193e3342989b9daa9c87f013d034361c094aa66af3ea8c0"
+  "archive_sha256": "f0bb344d843b54aec3aeb55fd5400933a8eebcc5431ffa89429c4bd4b2b1349d"
 }

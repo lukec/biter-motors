@@ -48,6 +48,9 @@ class OrbitalThermalDataTests(unittest.TestCase):
           }}
         }}
         local orbital_radiator_panel_icon = {}
+        local function generated_entity_picture(slug, _, scale)
+          return {filename = "graphics/entity/" .. slug .. "/" .. slug .. ".png", scale = scale}
+        end
         '''
         source += block('local function copied_energy_entity(', 'local function copied_electric_vehicle(')
         source += block('local function orbital_heat_buffer(', 'local high_density_space_solar_panel =')
@@ -72,8 +75,8 @@ class OrbitalThermalDataTests(unittest.TestCase):
         assert(orbital_core_heat_buffer.type == "heat-interface" and orbital_core_heat_buffer.hidden)
         assert(not orbital_core_heat_buffer.minable)
         assert(orbital_radiator_panel.type == "heat-interface" and not orbital_radiator_panel.hidden)
-        assert(orbital_radiator_panel.picture.layers[1].filename == "native-panel")
-        assert(orbital_radiator_panel.picture.layers[2].filename == "native-shadow")
+        assert(orbital_radiator_panel.picture.filename == "graphics/entity/orbital-radiator-panel/orbital-radiator-panel.png")
+        assert(orbital_radiator_panel.picture.scale == 0.2)
         assert(orbital_radiator_panel.picture ~= data.raw["solar-panel"]["solar-panel"].picture)
         assert(orbital_radiator_panel.gui_mode == "none" and not orbital_radiator_panel.production)
         assert(orbital_heat_pipe.type == "heat-pipe")
@@ -124,7 +127,7 @@ class OrbitalThermalDataTests(unittest.TestCase):
         self.assertIn('gui_mode = "none"', radiator)
         self.assertIn('collision_box = {{-1.4, -1.4}, {1.4, 1.4}}', radiator)
         self.assertIn('selection_box = {{-1.5, -1.5}, {1.5, 1.5}}', radiator)
-        self.assertIn('picture = table.deepcopy(data.raw["solar-panel"]["solar-panel"].picture)', radiator)
+        self.assertIn('picture = generated_entity_picture("orbital-radiator-panel", nil, 0.2)', radiator)
         self.assertNotIn('graphics/icons/', radiator)
         self.assertNotIn('.production =', radiator)
         self.assertIn('property = "gravity"', radiator)
