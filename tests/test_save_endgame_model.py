@@ -14,6 +14,16 @@ from bitermotors_economy_catalog import EconomyCatalog, DOLLAR, TOKEN
 
 
 class SaveEndgameTests(unittest.TestCase):
+    def test_recommended_rehearsal_leaves_human_work_allowance_below_four_hours(self):
+        observed = json.loads((ROOT / "docs/endgame-practical-hyperscale.json").read_text())
+        catalog = EconomyCatalog.load()
+        config = observed["config"]
+        entry = catalog.data["technologies"]["bitermotors-orbital-compute"]["unit"]
+        entry_minutes = entry["count"] * entry["time"] / (
+            config["labs"] * (1 + config["lab_speed_modifier"]) * 60)
+        self.assertEqual(catalog.data["source_sha256"], observed["source_sha256"])
+        self.assertGreaterEqual(240 - observed["total_minutes_including_freeplay"] - entry_minutes, 40)
+
     def snapshot(self, kind="initial", tick=1, produced=10):
         return dict(kind=kind, tick=tick, play_ticks=tick, factorio_version="2.1.24", mod_version="0.1.1",
                     inventory={b: {} for b in ("containers", "players", "cargo", "machine_outputs", "machine_inputs", "labs")},
@@ -114,9 +124,12 @@ class SaveEndgameTests(unittest.TestCase):
         observed = json.loads((ROOT / "docs/endgame-practical-hyperscale.json").read_text())
         layouts = load_layouts([ROOT / f"docs/orbital-layout-{n}.json" for n in (1, 4, 8, 12)])
         result = budget(catalog, baseline, layouts, observed=observed)
-        self.assertEqual(4900 + observed["operating_dollars_used"] + observed["research_dollars_consumed"] - 3900,
+        nominal_research = sum(catalog.research(row["technology"]) for row in result["research"])
+        native_research = sum(catalog.research(row["name"]) for row in observed["research"])
+        self.assertEqual(nominal_research + observed["operating_dollars_used"]
+                         + observed["research_dollars_consumed"] - native_research,
                          result["direct_dollars_before_stock"])
-        self.assertEqual(45, result["native_rehearsal_rockets"])
+        self.assertEqual(observed["rockets"], result["native_rehearsal_rockets"])
         self.assertNotIn("rocket-fuel", result["materials"]["supplies"])
         self.assertEqual(observed["manifest"]["bulk-inserter"], result["materials"]["recipe_batches"]["bulk-inserter"]
                          + result["materials"]["stock_credited"].get("bulk-inserter", 0))

@@ -7,23 +7,23 @@
     "sample_sha256": "8da154c65d3c35c096667f103ead19d6eb05022fa84468d08be2b680a62c9ae0",
     "sha256": "14eaf838a8da7f974997657a8778b0a5d1d73b7b817648d65d50ef19bfac212c"
   },
-  "catalog_source_sha256": "00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85",
+  "catalog_source_sha256": "1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb",
   "routes": [
     {
       "already_eligible_sales_cover_project_gap_before_other_spending": true,
       "cash_basis": "qualified native recipe consumption, partial lab commitments and reconfiguration losses",
-      "cash_gap": 6693.0,
+      "cash_gap": 4271.0,
       "conservative_separate_item_rockets": 59,
-      "direct_dollars_before_stock": 11228.0,
+      "direct_dollars_before_stock": 8806.0,
       "entry_tokens_missing": 0,
       "finite_already_eligible_battery_sales_gross": 8940.0,
-      "funding_minutes_at_observed_wallet_trend": 143.3190578158458,
-      "ideal_compute_minutes": 210.86111111111111,
+      "funding_minutes_at_observed_wallet_trend": 91.45610278372591,
+      "ideal_compute_minutes": 70.28703703703704,
       "limits": "Qualified native final I/O hardware and manufactured rocket parts replace the paper launch projection. Normal recipes without new module productivity. Gross material bounds are shared capacity, not spare output. Manufacturing, research, compute and income overlap; do not add these clocks or call them a campaign forecast.",
       "materials": {
         "recipe_batches": {
-          "advanced-circuit": 136,
-          "automation-science-pack": 3531,
+          "advanced-circuit": 0,
+          "automation-science-pack": 1681,
           "battery": 0,
           "bitermotors-battery-graphite": 0,
           "bitermotors-clean-lithium-extraction": 0,
@@ -41,38 +41,38 @@
           "bitermotors-orbital-radiator-panel": 12,
           "bulk-inserter": 0,
           "cargo-landing-pad": 0,
-          "chemical-science-pack": 1769,
+          "chemical-science-pack": 844,
           "concrete": 0,
-          "copper-cable": 42533,
-          "electric-furnace": 998,
-          "electronic-circuit": 19669,
-          "engine-unit": 3297,
+          "copper-cable": 22446,
+          "electric-furnace": 382,
+          "electronic-circuit": 6459,
+          "engine-unit": 1447,
           "express-transport-belt": 0,
           "fast-inserter": 0,
           "fast-transport-belt": 0,
-          "flying-robot-frame": 1065,
-          "inserter": 3311,
-          "iron-gear-wheel": 10256,
-          "iron-stick": 8114,
-          "logistic-science-pack": 3527,
-          "low-density-structure": 5921,
-          "pipe": 2893,
-          "plastic-bar": 14668,
-          "production-science-pack": 1126,
-          "productivity-module": 859,
-          "rail": 16303,
+          "flying-robot-frame": 449,
+          "inserter": 1461,
+          "iron-gear-wheel": 3781,
+          "iron-stick": 3494,
+          "logistic-science-pack": 1677,
+          "low-density-structure": 3973,
+          "pipe": 0,
+          "plastic-bar": 9662,
+          "production-science-pack": 510,
+          "productivity-module": 243,
+          "rail": 7063,
           "rocket-silo": 1,
           "solar-panel": 0,
           "space-platform-foundation": 1440,
           "space-platform-starter-pack": 1,
-          "sulfur": 676,
-          "transport-belt": 1179,
-          "utility-science-pack": 1135
+          "sulfur": 214,
+          "transport-belt": 254,
+          "utility-science-pack": 519
         },
         "stock_credited": {
-          "advanced-circuit": 9466,
+          "advanced-circuit": 3747,
           "automation-science-pack": 169,
-          "battery": 2950,
+          "battery": 1718,
           "bitermotors-datacenter-rack": 56,
           "bitermotors-high-density-solar-array": 120,
           "bitermotors-high-energy-battery-pack": 120,
@@ -81,7 +81,7 @@
           "bulk-inserter": 29,
           "cargo-landing-pad": 1,
           "chemical-science-pack": 162,
-          "coal": 14668,
+          "coal": 9662,
           "concrete": 1000,
           "copper-cable": 3286,
           "copper-plate": 6002,
@@ -97,91 +97,87 @@
           "iron-stick": 75,
           "logistic-science-pack": 173,
           "low-density-structure": 939,
-          "pipe": 3801,
+          "pipe": 2994,
           "plastic-bar": 541,
           "processing-unit": 693,
           "production-science-pack": 322,
           "productivity-module": 267,
           "rail": 1175,
-          "rocket-fuel": 2350,
+          "rocket-fuel": 2250,
           "steel-plate": 3719,
-          "stone": 11909,
-          "stone-brick": 9980,
+          "stone": 7063,
+          "stone-brick": 3820,
           "sulfur": 417,
           "transport-belt": 1169,
           "utility-science-pack": 295
         },
         "supplies": {
-          "copper-plate": 164962,
-          "electric-engine-unit": 1084,
-          "iron-plate": 46791,
-          "petroleum-gas": 313640,
-          "processing-unit": 5157,
-          "steel-plate": 71656,
-          "stone": 4394,
-          "water": 20280
+          "copper-plate": 104065,
+          "electric-engine-unit": 468,
+          "iron-plate": 10343,
+          "petroleum-gas": 199660,
+          "processing-unit": 3825,
+          "steel-plate": 49894,
+          "water": 6420
         },
         "surplus": {
           "copper-cable": 1.0,
-          "rail": 1.0
+          "production-science-pack": 2.0,
+          "rail": 1.0,
+          "sulfur": 1.0,
+          "utility-science-pack": 2.0
         }
       },
-      "native_rehearsal_minutes": 318.48333333333335,
-      "native_rehearsal_rockets": 45,
-      "operating_dollars": 6322,
+      "native_rehearsal_minutes": 178.88333333333333,
+      "native_rehearsal_rockets": 43,
+      "operating_dollars": 6353,
       "rated_gross_production_lower_bounds": [
         {
-          "count": 5157,
+          "count": 3825,
           "gross_per_minute": 52.7,
           "item": "processing-unit",
-          "minutes": 97.85578747628082
+          "minutes": 72.58064516129032
         },
         {
-          "count": 164962,
+          "count": 104065,
           "gross_per_minute": 3714.4,
           "item": "copper-plate",
-          "minutes": 44.4114796467801
+          "minutes": 28.01663794960155
         },
         {
-          "count": 71656,
+          "count": 49894,
           "gross_per_minute": 2287.7,
           "item": "steel-plate",
-          "minutes": 31.32228876163833
+          "minutes": 21.809677842374438
         },
         {
-          "count": 1084,
-          "gross_per_minute": 61.0,
-          "item": "electric-engine-unit",
-          "minutes": 17.770491803278688
-        },
-        {
-          "count": 313640,
+          "count": 199660,
           "gross_per_minute": 21271.5,
           "item": "petroleum-gas",
-          "minutes": 14.744611334414593
+          "minutes": 9.38626801118868
         },
         {
-          "count": 46791,
+          "count": 468,
+          "gross_per_minute": 61.0,
+          "item": "electric-engine-unit",
+          "minutes": 7.672131147540983
+        },
+        {
+          "count": 10343,
           "gross_per_minute": 6656.1,
           "item": "iron-plate",
-          "minutes": 7.029792220669761
+          "minutes": 1.5539129520289658
         },
         {
-          "count": 4394,
-          "gross_per_minute": 2678.1,
-          "item": "stone",
-          "minutes": 1.6407154325828013
-        },
-        {
-          "count": 20280,
+          "count": 6420,
           "gross_per_minute": 90040.64852882623,
           "item": "water",
-          "minutes": 0.22523160740570877
+          "minutes": 0.07130113015506165
         }
       ],
       "research": [
         {
-          "cycles": 1000,
+          "cycles": 500,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -194,7 +190,7 @@
           "tokens_per_cycle": 1.0
         },
         {
-          "cycles": 600,
+          "cycles": 300,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -207,7 +203,7 @@
           "tokens_per_cycle": 1.0
         },
         {
-          "cycles": 900,
+          "cycles": 450,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -220,7 +216,7 @@
           "tokens_per_cycle": 1.0
         },
         {
-          "cycles": 1200,
+          "cycles": 600,
           "dollars_per_cycle": 2.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -235,29 +231,29 @@
       ],
       "route": "Hyperscale",
       "science_before_stock": {
-        "automation-science-pack": 3700.0,
-        "chemical-science-pack": 3700.0,
-        "logistic-science-pack": 3700.0,
-        "production-science-pack": 3700.0,
-        "utility-science-pack": 3700.0
+        "automation-science-pack": 1850.0,
+        "chemical-science-pack": 1850.0,
+        "logistic-science-pack": 1850.0,
+        "production-science-pack": 1850.0,
+        "utility-science-pack": 1850.0
       },
       "unrated_materials": []
     },
     {
       "already_eligible_sales_cover_project_gap_before_other_spending": true,
       "cash_basis": "qualified native recipe consumption, partial lab commitments and reconfiguration losses",
-      "cash_gap": 8375.0,
+      "cash_gap": 7095.0,
       "conservative_separate_item_rockets": 59,
-      "direct_dollars_before_stock": 12910.0,
+      "direct_dollars_before_stock": 11630.0,
       "entry_tokens_missing": 0,
       "finite_already_eligible_battery_sales_gross": 8940.0,
-      "funding_minutes_at_observed_wallet_trend": 179.33618843683084,
-      "ideal_compute_minutes": 335.8611111111111,
+      "funding_minutes_at_observed_wallet_trend": 151.9271948608137,
+      "ideal_compute_minutes": 111.95370370370372,
       "limits": "Qualified native final I/O hardware and manufactured rocket parts replace the paper launch projection. Normal recipes without new module productivity. Gross material bounds are shared capacity, not spare output. Manufacturing, research, compute and income overlap; do not add these clocks or call them a campaign forecast.",
       "materials": {
         "recipe_batches": {
           "advanced-circuit": 0,
-          "automation-science-pack": 2331,
+          "automation-science-pack": 1081,
           "battery": 0,
           "bitermotors-battery-graphite": 0,
           "bitermotors-clean-lithium-extraction": 0,
@@ -275,38 +271,38 @@
           "bitermotors-orbital-radiator-panel": 12,
           "bulk-inserter": 0,
           "cargo-landing-pad": 0,
-          "chemical-science-pack": 1169,
+          "chemical-science-pack": 544,
           "concrete": 0,
-          "copper-cable": 29253,
-          "electric-furnace": 598,
-          "electronic-circuit": 10997,
-          "engine-unit": 2097,
+          "copper-cable": 16146,
+          "electric-furnace": 182,
+          "electronic-circuit": 2259,
+          "engine-unit": 847,
           "express-transport-belt": 0,
           "fast-inserter": 0,
           "fast-transport-belt": 0,
-          "flying-robot-frame": 665,
-          "inserter": 2111,
-          "iron-gear-wheel": 6056,
-          "iron-stick": 5114,
-          "logistic-science-pack": 2327,
-          "low-density-structure": 5021,
-          "pipe": 493,
-          "plastic-bar": 12282,
-          "production-science-pack": 726,
-          "productivity-module": 459,
-          "rail": 10303,
+          "flying-robot-frame": 249,
+          "inserter": 861,
+          "iron-gear-wheel": 1727,
+          "iron-stick": 1994,
+          "logistic-science-pack": 1077,
+          "low-density-structure": 3673,
+          "pipe": 0,
+          "plastic-bar": 8912,
+          "production-science-pack": 310,
+          "productivity-module": 43,
+          "rail": 4063,
           "rocket-silo": 1,
           "solar-panel": 0,
           "space-platform-foundation": 1440,
           "space-platform-starter-pack": 1,
-          "sulfur": 376,
-          "transport-belt": 579,
-          "utility-science-pack": 735
+          "sulfur": 64,
+          "transport-belt": 0,
+          "utility-science-pack": 319
         },
         "stock_credited": {
-          "advanced-circuit": 5802,
+          "advanced-circuit": 1847,
           "automation-science-pack": 169,
-          "battery": 2150,
+          "battery": 1318,
           "bitermotors-datacenter-rack": 56,
           "bitermotors-high-density-solar-array": 120,
           "bitermotors-high-energy-battery-pack": 120,
@@ -315,7 +311,7 @@
           "bulk-inserter": 29,
           "cargo-landing-pad": 1,
           "chemical-science-pack": 162,
-          "coal": 12282,
+          "coal": 8912,
           "concrete": 1000,
           "copper-cable": 3286,
           "copper-plate": 6002,
@@ -327,11 +323,11 @@
           "flying-robot-frame": 70,
           "inserter": 216,
           "iron-gear-wheel": 1062,
-          "iron-plate": 8887,
+          "iron-plate": 8568,
           "iron-stick": 75,
           "logistic-science-pack": 173,
           "low-density-structure": 939,
-          "pipe": 3801,
+          "pipe": 1794,
           "plastic-bar": 541,
           "processing-unit": 693,
           "production-science-pack": 322,
@@ -339,77 +335,73 @@
           "rail": 1175,
           "rocket-fuel": 2525,
           "steel-plate": 3719,
-          "stone": 10303,
-          "stone-brick": 5980,
+          "stone": 4063,
+          "stone-brick": 1820,
           "sulfur": 417,
-          "transport-belt": 1169,
+          "transport-belt": 1077,
           "utility-science-pack": 295
         },
         "supplies": {
-          "copper-plate": 132482,
-          "electric-engine-unit": 684,
-          "iron-plate": 22519,
-          "petroleum-gas": 256920,
-          "processing-unit": 4657,
-          "rocket-fuel": 125,
-          "steel-plate": 58256,
-          "water": 11280
+          "copper-plate": 91165,
+          "electric-engine-unit": 268,
+          "petroleum-gas": 180160,
+          "processing-unit": 3725,
+          "rocket-fuel": 25,
+          "steel-plate": 43494,
+          "water": 1920
         },
         "surplus": {
           "copper-cable": 1.0,
-          "rail": 1.0
+          "production-science-pack": 2.0,
+          "rail": 1.0,
+          "sulfur": 1.0,
+          "utility-science-pack": 2.0
         }
       },
-      "native_rehearsal_minutes": 426.9916666666667,
-      "native_rehearsal_rockets": 51,
-      "operating_dollars": 10407,
+      "native_rehearsal_minutes": 216.11666666666667,
+      "native_rehearsal_rockets": 49,
+      "operating_dollars": 10374,
       "rated_gross_production_lower_bounds": [
         {
-          "count": 4657,
+          "count": 3725,
           "gross_per_minute": 52.7,
           "item": "processing-unit",
-          "minutes": 88.36812144212523
+          "minutes": 70.68311195445919
         },
         {
-          "count": 132482,
+          "count": 91165,
           "gross_per_minute": 3714.4,
           "item": "copper-plate",
-          "minutes": 35.6671333189748
+          "minutes": 24.543667887141932
         },
         {
-          "count": 58256,
+          "count": 43494,
           "gross_per_minute": 2287.7,
           "item": "steel-plate",
-          "minutes": 25.464877387769377
+          "minutes": 19.01210823097434
         },
         {
-          "count": 256920,
+          "count": 180160,
           "gross_per_minute": 21271.5,
           "item": "petroleum-gas",
-          "minutes": 12.078132712784711
+          "minutes": 8.469548456855417
         },
         {
-          "count": 684,
+          "count": 268,
           "gross_per_minute": 61.0,
           "item": "electric-engine-unit",
-          "minutes": 11.21311475409836
+          "minutes": 4.39344262295082
         },
         {
-          "count": 22519,
-          "gross_per_minute": 6656.1,
-          "item": "iron-plate",
-          "minutes": 3.3832123916407504
-        },
-        {
-          "count": 11280,
+          "count": 1920,
           "gross_per_minute": 90040.64852882623,
           "item": "water",
-          "minutes": 0.1252767520481457
+          "minutes": 0.02132370247628012
         }
       ],
       "research": [
         {
-          "cycles": 1000,
+          "cycles": 500,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -422,7 +414,7 @@
           "tokens_per_cycle": 1.0
         },
         {
-          "cycles": 600,
+          "cycles": 300,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -435,7 +427,7 @@
           "tokens_per_cycle": 1.0
         },
         {
-          "cycles": 900,
+          "cycles": 450,
           "dollars_per_cycle": 1.0,
           "science": {
             "automation-science-pack": 1.0,
@@ -450,11 +442,11 @@
       ],
       "route": "Grid only",
       "science_before_stock": {
-        "automation-science-pack": 2500.0,
-        "chemical-science-pack": 2500.0,
-        "logistic-science-pack": 2500.0,
-        "production-science-pack": 2500.0,
-        "utility-science-pack": 2500.0
+        "automation-science-pack": 1250.0,
+        "chemical-science-pack": 1250.0,
+        "logistic-science-pack": 1250.0,
+        "production-science-pack": 1250.0,
+        "utility-science-pack": 1250.0
       },
       "unrated_materials": [
         "rocket-fuel"

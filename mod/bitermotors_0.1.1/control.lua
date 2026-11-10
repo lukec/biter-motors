@@ -10352,14 +10352,14 @@ local function current_progress_objective(snapshot)
       snapshot.orbital_hottest_c
     )
   elseif snapshot.orbital_ai_tokens_generated == 0 then
-    return "Orbital AI", "Compute the first Orbital Training Dataset.", "Supply 5 Dollars and 250 MW plus idle draw for one Dataset in 100 normal seconds. Five Solar Wings provide 300 MW in Nauvis orbit. Return a few Datasets for research; retain the rest. Power loss banks work; cooling loss can destroy the core at 130 C."
+    return "Orbital AI", "Compute the first Orbital Training Dataset.", "Supply 5 Dollars and 250 MW plus idle draw for one Dataset in about 33 normal seconds. Five Solar Wings provide 300 MW in Nauvis orbit. Return a few Datasets for research; retain the rest. Power loss banks work; cooling loss can destroy the core at 130 C."
   elseif snapshot.orbital_ai_tokens_generated < 1000000 then
     return "Orbital scale", "Generate one million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 1,000,000 equivalents. Each starting Dataset contains 50,000 equivalents and costs 5 Dollars. Keep the input belt filtered to Dollars only.",
       snapshot.orbital_ai_tokens_generated
     )
   elseif not snapshot.orbital_cluster_researched then
-    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Produce one Dataset per Dollar every 20 normal seconds. Return a few Datasets and unpack them for research."
+    return "Orbital scale", "Research Cluster Training.", research("bitermotors-orbital-cluster-training") .. " Produce one Dataset per Dollar about every 6.7 normal seconds. Return a few Datasets and unpack them for research."
   elseif snapshot.orbital_ai_tokens_generated < 10000000 then
     return "Orbital scale", "Generate ten million cumulative orbital AI Tokens.", string.format(
       "Orbital output: %d / 10,000,000 equivalents. Cluster Training produces one Dataset per Dollar. Keep the final archive in orbit.",

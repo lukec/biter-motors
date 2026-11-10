@@ -11,10 +11,10 @@ Normal assembly: **60s**; ground activation: **30s at 8 MW**.
 20,000 physical Datasets plus one Rack assemble the Model; return it and activate on Nauvis.
 Earned 1B and physical payload are separate. Research-consumed Tokens must be replaced.
 Hyperscale is optional. No controller, Capital Allocation or required white science remains.
-Ideal orbital-chapter AI/research cash **with optional Hyperscale**: **13,091 Dollars**.
+Ideal orbital-chapter AI/research cash **with optional Hyperscale**: **10,141 Dollars**.
 This starts after earlier terrestrial EV research and initial factory/datacenter construction are paid; it still includes pre-orbit Autonomy/Orbital research and terrestrial compute. The economy report starts earlier and skips Hyperscale by default, so its direct-cash total has a different scope.
 Research uses automation (red), logistic (green), chemical (blue), production (purple) and utility (yellow) science; no space (white).
-Compute-only ramp: 3.51h.
+Compute-only ramp: 1.17h.
 
 ## Hardware And Logistics
 
@@ -37,19 +37,19 @@ Joint co-products are credited once; no machine productivity is assumed.
 | bitermotors-lithium-brine | 5,500 | 5,500 |
 | bitermotors-nickel-ore | 640 | 640 |
 | calcite | 220 | 220 |
-| coal | 11,453 | 36,678 |
-| copper-plate | 112,524 | 326,200 |
-| electric-engine-unit | 320 | 1,804 |
+| coal | 11,453 | 26,190 |
+| copper-plate | 112,524 | 237,362 |
+| electric-engine-unit | 320 | 1,187 |
 | iron-ore | 120 | 120 |
-| iron-plate | 5,400 | 125,575 |
-| petroleum-gas | 221,060 | 758,950 |
-| processing-unit | 4,740 | 7,708 |
+| iron-plate | 5,400 | 75,613 |
+| petroleum-gas | 221,060 | 535,300 |
+| processing-unit | 4,740 | 6,474 |
 | rocket-fuel | 2,700 | 2,700 |
-| steel-plate | 39,191 | 91,129 |
-| stone | 390 | 22,650 |
-| stone-brick | 600 | 15,440 |
-| sulfuric-acid | 45,160 | 104,520 |
-| water | 12,000 | 45,390 |
+| steel-plate | 39,191 | 69,535 |
+| stone | 390 | 13,395 |
+| stone-brick | 600 | 9,270 |
+| sulfuric-acid | 45,160 | 79,840 |
+| water | 12,000 | 31,500 |
 
 Plates, fluids, blue circuits, engines and fuel are frontier supplies, not raw ore or free inputs.
 Tailings disposal, manufacturing energy and existing factory demand remain outside this bill.
@@ -61,22 +61,22 @@ Only remaining battery buyers pay. Unique living customers cap taxis; fleets/dep
 No limitless new nests, repeated EV generations or mature free fleet are assumed.
 | Case | Batteries sold | Fleet | Ideal model hours |
 | --- | ---: | ---: | ---: |
-| Finite sales; skip Hyperscale | 968 | 0 | 8.78 |
-| Modest recurring business | 492 | 120 | 5.14 |
-| Stronger recurring business | 500 | 300 | 5.14 |
+| Finite sales; skip Hyperscale | 582 | 0 | 4.88 |
+| Modest recurring business | 276 | 120 | 2.33 |
+| Stronger recurring business | 416 | 300 | 2.21 |
 | No remaining income | 0 | 0 | not finished in 24h |
 
 ## Shared Blue-Circuit Capacity
 
 | Spare blue circuits/min | Hardware floor | Hardware + science floor |
 | --- | ---: | ---: | ---: |
-| 20 | 3.95h | 6.42h |
-| 60 | 1.32h | 2.14h |
-| 120 | 0.66h | 1.07h |
+| 20 | 3.95h | 5.39h |
+| 60 | 1.32h | 1.80h |
+| 120 | 0.66h | 0.90h |
 
 Do not allocate the same blue-circuit production twice. Other materials can bottleneck first.
 These elapsed ideal-input clocks exclude practical I/O, build time and transport; they cannot qualify campaign pacing.
 Prototype capture does not qualify native Model return, activation, victory persistence or a complete campaign.
 
-Native source SHA-256: `00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85`.
-Model SHA-256: `34a09ea4545efce122de95fda216b1c9cbb25c30826e8210034eb8d3ea13d15f`.
+Native source SHA-256: `1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb`.
+Model SHA-256: `1851c5ab2e175be6279b4717ad1d6cc13cb98da762deafca7ec2de66918a7d3a`.

@@ -114,13 +114,16 @@ class AiValidationRunnerTests(unittest.TestCase):
             self.assertIn(f'{{"bitermotors-orbital-ai-{recipe}", {equivalents}}}', fixture)
         for marker in (
             "ledger descriptor matches native physical outputs",
-            'prototypes.recipe[case[1]].energy, 30',
+            'prototypes.recipe[case[1]].energy, 10',
             'prototypes.recipe[case[1]].ingredients[1].amount, 1',
-            '{"bitermotors-orbital-cluster-training", 600, 1}',
-            '{"bitermotors-grid-scale-energy", 900, 1}',
-            '{"bitermotors-hyperscale-training", 1200, 2}',
+            '{"bitermotors-orbital-compute", 500, 1}',
+            '{"bitermotors-orbital-cluster-training", 300, 1}',
+            '{"bitermotors-grid-scale-energy", 450, 1}',
+            '{"bitermotors-hyperscale-training", 600, 2}',
             'technology.research_unit_count', 'technology.research_unit_ingredients',
             '"scale research Dollars per cycle"',
+            'if ledger().terrestrial.pending_bonus ~= 2 then return end',
+            '"unblocked bonuses are materialized before isolating packaging"',
         ):
             self.assertIn(marker, fixture)
 

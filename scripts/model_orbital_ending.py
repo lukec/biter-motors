@@ -292,6 +292,16 @@ def supply_bill(catalog: EconomyCatalog, roots: dict[str, float], *,
                if opening_stock is not None else {})}
 
 
+def whole_cycles_per_minute(seconds: float) -> int:
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError("native cycle must be finite and positive")
+    cycles = 60 / seconds
+    rounded = round(cycles)
+    if rounded < 1 or not math.isclose(cycles, rounded, rel_tol=1e-12, abs_tol=1e-12):
+        raise ValueError("minute model requires whole native cycles; refine the step for changed speeds")
+    return rounded
+
+
 def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, horizon_minutes=1440) -> dict:
     """Minute cash/research/compute flow; instant available hardware is an explicit bound."""
     plan.validate()
@@ -333,9 +343,8 @@ def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, ho
     depot_cost = catalog.item_dollars(P + "bitertaxi-depot")
     per_vehicle_gross = 60 / runtime["bitertaxi_vehicle_minutes_per_dollar"]
     per_vehicle_wear = vehicle_cost / runtime["bitertaxi_attrition_vehicle_hours"]
-    cycle = catalog.seconds(ORBITAL_RECIPES[0], CORE)
-    if 60 % cycle or 60 % catalog.seconds(P + "terrestrial-ai-token", TERRESTRIAL):
-        raise ValueError("minute model requires whole native cycles; refine the step for changed speeds")
+    whole_cycles_per_minute(catalog.seconds(ORBITAL_RECIPES[0], CORE))
+    terra_cycles = whole_cycles_per_minute(catalog.seconds(P + "terrestrial-ai-token", TERRESTRIAL))
     for minute in range(1, horizon_minutes + 1):
         slots = math.floor(battery_rate * minute) - math.floor(battery_rate * (minute - 1))
         sold = 0
@@ -373,7 +382,7 @@ def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, ho
         if terra_produced < budget["terrestrial_tokens"]:
             recipe = P + "terrestrial-ai-token"
             cost, output = catalog.ingredient(recipe, DOLLAR), catalog.output(recipe, TOKEN)
-            batches = min(int(60 / catalog.seconds(recipe, TERRESTRIAL)), math.floor(wallet / cost),
+            batches = min(terra_cycles, math.floor(wallet / cost),
                           math.ceil((budget["terrestrial_tokens"] - terra_produced) / output))
             wallet -= batches * cost
             spent["terrestrial_compute"] += batches * cost
@@ -381,10 +390,8 @@ def simulate(catalog: EconomyCatalog, plan: ModelPlan, business: Business, *, ho
             terra_bank += batches * output
         if recipe_index >= 0 and orbital < target:
             cycle = catalog.seconds(ORBITAL_RECIPES[recipe_index], CORE)
-            if 60 % cycle:
-                raise ValueError("minute model requires whole native cycles; refine the step for changed speeds")
             cost = catalog.ingredient(ORBITAL_RECIPES[recipe_index], DOLLAR)
-            batches = min(int(60 / cycle) * plan.phase_cores[recipe_index], math.floor(wallet / cost),
+            batches = min(whole_cycles_per_minute(cycle) * plan.phase_cores[recipe_index], math.floor(wallet / cost),
                           math.ceil((target - orbital) / yields[recipe_index]))
             wallet -= batches * cost
             spent["orbital_compute"] += batches * cost

@@ -2,6 +2,8 @@ local REPORT = "bitermotors-cooling.jsonl"
 local DOLLAR, TOKEN = "bitermotors-dollar", "bitermotors-ai-token"
 local CORE, RADIATOR = "bitermotors-orbital-datacenter-core", "bitermotors-orbital-radiator-panel"
 local RECIPE = "bitermotors-orbital-ai-token"
+-- Keep progress probes below one tenth of a native batch as pacing changes.
+local PROBE_TICKS = math.max(30, math.floor(prototypes.recipe[RECIPE].energy / 1.5 * 60 * 0.1 / 30) * 30)
 
 local function check(value, label)
   assert(value, label)
@@ -134,7 +136,7 @@ local function advance()
     equal(input(first).insert{name = DOLLAR, count = 1}, 1, "supply exactly one original orbital Dollar")
     change_stage("unstarted_hold")
   elseif storage.stage == "unstarted_hold" then
-    if elapsed < 120 then return end
+    if elapsed < PROBE_TICKS then return end
     original_committed(first)
     check(first.crafting_progress > 0, "unconnected core starts native work and heat")
     no_earnings(first)
@@ -142,7 +144,7 @@ local function advance()
     for x = -34, -32 do make(storage.surface, "bitermotors-orbital-heat-pipe", {x, 12}, force) end
     change_stage("allocation")
   elseif storage.stage == "allocation" then
-    if elapsed < 120 then return end
+    if elapsed < PROBE_TICKS then return end
     equal(ledger(force).cooling.policy, "physical-heat-networks", "physical cooling replaces quota allocation")
     equal(ledger(force).cooling.radiators, 1, "one physically connected radiator installed")
     equal(ledger(storage.other_force).cooling.radiators, 0, "separate force counts its own hardware")
@@ -165,7 +167,7 @@ local function advance()
     storage.paused_progress = first.crafting_progress
     change_stage("cooling_hold")
   elseif storage.stage == "cooling_hold" then
-    if elapsed < 120 then return end
+    if elapsed < PROBE_TICKS then return end
     check(first.crafting_progress > storage.paused_progress, "disconnected cooling allows positive native progress")
     original_committed(first)
     no_earnings(first)
@@ -206,7 +208,7 @@ local function advance()
     storage.full_start = machine.crafting_progress
     change_stage("full_rate")
   elseif storage.stage == "full_rate" then
-    if elapsed < 120 then return end
+    if elapsed < PROBE_TICKS then return end
     storage.full_rate = (storage.second.crafting_progress - storage.full_start) / elapsed
     check(storage.full_rate > 0, "full power gives positive native progress")
     storage.before_half = storage.second.crafting_progress
@@ -221,7 +223,7 @@ local function advance()
     storage.half_start = storage.second.crafting_progress
     change_stage("half_measure")
   elseif storage.stage == "half_measure" then
-    if elapsed < 120 then return end
+    if elapsed < PROBE_TICKS then return end
     local machine = storage.second
     storage.half_rate = (machine.crafting_progress - storage.half_start) / elapsed
     check(storage.half_rate > 0 and storage.half_rate < storage.full_rate * 0.8,

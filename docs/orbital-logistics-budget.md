@@ -10,22 +10,24 @@ Campaign rockets/materials are modeled with conservative separate-item loads, no
 
 | Scenario | Projected Rockets | Joint blue circuits | Cash before wear | Finite funding gap |
 | --- | ---: | ---: | ---: | ---: |
-| Modest recurring; ten settlements | 58 | 9946 | 15691 | 3691 |
-| Finite non-taxi; skip Hyperscale | 58 | 7108 | 15191 | 0 |
+| Modest recurring; ten settlements | unqualified | 3772 | 12741 | 741 |
+| Finite non-taxi; skip Hyperscale | unqualified | 1334 | 13441 | 0 |
+
+Layouts missing: material/cash columns are partial, not full chapter totals.
 
 ## Modest recurring; ten settlements
 
 Finite sales revenue ceiling (Dollars): 10,000.00
-Steady service funding-only lower bound (hours): 1.04
-Frontier known lower bound (minutes): 422.62; unrated items: 0
+Steady service funding-only lower bound (hours): 0.21
+Frontier known lower bound (minutes): unqualified; unrated items: 14
 Transit: unqualified: Model-return transit missing; any native uplift samples remain separate
 
 | Recipe | Cores | Ideal min | Startup-midpoint projection min | Full-drain projection min |
 | --- | ---: | ---: | ---: | ---: |
-| orbital-ai-dataset | 1 | 33.33 | unqualified | unqualified |
-| orbital-ai-dataset-cluster | 4 | 15.00 | unqualified | unqualified |
-| orbital-ai-dataset-grid-scale | 8 | 37.50 | unqualified | unqualified |
-| orbital-ai-dataset-hyperscale | 12 | 125.03 | unqualified | unqualified |
+| orbital-ai-dataset | 1 | 11.11 | unqualified | unqualified |
+| orbital-ai-dataset-cluster | 4 | 5.00 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 8 | 12.50 | unqualified | unqualified |
+| orbital-ai-dataset-hyperscale | 12 | 41.68 | unqualified | unqualified |
 
 Compute-only extrapolations: startup-midpoint unqualified hours; finite-drain unqualified hours. Not player time.
 
@@ -33,15 +35,15 @@ Compute-only extrapolations: startup-midpoint unqualified hours; finite-drain un
 
 Finite sales revenue ceiling (Dollars): 20,000.00
 Steady service funding-only lower bound (hours): unqualified
-Frontier known lower bound (minutes): 358.75; unrated items: 0
+Frontier known lower bound (minutes): unqualified; unrated items: 14
 Transit: unqualified: Model-return transit missing; any native uplift samples remain separate
 
 | Recipe | Cores | Ideal min | Startup-midpoint projection min | Full-drain projection min |
 | --- | ---: | ---: | ---: | ---: |
-| orbital-ai-dataset | 1 | 33.33 | unqualified | unqualified |
-| orbital-ai-dataset-cluster | 4 | 15.00 | unqualified | unqualified |
-| orbital-ai-dataset-grid-scale | 8 | 37.50 | unqualified | unqualified |
-| orbital-ai-dataset-grid-scale | 12 | 250.03 | unqualified | unqualified |
+| orbital-ai-dataset | 1 | 11.11 | unqualified | unqualified |
+| orbital-ai-dataset-cluster | 4 | 5.00 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 8 | 12.50 | unqualified | unqualified |
+| orbital-ai-dataset-grid-scale | 12 | 83.34 | unqualified | unqualified |
 
 Compute-only extrapolations: startup-midpoint unqualified hours; finite-drain unqualified hours. Not player time.
 
@@ -51,32 +53,23 @@ Synthetic simultaneously sustainable units/minute; zero opening material stock. 
 
 | Frontier | Assumed units/min | Recurring demand | Finite demand |
 | --- | ---: | ---: | ---: |
-| bitermotors-lithium-brine | 10,000.00 | 218,000.00 | 325,500.00 |
-| bitermotors-nickel-ore | 1,000.00 | 640.00 | 640.00 |
-| calcite | 1,000.00 | 8,720.00 | 13,020.00 |
-| coal | 1,000.00 | 46,199.00 | 35,404.00 |
-| copper-plate | 1,000.00 | 422,619.00 | 358,747.00 |
-| electric-engine-unit | 100.00 | 2,284.00 | 1,404.00 |
-| iron-ore | 1,000.00 | 124.00 | 122.00 |
-| iron-plate | 1,000.00 | 233,249.00 | 195,409.00 |
-| lubricant | 1,000.00 | 4,540.00 | 4,540.00 |
-| petroleum-gas | 20,000.00 | 949,370.00 | 724,470.00 |
-| processing-unit | 30.00 | 9,946.00 | 7,108.00 |
-| rocket-fuel | 60.00 | 2,900.00 | 2,900.00 |
-| steel-plate | 1,000.00 | 137,709.00 | 138,271.00 |
-| stone | 1,000.00 | 43,900.00 | 48,650.00 |
-| stone-brick | 1,000.00 | 15,460.00 | 11,450.00 |
-| sulfuric-acid | 10,000.00 | 391,320.00 | 616,520.00 |
-| water | 20,000.00 | 45,790.00 | 36,590.00 |
+| bitermotors-lithium-brine | unqualified | 212,500.00 | 320,000.00 |
+| calcite | unqualified | 8,500.00 | 12,800.00 |
+| coal | unqualified | 23,733.00 | 16,338.00 |
+| copper-plate | unqualified | 215,127.00 | 180,055.00 |
+| electric-engine-unit | unqualified | 1,347.00 | 667.00 |
+| iron-ore | unqualified | 4.00 | 2.00 |
+| iron-plate | unqualified | 169,713.00 | 148,073.00 |
+| petroleum-gas | unqualified | 494,160.00 | 341,760.00 |
+| processing-unit | unqualified | 3,772.00 | 1,334.00 |
+| steel-plate | unqualified | 73,784.00 | 81,346.00 |
+| stone | unqualified | 34,255.00 | 42,005.00 |
+| stone-brick | unqualified | 8,690.00 | 6,680.00 |
+| sulfuric-acid | unqualified | 321,480.00 | 554,680.00 |
+| water | unqualified | 19,900.00 | 15,200.00 |
 
 | Scenario / Rate multiplier | Shared material lower bound min (hours) | Top bottlenecks: demand / rate |
 | --- | ---: | --- |
-| Modest recurring; ten settlements / 0.5x | 845.24 (14.09) | copper-plate: 422619 / 500; processing-unit: 9946 / 15; iron-plate: 233249 / 500 |
-| Modest recurring; ten settlements / 1x | 422.62 (7.04) | copper-plate: 422619 / 1000; processing-unit: 9946 / 30; iron-plate: 233249 / 1000 |
-| Modest recurring; ten settlements / 2x | 211.31 (3.52) | copper-plate: 422619 / 2000; processing-unit: 9946 / 60; iron-plate: 233249 / 2000 |
-| Finite non-taxi; skip Hyperscale / 0.5x | 717.49 (11.96) | copper-plate: 358747 / 500; processing-unit: 7108 / 15; iron-plate: 195409 / 500 |
-| Finite non-taxi; skip Hyperscale / 1x | 358.75 (5.98) | copper-plate: 358747 / 1000; processing-unit: 7108 / 30; iron-plate: 195409 / 1000 |
-| Finite non-taxi; skip Hyperscale / 2x | 179.37 (2.99) | copper-plate: 358747 / 2000; processing-unit: 7108 / 60; iron-plate: 195409 / 2000 |
 
 ## Verdict
 
@@ -88,6 +81,7 @@ Modest business: ten settlements, 2,000 population, 500 finite battery buyers, o
 
 Native spare prebuilt rocket parts are reported in JSON and not charged as minimum launch ingredients. Independent fresh-platform mixed flights do not replace the modeled staged single-item campaign count.
 
+No concrete hardware cost until --layouts is supplied.
 Scope: Autonomous Logistics through activation; earlier research/factory assumed built.
 Silo, landing pad and business capacity are charged as new; no opening stock credit.
 Business uses finite buyers, native adoption/referral and shared-customer fleet caps.
@@ -97,4 +91,4 @@ Campaign rockets use modeled single-item packing; native mixed-load fixture flig
 No lab capacity, build schedule, wear-material replacement, power infrastructure or movement time modeled.
 Independent lower bounds are not additive and are not a finish-time forecast.
 
-Native catalog source SHA-256: `00a8fe673da903fb88d2a531ea7ac9eda2fe833372cd9abfd437c2f876d13a85`.
+Native catalog source SHA-256: `1fee85102ae3ceab0208c8849e2e0b24bff0d5beeebddcfc3bda0db6f72e2efb`.

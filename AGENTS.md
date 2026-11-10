@@ -80,6 +80,9 @@ changes that policy.
 - Sample campaign stock and production from a disposable copy before balancing.
   Gross output is not spare capacity, and wallet growth is not gross profit.
   Do not count the same stocked intermediate and its ingredients twice.
+- Machine-driven rehearsals are lower bounds, not human playtime forecasts.
+  Budget explicit time for construction and troubleshooting; Luke's campaigns
+  have taken longer than optimistic overlap-based predictions.
 - Do not assume data-stage helpers exist at runtime. In particular, runtime
   code must not depend on an incidental `table.deepcopy` global; execute quality
   and researched-upgrade branches in regression tests, not only normal defaults.

@@ -50,7 +50,7 @@ local function pure_fixtures()
     end
     equal(physical_equivalents, case[2], "ledger descriptor matches native physical outputs")
     if case[1] ~= "bitermotors-terrestrial-ai-token" then
-      equal(prototypes.recipe[case[1]].energy, 30, "orbital batch takes thirty recipe seconds")
+      equal(prototypes.recipe[case[1]].energy, 10, "orbital batch takes ten recipe seconds")
       equal(#prototypes.recipe[case[1]].ingredients, 1, "one orbital operating input")
       equal(prototypes.recipe[case[1]].ingredients[1].name, DOLLAR, "orbital operating currency")
       equal(prototypes.recipe[case[1]].ingredients[1].amount, 1, "one Dollar per orbital batch")
@@ -59,8 +59,8 @@ local function pure_fixtures()
     equal(track.generated, case[2], "serialized ledger conserves progress")
   end
   for _, case in ipairs({
-    {"bitermotors-orbital-ai-dataset", 5, 150},
-    {"bitermotors-orbital-ai-dataset-cluster", 1, 30}
+    {"bitermotors-orbital-ai-dataset", 5, 50},
+    {"bitermotors-orbital-ai-dataset-cluster", 1, 10}
   }) do
     local recipe, track = prototypes.recipe[case[1]], AiAccounting.ensure()
     equal(recipe.ingredients[1].name, DOLLAR, "compact operating currency")
@@ -72,9 +72,10 @@ local function pure_fixtures()
     equal(track.generated, 50000, "compact equivalent conservation")
   end
   for _, case in ipairs({
-    {"bitermotors-orbital-cluster-training", 600, 1},
-    {"bitermotors-grid-scale-energy", 900, 1},
-    {"bitermotors-hyperscale-training", 1200, 2}
+    {"bitermotors-orbital-compute", 500, 1},
+    {"bitermotors-orbital-cluster-training", 300, 1},
+    {"bitermotors-grid-scale-energy", 450, 1},
+    {"bitermotors-hyperscale-training", 600, 2}
   }) do
     local technology = prototypes.technology[case[1]]
     equal(technology.research_unit_count, case[2], "scale research cycle count")
@@ -318,6 +319,10 @@ local function native_step()
   equal(output(storage.unpack).get_item_count(TOKEN), 50000, "native Dataset unpacking conserves physical equivalents")
   equal(storage.unpack.products_finished, 1, "unpacking completes exactly once")
   if not storage.pack_started then
+    -- Fast orbital tasks can finish before terrestrial bonus delivery settles.
+    if ledger().terrestrial.pending_bonus ~= 2 then return end
+    equal(ledger().cumulative_ai_tokens, storage.events.player + 6,
+      "unblocked bonuses are materialized before isolating packaging")
     storage.pack_started = true
     local grid = storage.tasks[9]
     equal(output(grid.machine).get_item_count(TOKEN), 100000, "grid-scale physical token batch")

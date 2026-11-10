@@ -105,7 +105,7 @@ class OrbitalLogisticsTests(unittest.TestCase):
         measurements = self.measurement_fixture()
         result = model.analyze(self.catalog, self.layouts, measurements)
         row = result["scenarios"][0]
-        self.assertEqual(row["compute"][0]["batches"] * measurements["runs"][0]["elapsed_ticks"] / 120,
+        self.assertAlmostEqual(row["compute"][0]["batches"] * measurements["runs"][0]["elapsed_ticks"] / 120,
                          row["compute"][0]["observed_rate_projection_seconds"])
         self.assertIsNone(row["compute"][1]["observed_rate_projection_seconds"])
         self.assertEqual(row["hardware"]["rockets"] * 30, row["transit"]["serialized_uplift_seconds"])
@@ -331,8 +331,8 @@ class OrbitalLogisticsTests(unittest.TestCase):
         catalog = model.EconomyCatalog(copy.deepcopy(self.catalog.data))
         # Explicit synthetic fallback permits this regression to run before capture refresh.
         for name, output, cost, recipe_seconds in (
-                (model.P + "orbital-ai-dataset", 1, 5, 150),
-                (model.P + "orbital-ai-dataset-cluster", 1, 1, 30)):
+                (model.P + "orbital-ai-dataset", 1, 5, 50),
+                (model.P + "orbital-ai-dataset-cluster", 1, 1, 10)):
             catalog.data["recipes"].setdefault(name, {
                 "categories": ["bitermotors-orbital-compute"], "energy_required": recipe_seconds,
                 "ingredients": [{"name": model.DOLLAR, "amount": cost}],
@@ -344,11 +344,12 @@ class OrbitalLogisticsTests(unittest.TestCase):
             self.assertEqual([model.P + "orbital-ai-dataset", model.P + "orbital-ai-dataset-cluster"],
                              [band["recipe"] for band in work["bands"][:2]])
             self.assertEqual([20, 180], [band["batches"] for band in work["bands"][:2]])
-            self.assertEqual([100, 20], [band["normal_cycle_seconds"] for band in work["bands"][:2]])
+            for seconds, band in zip((50 / 1.5, 10 / 1.5), work["bands"][:2]):
+                self.assertAlmostEqual(seconds, band["normal_cycle_seconds"])
             self.assertEqual(sum(band["dollars"] for band in native["bands"]), work["orbital_dollars"])
             for original, compact in zip(native["bands"][:2], work["bands"][:2]):
                 self.assertEqual(original["dollars"], compact["dollars"])
-                self.assertEqual(original["one_core_hours"], compact["one_core_hours"])
+                self.assertAlmostEqual(original["one_core_hours"], compact["one_core_hours"])
             self.assertTrue(all(band.get("compact_rounding_equivalents", 0) == 0 for band in work["bands"]))
         self.assertEqual(before, catalog.data)
 

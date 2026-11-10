@@ -1708,10 +1708,10 @@ expected_research = {
     "bitermotors-capital-scaling": (600, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-terrestrial-ai": (750, 60, rgbpy | {"bitermotors-dollar"}),
     "bitermotors-autonomous-logistics": (750, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-compute": (1000, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-orbital-cluster-training": (600, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-grid-scale-energy": (900, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
-    "bitermotors-hyperscale-training": (1200, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-compute": (500, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-orbital-cluster-training": (300, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-grid-scale-energy": (450, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
+    "bitermotors-hyperscale-training": (600, 60, rgbpy | {"bitermotors-ai-token", "bitermotors-dollar"}),
 }
 for technology_name, (count, time, ingredients) in expected_research.items():
     unit = data["technology"][technology_name]["unit"]
@@ -2033,9 +2033,10 @@ radiator = data["heat-interface"]["bitermotors-orbital-radiator-panel"]
 if radiator.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital Radiator Panel must be space-only")
 for name, cycles, dollars in (
-    ("bitermotors-orbital-cluster-training", 600, 1),
-    ("bitermotors-grid-scale-energy", 900, 1),
-    ("bitermotors-hyperscale-training", 1200, 2),
+    ("bitermotors-orbital-compute", 500, 1),
+    ("bitermotors-orbital-cluster-training", 300, 1),
+    ("bitermotors-grid-scale-energy", 450, 1),
+    ("bitermotors-hyperscale-training", 600, 2),
 ):
     unit = data["technology"][name]["unit"]
     ingredients = dict(unit["ingredients"])
@@ -2098,7 +2099,7 @@ if not any(result.get("name") == "bitermotors-ai-token" and result.get("amount")
 orbital_token_recipe = data["recipe"]["bitermotors-orbital-ai-token"]
 orbital_token_ingredients = {row["name"]: row["amount"] for row in orbital_token_recipe["ingredients"]}
 orbital_token_results = {row["name"]: row["amount"] for row in orbital_token_recipe["results"]}
-if orbital_token_ingredients != {"bitermotors-dollar": 1} or orbital_token_results != {"bitermotors-ai-token": 10000}:
+if orbital_token_ingredients != {"bitermotors-dollar": 1} or orbital_token_results != {"bitermotors-ai-token": 10000} or orbital_token_recipe["energy_required"] != 10:
     raise SystemExit(f"Orbital AI Token recipe mismatch: {orbital_token_recipe}")
 if orbital_token_recipe.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]:
     raise SystemExit("Orbital AI Token production must be space-only")
@@ -2123,20 +2124,22 @@ for recipe_name, expected_tokens in {
         row["amount"] for row in recipe["results"]
         if row["name"] == "bitermotors-ai-token"
     )
-    if ingredients != {"bitermotors-dollar": 1} or tokens != expected_tokens:
+    if ingredients != {"bitermotors-dollar": 1} or tokens != expected_tokens or recipe["energy_required"] != 10:
         raise SystemExit(f"Orbital milestone recipe mismatch: {recipe_name} {recipe}")
-for tier, datasets in (("grid-scale", 2), ("hyperscale", 4)):
-    name = f"bitermotors-orbital-ai-dataset-{tier}"
+for tier, datasets, dollars, seconds in (("", 1, 5, 50), ("cluster", 1, 1, 10),
+                                         ("grid-scale", 2, 1, 10), ("hyperscale", 4, 1, 10)):
+    name = "bitermotors-orbital-ai-dataset" + (f"-{tier}" if tier else "")
     recipe = data["recipe"][name]
-    if ({row["name"]: row["amount"] for row in recipe["ingredients"]} != {"bitermotors-dollar": 1}
+    if ({row["name"]: row["amount"] for row in recipe["ingredients"]} != {"bitermotors-dollar": dollars}
             or {row["name"]: row["amount"] for row in recipe["results"]} != {"bitermotors-agi-training-dataset": datasets}
-            or recipe["energy_required"] != 30
+            or recipe["energy_required"] != seconds
             or recipe.get("categories") != ["bitermotors-orbital-compute"]
             or recipe.get("surface_conditions") != [{"property": "gravity", "min": 0, "max": 0}]
             or recipe.get("raise_on_crafted") is not True
             or recipe.get("allow_quality") is not False):
         raise SystemExit(f"Compressed compute prototype mismatch: {name} {recipe}")
-    technology = "bitermotors-grid-scale-energy" if tier == "grid-scale" else "bitermotors-hyperscale-training"
+    technology = {"": "bitermotors-orbital-compute", "cluster": "bitermotors-orbital-cluster-training",
+                  "grid-scale": "bitermotors-grid-scale-energy", "hyperscale": "bitermotors-hyperscale-training"}[tier]
     if name not in {effect.get("recipe") for effect in data["technology"][technology]["effects"]}:
         raise SystemExit(f"Compressed compute lacks matching research unlock: {name}")
 for name in ("bitermotors-package-agi-training-dataset",):

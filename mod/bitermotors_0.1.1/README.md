@@ -103,8 +103,8 @@ The required orbital compute research chain uses terrestrial science, Dollars
 and AI Tokens, not white science.
 
 A normal cooled core consumes 1 Dollar and initially produces 10,000 physical AI
-Tokens every 20 seconds before further effects. Cumulative orbital output unlocks capital-and-science
-projects at 1M, 10M, and 100M Tokens. Research costs 2,000, 3,000 and 6,000 Dollars
+Tokens about every 6.7 seconds before further effects. Cumulative orbital output unlocks capital-and-science
+projects at 1M, 10M, and 100M Tokens. Research costs 300, 450 and 1,200 Dollars
 plus science, raising batches to 50,000, 100,000 and 200,000 Tokens. Grid-scale
 and hyperscale recipes can instead produce two or four 50,000-equivalent
 Datasets per Dollar. Low power slows/stops native work and preserves progress

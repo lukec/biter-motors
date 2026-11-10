@@ -67,9 +67,9 @@ Build in three consecutive slices:
    thermal slice supersedes automatic cooling holds with physical heat and
    destructive burnout. Keep ordinary
    terrestrial run-scrapping. Apply the approved research/yield changes: the
-   three scale projects now cost 600/900/2,400 Dollars after the Phase 4 pacing
+   three scale projects now cost 300/450/1,200 Dollars after the Phase 4 pacing
    freeze and unlock
-   50,000/100,000/200,000 equivalents per normal 20-second batch. Match direct
+   50,000/100,000/200,000 equivalents per normal 6.67-second batch. Match direct
    Dataset yields to their Token variants and preserve native earned accounting.
    **Implemented:** [banked-compute validation](docs/orbital-banked-compute-validation.md).
 2. **Physical Model and ground activation.** Assemble 20,000 physical Datasets
@@ -115,21 +115,25 @@ is not complete merely because these isolated layouts work.
 
 **Pacing/logistics freeze completed:** a ten-minute stock/production sample and
 one-hour unassisted copy of Luke's established save inform the joint budget.
-The exact candidate's native Hyper/Grid routes take **5 h 18 min / 7 h 7 min**
+The exact candidate's native Hyper/Grid routes take **2 h 59 min / 3 h 36 min**
 after the orbital unlock, including **21-minute physical Dataset loading**, real
 1/4/8/12 staged uplift/research, Model return, activation and separate-process
 reloads. Hyperscale is recommended for the shorter ending; Grid-only remains
-possible. Research prices are 1,000/600/900/1,200 cycles and
-1,000/600/900/2,400 Dollars. Compute yields, physical cooling and the billion/
+possible. Research prices are 500/300/450/600 cycles and
+500/300/450/1,200 Dollars. Recipe durations are one third of the previous freeze;
+per-batch compute yields/costs, physical cooling and the billion/
 20,000-Dataset gates are unchanged.
 
-From the sampled stage, the measured-cost reference needs about **11,228 Dollars**
-before its 4,535 usable starting cash, and 5,157 additional blue circuits with
+From the sampled stage, the measured-cost reference needs about **8,806 Dollars**
+before its 4,535 usable starting cash, and 3,825 additional blue circuits with
 normal recipes and stock credit. Existing rocket fuel already covers the
 recommended route. The finite already-eligible battery market covers the
 project cash gap before other spending. Ground entry research adds roughly
-32 modeled minutes at the rehearsal's 31.5-cycle/minute cap, supporting the
-frozen **roughly 4-6 focused active-hour target**, not a measured human campaign.
+16 modeled minutes at the rehearsal's 31.5-cycle/minute cap. The revised
+**roughly four focused active-hour target** allows about 45 minutes above that
+3 h 15 min machine-driven reference for player work, not a measured human campaign.
+Luke rejected the previous roughly six-hour overlap-based forecast as too
+optimistic; do not silently spend this allowance or promise perfect overlap.
 The [evidence and limits](docs/endgame-pacing.md) separate supplied finished
 ground hardware/science from real orbital work, and avoid adding overlapping
 manufacturing, income, research and compute clocks. No new nest expansion or
@@ -335,8 +339,8 @@ also complete; the remaining Phase 4 onboarding/presentation gates come next.
   until destructive burnout; no automatic cooling pause remains. Ordinary
   terrestrial training still scraps a failed run. Victory and the implemented
   offline terminal remain persistent.
-- The save-based remaining bill is about 11,228 Dollars under measured native
-  logistics, including entry research. The recommended route takes 5 h 18 min
+- The save-based remaining bill is about 8,806 Dollars under measured native
+  logistics, including entry research. The recommended route takes 2 h 59 min
   after that unlock in a supplied-ground-stock rehearsal. Manufacturing and
   actual human campaign time remain separately bounded, not silently qualified.
 - The 2026-10-07 capture exposed an unlaunchable 1.2-tonne core and 250-kg
@@ -346,8 +350,8 @@ also complete; the remaining Phase 4 onboarding/presentation gates come next.
   returns 10,000 Tokens and survives reload on source and the exact ZIP.
   It also captures the tighter ten-slot cargo-pod inventory. Basic Token
   extraction is slow; upgraded I/O belongs in final blueprint/pacing qualification.
-- The full native staged route uses 45 mixed-load launches with Hyperscale,
-  or 51 with Grid only. The joint save-based bill includes final assembly I/O,
+- The full native staged route uses 43 mixed-load launches with Hyperscale,
+  or 49 with Grid only. The joint save-based bill includes final assembly I/O,
   unused buffered rocket parts and research in a single blue-circuit allocation.
 
 First-cluster uplift, banked compute, physical cooling, Model assembly/return,
@@ -515,7 +519,7 @@ platforms.
 - **Orbital Compute Cluster**
   - Space-only 3x3 compute machine.
   - Draws 250 MW while operating.
-  - Consumes 1 Dollar per recipe batch: 30 recipe-seconds, or 20 seconds in a
+  - Consumes 1 Dollar per recipe batch: 10 recipe-seconds, or about 6.67 seconds in a
     normal-quality core at its current 1.5 crafting speed before other effects.
   - Produces 10,000 physical AI Tokens per batch.
 - **Orbital Radiator**

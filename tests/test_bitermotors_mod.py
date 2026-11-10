@@ -1425,7 +1425,7 @@ class BiterMotorsModTest(unittest.TestCase):
         self.assertNotIn("stockpile 1,000 for Autonomous Logistics", control)
         self.assertIn("check their research ingredients", control)
         readme = (MOD / "README.md").read_text()
-        self.assertIn("Tokens every 20 seconds before further effects", readme)
+        self.assertIn("Tokens about every 6.7 seconds before further effects", readme)
         self.assertNotIn("Tokens every 30 seconds", readme)
 
     def test_bitermotors_orbital_compute_is_space_bound(self):
@@ -2692,7 +2692,7 @@ class BiterMotorsModTest(unittest.TestCase):
             "bitermotors-capital-scaling": 600,
             "bitermotors-terrestrial-ai": 750,
             "bitermotors-autonomous-logistics": 750,
-            "bitermotors-orbital-compute": 1000,
+            "bitermotors-orbital-compute": 500,
         }
         technology_offsets = sorted(
             (data.index(f'tech("{name}"'), name, count)

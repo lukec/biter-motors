@@ -103,19 +103,19 @@ wait for ten clusters or forty panels. Avoid special scripted cargo delivery.
 
 ### Research And Throughput
 
-The first two research costs are 750 Dollars for Autonomy and 1,000 for
-Orbital Infrastructure. They consume 1,750 physical terrestrial Tokens, costing
-1,760 operating Dollars and 44 active minutes at normal base efficiency when
+The first two research costs are 750 Dollars for Autonomy and 500 for
+Orbital Infrastructure. They consume 1,250 physical terrestrial Tokens, costing
+1,260 operating Dollars and 31.5 active minutes at normal base efficiency when
 starting without stored Tokens.
 Do not require Bitertaxi sales or fleet construction to unlock orbit; recurring
 service is one effective financing strategy, not the only route.
 
 | Milestone | Research cycles | Dollars/cycle | Total Dollars | Unlocked normal batch |
 | --- | ---: | ---: | ---: | ---: |
-| Initial orbit | 1,000 | 1 | 1,000 | 10,000 Tokens / 20s |
-| 1M orbital equivalents | 600 | 1 | 600 | 50,000 Tokens / 20s |
-| 10M orbital equivalents | 900 | 1 | 900 | 100,000 equivalents / 20s |
-| 100M orbital equivalents | 1,200 | 2 | 2,400 | 200,000 equivalents / 20s |
+| Initial orbit | 500 | 1 | 500 | 10,000 Tokens / 6.67s |
+| 1M orbital equivalents | 300 | 1 | 300 | 50,000 Tokens / 6.67s |
+| 10M orbital equivalents | 450 | 1 | 450 | 100,000 equivalents / 6.67s |
+| 100M orbital equivalents | 600 | 2 | 1,200 | 200,000 equivalents / 6.67s |
 
 Keep appropriate red/green/blue/purple/yellow science and AI inputs. Remove
 white science, rather than adding another alternative space-science recipe.
@@ -221,9 +221,11 @@ The [2026-11-09 pacing freeze](../docs/endgame-pacing.md) supersedes the earlier
 research prices and synthetic zero-stock forecasts. It uses a read-only copy of
 Luke's established factory, native observations, a stock-aware joint material
 bill, and an independent supplied-ground-stock physical logistics rehearsal.
-The target is roughly 4-6 focused active hours from established terrestrial AI,
-not from crash landing. It remains a target for the acceptance campaign, not a
-claim of measured player time.
+The revised target is roughly four focused active hours from established
+terrestrial AI, not from crash landing. Orbital recipe durations cut to one
+third and halved research cycles leave time for construction and troubleshooting above
+the machine-driven rehearsal. This remains an acceptance-playthrough target,
+not a claim of measured human time or perfect overlap of every task.
 
 The [generated cost study](../docs/orbital-ending-cost-study.md) starts before
 Autonomy with no stored Tokens; the [save budget](../docs/endgame-save-budget.json)

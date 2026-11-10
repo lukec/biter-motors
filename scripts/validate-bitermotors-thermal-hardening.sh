@@ -102,7 +102,7 @@ for key, tolerance in (("temperature", 0.01), ("heat_joules", 1)):
     assert abs(number(reload["before"], key) - number(reload["after"], key)) <= tolerance
 assert type(reload["queued_ticks"]) is int and 1 <= reload["queued_ticks"] < 15
 assert reload["tick"] == hot["tick"] + reload["queued_ticks"]
-assert abs(number(hot, "progress_per_tick") - 1.5 / (30 * 60)) < 1e-12
+assert abs(number(hot, "progress_per_tick") - 1.5 / (10 * 60)) < 1e-12
 assert reload["progress_per_tick"] == hot["progress_per_tick"]
 assert reload["before"]["progress"] == hot["core"]["progress"]
 assert abs(number(reload["after"], "progress") - number(hot["core"], "progress")

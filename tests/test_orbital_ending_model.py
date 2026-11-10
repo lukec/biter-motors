@@ -59,13 +59,20 @@ class OrbitalEndingTests(unittest.TestCase):
             self.assertNotIn("space-science-pack", dict(native["unit"]["ingredients"]))
 
     def test_native_scale_tiers_match_approved_efficiency_and_research(self):
-        for technology, dollars in zip(model.RESEARCH[2:], (600, 900, 2400)):
+        for technology, dollars in zip(model.RESEARCH[2:], (300, 450, 1200)):
             self.assertEqual(dollars, self.catalog.research(technology))
         for recipe, tokens in zip(model.ORBITAL_RECIPES, (10000, 50000, 100000, 200000)):
             equivalents = self.catalog.output(recipe, model.TOKEN) + 50000 * self.catalog.output(recipe, model.DATASET)
             self.assertEqual(tokens, equivalents)
             self.assertEqual(1, self.catalog.ingredient(recipe, model.DOLLAR))
-            self.assertEqual(20, self.catalog.seconds(recipe, model.CORE))
+            self.assertAlmostEqual(10 / 1.5, self.catalog.seconds(recipe, model.CORE))
+
+    def test_whole_cycles_accepts_fractional_seconds_without_rounding_down_throughput(self):
+        self.assertEqual(9, model.whole_cycles_per_minute(10 / 1.5))
+        self.assertEqual(3, model.whole_cycles_per_minute(20))
+        for seconds in (7, 0, -1, float("nan"), float("inf")):
+            with self.subTest(seconds=seconds), self.assertRaises(ValueError):
+                model.whole_cycles_per_minute(seconds)
 
     def test_native_mass_is_explicit_and_does_not_change_native_catalog(self):
         before = copy.deepcopy(self.catalog.data)
@@ -140,10 +147,10 @@ class OrbitalEndingTests(unittest.TestCase):
 
     def test_budget_counts_physical_archive_and_science_only_once(self):
         budget = model.compute_budget(self.catalog, self.proposal)
-        self.assertEqual(1760, budget["terrestrial_dollars"])
-        self.assertEqual(5650, budget["research_dollars"])
+        self.assertEqual(1260, budget["terrestrial_dollars"])
+        self.assertEqual(3200, budget["research_dollars"])
         self.assertEqual(5681, budget["orbital_dollars"])
-        self.assertEqual(2700, budget["orbital_research_tokens"])
+        self.assertEqual(1350, budget["orbital_research_tokens"])
         self.assertGreaterEqual(budget["generated_equivalents"] - budget["orbital_research_tokens"], 1e9)
         self.assertNotIn("space-science-pack", budget["research_science"])
 
@@ -161,7 +168,7 @@ class OrbitalEndingTests(unittest.TestCase):
         hardware = result["hardware_supplies"]
         full = result["hardware_and_science_supplies"]
         self.assertEqual(4740, hardware["supplies"]["processing-unit"])
-        self.assertEqual(7708, full["supplies"]["processing-unit"])
+        self.assertEqual(6474, full["supplies"]["processing-unit"])
         self.assertNotIn(model.DOLLAR, hardware["supplies"])
         self.assertGreater(full["supplies"]["copper-plate"], hardware["supplies"]["copper-plate"])
         self.assertGreater(hardware["surplus"][model.P + "acidic-tailings"], 0)
@@ -243,7 +250,8 @@ class OrbitalEndingTests(unittest.TestCase):
     def test_skipping_optional_hyperscale_can_still_finish(self):
         case = model.simulate(self.catalog, self.proposal, model.BUSINESSES[0])
         self.assertIsNotNone(case["model_hours"])
-        self.assertGreater(case["model_hours"], 6)
+        self.assertGreater(case["model_hours"], 0)
+        self.assertLess(case["model_hours"], 6)
         self.assertNotIn(model.RESEARCH[-1], [row["technology"] for row in case["events"]])
         self.assertGreaterEqual(case["archive_equivalents"], 1e9)
         self.assertIn(model.RESEARCH[-2], [row["technology"] for row in case["events"]])

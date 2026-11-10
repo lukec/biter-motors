@@ -2171,7 +2171,7 @@ data:extend({
   ),
   recipe("bitermotors-orbital-ai-token", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d[orbital-ai-token]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-ai-token", amount = 10000}}, 30,
+    {{type = "item", name = "bitermotors-ai-token", amount = 10000}}, 10,
     {
       main_product = "bitermotors-ai-token",
       surface_conditions = {
@@ -2185,7 +2185,7 @@ data:extend({
   ),
   recipe("bitermotors-orbital-ai-token-cluster", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-d2[orbital-ai-token-cluster]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-ai-token", amount = 50000}}, 30,
+    {{type = "item", name = "bitermotors-ai-token", amount = 50000}}, 10,
     {
       surface_conditions = {
         {
@@ -2201,7 +2201,7 @@ data:extend({
     {
       {type = "item", name = "bitermotors-ai-token", amount = 50000},
       {type = "item", name = "bitermotors-ai-token", amount = 50000}
-    }, 30,
+    }, 10,
     {
       main_product = "bitermotors-ai-token",
       surface_conditions = {
@@ -2220,7 +2220,7 @@ data:extend({
       {type = "item", name = "bitermotors-ai-token", amount = 50000},
       {type = "item", name = "bitermotors-ai-token", amount = 50000},
       {type = "item", name = "bitermotors-ai-token", amount = 50000}
-    }, 30,
+    }, 10,
     {
       main_product = "bitermotors-ai-token",
       surface_conditions = {
@@ -2234,22 +2234,22 @@ data:extend({
   ),
   recipe("bitermotors-orbital-ai-dataset", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e[orbital-ai-dataset]",
     {{type = "item", name = "bitermotors-dollar", amount = 5}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 150,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 50,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-orbital-ai-dataset-cluster", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e2[orbital-ai-dataset-cluster]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 30,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 1}}, 10,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-orbital-ai-dataset-grid-scale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e3[orbital-ai-dataset-grid-scale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 30,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 2}}, 10,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-orbital-ai-dataset-hyperscale", {"bitermotors-orbital-compute"}, "science-pack", "bitermotors-e4[orbital-ai-dataset-hyperscale]",
     {{type = "item", name = "bitermotors-dollar", amount = 1}},
-    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 4}}, 30,
+    {{type = "item", name = "bitermotors-agi-training-dataset", amount = 4}}, 10,
     {surface_conditions = {{property = "gravity", min = 0, max = 0}}}
   ),
   recipe("bitermotors-package-agi-training-dataset", {"advanced-crafting"}, "science-pack", "h[agi-training-dataset]",
@@ -2468,7 +2468,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-dataset"),
       unlock("bitermotors-unpack-agi-training-dataset")
     },
-    1000,
+    500,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2487,7 +2487,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-token-cluster"),
       unlock("bitermotors-orbital-ai-dataset-cluster")
     },
-    600,
+    300,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2510,7 +2510,7 @@ data:extend({
       unlock("bitermotors-tandem-solar-array"),
       unlock("bitermotors-grid-battery-array")
     },
-    900,
+    450,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},
@@ -2530,7 +2530,7 @@ data:extend({
       unlock("bitermotors-orbital-ai-token-hyperscale"),
       unlock("bitermotors-orbital-ai-dataset-hyperscale")
     },
-    1200,
+    600,
     {
       {"automation-science-pack", 1},
       {"logistic-science-pack", 1},

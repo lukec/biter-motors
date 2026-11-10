@@ -19,10 +19,10 @@ NAMES = ["idle_passed", "nominal_passed", "brownout_passed", "outage_passed", "b
 
 def array(count):
     return dict(count=count, supplied_power=count != 1, supplied_watts=0 if count == 1 else count * 400000000,
-                min_c=97, max_c=97.2, min_products=150, min_output=600, min_cash=1850,
-                products=count * 150, output=count * 600, work_seconds=count * 3000,
+                min_c=97, max_c=97.2, min_products=450, min_output=1800, min_cash=1550,
+                products=count * 450, output=count * 1800, work_seconds=count * 3000,
                 heat_joules=count * 775000000000, elapsed_ticks=180000,
-                per_core=[dict(unit=i + 1, products=150, output=600, work_seconds=3000,
+                per_core=[dict(unit=i + 1, products=450, output=1800, work_seconds=3000,
                                temperature=97 if i == 0 else 97.2) for i in range(count)])
 
 
@@ -48,10 +48,10 @@ def valid_rows():
         alerts=dict(players=0, count=0, message_key="bitermotors-thermal.alert-critical"))
     r["repair_passed"]["alerts"] = dict(players=0, count=0, message_key="none")
     cut = r["hot_checkpoint"]["tick"] - 3600
-    r["hot_checkpoint"].update(core=copy.deepcopy(warning), cut_tick=cut, cut_temperature=97, progress_per_tick=1.5 / 1800)
+    r["hot_checkpoint"].update(core=copy.deepcopy(warning), cut_tick=cut, cut_temperature=97, progress_per_tick=1.5 / 600)
     r["hot_reload_passed"].update(saved_tick=r["hot_checkpoint"]["tick"], before=copy.deepcopy(warning),
-                                    after={**warning, "progress": warning["progress"] + 1.5 / 1800},
-                                    progress_per_tick=1.5 / 1800, queued_ticks=1, separate_process_reload=True)
+                                    after={**warning, "progress": warning["progress"] + 1.5 / 600},
+                                    progress_per_tick=1.5 / 600, queued_ticks=1, separate_process_reload=True)
     # Use real-tick relationships for the short disconnection sequence.
     r["hot_reload_passed"]["tick"] = r["hot_checkpoint"]["tick"] + 1
     r["critical_passed"]["tick"] = cut + 6600
@@ -77,9 +77,9 @@ def valid_perf(rows):
             tick = r[f"array{count}_checkpoint"]["tick"] + 1
             state = array(count)
             reports.append(dict(status="benchmark_start", tick=tick, state=state, max_visited=128))
-            after = {**state, "products": state["products"] + count * 3, "output": state["output"] + count * 12,
-                     "min_products": 153, "min_output": 612,
-                     "per_core": [{**c, "products": c["products"] + 3, "output": c["output"] + 12,
+            after = {**state, "products": state["products"] + count * 9, "output": state["output"] + count * 36,
+                     "min_products": 459, "min_output": 1836,
+                     "per_core": [{**c, "products": c["products"] + 9, "output": c["output"] + 36,
                                    "work_seconds": c["work_seconds"] + 60} for c in state["per_core"]],
                      "work_seconds": state["work_seconds"] + count * 60, "heat_joules": state["heat_joules"] + count * 1e10}
             reports.append(dict(status="benchmark_end", tick=tick + 3599, state=after, max_visited=128))
