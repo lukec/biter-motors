@@ -39,8 +39,9 @@ qualification is still not a frozen, playtest-ready campaign. Phase 4 now has
 [source-bound logistics budget](docs/orbital-logistics-budget.md). **The normal
 logistics/pacing slice is now qualified:** both ending routes consume the real
 20,000-Dataset payload through belts and survive mid-load and victory reloads.
-See the [save-based pacing freeze](docs/endgame-pacing.md). **Next: fresh-seed/
-prerequisite and functional-art checks**, then the remaining release qualification.
+See the [save-based pacing freeze](docs/endgame-pacing.md). **Three-seed and
+mandatory dependency audits are complete. Next: functional-art checks**, then
+the remaining release qualification.
 
 **Physical cooling update:** the approved thermal hardening slice is integrated
 on Factorio 2.1.24: native shared heat networks, a 2-3 minute nominal buffer,
@@ -147,10 +148,20 @@ helper. Keep these numbers and mechanics stable through acceptance testing;
 log small balance corrections rather than reopening the ending design.
 
 **Remaining Phase 4 work:**
-- Audit fresh starts on at least five seeds, resource access, and every critical
-  technology's ingredients, manufacturing machine and science prerequisites.
-  No removed-planet material, hidden unlock or optional vehicle/quality branch
-  may block the ending.
+- **Three-seed fresh-world checks complete:** default accelerated bootstrap and
+  real resource generation pass on 1092026, 424242 and 8675309. Iron, copper,
+  coal, stone, oil, calcite, nickel, lithium, uranium, water and customer
+  spawners are present within the tested origin-centred +/-1024-tile square;
+  enemies, expansion and pollution remain enabled. See the
+  [seed audit and limits](docs/fresh-world-audit.md). Generation presence is not
+  proof of a safe walking route or full campaign pacing.
+- **Mandatory dependency audit complete:** the full native prototype closure
+  reaches Model activation in 18 passes, including vanilla science, compatible
+  crafting machines and explicit scripted milestone assumptions. Negative
+  tests detect circular science, missing machines/inputs, inaccessible orbital
+  machines and removed-planet dependencies. No production blocker found; no
+  balance or unlock changes were needed. See the
+  [dependency evidence and limits](docs/progression-dependency-audit.md).
 - Give the cluster, radiator and solar wing clear platform-appropriate art with
   distinct silhouettes and correct footprints. Check existing critical assets,
   locked-item filters, tier/readability cues and native UI at two scales,
@@ -237,8 +248,8 @@ campaign we tested. A YouTube trailer, more marketing art, comprehensive art
 replacement, new vehicles/chemistries, Diners, Humanoid Robots, hyperscalers and
 other new mechanics are not release blockers.
 
-**Immediate next implementation:** Phase 4's five-seed/fresh-world prerequisite
-audit and functional in-game art/readability pass, followed by candidate soaks,
+**Immediate next implementation:** Phase 4's functional in-game art/readability
+pass, followed by candidate soaks,
 multiplayer and clean-install qualification. The ending, epilogue and practical
 pacing are implemented. No original player save or live process was changed;
 the development mod symlink loads this source on a later restart, not hot-reload.

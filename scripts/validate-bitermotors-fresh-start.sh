@@ -6,7 +6,16 @@ source "$repo_root/scripts/lib/bitermotors-validation.sh"
 bitermotors_resolve_source "$repo_root"
 factorio_bin="${FACTORIO_BINARY:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS/factorio}"
 read_data="${FACTORIO_READ_DATA:-$HOME/Library/Application Support/Steam/steamapps/common/Factorio/factorio.app/Contents/data}"
-tmp="$(mktemp -d /tmp/bitermotors-fresh-start.XXXXXX)"
+seed_settings=""
+if [[ ${BITERMOTORS_SEED+x} ]]; then
+  seed_settings="$(python3 "$repo_root/scripts/fresh_world_support.py" "$BITERMOTORS_SEED")"
+fi
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/bitermotors-fresh-start.XXXXXX")"
+seed_args=()
+if [[ -n "$seed_settings" ]]; then
+  printf '%s\n' "$seed_settings" > "$tmp/map-gen-settings.json"
+  seed_args=(--map-gen-settings "$tmp/map-gen-settings.json")
+fi
 mods="$tmp/mods"
 helper="$mods/bitermotors_fresh_start_test_0.1.1"
 save="$tmp/fresh.zip"
@@ -48,6 +57,7 @@ script.on_init(function()
   helpers.write_file("bitermotors-fresh-start.jsonl", helpers.table_to_json{
     status = "fresh_start_complete",
     tick = game.tick,
+    seed = game.surfaces.nauvis.map_gen_settings.seed,
     active_mods = script.active_mods,
     accelerated_start = settings.startup["bitermotors-accelerated-start"].value,
     ship = ship,
@@ -62,21 +72,25 @@ script.on_init(function()
 end)
 EOF
 
-"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" --create "$save" >"$tmp/create.log" 2>&1
+"$factorio_bin" --config "$tmp/config.ini" --mod-directory "$mods" "${seed_args[@]}" --create "$save" >"$tmp/create.log" 2>&1
 bitermotors_check_log "$tmp/create.log" --expect-marker Goodbye
 python3 "$repo_root/scripts/validation_support.py" report "$report" \
   --require-status fresh_start_complete
 
-python3 - "$report" <<'PY'
+PYTHONPATH="$repo_root/scripts${PYTHONPATH:+:$PYTHONPATH}" python3 - "$report" <<'PY'
 import json
 from pathlib import Path
 import sys
+import os
+from fresh_world_support import parse_seed
 
 path = Path(sys.argv[1])
 records = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 if not records:
     raise SystemExit("fresh-start report is empty")
 row = records[-1]
+if "BITERMOTORS_SEED" in os.environ and row.get("seed") != parse_seed(os.environ["BITERMOTORS_SEED"]):
+    raise SystemExit("fresh-start native seed mismatch")
 if row.get("status") == "failed":
     raise SystemExit(f"fresh-start report failed: {row}")
 required_mods = {"base", "space-age", "quality", "bitermotors"}
@@ -101,3 +115,4 @@ if row["sales_office_researched"] or row["prototype_roadster_enabled"]:
     raise SystemExit(f"Biter Motors progression started unlocked: {row}")
 print("Biter Motors fresh Freeplay bootstrap OK")
 PY
+printf 'Fresh-start report: %s\n' "$report"
